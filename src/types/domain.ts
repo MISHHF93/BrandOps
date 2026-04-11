@@ -1,6 +1,24 @@
+export type ExtensionSurface = 'popup' | 'dashboard' | 'options' | 'content';
+
 export type OpportunityStage = 'lead' | 'discovery' | 'proposal' | 'active' | 'closed';
 
+export type WorkspaceModuleId =
+  | 'dashboard'
+  | 'brand-memory'
+  | 'content-studio'
+  | 'outreach-assistant'
+  | 'opportunity-crm'
+  | 'settings';
+
+export interface WorkspaceModule {
+  id: WorkspaceModuleId;
+  title: string;
+  description: string;
+  status: 'available' | 'planned';
+}
+
 export interface BrandProfile {
+  name: string;
   headline: string;
   tone: string;
   coreOffer: string;
@@ -8,21 +26,11 @@ export interface BrandProfile {
   keywords: string[];
 }
 
-export interface PostDraft {
-  id: string;
-  idea: string;
-  text: string;
-  channel: 'linkedin' | 'x' | 'email';
-  createdAt: string;
-}
-
-export interface OutreachDraft {
-  id: string;
-  targetName: string;
-  targetRole: string;
-  objective: string;
-  message: string;
-  createdAt: string;
+export interface AppSettings {
+  llmProvider: 'local' | 'openai' | 'anthropic' | 'custom';
+  activePromptProfileId: string;
+  customEndpoint?: string;
+  apiKey?: string;
 }
 
 export interface Opportunity {
@@ -31,29 +39,20 @@ export interface Opportunity {
   contact: string;
   stage: OpportunityStage;
   valueUsd: number;
-  notes: string;
+  nextStep: string;
   updatedAt: string;
 }
 
-export interface PromptProfile {
-  id: string;
-  name: string;
-  stylePrompt: string;
-  temperature: number;
-}
-
-export interface AppSettings {
-  llmProvider: 'local' | 'openai' | 'anthropic' | 'custom';
-  apiKey?: string;
-  customEndpoint?: string;
-  activePromptProfileId: string;
+export interface SeedMetadata {
+  seededAt: string;
+  source: 'default-demo';
+  version: string;
 }
 
 export interface BrandOpsData {
   brand: BrandProfile;
-  posts: PostDraft[];
-  outreach: OutreachDraft[];
   opportunities: Opportunity[];
-  promptProfiles: PromptProfile[];
+  modules: WorkspaceModule[];
   settings: AppSettings;
+  seed: SeedMetadata;
 }

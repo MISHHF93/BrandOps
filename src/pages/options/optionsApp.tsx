@@ -1,49 +1,31 @@
 import { useEffect } from 'react';
-import { AppShell } from '../../app/layout/AppShell';
-import { Card } from '../../app/components/Card';
-import { SectionTitle } from '../../app/components/SectionTitle';
+import { BrandHeader } from '../../shared/ui/BrandHeader';
 import { useBrandOpsStore } from '../../state/useBrandOpsStore';
 
 export function OptionsApp() {
-  const { data, init, updateHeadline, updateSettings } = useBrandOpsStore();
+  const { data, init } = useBrandOpsStore();
 
   useEffect(() => {
     void init();
   }, [init]);
 
-  if (!data) return null;
+  if (!data) {
+    return <div className="p-5">Loading settings…</div>;
+  }
 
   return (
-    <AppShell>
-      <Card>
-        <SectionTitle title="Profile Settings" subtitle="Personalize your operating system" />
-        <label className="text-xs text-slate-400">Headline</label>
-        <input
-          value={data.brand.headline}
-          onChange={(event) => void updateHeadline(event.target.value)}
-          className="mt-1 w-full rounded-md border border-slate-700 bg-[#0A1220] p-2 text-sm"
-        />
-      </Card>
+    <main className="mx-auto max-w-3xl space-y-4 p-6">
+      <BrandHeader subtitle="Settings and provider configuration foundation." />
 
-      <Card>
-        <SectionTitle title="Prompt Profiles" subtitle="Future-ready LLM adapter controls" />
-        <label className="text-xs text-slate-400">Provider</label>
-        <select
-          value={data.settings.llmProvider}
-          onChange={(event) => void updateSettings({ llmProvider: event.target.value as any })}
-          className="mt-1 rounded-md border border-slate-700 bg-[#0A1220] p-2 text-sm"
-        >
-          <option value="local">Local template</option>
-          <option value="openai">OpenAI</option>
-          <option value="anthropic">Anthropic</option>
-          <option value="custom">Custom endpoint</option>
-        </select>
-      </Card>
-
-      <Card>
-        <SectionTitle title="Data" subtitle="Export/import placeholder for local-first roadmap" />
-        <p className="text-sm text-slate-300">All data stays in chrome.storage.local in MVP mode.</p>
-      </Card>
-    </AppShell>
+      <section className="bo-card space-y-3">
+        <h2 className="text-base font-semibold">Environment</h2>
+        <p className="text-sm" style={{ color: 'hsl(var(--bo-text-muted))' }}>
+          Provider: {data.settings.llmProvider}
+        </p>
+        <p className="text-sm" style={{ color: 'hsl(var(--bo-text-muted))' }}>
+          Active profile: {data.settings.activePromptProfileId}
+        </p>
+      </section>
+    </main>
   );
 }

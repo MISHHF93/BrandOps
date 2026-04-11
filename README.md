@@ -1,83 +1,107 @@
-# BrandOps Browser Extension
+# BrandOps Extension Foundation
 
-BrandOps is a privacy-first personal brand operating system for technical AI builders.
+BrandOps is a **Manifest V3**, TypeScript-first browser extension foundation designed to scale into a serious product.
 
-## What this MVP includes
+## Stack
 
-- **Brand Memory** for positioning, offer framing, tone, keywords.
-- **Content Studio** to generate on-brand LinkedIn draft posts.
-- **Outreach Assistant** to draft collaboration/consulting outreach messages.
-- **Opportunity CRM** to track leads from lead → closed.
-- **LinkedIn Overlay** to provide in-page context and copyable outreach opener.
-- **Dashboard + Popup + Settings pages** for command-center workflows.
-- **LLM adapter layer** currently using local template provider (future-ready for external APIs).
+- Manifest V3 extension architecture
+- TypeScript + React
+- Tailwind CSS + premium dark design tokens
+- Zustand state management
+- Chrome local storage abstraction
+- ESLint + Prettier setup
 
-## Architecture
+## Scalable architecture
 
 ```text
 src/
-  background/            # MV3 service worker + runtime message handling
-  content/               # LinkedIn content script overlay
+  background/                  # MV3 background service worker
+  content/                     # Content scripts
+  modules/                     # Domain modules and feature placeholders
+    dashboard/
+    brandMemory/
+    contentStudio/
+    outreach/
+    opportunityCrm/
+    settings/
   pages/
-    popup/               # Quick-action cockpit
-    dashboard/           # Full command center view
-    options/             # Settings / prompt profile controls
-  modules/
-    brandMemory/         # seed and profile model
-    contentStudio/       # post generation service
-    outreach/            # outreach generation service
-    crm/                 # opportunity transitions
+    popup/                     # React popup entry and UI
+    dashboard/                 # Dashboard page
+    options/                   # Extension options page
   services/
-    storage/             # chrome.storage.local abstraction
-    llm/                 # provider adapter interface + local provider
-    messaging/           # runtime message types
-  state/                 # Zustand app store
-  app/                   # reusable layout/components
-  types/                 # domain model
+    storage/                   # Domain-level storage service
+    aiAdapters/                # Future AI provider adapter contracts
+    llm/                       # Local placeholder adapter implementation
+    messaging/                 # Runtime message contracts
+  shared/
+    config/                    # App-wide module/navigation definitions
+    storage/                   # Browser storage adapter primitives
+    ui/                        # Shared React UI primitives
+  state/                       # Global app store
+  styles/                      # Tailwind + design token styling
+  types/                       # Shared domain types
 ```
 
-## Product principles implemented
+## Included foundation surfaces
 
-- **Local-first storage:** data persisted in `chrome.storage.local`.
-- **Privacy-first by default:** no backend dependency in MVP mode.
-- **Modular code:** services and modules separated by responsibility.
-- **Strong typing:** domain models and service contracts in TypeScript.
-- **Future LLM integration:** provider adapter interface ready for OpenAI/Anthropic/custom endpoints.
+### Product modules (placeholders)
 
-## Run locally
+- Dashboard
+- Brand Memory
+- Content Studio
+- Outreach Assistant
+- Opportunity CRM
+- Settings
+
+### Extension runtime surfaces
+
+- Popup UI (React)
+- Options page
+- Dashboard page
+- Background service worker
+- LinkedIn content script placeholder
+
+## Premium dark theme design system
+
+`src/styles/index.css` includes reusable design tokens and utility components:
+
+- semantic color tokens (`--bo-bg`, `--bo-surface`, `--bo-primary`, `--bo-accent`, etc.)
+- reusable card and pill styles (`.bo-card`, `.bo-pill`)
+- polished gradient background and subtle shadows
+
+## Storage abstraction + seed demo data
+
+- `shared/storage/browserStorage.ts` provides a clean key-value storage interface
+- `services/storage/storage.ts` exposes extension data methods
+- `modules/brandMemory/seed.ts` contains default demo data
+- first load automatically seeds local data when none exists
+
+## Local development
 
 ```bash
 npm install
 npm run build
 ```
 
-For local web UI preview during development:
+Optional checks:
 
 ```bash
-npm run dev
+npm run lint
+npm run typecheck
+npm run format
 ```
 
 ## Load extension in Chrome/Edge
 
-1. Build the project (`npm run build`).
-2. Open extension management page:
-   - Chrome: `chrome://extensions`
-   - Edge: `edge://extensions`
+1. Run `npm run build`.
+2. Open:
+   - `chrome://extensions` (Chrome)
+   - `edge://extensions` (Edge)
 3. Enable **Developer mode**.
 4. Click **Load unpacked**.
 5. Select the generated `dist/` folder.
 
-## MVP behavior notes
+## Notes
 
-- On first install, seed data is loaded into local storage.
-- Popup gives quick actions for content and outreach generation.
-- Dashboard provides full visibility across drafts + pipeline.
-- LinkedIn pages receive a lightweight contextual overlay widget.
-
-## Suggested next branches
-
-1. `feat/openai-anthropic-provider-impl`
-2. `feat/linkedin-dom-context-parser`
-3. `feat/export-import-encrypted-backups`
-4. `feat/opportunity-reminders-and-followups`
-5. `feat/analytics-weekly-brand-score`
+- This repo is intentionally structured for future growth (AI adapters, richer feature modules, and shared components).
+- Seed data can be reset from the popup quick actions.

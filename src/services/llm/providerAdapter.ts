@@ -1,20 +1,15 @@
-import { AppSettings, PromptProfile } from '../../types/domain';
+import { AiGenerationRequest, AiGenerationResponse, AiProviderAdapter } from '../aiAdapters/types';
 
-export interface LlmGenerationInput {
-  goal: string;
-  context: string;
-  promptProfile?: PromptProfile;
-}
+class LocalTemplateProvider implements AiProviderAdapter {
+  id = 'local' as const;
 
-export interface LlmProvider {
-  generate(input: LlmGenerationInput, settings: AppSettings): Promise<string>;
-}
-
-class LocalTemplateProvider implements LlmProvider {
-  async generate(input: LlmGenerationInput): Promise<string> {
-    const style = input.promptProfile?.stylePrompt ?? 'Clear technical tone';
-    return `Goal: ${input.goal}\n\nContext: ${input.context}\n\nDraft (${style}):\nI help teams design and ship AI systems that deliver measurable business outcomes. Let's align on one high-impact workflow and ship quickly.`;
+  async generate(request: AiGenerationRequest): Promise<AiGenerationResponse> {
+    return {
+      provider: this.id,
+      model: 'template-v1',
+      text: `Placeholder generation for objective: ${request.objective}`
+    };
   }
 }
 
-export const llmProviderAdapter: LlmProvider = new LocalTemplateProvider();
+export const llmProviderAdapter: AiProviderAdapter = new LocalTemplateProvider();
