@@ -3,50 +3,65 @@
 @tailwind utilities;
 
 :root {
-  --bo-bg: 222 32% 8%;
-  --bo-bg-elevated: 221 28% 12%;
-  --bo-surface: 221 28% 15%;
-  --bo-border: 218 20% 30%;
-  --bo-text: 214 32% 95%;
-  --bo-text-muted: 216 15% 72%;
-  --bo-primary: 214 98% 66%;
-  --bo-accent: 272 83% 64%;
-  --bo-success: 152 56% 51%;
-  --bo-shadow: 220 80% 4%;
+  --bo-bg: 232 34% 7%;
+  --bo-bg-elevated: 230 30% 11%;
+  --bo-surface: 229 25% 15%;
+  --bo-border: 228 16% 29%;
+  --bo-text: 220 33% 95%;
+  --bo-text-muted: 216 19% 70%;
+  --bo-primary: 227 92% 67%;
+  --bo-accent: 271 92% 68%;
+  --bo-shadow: 230 70% 3%;
   color-scheme: dark;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    sans-serif;
 }
 
 body {
   @apply m-0 min-h-screen;
-  background: radial-gradient(circle at top right, hsl(var(--bo-accent) / 0.14), transparent 36%),
-    radial-gradient(circle at top left, hsl(var(--bo-primary) / 0.16), transparent 38%), hsl(var(--bo-bg));
+  background:
+    radial-gradient(circle at top right, hsl(var(--bo-accent) / 0.12), transparent 34%),
+    radial-gradient(circle at top left, hsl(var(--bo-primary) / 0.14), transparent 36%),
+    linear-gradient(185deg, hsl(232 33% 9%), hsl(var(--bo-bg)) 42%);
   color: hsl(var(--bo-text));
 }
 
 @layer components {
   .bo-card {
     @apply rounded-2xl border p-4;
-    border-color: hsl(var(--bo-border) / 0.65);
-    background: linear-gradient(160deg, hsl(var(--bo-surface) / 0.9), hsl(var(--bo-bg-elevated) / 0.82));
-    box-shadow: 0 10px 38px hsl(var(--bo-shadow) / 0.45), inset 0 1px 0 hsl(0 0% 100% / 0.05);
+    border-color: hsl(var(--bo-border) / 0.6);
+    background: linear-gradient(
+      160deg,
+      hsl(var(--bo-surface) / 0.86),
+      hsl(var(--bo-bg-elevated) / 0.82)
+    );
+    box-shadow:
+      0 14px 44px hsl(var(--bo-shadow) / 0.45),
+      inset 0 1px 0 hsl(0 0% 100% / 0.06);
+    backdrop-filter: blur(8px);
   }
 
   .bo-pill {
     @apply inline-flex items-center rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide;
     border-color: hsl(var(--bo-border) / 0.7);
-    background-color: hsl(var(--bo-bg) / 0.4);
+    background-color: hsl(var(--bo-bg) / 0.45);
     color: hsl(var(--bo-text-muted));
   }
 
   .bo-link {
     @apply rounded-lg border px-3 py-2 text-xs font-medium transition;
     border-color: hsl(var(--bo-border) / 0.55);
-    background-color: hsl(var(--bo-bg) / 0.45);
+    background-color: hsl(var(--bo-bg) / 0.5);
   }
 
   .bo-link:hover {
     border-color: hsl(var(--bo-primary) / 0.55);
+    background-color: hsl(var(--bo-primary) / 0.13);
     color: hsl(var(--bo-text));
   }
 }

@@ -33,7 +33,10 @@ export function OptionsApp() {
         <h2 className="text-base font-semibold">Automation rules</h2>
         <div className="grid gap-2 md:grid-cols-2">
           {data.settings.automationRules.map((rule) => (
-            <article key={rule.id} className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-sm">
+            <article
+              key={rule.id}
+              className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-sm"
+            >
               <p className="font-medium">{rule.name}</p>
               <p className="text-xs text-slate-400">
                 Trigger: {rule.trigger} / Action: {rule.action}

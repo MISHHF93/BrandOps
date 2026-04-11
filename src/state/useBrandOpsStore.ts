@@ -15,9 +15,17 @@ interface StoreState {
   error?: string;
   init: () => Promise<void>;
   resetDemoData: () => Promise<void>;
-  addPublishingDraft: (payload: { title: string; body: string; reminderAt?: string }) => Promise<void>;
+  addPublishingDraft: (payload: {
+    title: string;
+    body: string;
+    reminderAt?: string;
+  }) => Promise<void>;
   updatePublishingStatus: (id: string, status: QueueStatus) => Promise<void>;
-  addOutreachDraft: (payload: { contactId: string; subject: string; message: string }) => Promise<void>;
+  addOutreachDraft: (payload: {
+    contactId: string;
+    subject: string;
+    message: string;
+  }) => Promise<void>;
   toggleFollowUp: (id: string) => Promise<void>;
   addVaultEntry: (payload: Omit<MessagingVaultEntry, 'id'>) => Promise<void>;
   addContentAsset: (payload: Omit<ContentAsset, 'id'>) => Promise<void>;
@@ -75,7 +83,9 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
     const updated = {
       ...current,
-      publishingQueue: current.publishingQueue.map((item) => (item.id === id ? { ...item, status } : item))
+      publishingQueue: current.publishingQueue.map((item) =>
+        item.id === id ? { ...item, status } : item
+      )
     };
 
     await storageService.setData(updated);

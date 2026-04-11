@@ -63,13 +63,21 @@ export function DashboardApp() {
           value={data.publishingQueue.length}
           hint="Drafts + scheduled reminders"
         />
-        <StatCard label="Outreach drafts" value={data.outreachDrafts.length} hint="Prepared touchpoints" />
+        <StatCard
+          label="Outreach drafts"
+          value={data.outreachDrafts.length}
+          hint="Prepared touchpoints"
+        />
         <StatCard
           label="Weighted pipeline"
           value={`$${Math.round(derived.weightedPipeline).toLocaleString()}`}
           hint="Confidence adjusted"
         />
-        <StatCard label="Overdue follow-ups" value={derived.overdueFollowUps} hint="Needs execution today" />
+        <StatCard
+          label="Overdue follow-ups"
+          value={derived.overdueFollowUps}
+          hint="Needs execution today"
+        />
       </section>
 
       <section className="grid gap-3 xl:grid-cols-2">
@@ -108,14 +116,22 @@ export function DashboardApp() {
 
           <div className="space-y-2">
             {data.publishingQueue.map((item) => (
-              <div key={item.id} className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-sm">
+              <div
+                key={item.id}
+                className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-sm"
+              >
                 <p className="font-medium">{item.title}</p>
                 <p className="mt-1 line-clamp-2 text-xs text-slate-400">{item.body}</p>
                 <div className="mt-2 flex items-center gap-2 text-xs">
                   <span className="bo-pill">{item.status}</span>
                   <button
                     className="bo-link px-2 py-1 text-[11px]"
-                    onClick={() => void updatePublishingStatus(item.id, item.status === 'ready' ? 'scheduled' : 'ready')}
+                    onClick={() =>
+                      void updatePublishingStatus(
+                        item.id,
+                        item.status === 'ready' ? 'scheduled' : 'ready'
+                      )
+                    }
                   >
                     {item.status === 'ready' ? 'Schedule' : 'Mark ready'}
                   </button>
@@ -148,7 +164,10 @@ export function DashboardApp() {
             {data.outreachDrafts.map((draft) => {
               const contact = data.contacts.find((item) => item.id === draft.contactId);
               return (
-                <div key={draft.id} className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-sm">
+                <div
+                  key={draft.id}
+                  className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-sm"
+                >
                   <p className="font-medium">{draft.subject}</p>
                   <p className="text-xs text-slate-400">{contact?.fullName ?? 'Unknown contact'}</p>
                   <p className="mt-1 text-xs text-slate-400 line-clamp-2">{draft.message}</p>
@@ -192,7 +211,10 @@ export function DashboardApp() {
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
               {data.opportunities.map((opp) => (
-                <div key={opp.id} className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs">
+                <div
+                  key={opp.id}
+                  className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs"
+                >
                   <p className="text-sm font-medium">{opp.account}</p>
                   <p className="text-slate-400">{opp.serviceLine}</p>
                   <p className="mt-1">Stage: {opp.stage}</p>
@@ -207,7 +229,8 @@ export function DashboardApp() {
                   void addVaultEntry({
                     category: 'offer',
                     title: 'Offer framing',
-                    content: 'Install a weekly operating system across content, outreach, and pipeline.'
+                    content:
+                      'Install a weekly operating system across content, outreach, and pipeline.'
                   })
                 }
               >
@@ -226,7 +249,10 @@ export function DashboardApp() {
                 Add content asset
               </button>
               {data.messagingVault.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs">
+                <div
+                  key={entry.id}
+                  className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs"
+                >
                   <p className="text-sm font-medium">{entry.title}</p>
                   <p className="text-slate-400">{entry.content}</p>
                 </div>

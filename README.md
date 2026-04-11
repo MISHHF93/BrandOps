@@ -1,97 +1,105 @@
-# BrandOps (Browser Extension)
+# BrandOps Extension Foundation
 
-BrandOps is a production-ready **Manifest V3** browser extension for technical solo operators managing LinkedIn publishing, outreach, and pipeline workflows.
+BrandOps is a **Manifest V3** browser extension foundation built with **TypeScript**, **React**, and **Tailwind CSS**, designed for a premium dark command-center experience and long-term maintainability.
 
-It is intentionally **local-first**, **privacy-first**, and immediately useful without external AI APIs.
+## Stack
 
-## What BrandOps includes
+- Manifest V3
+- React + TypeScript
+- Tailwind CSS + PostCSS
+- Vite build pipeline
+- Zustand store
+- ESLint + Prettier
 
-### Core modules
+## Product surfaces included
 
-1. Publishing Queue
-2. Content Library
-3. Outreach Workspace
-4. Follow-Up Scheduler
-5. Opportunity Pipeline CRM
-6. Brand Messaging Vault
-7. LinkedIn Companion Overlay
-8. Dashboard / Command Center
-9. Settings / Export / Import / Local Automation Rules
+- Popup (React): primary operator entrypoint
+- Options page (React): settings and workspace controls
+- Dashboard page (React): scalable full-workspace surface
+- Background service worker (MV3)
+- Content script foundation
 
-### Product principles implemented
-
-- Local browser storage for core workspace operations.
-- No dependency on external model APIs for MVP workflows.
-- Strongly typed TypeScript domain models and state mutations.
-- Modular architecture with extension-ready surfaces (popup, options, dashboard, content script, service worker).
-- Premium dark command-center UI for high-density operations.
-
-## Architecture overview
+## Scalable architecture
 
 ```text
 src/
-  background/                 # MV3 service worker
-  content/                    # LinkedIn overlay companion (safe/non-automation)
-  modules/                    # Domain seed + modular placeholders
+  app/                        # UI layout primitives
+  background/                 # MV3 service worker entrypoint
+  content/                    # Content script entrypoints
+  modules/                    # Product module placeholders
+    commandCenter/
+    brandVault/
+    contentLibrary/
+    publishingQueue/
+    outreachWorkspace/
+    pipelineCrm/
+    settings/
   pages/
-    popup/                    # Fast command cockpit entry
-    dashboard/                # Full operator workspace
-    options/                  # Settings + import/export controls
+    popup/
+    options/
+    dashboard/
   services/
-    storage/                  # Data persistence and import/export helpers
-    aiAdapters/               # Optional future adapter interfaces
+    storage/                  # Storage repository + validation
+    scheduling/               # Scheduling utility placeholders
+    intelligence/             # Local intelligence placeholder interfaces
+    messaging/
+    llm/
+    aiAdapters/
   shared/
     config/                   # Module registry definitions
-    storage/                  # Browser local storage abstraction
-    ui/                       # Header and card primitives
-  state/                      # Zustand store and actions
-  types/                      # Reusable domain models
+    storage/                  # Browser storage abstraction layer
+    ui/                       # Shared premium components
+  state/                      # Zustand application state
+  styles/                     # Tailwind + design tokens
+  types/                      # Domain models
 ```
 
-## Local development
+## Included placeholder modules
+
+- Command Center
+- Brand Vault
+- Content Library
+- Publishing Queue
+- Outreach Workspace
+- Pipeline CRM
+- Settings
+
+## Storage architecture
+
+- `shared/storage/browserStorage.ts` provides a typed adapter over browser storage areas (`local`, `sync`, `session`).
+- `services/storage/storage.ts` provides BrandOps-specific persistence, import/export, schema guardrails, and seed reset support.
+- `modules/brandMemory/seed.ts` contains seeded demo workspace data for first-run bootstrapping.
+
+## Development
 
 ```bash
 npm install
-npm run build
+npm run dev
 ```
 
-Recommended quality checks:
+## Quality checks
 
 ```bash
 npm run typecheck
 npm run lint
+npm run format
 ```
 
-## Load the extension in Chrome / Edge
+## Build extension
 
-1. Build once with `npm run build`.
+```bash
+npm run build
+```
+
+## Load unpacked extension (Chrome / Edge)
+
+1. Run `npm run build`.
 2. Open `chrome://extensions` (or `edge://extensions`).
 3. Enable **Developer mode**.
 4. Click **Load unpacked**.
 5. Select the generated `dist/` folder.
 
-## Usage flow
+## Notes
 
-- Open the popup to check queue/outreach/follow-up counts.
-- Open Dashboard to add drafts, update statuses, manage follow-ups, and inspect pipeline + messaging vault.
-- Open Settings to export/import the entire workspace JSON.
-- Visit LinkedIn and use the companion overlay for manual execution reminders.
-
-## Notes on AI integration
-
-- MVP mode keeps `aiAdapterMode` disabled by default.
-- Architecture includes future adapter seams for optional local ML or opt-in external integrations.
-- No fake AI auto-generation features are presented as active.
-
-## Recommended next branches
-
-After finishing this foundation branch, recommended sequence:
-
-1. `feature/calendar-reminders-engine`  
-   Add richer reminder calendar views and browser notification delivery windows.
-2. `feature/pipeline-analytics`  
-   Add conversion/velocity metrics, weighted forecasting trends, and stage aging.
-3. `feature/linkedin-overlay-context-sync`  
-   Improve overlay context retrieval and note capture while preserving safe manual workflow rules.
-4. `feature/local-ml-prioritization`  
-   Add optional local scoring/prioritization engine behind explicit user opt-in.
+- UI is intentionally premium dark and componentized for future expansion.
+- The scaffold is architected for maintainability and real product growth, including future local intelligence modules.

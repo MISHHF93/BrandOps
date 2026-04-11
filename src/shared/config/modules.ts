@@ -2,57 +2,52 @@ import { WorkspaceModule } from '../../types/domain';
 
 export const workspaceModules: WorkspaceModule[] = [
   {
-    id: 'dashboard',
+    id: 'command-center',
     title: 'Command Center',
-    description: 'Daily execution cockpit for publishing, outreach, and pipeline momentum.',
-    status: 'active'
+    description: 'Mission control for execution telemetry, priorities, and operational cadence.',
+    status: 'active',
+    route: 'popup'
   },
   {
-    id: 'publishing-queue',
-    title: 'Publishing Queue',
-    description: 'Capture drafts, mark readiness, and schedule reminder timestamps.',
-    status: 'active'
+    id: 'brand-vault',
+    title: 'Brand Vault',
+    description: 'Canonical source for positioning pillars, offers, and approved messaging assets.',
+    status: 'active',
+    route: 'dashboard'
   },
   {
     id: 'content-library',
     title: 'Content Library',
-    description: 'Store reusable hooks, proof points, and closing CTAs.',
-    status: 'active'
+    description: 'Reusable story blocks, hooks, and conversion CTA components.',
+    status: 'active',
+    route: 'dashboard'
+  },
+  {
+    id: 'publishing-queue',
+    title: 'Publishing Queue',
+    description: 'Scheduling-ready draft stack with reminder-aware publishing workflows.',
+    status: 'active',
+    route: 'dashboard'
   },
   {
     id: 'outreach-workspace',
     title: 'Outreach Workspace',
-    description: 'Build message drafts and multi-touchpoint outreach sequences.',
-    status: 'active'
+    description: 'Multi-touch outreach drafting and relationship context workspace.',
+    status: 'active',
+    route: 'dashboard'
   },
   {
-    id: 'follow-up-scheduler',
-    title: 'Follow-Up Scheduler',
-    description: 'Track overdue follow-ups and execution discipline.',
-    status: 'active'
-  },
-  {
-    id: 'opportunity-pipeline',
-    title: 'Opportunity Pipeline CRM',
-    description: 'Move opportunities through stages with confidence-weighted value.',
-    status: 'active'
-  },
-  {
-    id: 'messaging-vault',
-    title: 'Brand Messaging Vault',
-    description: 'Protect approved positioning, offers, and FAQ responses.',
-    status: 'active'
-  },
-  {
-    id: 'linkedin-overlay',
-    title: 'LinkedIn Companion Overlay',
-    description: 'Contextual sidebar focused on reminders, not unsafe automation.',
-    status: 'active'
+    id: 'pipeline-crm',
+    title: 'Pipeline CRM',
+    description: 'Deal progression, next actions, confidence scoring, and close discipline.',
+    status: 'active',
+    route: 'dashboard'
   },
   {
     id: 'settings',
-    title: 'Settings / Export / Import',
-    description: 'Configure local-first behavior and optional future adapters.',
-    status: 'active'
+    title: 'Settings',
+    description: 'Extension controls, storage import/export, and environment preferences.',
+    status: 'active',
+    route: 'options'
   }
 ];

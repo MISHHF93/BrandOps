@@ -12,10 +12,16 @@ const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   }
 });
 
+const isBrandOpsData = (value: unknown): value is BrandOpsData => {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<BrandOpsData>;
+  return Array.isArray(candidate.modules) && Array.isArray(candidate.publishingQueue);
+};
+
 export const storageService = {
   async getData(): Promise<BrandOpsData> {
     const stored = await browserLocalStorage.get<BrandOpsData>(DATA_KEY);
-    if (stored) {
+    if (isBrandOpsData(stored)) {
       return stored;
     }
 
@@ -40,7 +46,11 @@ export const storageService = {
   },
 
   async importData(raw: string): Promise<BrandOpsData> {
-    const parsed = JSON.parse(raw) as BrandOpsData;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isBrandOpsData(parsed)) {
+      throw new Error('Invalid BrandOps workspace payload.');
+    }
+
     await browserLocalStorage.set(DATA_KEY, parsed);
     return parsed;
   }
