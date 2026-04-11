@@ -20,6 +20,8 @@ npm ci
 npm run check
 npm run build
 npm run verify:dist
+npm run package:release
 ```
 
 If any command fails, fix the issue before publishing the `dist/` bundle.
+When successful, share `release/brandops-extension-v<version>.tar.gz` as the downloadable deployment artifact.

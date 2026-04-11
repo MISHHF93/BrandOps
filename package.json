@@ -12,7 +12,9 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "check": "npm run typecheck && npm run lint",
-    "verify:dist": "node scripts/verify-dist.mjs"
+    "verify:dist": "node scripts/verify-dist.mjs",
+    "package:release": "node scripts/package-release.mjs",
+    "release": "npm run check && npm run build && npm run verify:dist && npm run package:release"
   },
   "dependencies": {
     "clsx": "^2.1.1",

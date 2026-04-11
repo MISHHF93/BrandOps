@@ -97,6 +97,13 @@ npm ci
 npm run check
 npm run build
 npm run verify:dist
+npm run package:release
+```
+
+This generates a downloadable release archive at:
+
+```text
+release/brandops-extension-v<version>.tar.gz
 ```
 
 ### Testing and QA notes
@@ -145,6 +152,14 @@ npm run dev
 npm run build
 ```
 
+### 3.1) Build + seal a downloadable artifact
+
+```bash
+npm run release
+```
+
+This runs type checks, lint, production build, dist verification, and packages the built extension into `release/`.
+
 ### 4) Run checks
 
 ```bash
@@ -164,6 +179,13 @@ npm run format
 3. Enable **Developer mode**.
 4. Click **Load unpacked**.
 5. Select the generated `dist/` folder.
+
+### Direct deployment handoff (artifact workflow)
+
+1. Run `npm run release`.
+2. Upload `release/brandops-extension-v<version>.tar.gz` to your artifact store or attach it to a release.
+3. Download and extract the archive wherever deployment happens.
+4. Load the extracted folder as an unpacked extension (or select `manifest.json` for temporary Firefox loading).
 
 ### Firefox (temporary add-on)
 
