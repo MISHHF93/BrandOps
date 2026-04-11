@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { storageService } from '../services/storage/storage';
+import { scheduler } from '../services/scheduling/scheduler';
 import {
   ActivityNote,
   BrandOpsData,
@@ -70,6 +71,8 @@ interface StoreState {
   archiveOpportunity: (id: string) => Promise<void>;
   restoreOpportunity: (id: string) => Promise<void>;
   toggleFollowUp: (id: string) => Promise<void>;
+  snoozeSchedulerTask: (taskId: string, minutes: number) => Promise<void>;
+  completeSchedulerTask: (taskId: string) => Promise<void>;
   addVaultEntry: (payload: Omit<MessagingVaultEntry, 'id'>) => Promise<void>;
   addContentLibraryItem: (payload: {
     type: ContentItemType;
@@ -117,8 +120,12 @@ const updateData = async (
 ) => {
   if (!current) return;
   const updated = producer(current);
-  await storageService.setData(updated);
-  setData(updated);
+  const withScheduler = { ...updated, scheduler: scheduler.reconcile(updated) };
+  await storageService.setData(withScheduler);
+  setData(withScheduler);
+  if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+    void chrome.runtime.sendMessage({ type: 'SYNC_SCHEDULER' });
+  }
 };
 
 export const useBrandOpsStore = create<StoreState>((set, get) => ({
@@ -130,7 +137,9 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
     try {
       const data = await storageService.getData();
-      set({ data, loading: false });
+      const withScheduler = { ...data, scheduler: scheduler.reconcile(data) };
+      await storageService.setData(withScheduler);
+      set({ data: withScheduler, loading: false });
     } catch (error) {
       set({ loading: false, error: (error as Error).message });
     }
@@ -138,7 +147,9 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
   async resetDemoData() {
     const data = await storageService.resetToSeed();
-    set({ data, error: undefined });
+    const withScheduler = { ...data, scheduler: scheduler.reconcile(data) };
+    await storageService.setData(withScheduler);
+    set({ data: withScheduler, error: undefined });
   },
 
   async addPublishingDraft(payload) {
@@ -448,6 +459,36 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
     );
   },
 
+  async snoozeSchedulerTask(taskId, minutes) {
+    const current = get().data;
+    if (!current) return;
+
+    const next = {
+      ...current,
+      scheduler: scheduler.snooze(current.scheduler, taskId, minutes)
+    };
+    await storageService.setData(next);
+    set({ data: next });
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      void chrome.runtime.sendMessage({ type: 'SYNC_SCHEDULER' });
+    }
+  },
+
+  async completeSchedulerTask(taskId) {
+    const current = get().data;
+    if (!current) return;
+
+    const next = {
+      ...current,
+      scheduler: scheduler.complete(current.scheduler, taskId)
+    };
+    await storageService.setData(next);
+    set({ data: next });
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      void chrome.runtime.sendMessage({ type: 'SYNC_SCHEDULER' });
+    }
+  },
+
   async addVaultEntry(payload) {
     const current = get().data;
     const entry: MessagingVaultEntry = { id: uid('msg'), ...payload };
@@ -664,6 +705,8 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
   async importWorkspace(raw) {
     const data = await storageService.importData(raw);
-    set({ data, error: undefined });
+    const withScheduler = { ...data, scheduler: scheduler.reconcile(data) };
+    await storageService.setData(withScheduler);
+    set({ data: withScheduler, error: undefined });
   }
 }));

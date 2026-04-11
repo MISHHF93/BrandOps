@@ -133,6 +133,47 @@ export interface FollowUpTask {
   reason: string;
   dueAt: string;
   completed: boolean;
+  recurrence?: SchedulerRecurrence;
+}
+
+export type SchedulerTaskType = 'publishing' | 'follow-up' | 'crm';
+
+export type SchedulerTaskStatus =
+  | 'scheduled'
+  | 'due-soon'
+  | 'due'
+  | 'completed'
+  | 'missed'
+  | 'snoozed'
+  | 'cancelled';
+
+export interface SchedulerRecurrence {
+  interval: 'daily' | 'weekly';
+  every: number;
+}
+
+export interface SchedulerTask {
+  id: string;
+  sourceId: string;
+  sourceType: SchedulerTaskType;
+  title: string;
+  detail: string;
+  dueAt: string;
+  remindAt: string;
+  status: SchedulerTaskStatus;
+  recurrence?: SchedulerRecurrence;
+  snoozeCount: number;
+  lastNotifiedAt?: string;
+  completedAt?: string;
+  missedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SchedulerState {
+  tasks: SchedulerTask[];
+  updatedAt: string;
+  lastHydratedAt: string;
 }
 
 export type OpportunityStage =
@@ -306,6 +347,7 @@ export interface BrandOpsData {
   followUps: FollowUpTask[];
   opportunities: Opportunity[];
   messagingVault: MessagingVaultEntry[];
+  scheduler: SchedulerState;
   settings: AppSettings;
   seed: SeedMetadata;
 }
