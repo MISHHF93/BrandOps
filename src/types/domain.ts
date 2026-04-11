@@ -1,14 +1,12 @@
 export type ExtensionSurface = 'popup' | 'dashboard' | 'options' | 'content';
 
 export type WorkspaceModuleId =
-  | 'dashboard'
-  | 'publishing-queue'
+  | 'command-center'
+  | 'brand-vault'
   | 'content-library'
+  | 'publishing-queue'
   | 'outreach-workspace'
-  | 'follow-up-scheduler'
-  | 'opportunity-pipeline'
-  | 'messaging-vault'
-  | 'linkedin-overlay'
+  | 'pipeline-crm'
   | 'settings';
 
 export interface WorkspaceModule {
@@ -16,6 +14,7 @@ export interface WorkspaceModule {
   title: string;
   description: string;
   status: 'active' | 'planned';
+  route: ExtensionSurface;
 }
 
 export type QueueStatus = 'draft' | 'ready' | 'scheduled' | 'published';
@@ -59,7 +58,13 @@ export interface FollowUpTask {
   completed: boolean;
 }
 
-export type OpportunityStage = 'prospect' | 'discovery' | 'proposal' | 'negotiation' | 'won' | 'lost';
+export type OpportunityStage =
+  | 'prospect'
+  | 'discovery'
+  | 'proposal'
+  | 'negotiation'
+  | 'won'
+  | 'lost';
 
 export interface Opportunity {
   id: string;

@@ -1,4 +1,6 @@
 export const settingsModule = {
   id: 'settings',
-  summary: 'Preferences, provider adapters, and extension controls.'
-};
+  title: 'Settings',
+  description: 'Workspace preferences, environment controls, and portability settings.',
+  version: '0.1.0'
+} as const;

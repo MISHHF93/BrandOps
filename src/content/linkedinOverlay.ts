@@ -24,8 +24,12 @@ function renderOverlay(data: OverlayData) {
   root.style.fontFamily = 'Inter, system-ui, sans-serif';
 
   const overdue =
-    data.followUps?.filter((item) => !item.completed && new Date(item.dueAt).getTime() < Date.now()) ?? [];
-  const nextPost = data.publishingQueue?.find((item) => item.status === 'ready' || item.status === 'scheduled');
+    data.followUps?.filter(
+      (item) => !item.completed && new Date(item.dueAt).getTime() < Date.now()
+    ) ?? [];
+  const nextPost = data.publishingQueue?.find(
+    (item) => item.status === 'ready' || item.status === 'scheduled'
+  );
 
   root.innerHTML = `
     <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#94A3B8;">BrandOps Companion</div>

@@ -3,7 +3,8 @@ import { workspaceModules } from '../../shared/config/modules';
 
 const now = new Date();
 const plusHours = (hours: number) => new Date(now.getTime() + hours * 60 * 60 * 1000).toISOString();
-const minusHours = (hours: number) => new Date(now.getTime() - hours * 60 * 60 * 1000).toISOString();
+const minusHours = (hours: number) =>
+  new Date(now.getTime() - hours * 60 * 60 * 1000).toISOString();
 
 export const seedData: BrandOpsData = {
   brand: {
@@ -90,7 +91,8 @@ export const seedData: BrandOpsData = {
       id: 'out-002',
       contactId: 'contact-001',
       subject: 'Quick follow-up with practical teardown',
-      message: 'Following up with a teardown pattern: baseline, orchestration, and governance checks in one page.',
+      message:
+        'Following up with a teardown pattern: baseline, orchestration, and governance checks in one page.',
       status: 'draft',
       touchpoint: 2
     }
