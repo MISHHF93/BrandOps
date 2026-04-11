@@ -3,6 +3,8 @@ import { storageService } from '../services/storage/storage';
 import {
   ActivityNote,
   BrandOpsData,
+  BrandVault,
+  BrandVaultListField,
   Contact,
   ContentAsset,
   MessagingVaultEntry,
@@ -34,6 +36,20 @@ interface StoreState {
   toggleFollowUp: (id: string) => Promise<void>;
   addVaultEntry: (payload: Omit<MessagingVaultEntry, 'id'>) => Promise<void>;
   addContentAsset: (payload: Omit<ContentAsset, 'id'>) => Promise<void>;
+  updateBrandVaultTextField: (
+    field: 'positioningStatement' | 'shortBio' | 'fullAboutSummary',
+    value: string
+  ) => Promise<void>;
+  addBrandVaultListItem: (field: BrandVaultListField, value: string) => Promise<void>;
+  updateBrandVaultListItem: (field: BrandVaultListField, index: number, value: string) => Promise<void>;
+  deleteBrandVaultListItem: (field: BrandVaultListField, index: number) => Promise<void>;
+  reorderBrandVaultListItem: (
+    field: BrandVaultListField,
+    fromIndex: number,
+    toIndex: number
+  ) => Promise<void>;
+  exportBrandVault: () => Promise<string>;
+  importBrandVault: (raw: string) => Promise<void>;
   exportWorkspace: () => Promise<string>;
   importWorkspace: (raw: string) => Promise<void>;
 }
@@ -41,6 +57,17 @@ interface StoreState {
 function uid(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
+
+const updateData = async (
+  current: BrandOpsData | null,
+  producer: (currentData: BrandOpsData) => BrandOpsData,
+  setData: (next: BrandOpsData) => void
+) => {
+  if (!current) return;
+  const updated = producer(current);
+  await storageService.setData(updated);
+  setData(updated);
+};
 
 export const useBrandOpsStore = create<StoreState>((set, get) => ({
   data: null,
@@ -64,8 +91,6 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
   async addPublishingDraft(payload) {
     const current = get().data;
-    if (!current) return;
-
     const draft: PublishingItem = {
       id: uid('pub'),
       title: payload.title,
@@ -77,29 +102,30 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
       createdAt: new Date().toISOString()
     };
 
-    const updated = { ...current, publishingQueue: [draft, ...current.publishingQueue] };
-    await storageService.setData(updated);
-    set({ data: updated });
+    await updateData(
+      current,
+      (currentData) => ({ ...currentData, publishingQueue: [draft, ...currentData.publishingQueue] }),
+      (data) => set({ data })
+    );
   },
 
   async updatePublishingStatus(id, status) {
     const current = get().data;
-    if (!current) return;
 
-    const updated = {
-      ...current,
-      publishingQueue: current.publishingQueue.map((item) =>
-        item.id === id ? { ...item, status } : item
-      )
-    };
-
-    await storageService.setData(updated);
-    set({ data: updated });
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        publishingQueue: currentData.publishingQueue.map((item) =>
+          item.id === id ? { ...item, status } : item
+        )
+      }),
+      (data) => set({ data })
+    );
   },
 
   async addOutreachDraft(payload) {
     const current = get().data;
-    if (!current) return;
 
     const draft: OutreachDraft = {
       id: uid('out'),
@@ -110,14 +136,15 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
       touchpoint: 1
     };
 
-    const updated = { ...current, outreachDrafts: [draft, ...current.outreachDrafts] };
-    await storageService.setData(updated);
-    set({ data: updated });
+    await updateData(
+      current,
+      (currentData) => ({ ...currentData, outreachDrafts: [draft, ...currentData.outreachDrafts] }),
+      (data) => set({ data })
+    );
   },
 
   async addContact(payload) {
     const current = get().data;
-    if (!current) return;
 
     const contact: Contact = {
       id: uid('contact'),
@@ -128,36 +155,37 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
       lastContactAt: new Date().toISOString()
     };
 
-    const updated = { ...current, contacts: [contact, ...current.contacts] };
-    await storageService.setData(updated);
-    set({ data: updated });
+    await updateData(
+      current,
+      (currentData) => ({ ...currentData, contacts: [contact, ...currentData.contacts] }),
+      (data) => set({ data })
+    );
   },
 
   async logFollowUp(payload) {
     const current = get().data;
-    if (!current) return;
 
-    const updated = {
-      ...current,
-      followUps: [
-        {
-          id: uid('fu'),
-          contactId: payload.contactId,
-          reason: payload.reason,
-          dueAt: payload.dueAt,
-          completed: false
-        },
-        ...current.followUps
-      ]
-    };
-
-    await storageService.setData(updated);
-    set({ data: updated });
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        followUps: [
+          {
+            id: uid('fu'),
+            contactId: payload.contactId,
+            reason: payload.reason,
+            dueAt: payload.dueAt,
+            completed: false
+          },
+          ...currentData.followUps
+        ]
+      }),
+      (data) => set({ data })
+    );
   },
 
   async addNote(payload) {
     const current = get().data;
-    if (!current) return;
 
     const note: ActivityNote = {
       id: uid('note'),
@@ -166,46 +194,160 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
       createdAt: new Date().toISOString()
     };
 
-    const updated = { ...current, notes: [note, ...current.notes] };
-    await storageService.setData(updated);
-    set({ data: updated });
+    await updateData(
+      current,
+      (currentData) => ({ ...currentData, notes: [note, ...currentData.notes] }),
+      (data) => set({ data })
+    );
   },
 
   async toggleFollowUp(id) {
     const current = get().data;
-    if (!current) return;
 
-    const updated = {
-      ...current,
-      followUps: current.followUps.map((item) =>
-        item.id === id ? { ...item, completed: !item.completed } : item
-      )
-    };
-
-    await storageService.setData(updated);
-    set({ data: updated });
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        followUps: currentData.followUps.map((item) =>
+          item.id === id ? { ...item, completed: !item.completed } : item
+        )
+      }),
+      (data) => set({ data })
+    );
   },
 
   async addVaultEntry(payload) {
     const current = get().data;
-    if (!current) return;
-
     const entry: MessagingVaultEntry = { id: uid('msg'), ...payload };
-    const updated = { ...current, messagingVault: [entry, ...current.messagingVault] };
 
-    await storageService.setData(updated);
-    set({ data: updated });
+    await updateData(
+      current,
+      (currentData) => ({ ...currentData, messagingVault: [entry, ...currentData.messagingVault] }),
+      (data) => set({ data })
+    );
   },
 
   async addContentAsset(payload) {
     const current = get().data;
-    if (!current) return;
-
     const asset: ContentAsset = { id: uid('asset'), ...payload };
-    const updated = { ...current, contentLibrary: [asset, ...current.contentLibrary] };
 
-    await storageService.setData(updated);
-    set({ data: updated });
+    await updateData(
+      current,
+      (currentData) => ({ ...currentData, contentLibrary: [asset, ...currentData.contentLibrary] }),
+      (data) => set({ data })
+    );
+  },
+
+  async updateBrandVaultTextField(field, value) {
+    const current = get().data;
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        brandVault: {
+          ...currentData.brandVault,
+          [field]: value
+        }
+      }),
+      (data) => set({ data })
+    );
+  },
+
+  async addBrandVaultListItem(field, value) {
+    const current = get().data;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        brandVault: {
+          ...currentData.brandVault,
+          [field]: [trimmed, ...currentData.brandVault[field]]
+        }
+      }),
+      (data) => set({ data })
+    );
+  },
+
+  async updateBrandVaultListItem(field, index, value) {
+    const current = get().data;
+
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        brandVault: {
+          ...currentData.brandVault,
+          [field]: currentData.brandVault[field].map((item, itemIndex) =>
+            itemIndex === index ? value : item
+          )
+        }
+      }),
+      (data) => set({ data })
+    );
+  },
+
+  async deleteBrandVaultListItem(field, index) {
+    const current = get().data;
+
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        brandVault: {
+          ...currentData.brandVault,
+          [field]: currentData.brandVault[field].filter((_, itemIndex) => itemIndex !== index)
+        }
+      }),
+      (data) => set({ data })
+    );
+  },
+
+  async reorderBrandVaultListItem(field, fromIndex, toIndex) {
+    const current = get().data;
+
+    await updateData(
+      current,
+      (currentData) => {
+        const updatedList = [...currentData.brandVault[field]];
+        const [movedItem] = updatedList.splice(fromIndex, 1);
+        updatedList.splice(toIndex, 0, movedItem);
+
+        return {
+          ...currentData,
+          brandVault: {
+            ...currentData.brandVault,
+            [field]: updatedList
+          }
+        };
+      },
+      (data) => set({ data })
+    );
+  },
+
+  async exportBrandVault() {
+    const current = get().data;
+    return JSON.stringify(current?.brandVault ?? ({} as BrandVault), null, 2);
+  },
+
+  async importBrandVault(raw) {
+    const current = get().data;
+    const parsed = JSON.parse(raw) as unknown;
+
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('Invalid Brand Vault JSON payload.');
+    }
+
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        brandVault: parsed as BrandVault
+      }),
+      (data) => set({ data })
+    );
   },
 
   async exportWorkspace() {
