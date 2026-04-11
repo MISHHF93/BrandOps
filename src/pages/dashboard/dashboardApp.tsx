@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Clock3, Database, Target } from 'lucide-react';
+import { BrandVaultPanel } from '../../modules/brandVault/BrandVaultPanel';
 import { BrandHeader } from '../../shared/ui/BrandHeader';
 import { useBrandOpsStore } from '../../state/useBrandOpsStore';
 
@@ -20,9 +21,7 @@ export function DashboardApp() {
     addPublishingDraft,
     updatePublishingStatus,
     addOutreachDraft,
-    toggleFollowUp,
-    addVaultEntry,
-    addContentAsset
+    toggleFollowUp
   } = useBrandOpsStore();
   const [draftTitle, setDraftTitle] = useState('');
   const [draftBody, setDraftBody] = useState('');
@@ -204,63 +203,24 @@ export function DashboardApp() {
 
         <article className="bo-card space-y-3 xl:col-span-2">
           <header className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Pipeline + Messaging Vault</h2>
+            <h2 className="text-sm font-semibold">Pipeline Snapshot</h2>
             <Database size={14} className="text-slate-400" />
           </header>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              {data.opportunities.map((opp) => (
-                <div
-                  key={opp.id}
-                  className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs"
-                >
-                  <p className="text-sm font-medium">{opp.account}</p>
-                  <p className="text-slate-400">{opp.serviceLine}</p>
-                  <p className="mt-1">Stage: {opp.stage}</p>
-                  <p>Next: {opp.nextAction}</p>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-2">
-              <button
-                className="bo-link"
-                onClick={() =>
-                  void addVaultEntry({
-                    category: 'offer',
-                    title: 'Offer framing',
-                    content:
-                      'Install a weekly operating system across content, outreach, and pipeline.'
-                  })
-                }
-              >
-                Add vault entry
-              </button>
-              <button
-                className="bo-link"
-                onClick={() =>
-                  void addContentAsset({
-                    label: 'New objection handler',
-                    category: 'objection-handle',
-                    text: 'We can phase delivery so your team adopts process changes safely.'
-                  })
-                }
-              >
-                Add content asset
-              </button>
-              {data.messagingVault.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs"
-                >
-                  <p className="text-sm font-medium">{entry.title}</p>
-                  <p className="text-slate-400">{entry.content}</p>
-                </div>
-              ))}
-            </div>
+            {data.opportunities.map((opp) => (
+              <div key={opp.id} className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs">
+                <p className="text-sm font-medium">{opp.account}</p>
+                <p className="text-slate-400">{opp.serviceLine}</p>
+                <p className="mt-1">Stage: {opp.stage}</p>
+                <p>Next: {opp.nextAction}</p>
+              </div>
+            ))}
           </div>
         </article>
       </section>
+
+      <BrandVaultPanel />
     </main>
   );
 }

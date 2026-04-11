@@ -101,6 +101,31 @@ export interface MessagingVaultEntry {
   content: string;
 }
 
+export interface BrandVault {
+  positioningStatement: string;
+  headlineOptions: string[];
+  shortBio: string;
+  fullAboutSummary: string;
+  serviceOfferings: string[];
+  collaborationModes: string[];
+  outreachAngles: string[];
+  audienceSegments: string[];
+  expertiseAreas: string[];
+  industries: string[];
+  proofPoints: string[];
+  signatureThemes: string[];
+  preferredVoiceNotes: string[];
+  bannedPhrases: string[];
+  callsToAction: string[];
+  reusableSnippets: string[];
+  personalNotes: string[];
+}
+
+export type BrandVaultListField = Exclude<
+  keyof BrandVault,
+  'positioningStatement' | 'shortBio' | 'fullAboutSummary'
+>;
+
 export interface OverlayPreferences {
   enabled: boolean;
   compactMode: boolean;
@@ -141,6 +166,7 @@ export interface BrandProfile {
 
 export interface BrandOpsData {
   brand: BrandProfile;
+  brandVault: BrandVault;
   modules: WorkspaceModule[];
   publishingQueue: PublishingItem[];
   contentLibrary: ContentAsset[];

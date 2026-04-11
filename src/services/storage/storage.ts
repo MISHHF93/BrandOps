@@ -1,8 +1,10 @@
 import { seedData } from '../../modules/brandMemory/seed';
 import { browserLocalStorage } from '../../shared/storage/browserStorage';
-import { BrandOpsData } from '../../types/domain';
+import { BrandOpsData, BrandVault } from '../../types/domain';
 
 const DATA_KEY = 'brandops:data';
+
+const defaultBrandVault: BrandVault = seedData.brandVault;
 
 const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   ...base,
@@ -14,7 +16,8 @@ const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
 
 const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   ...base,
-  notes: base.notes ?? []
+  notes: base.notes ?? [],
+  brandVault: base.brandVault ?? defaultBrandVault
 });
 
 const isBrandOpsData = (value: unknown): value is BrandOpsData => {

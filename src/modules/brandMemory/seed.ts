@@ -14,6 +14,82 @@ export const seedData: BrandOpsData = {
     voiceGuide: 'Direct, precise, evidence-backed, and execution-oriented',
     focusMetric: 'Qualified discovery calls booked per month'
   },
+  brandVault: {
+    positioningStatement:
+      'I help product and engineering teams design practical AI systems that move from prototype chaos to reliable production execution.',
+    headlineOptions: [
+      'AI Systems Architect for Delivery-Focused Teams',
+      'I Build AI Operating Systems That Teams Actually Use',
+      'From Prompt Experiments to Production-Grade AI Workflows'
+    ],
+    shortBio:
+      'I partner with founders and product leaders to architect and implement agentic AI workflows that improve speed, quality, and decision clarity.',
+    fullAboutSummary:
+      'I design the system behind your AI outcomes: scoped use cases, orchestration patterns, guardrails, and team operating rhythms. My work blends technical architecture, workflow design, and enablement so teams can ship useful AI capabilities without creating governance debt. Typical engagements include architecture assessments, pilot-to-production delivery plans, and implementation sprints with measurable outcomes.',
+    serviceOfferings: [
+      'AI Architecture Audit: map current workflows, risk points, and fast-win opportunities',
+      'Pilot-to-Production Sprint: convert one use case into a repeatable delivery blueprint',
+      'Fractional AI Systems Lead: weekly operating cadence across product, engineering, and GTM'
+    ],
+    collaborationModes: [
+      'Advisory retainers with weekly strategic reviews',
+      'Hands-on implementation sprint (2-6 weeks)',
+      'Embedded interim leadership for AI initiatives'
+    ],
+    outreachAngles: [
+      'Cut time-to-value by standardizing AI workflow architecture',
+      'Reduce failed pilots by defining governance before scale',
+      'Turn delivery lessons into reusable operating playbooks'
+    ],
+    audienceSegments: [
+      'B2B SaaS founders moving from experimentation to execution',
+      'Product leaders responsible for AI roadmap delivery',
+      'Engineering managers modernizing internal tooling with AI'
+    ],
+    expertiseAreas: [
+      'Agentic workflow architecture',
+      'RAG and retrieval pipeline strategy',
+      'Human-in-the-loop quality controls',
+      'AI delivery operations and governance'
+    ],
+    industries: ['B2B SaaS', 'Fintech infrastructure', 'Healthtech operations', 'Developer tooling'],
+    proofPoints: [
+      'Reduced proposal prep cycle from 5 days to 36 hours via AI-assisted workflow redesign',
+      'Decreased support triage backlog by 41% with structured AI classification pipeline',
+      'Helped teams ship first production AI feature in under 30 days with governance baseline'
+    ],
+    signatureThemes: [
+      'Execution over inspiration',
+      'Systems before scale',
+      'Reliable AI > flashy demos',
+      'Operational clarity compounds'
+    ],
+    preferredVoiceNotes: [
+      'Confident but practical; avoid hype language',
+      'Use concrete examples and measurable outcomes',
+      'Teach frameworks teams can apply immediately'
+    ],
+    bannedPhrases: [
+      '10x overnight',
+      'set it and forget it AI',
+      'fully autonomous with zero oversight'
+    ],
+    callsToAction: [
+      'Reply "SYSTEM" for the weekly AI operating cadence template.',
+      'Send me your current workflow and I will suggest two architecture upgrades.',
+      'Book a 30-minute architecture fit call to map next-quarter priorities.'
+    ],
+    reusableSnippets: [
+      'Most AI initiatives do not fail from model quality. They fail from workflow ambiguity.',
+      'If your team cannot explain where human review happens, you do not have an AI system yet.',
+      'A good pilot proves value once. A good operating system proves value every week.'
+    ],
+    personalNotes: [
+      'Prioritize practical language over technical jargon in public-facing posts.',
+      'Mention governance and adoption in every enterprise conversation.',
+      'Keep examples tied to real delivery timelines.'
+    ]
+  },
   modules: workspaceModules,
   publishingQueue: [
     {
