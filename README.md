@@ -83,6 +83,22 @@ src/
 - Schema normalization and demo reset fallback.
 - Stronger settings normalization and malformed payload guardrails on import.
 
+### Production readiness directive
+
+BrandOps now enforces a production-readiness baseline:
+- unified quality gate via `npm run check` (typecheck + lint),
+- CI validation on pull requests and pushes to `main`,
+- build artifact verification via `npm run verify:dist`.
+
+Recommended pre-release sequence:
+
+```bash
+npm ci
+npm run check
+npm run build
+npm run verify:dist
+```
+
 ### Testing and QA notes
 
 - Run static checks before packaging:
