@@ -484,6 +484,11 @@ Slide 7: CTA to request audit checklist`,
         'Only when clients explicitly opt in. Core workflows stay usable in local-first mode with no dependency on model vendors.'
     }
   ],
+  scheduler: {
+    tasks: [],
+    updatedAt: now.toISOString(),
+    lastHydratedAt: now.toISOString()
+  },
   settings: {
     timezone: 'America/New_York',
     defaultReminderLeadHours: 24,

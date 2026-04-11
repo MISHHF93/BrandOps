@@ -7,6 +7,7 @@ import { PublishingQueuePanel } from '../../modules/publishingQueue/PublishingQu
 import { PipelineCrmPanel } from '../../modules/pipelineCrm/PipelineCrmPanel';
 import { BrandHeader } from '../../shared/ui/BrandHeader';
 import { useBrandOpsStore } from '../../state/useBrandOpsStore';
+import { scheduler } from '../../services/scheduling/scheduler';
 
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint: string }) {
   return (
@@ -22,7 +23,9 @@ export function DashboardApp() {
   const {
     data,
     init,
-    toggleFollowUp
+    toggleFollowUp,
+    snoozeSchedulerTask,
+    completeSchedulerTask
   } = useBrandOpsStore();
 
   useEffect(() => {
@@ -41,9 +44,12 @@ export function DashboardApp() {
       0
     );
 
+    const groups = scheduler.groups(data.scheduler);
+
     return {
       overdueFollowUps,
-      weightedPipeline
+      weightedPipeline,
+      groups
     };
   }, [data]);
 
@@ -76,6 +82,48 @@ export function DashboardApp() {
           value={derived.overdueFollowUps}
           hint="Needs execution today"
         />
+      </section>
+
+      <section className="bo-card space-y-3">
+        <header className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold">Reminder Engine</h2>
+          <p className="text-xs text-slate-400">
+            Local, browser-based reminders (best effort while browser is running).
+          </p>
+        </header>
+        <div className="grid gap-2 md:grid-cols-3">
+          <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs">
+            <p className="text-slate-400 uppercase tracking-[0.14em]">Due soon</p>
+            <p className="mt-1 text-lg font-semibold">{derived.groups.dueSoon.length}</p>
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs">
+            <p className="text-slate-400 uppercase tracking-[0.14em]">Today</p>
+            <p className="mt-1 text-lg font-semibold">{derived.groups.today.length}</p>
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs">
+            <p className="text-slate-400 uppercase tracking-[0.14em]">This week</p>
+            <p className="mt-1 text-lg font-semibold">{derived.groups.thisWeek.length}</p>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {[...derived.groups.dueSoon, ...derived.groups.missed].slice(0, 8).map((task) => (
+            <article key={task.id} className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs">
+              <p className="text-sm font-medium">{task.title}</p>
+              <p className="text-slate-400 mt-1">
+                {task.sourceType.toUpperCase()} • Due {new Date(task.dueAt).toLocaleString()} • {task.status}
+              </p>
+              <p className="mt-1 text-slate-300">{task.detail}</p>
+              <div className="mt-2 flex gap-2">
+                <button className="bo-link !px-2 !py-1" onClick={() => void snoozeSchedulerTask(task.id, 15)}>
+                  Snooze 15m
+                </button>
+                <button className="bo-link !px-2 !py-1" onClick={() => void completeSchedulerTask(task.id)}>
+                  Complete
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <OutreachWorkspacePanel />

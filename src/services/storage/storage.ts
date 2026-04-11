@@ -447,7 +447,12 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   notes: normalizeActivityNotes(base.notes),
   outreachDrafts: normalizeOutreachDrafts(base.outreachDrafts),
   outreachTemplates: normalizeOutreachTemplates(base.outreachTemplates),
-  outreachHistory: normalizeOutreachHistory(base.outreachHistory)
+  outreachHistory: normalizeOutreachHistory(base.outreachHistory),
+  scheduler: base.scheduler ?? {
+    tasks: [],
+    updatedAt: new Date().toISOString(),
+    lastHydratedAt: new Date().toISOString()
+  }
 });
 
 const isBrandOpsData = (value: unknown): value is BrandOpsData => {
