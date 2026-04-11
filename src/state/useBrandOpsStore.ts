@@ -25,9 +25,23 @@ interface StoreState {
   addPublishingDraft: (payload: {
     title: string;
     body: string;
+    contentLibraryItemId?: string;
+    scheduledFor?: string;
     reminderAt?: string;
+    reminderLeadMinutes?: number;
+    checklist?: string;
   }) => Promise<void>;
   updatePublishingStatus: (id: string, status: QueueStatus) => Promise<void>;
+  updatePublishingItem: (
+    id: string,
+    payload: Partial<
+      Pick<
+        PublishingItem,
+        'scheduledFor' | 'reminderAt' | 'reminderLeadMinutes' | 'checklist' | 'status'
+      >
+    >
+  ) => Promise<void>;
+  quickReschedulePublishingItem: (id: string, minutesDelta: number) => Promise<void>;
   addOutreachDraft: (payload: {
     contactId: string;
     subject: string;
@@ -110,15 +124,21 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
   async addPublishingDraft(payload) {
     const current = get().data;
+    const now = new Date().toISOString();
     const draft: PublishingItem = {
       id: uid('pub'),
       title: payload.title,
       body: payload.body,
+      contentLibraryItemId: payload.contentLibraryItemId,
       platforms: ['linkedin'],
       tags: ['new-draft'],
-      status: 'draft',
+      status: payload.scheduledFor ? 'queued' : 'ready-to-post',
+      scheduledFor: payload.scheduledFor,
       reminderAt: payload.reminderAt,
-      createdAt: new Date().toISOString()
+      reminderLeadMinutes: payload.reminderLeadMinutes,
+      checklist: payload.checklist,
+      createdAt: now,
+      updatedAt: now
     };
 
     await updateData(
@@ -136,8 +156,64 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
       (currentData) => ({
         ...currentData,
         publishingQueue: currentData.publishingQueue.map((item) =>
-          item.id === id ? { ...item, status } : item
+          item.id === id
+            ? {
+                ...item,
+                status,
+                postedAt: status === 'posted' ? new Date().toISOString() : item.postedAt,
+                skippedAt: status === 'skipped' ? new Date().toISOString() : item.skippedAt,
+                updatedAt: new Date().toISOString()
+              }
+            : item
         )
+      }),
+      (data) => set({ data })
+    );
+  },
+
+  async updatePublishingItem(id, payload) {
+    const current = get().data;
+
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        publishingQueue: currentData.publishingQueue.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                ...payload,
+                updatedAt: new Date().toISOString()
+              }
+            : item
+        )
+      }),
+      (data) => set({ data })
+    );
+  },
+
+  async quickReschedulePublishingItem(id, minutesDelta) {
+    const current = get().data;
+
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        publishingQueue: currentData.publishingQueue.map((item) => {
+          if (item.id !== id) return item;
+          const source = item.scheduledFor ?? item.reminderAt ?? new Date().toISOString();
+          const nextDate = new Date(source);
+          nextDate.setMinutes(nextDate.getMinutes() + minutesDelta);
+          const nextIso = nextDate.toISOString();
+
+          return {
+            ...item,
+            scheduledFor: nextIso,
+            reminderAt: nextIso,
+            status: 'queued',
+            updatedAt: new Date().toISOString()
+          };
+        })
       }),
       (data) => set({ data })
     );

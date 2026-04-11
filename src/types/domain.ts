@@ -17,7 +17,7 @@ export interface WorkspaceModule {
   route: ExtensionSurface;
 }
 
-export type QueueStatus = 'draft' | 'ready' | 'scheduled' | 'published';
+export type QueueStatus = 'queued' | 'due-soon' | 'ready-to-post' | 'posted' | 'skipped';
 
 export interface PublishingItem {
   id: string;
@@ -26,8 +26,15 @@ export interface PublishingItem {
   platforms: ('linkedin' | 'newsletter' | 'x')[];
   tags: string[];
   status: QueueStatus;
+  contentLibraryItemId?: string;
+  scheduledFor?: string;
   reminderAt?: string;
+  reminderLeadMinutes?: number;
+  checklist?: string;
+  postedAt?: string;
+  skippedAt?: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export type ContentItemType =
