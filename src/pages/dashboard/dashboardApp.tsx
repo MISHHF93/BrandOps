@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from 'react';
-import { AlertTriangle, CheckCircle2, Database, Target } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Database } from 'lucide-react';
 import { BrandVaultPanel } from '../../modules/brandVault/BrandVaultPanel';
 import { ContentLibraryPanel } from '../../modules/contentLibrary/ContentLibraryPanel';
+import { OutreachWorkspacePanel } from '../../modules/outreachWorkspace/OutreachWorkspacePanel';
 import { PublishingQueuePanel } from '../../modules/publishingQueue/PublishingQueuePanel';
 import { BrandHeader } from '../../shared/ui/BrandHeader';
 import { useBrandOpsStore } from '../../state/useBrandOpsStore';
@@ -20,7 +21,6 @@ export function DashboardApp() {
   const {
     data,
     init,
-    addOutreachDraft,
     toggleFollowUp
   } = useBrandOpsStore();
 
@@ -77,43 +77,7 @@ export function DashboardApp() {
         />
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-2">
-        <article className="bo-card space-y-3">
-          <header className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Outreach Workspace</h2>
-            <Target size={14} className="text-slate-400" />
-          </header>
-
-          <button
-            className="bo-link"
-            onClick={() =>
-              void addOutreachDraft({
-                contactId: data.contacts[0]?.id ?? 'unknown',
-                subject: 'New outreach touchpoint',
-                message: 'Sharing a concise systems teardown tailored to your current initiative.'
-              })
-            }
-          >
-            Add outreach draft
-          </button>
-
-          <div className="space-y-2">
-            {data.outreachDrafts.map((draft) => {
-              const contact = data.contacts.find((item) => item.id === draft.contactId);
-              return (
-                <div
-                  key={draft.id}
-                  className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-sm"
-                >
-                  <p className="font-medium">{draft.subject}</p>
-                  <p className="text-xs text-slate-400">{contact?.fullName ?? 'Unknown contact'}</p>
-                  <p className="mt-1 text-xs text-slate-400 line-clamp-2">{draft.message}</p>
-                </div>
-              );
-            })}
-          </div>
-        </article>
-      </section>
+      <OutreachWorkspacePanel />
 
       <PublishingQueuePanel />
 

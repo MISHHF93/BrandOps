@@ -29,7 +29,7 @@ export function PopupApp() {
     const upcomingScheduledPosts = data.publishingQueue.filter(
       (item) => item.reminderAt && new Date(item.reminderAt).getTime() <= next72Hours
     ).length;
-    const pendingOutreachTasks = data.outreachDrafts.filter((item) => item.status !== 'sent').length;
+    const pendingOutreachTasks = data.outreachDrafts.filter((item) => item.status !== 'archived').length;
     const followUpsSoon = data.followUps.filter(
       (item) => !item.completed && new Date(item.dueAt).getTime() <= next24Hours
     ).length;
@@ -48,9 +48,9 @@ export function PopupApp() {
       })),
       ...data.outreachDrafts.map((item) => ({
         id: `out-${item.id}`,
-        label: item.subject,
+        label: `${item.targetName} · ${item.category}`,
         type: 'outreach' as const,
-        time: item.scheduledFor ?? new Date().toISOString()
+        time: item.updatedAt
       })),
       ...data.followUps.map((item) => ({
         id: `fu-${item.id}`,
@@ -156,9 +156,15 @@ export function PopupApp() {
           <button
             onClick={() =>
               void addOutreachDraft({
-                contactId: data.contacts[0]?.id ?? 'unknown',
-                subject: 'New outreach draft',
-                message: 'Sharing a compact teardown that maps your current workflow to faster execution.'
+                category: 'consulting',
+                targetName: data.contacts[0]?.fullName ?? 'Unknown target',
+                company: data.contacts[0]?.company ?? 'Unknown company',
+                role: data.contacts[0]?.title ?? 'Decision maker',
+                messageBody:
+                  'Sharing a compact teardown that maps your current workflow to faster execution and stronger technical handoffs.',
+                outreachGoal: 'Book a 20-minute scoping call',
+                tone: 'Operator-grade and technically credible',
+                notes: 'Created from popup quick action.'
               })
             }
             className="bo-link"

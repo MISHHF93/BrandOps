@@ -4,3 +4,5 @@ export const outreachWorkspaceModule = {
   description: 'Structured outreach pipelines for relationship momentum.',
   version: '0.1.0'
 } as const;
+
+export { OutreachWorkspacePanel } from './OutreachWorkspacePanel';

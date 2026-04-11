@@ -280,22 +280,72 @@ Slide 7: CTA to request audit checklist`,
   outreachDrafts: [
     {
       id: 'out-001',
-      contactId: 'contact-001',
-      subject: 'Noticed your hiring for AI integration engineering',
-      message:
-        'Morgan, I mapped a lightweight architecture playbook for teams shipping agent-assisted workflows without adding vendor lock-in. Happy to share if useful.',
-      status: 'queued',
-      touchpoint: 1,
-      scheduledFor: plusHours(6)
+      category: 'technical build partnership',
+      targetName: 'Morgan Lee',
+      company: 'Northstar Robotics',
+      role: 'Head of Product',
+      messageBody:
+        'Morgan — saw Northstar is expanding AI integration hiring. I put together a practical architecture brief for technical teams shipping agent-assisted workflows without lock-in. If useful, I can send a one-page teardown and implementation sequence.',
+      outreachGoal: 'Book a scoped architecture call',
+      tone: 'Operator-grade and technically credible',
+      status: 'ready',
+      linkedOpportunity: 'opp-001',
+      notes: 'Include implementation timeline options in follow-up.',
+      createdAt: minusHours(14),
+      updatedAt: minusHours(3)
     },
     {
       id: 'out-002',
-      contactId: 'contact-001',
-      subject: 'Quick follow-up with practical teardown',
-      message:
-        'Following up with a teardown pattern: baseline, orchestration, and governance checks in one page.',
-      status: 'draft',
-      touchpoint: 2
+      category: 'follow-up',
+      targetName: 'Morgan Lee',
+      company: 'Northstar Robotics',
+      role: 'Head of Product',
+      messageBody:
+        'Quick follow-up: I can share a practical teardown format covering baseline system map, orchestration logic, and governance controls.',
+      outreachGoal: 'Trigger a response with concrete next step',
+      tone: 'Concise and direct',
+      status: 'scheduled follow-up',
+      linkedOpportunity: 'opp-001',
+      notes: 'Send Tuesday morning with revised proof point.',
+      createdAt: minusHours(9),
+      updatedAt: minusHours(2)
+    }
+  ],
+  outreachTemplates: [
+    {
+      id: 'tpl-001',
+      name: 'Technical Partnership Intro',
+      category: 'technical build partnership',
+      openerBlock: 'Noticed your team is scaling delivery around AI-assisted workflows.',
+      valueBlock:
+        'I help product and engineering teams install execution-safe AI operating systems with explicit ownership and QA handoffs.',
+      proofBlock:
+        'Recent implementations reduced sprint rework and accelerated launch readiness through architecture and process alignment.',
+      callToActionBlock:
+        'Open to a brief call this week to map one high-impact workflow and immediate fixes?',
+      signoffBlock: 'Best,\nAlex',
+      createdAt: minusHours(48),
+      updatedAt: minusHours(8)
+    }
+  ],
+  outreachHistory: [
+    {
+      id: 'outh-001',
+      draftId: 'out-legacy-01',
+      targetName: 'Samira Patel',
+      company: 'SignalForge',
+      status: 'sent',
+      loggedAt: minusHours(18),
+      summary: 'Sent consulting follow-up with implementation milestones and governance checklist.'
+    },
+    {
+      id: 'outh-002',
+      draftId: 'out-legacy-02',
+      targetName: 'Samira Patel',
+      company: 'SignalForge',
+      status: 'replied',
+      loggedAt: minusHours(5),
+      summary: 'Received reply requesting kickoff options for next sprint.'
     }
   ],
   followUps: [
