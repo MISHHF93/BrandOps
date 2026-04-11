@@ -11,6 +11,7 @@ import {
   ContentLibraryItem,
   PublishChannel,
   MessagingVaultEntry,
+  Opportunity,
   OutreachCategory,
   OutreachDraft,
   OutreachHistoryEntry,
@@ -65,6 +66,9 @@ interface StoreState {
   addContact: (payload: { fullName: string; title: string; company: string }) => Promise<void>;
   logFollowUp: (payload: { contactId: string; reason: string; dueAt: string }) => Promise<void>;
   addNote: (payload: { title: string; detail: string }) => Promise<void>;
+  updateOpportunity: (id: string, payload: Partial<Opportunity>) => Promise<void>;
+  archiveOpportunity: (id: string) => Promise<void>;
+  restoreOpportunity: (id: string) => Promise<void>;
   toggleFollowUp: (id: string) => Promise<void>;
   addVaultEntry: (payload: Omit<MessagingVaultEntry, 'id'>) => Promise<void>;
   addContentLibraryItem: (payload: {
@@ -336,10 +340,18 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
     const contact: Contact = {
       id: uid('contact'),
-      fullName: payload.fullName,
-      title: payload.title,
+      name: payload.fullName,
       company: payload.company,
-      relationship: 'new',
+      role: payload.title,
+      source: 'manual',
+      relationshipStage: 'new',
+      status: 'active',
+      nextAction: 'Send a first-touch intro message',
+      followUpDate: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+      notes: 'Added from quick capture.',
+      links: [],
+      relatedOutreachDraftIds: [],
+      relatedContentTags: [],
       lastContactAt: new Date().toISOString()
     };
 
@@ -377,6 +389,8 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
     const note: ActivityNote = {
       id: uid('note'),
+      entityType: 'opportunity',
+      entityId: 'manual',
       title: payload.title,
       detail: payload.detail,
       createdAt: new Date().toISOString()
@@ -387,6 +401,36 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
       (currentData) => ({ ...currentData, notes: [note, ...currentData.notes] }),
       (data) => set({ data })
     );
+  },
+
+  async updateOpportunity(id, payload) {
+    const current = get().data;
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        opportunities: currentData.opportunities.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                ...payload,
+                status: payload.status ?? item.status,
+                stage: payload.status ?? payload.stage ?? item.stage ?? item.status,
+                updatedAt: new Date().toISOString()
+              }
+            : item
+        )
+      }),
+      (data) => set({ data })
+    );
+  },
+
+  async archiveOpportunity(id) {
+    await get().updateOpportunity(id, { archivedAt: new Date().toISOString() });
+  },
+
+  async restoreOpportunity(id) {
+    await get().updateOpportunity(id, { archivedAt: undefined });
   },
 
   async toggleFollowUp(id) {

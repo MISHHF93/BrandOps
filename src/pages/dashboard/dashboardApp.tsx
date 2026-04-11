@@ -4,6 +4,7 @@ import { BrandVaultPanel } from '../../modules/brandVault/BrandVaultPanel';
 import { ContentLibraryPanel } from '../../modules/contentLibrary/ContentLibraryPanel';
 import { OutreachWorkspacePanel } from '../../modules/outreachWorkspace/OutreachWorkspacePanel';
 import { PublishingQueuePanel } from '../../modules/publishingQueue/PublishingQueuePanel';
+import { PipelineCrmPanel } from '../../modules/pipelineCrm/PipelineCrmPanel';
 import { BrandHeader } from '../../shared/ui/BrandHeader';
 import { useBrandOpsStore } from '../../state/useBrandOpsStore';
 
@@ -80,6 +81,8 @@ export function DashboardApp() {
       <OutreachWorkspacePanel />
 
       <PublishingQueuePanel />
+
+      <PipelineCrmPanel />
 
       <section className="grid gap-3 xl:grid-cols-3">
         <article className="bo-card space-y-3">

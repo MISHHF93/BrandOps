@@ -157,9 +157,9 @@ export function PopupApp() {
             onClick={() =>
               void addOutreachDraft({
                 category: 'consulting',
-                targetName: data.contacts[0]?.fullName ?? 'Unknown target',
+                targetName: data.contacts[0]?.name ?? data.contacts[0]?.fullName ?? 'Unknown target',
                 company: data.contacts[0]?.company ?? 'Unknown company',
-                role: data.contacts[0]?.title ?? 'Decision maker',
+                role: data.contacts[0]?.role ?? data.contacts[0]?.title ?? 'Decision maker',
                 messageBody:
                   'Sharing a compact teardown that maps your current workflow to faster execution and stronger technical handoffs.',
                 outreachGoal: 'Book a 20-minute scoping call',
