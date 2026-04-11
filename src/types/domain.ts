@@ -71,16 +71,60 @@ export interface ContentLibraryItem {
   updatedAt: string;
 }
 
-export type OutreachStatus = 'draft' | 'queued' | 'sent' | 'replied';
+export type OutreachCategory =
+  | 'collaboration'
+  | 'consulting'
+  | 'technical build partnership'
+  | 'founder intro'
+  | 'follow-up'
+  | 'warm reconnect'
+  | 'recruiting reply';
+
+export type OutreachStatus =
+  | 'draft'
+  | 'ready'
+  | 'scheduled follow-up'
+  | 'sent'
+  | 'replied'
+  | 'archived';
 
 export interface OutreachDraft {
   id: string;
-  contactId: string;
-  subject: string;
-  message: string;
+  category: OutreachCategory;
+  targetName: string;
+  company: string;
+  role: string;
+  messageBody: string;
+  outreachGoal: string;
+  tone: string;
   status: OutreachStatus;
-  touchpoint: 1 | 2 | 3 | 4;
-  scheduledFor?: string;
+  linkedOpportunity?: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OutreachTemplate {
+  id: string;
+  name: string;
+  category: OutreachCategory;
+  openerBlock: string;
+  valueBlock: string;
+  proofBlock: string;
+  callToActionBlock: string;
+  signoffBlock: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OutreachHistoryEntry {
+  id: string;
+  draftId: string;
+  targetName: string;
+  company: string;
+  status: Exclude<OutreachStatus, 'draft' | 'ready'>;
+  loggedAt: string;
+  summary: string;
 }
 
 export interface FollowUpTask {
@@ -206,6 +250,8 @@ export interface BrandOpsData {
   contacts: Contact[];
   notes: ActivityNote[];
   outreachDrafts: OutreachDraft[];
+  outreachTemplates: OutreachTemplate[];
+  outreachHistory: OutreachHistoryEntry[];
   followUps: FollowUpTask[];
   opportunities: Opportunity[];
   messagingVault: MessagingVaultEntry[];

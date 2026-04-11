@@ -6,6 +6,11 @@ import {
   ContentItemStatus,
   ContentItemType,
   ContentLibraryItem,
+  OutreachCategory,
+  OutreachDraft,
+  OutreachHistoryEntry,
+  OutreachStatus,
+  OutreachTemplate,
   PublishingItem,
   PublishChannel
 } from '../../types/domain';
@@ -127,6 +132,109 @@ const normalizePublishingQueue = (items: unknown): PublishingItem[] => {
     .filter((item): item is PublishingItem => Boolean(item));
 };
 
+const OUTREACH_CATEGORY_FALLBACK: OutreachCategory = 'consulting';
+const OUTREACH_STATUS_FALLBACK: OutreachStatus = 'draft';
+
+const normalizeOutreachDrafts = (items: unknown): OutreachDraft[] => {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item): OutreachDraft | null => {
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const createdAt = typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString();
+      const targetName =
+        typeof candidate.targetName === 'string'
+          ? candidate.targetName
+          : typeof candidate.contactName === 'string'
+            ? candidate.contactName
+            : 'Unknown target';
+      const messageBody =
+        typeof candidate.messageBody === 'string'
+          ? candidate.messageBody
+          : typeof candidate.message === 'string'
+            ? candidate.message
+            : '';
+
+      return {
+        id:
+          typeof candidate.id === 'string' ? candidate.id : `out-${Math.random().toString(36).slice(2, 9)}`,
+        category: (candidate.category as OutreachCategory) ?? OUTREACH_CATEGORY_FALLBACK,
+        targetName,
+        company: typeof candidate.company === 'string' ? candidate.company : '',
+        role: typeof candidate.role === 'string' ? candidate.role : '',
+        messageBody,
+        outreachGoal: typeof candidate.outreachGoal === 'string' ? candidate.outreachGoal : 'Start a conversation',
+        tone: typeof candidate.tone === 'string' ? candidate.tone : 'Direct and practical',
+        status: (candidate.status as OutreachStatus) ?? OUTREACH_STATUS_FALLBACK,
+        linkedOpportunity:
+          typeof candidate.linkedOpportunity === 'string' ? candidate.linkedOpportunity : undefined,
+        notes: typeof candidate.notes === 'string' ? candidate.notes : '',
+        createdAt,
+        updatedAt: typeof candidate.updatedAt === 'string' ? candidate.updatedAt : createdAt
+      };
+    })
+    .filter((item): item is OutreachDraft => Boolean(item));
+};
+
+const normalizeOutreachTemplates = (items: unknown): OutreachTemplate[] => {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item): OutreachTemplate | null => {
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const createdAt = typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString();
+      return {
+        id:
+          typeof candidate.id === 'string' ? candidate.id : `tpl-${Math.random().toString(36).slice(2, 9)}`,
+        name: typeof candidate.name === 'string' ? candidate.name : 'Untitled template',
+        category: (candidate.category as OutreachCategory) ?? OUTREACH_CATEGORY_FALLBACK,
+        openerBlock: typeof candidate.openerBlock === 'string' ? candidate.openerBlock : '',
+        valueBlock: typeof candidate.valueBlock === 'string' ? candidate.valueBlock : '',
+        proofBlock: typeof candidate.proofBlock === 'string' ? candidate.proofBlock : '',
+        callToActionBlock: typeof candidate.callToActionBlock === 'string' ? candidate.callToActionBlock : '',
+        signoffBlock: typeof candidate.signoffBlock === 'string' ? candidate.signoffBlock : '',
+        createdAt,
+        updatedAt: typeof candidate.updatedAt === 'string' ? candidate.updatedAt : createdAt
+      };
+    })
+    .filter((item): item is OutreachTemplate => Boolean(item));
+};
+
+const normalizeOutreachHistory = (items: unknown): OutreachHistoryEntry[] => {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item): OutreachHistoryEntry | null => {
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const status = candidate.status;
+      if (
+        status !== 'scheduled follow-up' &&
+        status !== 'sent' &&
+        status !== 'replied' &&
+        status !== 'archived'
+      ) {
+        return null;
+      }
+
+      return {
+        id:
+          typeof candidate.id === 'string'
+            ? candidate.id
+            : `outh-${Math.random().toString(36).slice(2, 9)}`,
+        draftId: typeof candidate.draftId === 'string' ? candidate.draftId : 'unknown-draft',
+        targetName: typeof candidate.targetName === 'string' ? candidate.targetName : 'Unknown target',
+        company: typeof candidate.company === 'string' ? candidate.company : 'Unknown company',
+        status,
+        loggedAt: typeof candidate.loggedAt === 'string' ? candidate.loggedAt : new Date().toISOString(),
+        summary: typeof candidate.summary === 'string' ? candidate.summary : 'Outreach status updated.'
+      };
+    })
+    .filter((item): item is OutreachHistoryEntry => Boolean(item));
+};
+
 const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   seed: {
@@ -140,7 +248,10 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   notes: base.notes ?? [],
   brandVault: base.brandVault ?? defaultBrandVault,
   contentLibrary: normalizeContentLibrary(base.contentLibrary),
-  publishingQueue: normalizePublishingQueue(base.publishingQueue)
+  publishingQueue: normalizePublishingQueue(base.publishingQueue),
+  outreachDrafts: normalizeOutreachDrafts(base.outreachDrafts),
+  outreachTemplates: normalizeOutreachTemplates(base.outreachTemplates),
+  outreachHistory: normalizeOutreachHistory(base.outreachHistory)
 });
 
 const isBrandOpsData = (value: unknown): value is BrandOpsData => {

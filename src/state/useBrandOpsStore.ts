@@ -11,7 +11,10 @@ import {
   ContentLibraryItem,
   PublishChannel,
   MessagingVaultEntry,
+  OutreachCategory,
   OutreachDraft,
+  OutreachHistoryEntry,
+  OutreachTemplate,
   PublishingItem,
   QueueStatus
 } from '../types/domain';
@@ -43,10 +46,22 @@ interface StoreState {
   ) => Promise<void>;
   quickReschedulePublishingItem: (id: string, minutesDelta: number) => Promise<void>;
   addOutreachDraft: (payload: {
-    contactId: string;
-    subject: string;
-    message: string;
+    category: OutreachCategory;
+    targetName: string;
+    company: string;
+    role: string;
+    messageBody: string;
+    outreachGoal: string;
+    tone: string;
+    linkedOpportunity?: string;
+    notes: string;
   }) => Promise<void>;
+  updateOutreachDraft: (
+    id: string,
+    payload: Partial<Omit<OutreachDraft, 'id' | 'createdAt'>>
+  ) => Promise<void>;
+  archiveOutreachDraft: (id: string) => Promise<void>;
+  addOutreachTemplate: (payload: Omit<OutreachTemplate, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   addContact: (payload: { fullName: string; title: string; company: string }) => Promise<void>;
   logFollowUp: (payload: { contactId: string; reason: string; dueAt: string }) => Promise<void>;
   addNote: (payload: { title: string; detail: string }) => Promise<void>;
@@ -221,19 +236,97 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
   async addOutreachDraft(payload) {
     const current = get().data;
+    const now = new Date().toISOString();
 
     const draft: OutreachDraft = {
       id: uid('out'),
-      contactId: payload.contactId,
-      subject: payload.subject,
-      message: payload.message,
+      category: payload.category,
+      targetName: payload.targetName,
+      company: payload.company,
+      role: payload.role,
+      messageBody: payload.messageBody,
+      outreachGoal: payload.outreachGoal,
+      tone: payload.tone,
       status: 'draft',
-      touchpoint: 1
+      linkedOpportunity: payload.linkedOpportunity,
+      notes: payload.notes,
+      createdAt: now,
+      updatedAt: now
     };
 
     await updateData(
       current,
       (currentData) => ({ ...currentData, outreachDrafts: [draft, ...currentData.outreachDrafts] }),
+      (data) => set({ data })
+    );
+  },
+
+  async updateOutreachDraft(id, payload) {
+    const current = get().data;
+    const now = new Date().toISOString();
+    await updateData(
+      current,
+      (currentData) => {
+        const previous = currentData.outreachDrafts.find((item) => item.id === id);
+        const nextStatus = payload.status;
+        const shouldLogHistory =
+          nextStatus &&
+          nextStatus !== 'draft' &&
+          nextStatus !== 'ready' &&
+          previous &&
+          previous.status !== nextStatus;
+
+        const updatedDrafts = currentData.outreachDrafts.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                ...payload,
+                updatedAt: now
+              }
+            : item
+        );
+
+        const historyEntry: OutreachHistoryEntry | null =
+          shouldLogHistory && previous
+            ? {
+                id: uid('outh'),
+                draftId: previous.id,
+                targetName: previous.targetName,
+                company: previous.company,
+                status: nextStatus,
+                loggedAt: now,
+                summary: `${nextStatus.toUpperCase()}: ${previous.outreachGoal}`
+              }
+            : null;
+
+        return {
+          ...currentData,
+          outreachDrafts: updatedDrafts,
+          outreachHistory: historyEntry
+            ? [historyEntry, ...currentData.outreachHistory].slice(0, 25)
+            : currentData.outreachHistory
+        };
+      },
+      (data) => set({ data })
+    );
+  },
+
+  async archiveOutreachDraft(id) {
+    await get().updateOutreachDraft(id, { status: 'archived' });
+  },
+
+  async addOutreachTemplate(payload) {
+    const current = get().data;
+    const now = new Date().toISOString();
+    const template: OutreachTemplate = {
+      id: uid('tpl'),
+      ...payload,
+      createdAt: now,
+      updatedAt: now
+    };
+    await updateData(
+      current,
+      (currentData) => ({ ...currentData, outreachTemplates: [template, ...currentData.outreachTemplates] }),
       (data) => set({ data })
     );
   },
