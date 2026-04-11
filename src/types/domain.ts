@@ -145,30 +145,80 @@ export type OpportunityStage =
 
 export interface Opportunity {
   id: string;
-  contactId: string;
-  account: string;
-  serviceLine: string;
-  stage: OpportunityStage;
+  name: string;
+  company: string;
+  role: string;
+  source: string;
+  relationshipStage: 'new' | 'building' | 'trusted' | 'partner';
+  opportunityType:
+    | 'consulting'
+    | 'collaboration'
+    | 'client delivery'
+    | 'advisory'
+    | 'founding team'
+    | 'investor relationship'
+    | 'recruiter conversation';
+  status: OpportunityStage;
+  nextAction: string;
+  followUpDate: string;
+  notes: string;
+  links: string[];
+  relatedOutreachDraftIds: string[];
+  relatedContentTags: string[];
+  archivedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   valueUsd: number;
   confidence: number;
-  nextAction: string;
-  updatedAt: string;
+  contactId?: string;
+  account?: string;
+  serviceLine?: string;
+  stage?: OpportunityStage;
 }
 
 export interface Contact {
   id: string;
-  fullName: string;
-  title: string;
+  name: string;
   company: string;
-  relationship: 'new' | 'warm' | 'active-client' | 'past-client';
+  role: string;
+  source: string;
+  relationshipStage: 'new' | 'building' | 'trusted' | 'partner';
+  status: 'active' | 'dormant' | 'archived';
+  nextAction: string;
+  followUpDate?: string;
+  notes: string;
+  links: string[];
+  relatedOutreachDraftIds: string[];
+  relatedContentTags: string[];
   lastContactAt: string;
+  fullName?: string;
+  title?: string;
+  relationship?: 'new' | 'warm' | 'active-client' | 'past-client';
 }
 
 export interface ActivityNote {
   id: string;
+  entityType: 'contact' | 'company' | 'opportunity';
+  entityId: string;
   title: string;
   detail: string;
+  status?: string;
+  nextAction?: string;
   createdAt: string;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  source: string;
+  relationshipStage: 'new' | 'building' | 'trusted' | 'partner';
+  status: 'active' | 'dormant' | 'archived';
+  nextAction: string;
+  followUpDate?: string;
+  notes: string;
+  links: string[];
+  relatedOutreachDraftIds: string[];
+  relatedContentTags: string[];
 }
 
 export interface MessagingVaultEntry {
@@ -248,6 +298,7 @@ export interface BrandOpsData {
   publishingQueue: PublishingItem[];
   contentLibrary: ContentLibraryItem[];
   contacts: Contact[];
+  companies: Company[];
   notes: ActivityNote[];
   outreachDrafts: OutreachDraft[];
   outreachTemplates: OutreachTemplate[];

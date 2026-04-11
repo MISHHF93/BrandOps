@@ -1,11 +1,15 @@
 import { seedData } from '../../modules/brandMemory/seed';
 import { browserLocalStorage } from '../../shared/storage/browserStorage';
 import {
+  ActivityNote,
   BrandOpsData,
   BrandVault,
+  Company,
+  Contact,
   ContentItemStatus,
   ContentItemType,
   ContentLibraryItem,
+  Opportunity,
   OutreachCategory,
   OutreachDraft,
   OutreachHistoryEntry,
@@ -235,6 +239,195 @@ const normalizeOutreachHistory = (items: unknown): OutreachHistoryEntry[] => {
     .filter((item): item is OutreachHistoryEntry => Boolean(item));
 };
 
+const normalizeContacts = (items: unknown): Contact[] => {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item): Contact | null => {
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const legacyName = typeof candidate.fullName === 'string' ? candidate.fullName : 'Unknown contact';
+      const legacyRole = typeof candidate.title === 'string' ? candidate.title : 'Unknown role';
+      const relationship = candidate.relationship;
+      const relationshipStage =
+        candidate.relationshipStage === 'new' ||
+        candidate.relationshipStage === 'building' ||
+        candidate.relationshipStage === 'trusted' ||
+        candidate.relationshipStage === 'partner'
+          ? candidate.relationshipStage
+          : relationship === 'active-client' || relationship === 'past-client'
+            ? 'trusted'
+            : relationship === 'warm'
+              ? 'building'
+              : 'new';
+
+      return {
+        id: typeof candidate.id === 'string' ? candidate.id : `contact-${Math.random().toString(36).slice(2, 9)}`,
+        name: typeof candidate.name === 'string' ? candidate.name : legacyName,
+        company: typeof candidate.company === 'string' ? candidate.company : 'Unknown company',
+        role: typeof candidate.role === 'string' ? candidate.role : legacyRole,
+        source: typeof candidate.source === 'string' ? candidate.source : 'manual',
+        relationshipStage,
+        status:
+          candidate.status === 'active' || candidate.status === 'dormant' || candidate.status === 'archived'
+            ? candidate.status
+            : 'active',
+        nextAction: typeof candidate.nextAction === 'string' ? candidate.nextAction : 'Add next action',
+        followUpDate: typeof candidate.followUpDate === 'string' ? candidate.followUpDate : undefined,
+        notes: typeof candidate.notes === 'string' ? candidate.notes : '',
+        links: asStringArray(candidate.links),
+        relatedOutreachDraftIds: asStringArray(candidate.relatedOutreachDraftIds),
+        relatedContentTags: asStringArray(candidate.relatedContentTags),
+        lastContactAt:
+          typeof candidate.lastContactAt === 'string' ? candidate.lastContactAt : new Date().toISOString(),
+        fullName: legacyName,
+        title: legacyRole,
+        relationship:
+          relationship === 'new' || relationship === 'warm' || relationship === 'active-client' || relationship === 'past-client'
+            ? relationship
+            : 'new'
+      };
+    })
+    .filter((item): item is Contact => Boolean(item));
+};
+
+const normalizeCompanies = (items: unknown): Company[] => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item): Company | null => {
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      return {
+        id: typeof candidate.id === 'string' ? candidate.id : `company-${Math.random().toString(36).slice(2, 9)}`,
+        name: typeof candidate.name === 'string' ? candidate.name : 'Unknown company',
+        source: typeof candidate.source === 'string' ? candidate.source : 'manual',
+        relationshipStage:
+          candidate.relationshipStage === 'new' ||
+          candidate.relationshipStage === 'building' ||
+          candidate.relationshipStage === 'trusted' ||
+          candidate.relationshipStage === 'partner'
+            ? candidate.relationshipStage
+            : 'new',
+        status:
+          candidate.status === 'active' || candidate.status === 'dormant' || candidate.status === 'archived'
+            ? candidate.status
+            : 'active',
+        nextAction: typeof candidate.nextAction === 'string' ? candidate.nextAction : 'Add next action',
+        followUpDate: typeof candidate.followUpDate === 'string' ? candidate.followUpDate : undefined,
+        notes: typeof candidate.notes === 'string' ? candidate.notes : '',
+        links: asStringArray(candidate.links),
+        relatedOutreachDraftIds: asStringArray(candidate.relatedOutreachDraftIds),
+        relatedContentTags: asStringArray(candidate.relatedContentTags)
+      };
+    })
+    .filter((item): item is Company => Boolean(item));
+};
+
+const normalizeOpportunities = (items: unknown): Opportunity[] => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item): Opportunity | null => {
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const stage =
+        candidate.status === 'prospect' ||
+        candidate.status === 'discovery' ||
+        candidate.status === 'proposal' ||
+        candidate.status === 'negotiation' ||
+        candidate.status === 'won' ||
+        candidate.status === 'lost'
+          ? candidate.status
+          : candidate.stage === 'prospect' ||
+              candidate.stage === 'discovery' ||
+              candidate.stage === 'proposal' ||
+              candidate.stage === 'negotiation' ||
+              candidate.stage === 'won' ||
+              candidate.stage === 'lost'
+            ? candidate.stage
+            : 'prospect';
+
+      return {
+        id: typeof candidate.id === 'string' ? candidate.id : `opp-${Math.random().toString(36).slice(2, 9)}`,
+        name:
+          typeof candidate.name === 'string'
+            ? candidate.name
+            : typeof candidate.account === 'string'
+              ? `${candidate.account} opportunity`
+              : 'Untitled opportunity',
+        company:
+          typeof candidate.company === 'string'
+            ? candidate.company
+            : typeof candidate.account === 'string'
+              ? candidate.account
+              : 'Unknown company',
+        role: typeof candidate.role === 'string' ? candidate.role : 'Decision maker',
+        source: typeof candidate.source === 'string' ? candidate.source : 'manual',
+        relationshipStage:
+          candidate.relationshipStage === 'new' ||
+          candidate.relationshipStage === 'building' ||
+          candidate.relationshipStage === 'trusted' ||
+          candidate.relationshipStage === 'partner'
+            ? candidate.relationshipStage
+            : 'new',
+        opportunityType:
+          candidate.opportunityType === 'consulting' ||
+          candidate.opportunityType === 'collaboration' ||
+          candidate.opportunityType === 'client delivery' ||
+          candidate.opportunityType === 'advisory' ||
+          candidate.opportunityType === 'founding team' ||
+          candidate.opportunityType === 'investor relationship' ||
+          candidate.opportunityType === 'recruiter conversation'
+            ? candidate.opportunityType
+            : 'consulting',
+        status: stage,
+        nextAction: typeof candidate.nextAction === 'string' ? candidate.nextAction : 'Define next action',
+        followUpDate:
+          typeof candidate.followUpDate === 'string'
+            ? candidate.followUpDate
+            : typeof candidate.updatedAt === 'string'
+              ? candidate.updatedAt
+              : new Date().toISOString(),
+        notes: typeof candidate.notes === 'string' ? candidate.notes : '',
+        links: asStringArray(candidate.links),
+        relatedOutreachDraftIds: asStringArray(candidate.relatedOutreachDraftIds),
+        relatedContentTags: asStringArray(candidate.relatedContentTags),
+        archivedAt: typeof candidate.archivedAt === 'string' ? candidate.archivedAt : undefined,
+        createdAt: typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString(),
+        updatedAt: typeof candidate.updatedAt === 'string' ? candidate.updatedAt : new Date().toISOString(),
+        valueUsd: typeof candidate.valueUsd === 'number' ? candidate.valueUsd : 0,
+        confidence: typeof candidate.confidence === 'number' ? candidate.confidence : 0,
+        contactId: typeof candidate.contactId === 'string' ? candidate.contactId : undefined,
+        account: typeof candidate.account === 'string' ? candidate.account : undefined,
+        serviceLine: typeof candidate.serviceLine === 'string' ? candidate.serviceLine : undefined,
+        stage
+      };
+    })
+    .filter((item): item is Opportunity => Boolean(item));
+};
+
+const normalizeActivityNotes = (items: unknown): ActivityNote[] => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item): ActivityNote | null => {
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      return {
+        id: typeof candidate.id === 'string' ? candidate.id : `note-${Math.random().toString(36).slice(2, 9)}`,
+        entityType:
+          candidate.entityType === 'contact' || candidate.entityType === 'company' || candidate.entityType === 'opportunity'
+            ? candidate.entityType
+            : 'opportunity',
+        entityId: typeof candidate.entityId === 'string' ? candidate.entityId : 'unknown',
+        title: typeof candidate.title === 'string' ? candidate.title : 'Activity note',
+        detail: typeof candidate.detail === 'string' ? candidate.detail : '',
+        status: typeof candidate.status === 'string' ? candidate.status : undefined,
+        nextAction: typeof candidate.nextAction === 'string' ? candidate.nextAction : undefined,
+        createdAt: typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString()
+      };
+    })
+    .filter((item): item is ActivityNote => Boolean(item));
+};
+
 const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   seed: {
@@ -245,10 +438,13 @@ const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
 
 const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   ...base,
-  notes: base.notes ?? [],
   brandVault: base.brandVault ?? defaultBrandVault,
   contentLibrary: normalizeContentLibrary(base.contentLibrary),
   publishingQueue: normalizePublishingQueue(base.publishingQueue),
+  contacts: normalizeContacts(base.contacts),
+  companies: normalizeCompanies(base.companies),
+  opportunities: normalizeOpportunities(base.opportunities),
+  notes: normalizeActivityNotes(base.notes),
   outreachDrafts: normalizeOutreachDrafts(base.outreachDrafts),
   outreachTemplates: normalizeOutreachTemplates(base.outreachTemplates),
   outreachHistory: normalizeOutreachHistory(base.outreachHistory)
