@@ -495,6 +495,7 @@ Slide 7: CTA to request audit checklist`,
     weekStartsOn: 'monday',
     localModelEnabled: false,
     aiAdapterMode: 'disabled',
+    debugMode: false,
     overlay: {
       enabled: true,
       compactMode: true,

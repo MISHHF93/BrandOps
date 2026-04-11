@@ -27,6 +27,8 @@ interface StoreState {
   error?: string;
   init: () => Promise<void>;
   resetDemoData: () => Promise<void>;
+  setDebugMode: (enabled: boolean) => Promise<void>;
+  generateMockActivityBurst: () => Promise<void>;
   addPublishingDraft: (payload: {
     title: string;
     body: string;
@@ -150,6 +152,102 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
     const withScheduler = { ...data, scheduler: scheduler.reconcile(data) };
     await storageService.setData(withScheduler);
     set({ data: withScheduler, error: undefined });
+  },
+
+  async setDebugMode(enabled) {
+    const current = get().data;
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        settings: {
+          ...currentData.settings,
+          debugMode: enabled
+        }
+      }),
+      (data) => set({ data, error: undefined })
+    );
+  },
+
+  async generateMockActivityBurst() {
+    const current = get().data;
+    const now = new Date().toISOString();
+
+    await updateData(
+      current,
+      (currentData) => {
+        const syntheticContentId = uid('cli');
+        const syntheticOpportunityId = uid('opp');
+        const syntheticContactId = uid('contact');
+
+        return {
+          ...currentData,
+          contentLibrary: [
+            {
+              id: syntheticContentId,
+              type: 'post-idea',
+              title: 'QA synthetic content idea',
+              body: 'Generated test content to validate first-launch empty and loaded states.',
+              tags: ['qa', 'synthetic'],
+              audience: 'Internal QA',
+              goal: 'Exercise rendering and search index paths',
+              status: 'idea',
+              publishChannel: 'linkedin',
+              notes: 'Auto-generated from developer tools.',
+              createdAt: now,
+              updatedAt: now
+            },
+            ...currentData.contentLibrary
+          ],
+          contacts: [
+            {
+              id: syntheticContactId,
+              name: 'QA Synthetic Contact',
+              company: 'Demo Labs',
+              role: 'Operator',
+              source: 'debug-generator',
+              relationshipStage: 'new',
+              status: 'active',
+              nextAction: 'Validate follow-up scheduling flow',
+              followUpDate: now,
+              notes: 'Generated for QA checks.',
+              links: [],
+              relatedOutreachDraftIds: [],
+              relatedContentTags: ['qa'],
+              lastContactAt: now,
+              fullName: 'QA Synthetic Contact',
+              title: 'Operator',
+              relationship: 'new'
+            },
+            ...currentData.contacts
+          ],
+          opportunities: [
+            {
+              id: syntheticOpportunityId,
+              name: 'QA Pipeline Opportunity',
+              company: 'Demo Labs',
+              role: 'Buyer',
+              source: 'debug-generator',
+              relationshipStage: 'building',
+              opportunityType: 'consulting',
+              status: 'prospect',
+              nextAction: 'Run CRM status transition checks',
+              followUpDate: now,
+              notes: 'Generated for test coverage of pipeline cards.',
+              links: [],
+              relatedOutreachDraftIds: [],
+              relatedContentTags: ['qa'],
+              createdAt: now,
+              updatedAt: now,
+              valueUsd: 7500,
+              confidence: 35
+            },
+            ...currentData.opportunities
+          ]
+        };
+      },
+      (data) => set({ data, error: undefined })
+    );
   },
 
   async addPublishingDraft(payload) {

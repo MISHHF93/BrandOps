@@ -13,9 +13,19 @@ const downloadJson = (filename: string, payload: string) => {
 };
 
 export function OptionsApp() {
-  const { data, init, error, exportWorkspace, importWorkspace } = useBrandOpsStore();
+  const {
+    data,
+    init,
+    error,
+    exportWorkspace,
+    importWorkspace,
+    resetDemoData,
+    setDebugMode,
+    generateMockActivityBurst
+  } = useBrandOpsStore();
   const [importText, setImportText] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
+  const [failureNotice, setFailureNotice] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -62,9 +72,15 @@ export function OptionsApp() {
             className="bo-link"
             onClick={() =>
               void (async () => {
-                const exported = await exportWorkspace();
-                await navigator.clipboard.writeText(exported);
-                setNotice('Workspace JSON copied to clipboard.');
+                try {
+                  const exported = await exportWorkspace();
+                  await navigator.clipboard.writeText(exported);
+                  setFailureNotice(null);
+                  setNotice('Workspace JSON copied to clipboard.');
+                } catch (copyError) {
+                  setNotice(null);
+                  setFailureNotice(`Copy failed: ${(copyError as Error).message}`);
+                }
               })()
             }
           >
@@ -74,9 +90,15 @@ export function OptionsApp() {
             className="bo-link"
             onClick={() =>
               void (async () => {
-                const exported = await exportWorkspace();
-                downloadJson(`brandops-workspace-${new Date().toISOString().slice(0, 10)}.json`, exported);
-                setNotice('Workspace JSON downloaded.');
+                try {
+                  const exported = await exportWorkspace();
+                  downloadJson(`brandops-workspace-${new Date().toISOString().slice(0, 10)}.json`, exported);
+                  setFailureNotice(null);
+                  setNotice('Workspace JSON downloaded.');
+                } catch (downloadError) {
+                  setNotice(null);
+                  setFailureNotice(`Download failed: ${(downloadError as Error).message}`);
+                }
               })()
             }
           >
@@ -93,17 +115,33 @@ export function OptionsApp() {
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (!file) return;
-              void file.text().then((text) => setImportText(text));
+              void file
+                .text()
+                .then((text) => setImportText(text))
+                .catch(() => {
+                  setImportText('');
+                  setNotice(null);
+                  setFailureNotice('Unable to read selected file. Please select a valid JSON file.');
+                });
             }}
           />
           <button
             className="bo-link"
             onClick={() =>
               void (async () => {
-                if (!importText.trim()) return;
-                await importWorkspace(importText);
-                setImportText('');
-                setNotice('Workspace imported successfully.');
+                try {
+                  if (!importText.trim()) {
+                    setFailureNotice('Import text cannot be empty.');
+                    return;
+                  }
+                  await importWorkspace(importText);
+                  setImportText('');
+                  setFailureNotice(null);
+                  setNotice('Workspace imported successfully.');
+                } catch (importError) {
+                  setNotice(null);
+                  setFailureNotice(`Import failed: ${(importError as Error).message}`);
+                }
               })()
             }
           >
@@ -119,6 +157,58 @@ export function OptionsApp() {
           className="w-full rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs"
         />
         {notice ? <p className="text-xs text-emerald-300">{notice}</p> : null}
+        {failureNotice ? <p className="text-xs text-rose-300">{failureNotice}</p> : null}
+      </section>
+
+      <section className="bo-card space-y-3">
+        <h2 className="text-base font-semibold">Developer tools</h2>
+        <p className="text-xs text-slate-400">
+          Use these controls to test first-launch flows, QA edge-cases, and seed/demo restoration.
+        </p>
+        <label className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-sm">
+          <span>Debug mode</span>
+          <input
+            type="checkbox"
+            checked={data.settings.debugMode}
+            onChange={(event) =>
+              void (async () => {
+                await setDebugMode(event.target.checked);
+                setFailureNotice(null);
+                setNotice(`Debug mode ${event.target.checked ? 'enabled' : 'disabled'}.`);
+              })()
+            }
+          />
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="bo-link"
+            onClick={() =>
+              void (async () => {
+                await generateMockActivityBurst();
+                setFailureNotice(null);
+                setNotice('Mock activity burst generated.');
+              })()
+            }
+          >
+            Generate mock activity burst
+          </button>
+          <button
+            className="bo-link"
+            onClick={() =>
+              void (async () => {
+                const confirmed = window.confirm(
+                  'Reset workspace to demo seed data? This overwrites all current local data.'
+                );
+                if (!confirmed) return;
+                await resetDemoData();
+                setFailureNotice(null);
+                setNotice('Workspace reset to seeded demo data.');
+              })()
+            }
+          >
+            Reset to demo seed
+          </button>
+        </div>
       </section>
     </main>
   );

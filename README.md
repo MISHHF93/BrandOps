@@ -74,12 +74,30 @@ src/
 - Improved empty and error states.
 - Consistent UI language and interaction patterns.
 - Accessibility improvements (`focus-visible`, labels, semantic dialog/alerts).
+- Developer tools in Options: debug mode toggle, mock activity generator, and guarded demo reset.
 
 ### Data resilience
 - Full workspace export/import as JSON.
 - Clipboard + downloadable backups.
 - JSON file import and text import.
 - Schema normalization and demo reset fallback.
+- Stronger settings normalization and malformed payload guardrails on import.
+
+### Testing and QA notes
+
+- Run static checks before packaging:
+  - `npm run typecheck`
+  - `npm run lint`
+- Use **Options → Developer tools** for QA workflows:
+  - Enable/disable debug mode.
+  - Generate synthetic mock activity to verify loaded-state rendering and search.
+  - Reset to seeded demo workspace with confirmation.
+- Validate first-launch behavior by removing extension storage and reloading the extension.
+
+### Known limitations
+
+- Browser notifications/scheduler execution are best-effort while the browser is running.
+- Debug mode currently exposes internal QA utilities only in the Options page (not popup/dashboard surfaces).
 
 ### Local intelligence helpers
 - Content priority ranking.

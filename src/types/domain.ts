@@ -314,6 +314,7 @@ export interface AppSettings {
   weekStartsOn: 'monday' | 'sunday';
   localModelEnabled: boolean;
   aiAdapterMode: 'disabled' | 'local-only' | 'external-opt-in';
+  debugMode: boolean;
   overlay: OverlayPreferences;
   automationRules: AutomationRule[];
 }
