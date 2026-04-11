@@ -115,23 +115,118 @@ export const seedData: BrandOpsData = {
   ],
   contentLibrary: [
     {
-      id: 'asset-001',
-      label: 'Technical founder hook',
-      category: 'hook',
-      text: 'If your GTM depends on random motivation, it is not a strategy.'
+      id: 'cli-001',
+      type: 'post-draft',
+      title: 'Execution loops beat motivation spikes',
+      body: `Most content calendars fail because they optimize for inspiration.
+
+Here is the operator loop that holds up under client pressure:
+1) Capture one delivery lesson immediately after a sprint block.
+2) Convert it into a single teachable takeaway.
+3) Publish before polishing turns into avoidance.
+
+Discipline compounds authority faster than clever phrasing.`,
+      tags: ['editorial-system', 'consistency', 'linkedin'],
+      audience: 'Technical founders who publish inconsistently',
+      goal: 'Build authority through consistent operator-style writing',
+      status: 'drafting',
+      publishChannel: 'linkedin',
+      notes: 'Add one concrete metric from the March sprint before publishing.',
+      createdAt: minusHours(40),
+      updatedAt: minusHours(5)
     },
     {
-      id: 'asset-002',
-      label: 'Case study frame',
-      category: 'proof-point',
-      text: 'Reduced proposal turnaround from 5 days to 36 hours by standardizing discovery synthesis.',
-      lastUsedAt: minusHours(72)
+      id: 'cli-002',
+      type: 'post-idea',
+      title: 'Why AI pilots stall at week 5',
+      body: 'Angle: most pilots fail due to ownership gaps, not model quality. Outline ownership map + review cadence.',
+      tags: ['ai-governance', 'pilot-to-production'],
+      audience: 'Product leaders responsible for AI roadmap delivery',
+      goal: 'Drive discovery call interest from enterprise product teams',
+      status: 'idea',
+      publishChannel: 'linkedin',
+      notes: 'Pair with simple ownership matrix visual.',
+      createdAt: minusHours(28),
+      updatedAt: minusHours(28)
     },
     {
-      id: 'asset-003',
-      label: 'Closing CTA for discovery',
-      category: 'cta',
-      text: 'Reply with "SYSTEM" and I can share the exact weekly operating cadence I use.'
+      id: 'cli-003',
+      type: 'article-note',
+      title: 'Newsletter research notes: workflow debt',
+      body: `Thesis notes:
+- Workflow debt accumulates when teams add AI steps without redefining handoffs.
+- Quality issues appear as “model problems” but originate in ambiguous review ownership.
+- Fast fix: define explicit draft->review->publish state transitions in every team.` ,
+      tags: ['newsletter', 'research', 'workflow-debt'],
+      audience: 'Ops and product leaders building internal AI systems',
+      goal: 'Prepare long-form newsletter edition',
+      status: 'ready',
+      publishChannel: 'newsletter',
+      notes: 'Needs supporting example from Northstar proposal cycle.',
+      createdAt: minusHours(72),
+      updatedAt: minusHours(20)
+    },
+    {
+      id: 'cli-004',
+      type: 'carousel-outline',
+      title: 'Carousel: 6 signals your AI workflow is fragile',
+      body: `Slide 1: Cover
+Slide 2: No clear reviewer ownership
+Slide 3: Prompt edits happen in DMs
+Slide 4: No quality acceptance checklist
+Slide 5: No rollback process
+Slide 6: No weekly retrospective
+Slide 7: CTA to request audit checklist`,
+      tags: ['carousel', 'audit', 'content-framework'],
+      audience: 'B2B SaaS teams operationalizing AI features',
+      goal: 'Increase saves and profile visits',
+      status: 'scheduled',
+      publishChannel: 'linkedin',
+      notes: 'Design draft in Figma on Monday.',
+      createdAt: minusHours(96),
+      updatedAt: minusHours(10)
+    },
+    {
+      id: 'cli-005',
+      type: 'hook-bank-entry',
+      title: 'Hook: workflow ambiguity',
+      body: 'If your team cannot explain where human review happens, you do not have an AI system yet.',
+      tags: ['hooks', 'governance'],
+      audience: 'Engineering managers shipping AI-assisted workflows',
+      goal: 'Improve opening-line retention',
+      status: 'published',
+      publishChannel: 'linkedin',
+      notes: 'Strong performer in comments from March 14 post.',
+      createdAt: minusHours(240),
+      updatedAt: minusHours(120)
+    },
+    {
+      id: 'cli-006',
+      type: 'cta-snippet',
+      title: 'CTA: architecture teardown invitation',
+      body: 'Reply "SYSTEM" and I will send the one-page teardown template we use in architecture reviews.',
+      tags: ['cta', 'lead-gen'],
+      audience: 'Founders evaluating architecture support',
+      goal: 'Generate qualified inbound replies',
+      status: 'ready',
+      publishChannel: 'linkedin',
+      notes: 'Pair with post about review cadence.',
+      createdAt: minusHours(180),
+      updatedAt: minusHours(36)
+    },
+    {
+      id: 'cli-007',
+      type: 'reusable-paragraph',
+      title: 'Reusable paragraph: systems positioning block',
+      body: 'I help teams move from AI prototype chaos to repeatable delivery by defining ownership, orchestration, and quality controls that survive real deadlines.',
+      tags: ['positioning', 'about-section'],
+      audience: 'Prospective clients reading profile and proposals',
+      goal: 'Keep messaging consistent across channels',
+      status: 'ready',
+      publishChannel: 'blog',
+      notes: 'Use in proposal intro and About page refresh.',
+      createdAt: minusHours(220),
+      updatedAt: minusHours(48)
     }
   ],
   contacts: [

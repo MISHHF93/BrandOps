@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Clock3, Database, Target } from 'lucide-react';
 import { BrandVaultPanel } from '../../modules/brandVault/BrandVaultPanel';
+import { ContentLibraryPanel } from '../../modules/contentLibrary/ContentLibraryPanel';
 import { BrandHeader } from '../../shared/ui/BrandHeader';
 import { useBrandOpsStore } from '../../state/useBrandOpsStore';
 
@@ -219,6 +220,8 @@ export function DashboardApp() {
           </div>
         </article>
       </section>
+
+      <ContentLibraryPanel />
 
       <BrandVaultPanel />
     </main>

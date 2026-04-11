@@ -1,10 +1,76 @@
 import { seedData } from '../../modules/brandMemory/seed';
 import { browserLocalStorage } from '../../shared/storage/browserStorage';
-import { BrandOpsData, BrandVault } from '../../types/domain';
+import {
+  BrandOpsData,
+  BrandVault,
+  ContentItemStatus,
+  ContentItemType,
+  ContentLibraryItem,
+  PublishChannel
+} from '../../types/domain';
 
 const DATA_KEY = 'brandops:data';
 
 const defaultBrandVault: BrandVault = seedData.brandVault;
+
+const CONTENT_TYPE_FALLBACK: ContentItemType = 'reusable-paragraph';
+const CONTENT_STATUS_FALLBACK: ContentItemStatus = 'idea';
+const PUBLISH_CHANNEL_FALLBACK: PublishChannel = 'linkedin';
+
+const asStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+};
+
+const normalizeContentLibrary = (items: unknown): ContentLibraryItem[] => {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item): ContentLibraryItem | null => {
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+
+      const id = typeof candidate.id === 'string' ? candidate.id : `cli-${Math.random().toString(36).slice(2, 9)}`;
+      const title =
+        typeof candidate.title === 'string'
+          ? candidate.title
+          : typeof candidate.label === 'string'
+            ? candidate.label
+            : 'Untitled content item';
+      const body =
+        typeof candidate.body === 'string'
+          ? candidate.body
+          : typeof candidate.text === 'string'
+            ? candidate.text
+            : '';
+
+      return {
+        id,
+        type: (candidate.type as ContentItemType) ?? CONTENT_TYPE_FALLBACK,
+        title,
+        body,
+        tags: asStringArray(candidate.tags),
+        audience: typeof candidate.audience === 'string' ? candidate.audience : 'General audience',
+        goal: typeof candidate.goal === 'string' ? candidate.goal : 'Capture and refine reusable content',
+        status: (candidate.status as ContentItemStatus) ?? CONTENT_STATUS_FALLBACK,
+        publishChannel: (candidate.publishChannel as PublishChannel) ?? PUBLISH_CHANNEL_FALLBACK,
+        notes: typeof candidate.notes === 'string' ? candidate.notes : '',
+        createdAt:
+          typeof candidate.createdAt === 'string'
+            ? candidate.createdAt
+            : typeof candidate.lastUsedAt === 'string'
+              ? candidate.lastUsedAt
+              : new Date().toISOString(),
+        updatedAt:
+          typeof candidate.updatedAt === 'string'
+            ? candidate.updatedAt
+            : typeof candidate.lastUsedAt === 'string'
+              ? candidate.lastUsedAt
+              : new Date().toISOString()
+      };
+    })
+    .filter((item): item is ContentLibraryItem => Boolean(item));
+};
 
 const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   ...base,
@@ -17,7 +83,8 @@ const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
 const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   notes: base.notes ?? [],
-  brandVault: base.brandVault ?? defaultBrandVault
+  brandVault: base.brandVault ?? defaultBrandVault,
+  contentLibrary: normalizeContentLibrary(base.contentLibrary)
 });
 
 const isBrandOpsData = (value: unknown): value is BrandOpsData => {
