@@ -2,15 +2,12 @@ module.exports = {
   content: ['./*.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
-      colors: {
-        bg: '#090D13',
-        panel: '#101826',
-        glow: '#3B82F6',
-        accent: '#7C3AED'
+      borderRadius: {
+        xl: '0.9rem',
+        '2xl': '1rem'
       },
       boxShadow: {
-        panel: '0 12px 50px rgba(59,130,246,0.12)',
-        subtle: 'inset 0 1px 0 rgba(255,255,255,0.06)'
+        luxe: '0 18px 48px rgba(6, 16, 34, 0.48)'
       }
     }
   },

@@ -1,9 +1,8 @@
-import { storageService } from '../services/storage/storage';
 import { RuntimeMessage } from '../services/messaging/messages';
+import { storageService } from '../services/storage/storage';
 
 chrome.runtime.onInstalled.addListener(async () => {
-  const existing = await storageService.getData();
-  await storageService.setData(existing);
+  await storageService.getData();
 });
 
 chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResponse) => {
@@ -14,8 +13,7 @@ chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResp
     }
 
     if (message.type === 'RESET_DATA') {
-      await storageService.reset();
-      sendResponse({ ok: true });
+      sendResponse(await storageService.resetToSeed());
       return;
     }
 

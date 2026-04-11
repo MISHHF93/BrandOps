@@ -1,17 +1,26 @@
-import { BrandOpsData } from '../../types/domain';
 import { seedData } from '../../modules/brandMemory/seed';
+import { browserLocalStorage } from '../../shared/storage/browserStorage';
+import { BrandOpsData } from '../../types/domain';
 
-const KEY = 'brandops:data';
+const DATA_KEY = 'brandops:data';
 
 export const storageService = {
   async getData(): Promise<BrandOpsData> {
-    const result = await chrome.storage.local.get(KEY);
-    return (result[KEY] as BrandOpsData | undefined) ?? seedData;
+    const stored = await browserLocalStorage.get<BrandOpsData>(DATA_KEY);
+    if (stored) {
+      return stored;
+    }
+
+    await browserLocalStorage.set(DATA_KEY, seedData);
+    return seedData;
   },
+
   async setData(data: BrandOpsData): Promise<void> {
-    await chrome.storage.local.set({ [KEY]: data });
+    await browserLocalStorage.set(DATA_KEY, data);
   },
-  async reset(): Promise<void> {
-    await chrome.storage.local.set({ [KEY]: seedData });
+
+  async resetToSeed(): Promise<BrandOpsData> {
+    await browserLocalStorage.set(DATA_KEY, seedData);
+    return seedData;
   }
 };
