@@ -3,38 +3,56 @@ import { WorkspaceModule } from '../../types/domain';
 export const workspaceModules: WorkspaceModule[] = [
   {
     id: 'dashboard',
-    title: 'Dashboard',
-    description: 'KPI snapshot and next actions across your brand operations.',
-    status: 'available'
+    title: 'Command Center',
+    description: 'Daily execution cockpit for publishing, outreach, and pipeline momentum.',
+    status: 'active'
   },
   {
-    id: 'brand-memory',
-    title: 'Brand Memory',
-    description: 'Source of truth for positioning, voice, and strategic constraints.',
-    status: 'planned'
+    id: 'publishing-queue',
+    title: 'Publishing Queue',
+    description: 'Capture drafts, mark readiness, and schedule reminder timestamps.',
+    status: 'active'
   },
   {
-    id: 'content-studio',
-    title: 'Content Studio',
-    description: 'Generate and iterate high-leverage content with reusable workflows.',
-    status: 'planned'
+    id: 'content-library',
+    title: 'Content Library',
+    description: 'Store reusable hooks, proof points, and closing CTAs.',
+    status: 'active'
   },
   {
-    id: 'outreach-assistant',
-    title: 'Outreach Assistant',
-    description: 'Compose context-aware outreach and follow-up sequences.',
-    status: 'planned'
+    id: 'outreach-workspace',
+    title: 'Outreach Workspace',
+    description: 'Build message drafts and multi-touchpoint outreach sequences.',
+    status: 'active'
   },
   {
-    id: 'opportunity-crm',
-    title: 'Opportunity CRM',
-    description: 'Track pipeline opportunities and momentum by stage.',
-    status: 'planned'
+    id: 'follow-up-scheduler',
+    title: 'Follow-Up Scheduler',
+    description: 'Track overdue follow-ups and execution discipline.',
+    status: 'active'
+  },
+  {
+    id: 'opportunity-pipeline',
+    title: 'Opportunity Pipeline CRM',
+    description: 'Move opportunities through stages with confidence-weighted value.',
+    status: 'active'
+  },
+  {
+    id: 'messaging-vault',
+    title: 'Brand Messaging Vault',
+    description: 'Protect approved positioning, offers, and FAQ responses.',
+    status: 'active'
+  },
+  {
+    id: 'linkedin-overlay',
+    title: 'LinkedIn Companion Overlay',
+    description: 'Contextual sidebar focused on reminders, not unsafe automation.',
+    status: 'active'
   },
   {
     id: 'settings',
-    title: 'Settings',
-    description: 'Configure providers, prompts, and extension behavior.',
-    status: 'available'
+    title: 'Settings / Export / Import',
+    description: 'Configure local-first behavior and optional future adapters.',
+    status: 'active'
   }
 ];
