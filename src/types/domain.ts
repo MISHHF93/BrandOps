@@ -87,6 +87,13 @@ export interface Contact {
   lastContactAt: string;
 }
 
+export interface ActivityNote {
+  id: string;
+  title: string;
+  detail: string;
+  createdAt: string;
+}
+
 export interface MessagingVaultEntry {
   id: string;
   category: 'positioning' | 'offer' | 'case-study' | 'faq';
@@ -138,6 +145,7 @@ export interface BrandOpsData {
   publishingQueue: PublishingItem[];
   contentLibrary: ContentAsset[];
   contacts: Contact[];
+  notes: ActivityNote[];
   outreachDrafts: OutreachDraft[];
   followUps: FollowUpTask[];
   opportunities: Opportunity[];

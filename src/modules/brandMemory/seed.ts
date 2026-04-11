@@ -76,6 +76,26 @@ export const seedData: BrandOpsData = {
       lastContactAt: minusHours(6)
     }
   ],
+  notes: [
+    {
+      id: 'note-001',
+      title: 'Daily intent',
+      detail: 'Prioritize one authority post, three outreach touches, and proposal follow-up before noon.',
+      createdAt: minusHours(2)
+    },
+    {
+      id: 'note-002',
+      title: 'Pipeline insight',
+      detail: 'Northstar asked for lean phase-1 scope; include optional governance add-on in proposal.',
+      createdAt: minusHours(9)
+    },
+    {
+      id: 'note-003',
+      title: 'Content angle',
+      detail: 'Next post: show how sprint retros become sales assets with a 3-step conversion framework.',
+      createdAt: minusHours(20)
+    }
+  ],
   outreachDrafts: [
     {
       id: 'out-001',

@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { storageService } from '../services/storage/storage';
 import {
+  ActivityNote,
   BrandOpsData,
+  Contact,
   ContentAsset,
   MessagingVaultEntry,
   OutreachDraft,
@@ -26,6 +28,9 @@ interface StoreState {
     subject: string;
     message: string;
   }) => Promise<void>;
+  addContact: (payload: { fullName: string; title: string; company: string }) => Promise<void>;
+  logFollowUp: (payload: { contactId: string; reason: string; dueAt: string }) => Promise<void>;
+  addNote: (payload: { title: string; detail: string }) => Promise<void>;
   toggleFollowUp: (id: string) => Promise<void>;
   addVaultEntry: (payload: Omit<MessagingVaultEntry, 'id'>) => Promise<void>;
   addContentAsset: (payload: Omit<ContentAsset, 'id'>) => Promise<void>;
@@ -106,6 +111,62 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
     };
 
     const updated = { ...current, outreachDrafts: [draft, ...current.outreachDrafts] };
+    await storageService.setData(updated);
+    set({ data: updated });
+  },
+
+  async addContact(payload) {
+    const current = get().data;
+    if (!current) return;
+
+    const contact: Contact = {
+      id: uid('contact'),
+      fullName: payload.fullName,
+      title: payload.title,
+      company: payload.company,
+      relationship: 'new',
+      lastContactAt: new Date().toISOString()
+    };
+
+    const updated = { ...current, contacts: [contact, ...current.contacts] };
+    await storageService.setData(updated);
+    set({ data: updated });
+  },
+
+  async logFollowUp(payload) {
+    const current = get().data;
+    if (!current) return;
+
+    const updated = {
+      ...current,
+      followUps: [
+        {
+          id: uid('fu'),
+          contactId: payload.contactId,
+          reason: payload.reason,
+          dueAt: payload.dueAt,
+          completed: false
+        },
+        ...current.followUps
+      ]
+    };
+
+    await storageService.setData(updated);
+    set({ data: updated });
+  },
+
+  async addNote(payload) {
+    const current = get().data;
+    if (!current) return;
+
+    const note: ActivityNote = {
+      id: uid('note'),
+      title: payload.title,
+      detail: payload.detail,
+      createdAt: new Date().toISOString()
+    };
+
+    const updated = { ...current, notes: [note, ...current.notes] };
     await storageService.setData(updated);
     set({ data: updated });
   },
