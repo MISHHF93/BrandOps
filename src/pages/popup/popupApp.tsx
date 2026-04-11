@@ -36,7 +36,7 @@ export function PopupApp() {
     const activeOpportunities = data.opportunities.filter(
       (item) => item.stage !== 'won' && item.stage !== 'lost'
     ).length;
-    const savedDrafts = data.publishingQueue.filter((item) => item.status === 'draft').length;
+    const savedDrafts = data.publishingQueue.filter((item) => item.status !== 'posted').length;
     const recentNotes = data.notes.slice(0, 3);
 
     const timeline = [
@@ -143,8 +143,10 @@ export function PopupApp() {
           </button>
           <button
             onClick={() => {
-              const ready = data.publishingQueue.find((item) => item.status === 'ready');
-              if (ready) void updatePublishingStatus(ready.id, 'scheduled');
+              const ready = data.publishingQueue.find(
+                (item) => item.status === 'ready-to-post' || item.status === 'due-soon'
+              );
+              if (ready) void updatePublishingStatus(ready.id, 'queued');
             }}
             className="bo-link"
           >

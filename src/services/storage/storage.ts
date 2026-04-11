@@ -6,6 +6,7 @@ import {
   ContentItemStatus,
   ContentItemType,
   ContentLibraryItem,
+  PublishingItem,
   PublishChannel
 } from '../../types/domain';
 
@@ -72,6 +73,60 @@ const normalizeContentLibrary = (items: unknown): ContentLibraryItem[] => {
     .filter((item): item is ContentLibraryItem => Boolean(item));
 };
 
+const normalizePublishingQueue = (items: unknown): PublishingItem[] => {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item): PublishingItem | null => {
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const createdAt = typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString();
+      const scheduledFor =
+        typeof candidate.scheduledFor === 'string'
+          ? candidate.scheduledFor
+          : typeof candidate.reminderAt === 'string'
+            ? candidate.reminderAt
+            : undefined;
+      const status = candidate.status;
+      const normalizedStatus =
+        status === 'queued' ||
+        status === 'due-soon' ||
+        status === 'ready-to-post' ||
+        status === 'posted' ||
+        status === 'skipped'
+          ? status
+          : status === 'draft' || status === 'scheduled'
+            ? 'queued'
+            : status === 'ready'
+              ? 'ready-to-post'
+              : status === 'published'
+                ? 'posted'
+                : 'queued';
+
+      return {
+        id:
+          typeof candidate.id === 'string' ? candidate.id : `pub-${Math.random().toString(36).slice(2, 9)}`,
+        title: typeof candidate.title === 'string' ? candidate.title : 'Untitled publishing item',
+        body: typeof candidate.body === 'string' ? candidate.body : '',
+        platforms: ['linkedin'],
+        tags: asStringArray(candidate.tags),
+        status: normalizedStatus,
+        contentLibraryItemId:
+          typeof candidate.contentLibraryItemId === 'string' ? candidate.contentLibraryItemId : undefined,
+        scheduledFor,
+        reminderAt: typeof candidate.reminderAt === 'string' ? candidate.reminderAt : undefined,
+        reminderLeadMinutes:
+          typeof candidate.reminderLeadMinutes === 'number' ? candidate.reminderLeadMinutes : undefined,
+        checklist: typeof candidate.checklist === 'string' ? candidate.checklist : undefined,
+        postedAt: typeof candidate.postedAt === 'string' ? candidate.postedAt : undefined,
+        skippedAt: typeof candidate.skippedAt === 'string' ? candidate.skippedAt : undefined,
+        createdAt,
+        updatedAt: typeof candidate.updatedAt === 'string' ? candidate.updatedAt : createdAt
+      };
+    })
+    .filter((item): item is PublishingItem => Boolean(item));
+};
+
 const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   seed: {
@@ -84,7 +139,8 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   notes: base.notes ?? [],
   brandVault: base.brandVault ?? defaultBrandVault,
-  contentLibrary: normalizeContentLibrary(base.contentLibrary)
+  contentLibrary: normalizeContentLibrary(base.contentLibrary),
+  publishingQueue: normalizePublishingQueue(base.publishingQueue)
 });
 
 const isBrandOpsData = (value: unknown): value is BrandOpsData => {

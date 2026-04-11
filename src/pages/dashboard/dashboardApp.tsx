@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Clock3, Database, Target } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+import { AlertTriangle, CheckCircle2, Database, Target } from 'lucide-react';
 import { BrandVaultPanel } from '../../modules/brandVault/BrandVaultPanel';
 import { ContentLibraryPanel } from '../../modules/contentLibrary/ContentLibraryPanel';
+import { PublishingQueuePanel } from '../../modules/publishingQueue/PublishingQueuePanel';
 import { BrandHeader } from '../../shared/ui/BrandHeader';
 import { useBrandOpsStore } from '../../state/useBrandOpsStore';
 
@@ -19,13 +20,9 @@ export function DashboardApp() {
   const {
     data,
     init,
-    addPublishingDraft,
-    updatePublishingStatus,
     addOutreachDraft,
     toggleFollowUp
   } = useBrandOpsStore();
-  const [draftTitle, setDraftTitle] = useState('');
-  const [draftBody, setDraftBody] = useState('');
 
   useEffect(() => {
     void init();
@@ -83,66 +80,6 @@ export function DashboardApp() {
       <section className="grid gap-3 xl:grid-cols-2">
         <article className="bo-card space-y-3">
           <header className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Publishing Queue</h2>
-            <Clock3 size={14} className="text-slate-400" />
-          </header>
-
-          <div className="space-y-2">
-            <input
-              value={draftTitle}
-              onChange={(event) => setDraftTitle(event.target.value)}
-              placeholder="Post title"
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm"
-            />
-            <textarea
-              value={draftBody}
-              onChange={(event) => setDraftBody(event.target.value)}
-              placeholder="Paste LinkedIn post content"
-              rows={3}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm"
-            />
-            <button
-              onClick={() => {
-                if (!draftTitle.trim() || !draftBody.trim()) return;
-                void addPublishingDraft({ title: draftTitle.trim(), body: draftBody.trim() });
-                setDraftTitle('');
-                setDraftBody('');
-              }}
-              className="bo-link"
-            >
-              Save draft
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            {data.publishingQueue.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-sm"
-              >
-                <p className="font-medium">{item.title}</p>
-                <p className="mt-1 line-clamp-2 text-xs text-slate-400">{item.body}</p>
-                <div className="mt-2 flex items-center gap-2 text-xs">
-                  <span className="bo-pill">{item.status}</span>
-                  <button
-                    className="bo-link px-2 py-1 text-[11px]"
-                    onClick={() =>
-                      void updatePublishingStatus(
-                        item.id,
-                        item.status === 'ready' ? 'scheduled' : 'ready'
-                      )
-                    }
-                  >
-                    {item.status === 'ready' ? 'Schedule' : 'Mark ready'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="bo-card space-y-3">
-          <header className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Outreach Workspace</h2>
             <Target size={14} className="text-slate-400" />
           </header>
@@ -177,6 +114,8 @@ export function DashboardApp() {
           </div>
         </article>
       </section>
+
+      <PublishingQueuePanel />
 
       <section className="grid gap-3 xl:grid-cols-3">
         <article className="bo-card space-y-3">

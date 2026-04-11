@@ -98,19 +98,29 @@ export const seedData: BrandOpsData = {
       body: 'A reliable LinkedIn operating loop beats occasional brilliance. Capture ideas, schedule reminders, and publish before perfection anxiety takes over.',
       platforms: ['linkedin'],
       tags: ['workflow', 'founder-ops'],
-      status: 'ready',
+      status: 'due-soon',
+      contentLibraryItemId: 'cli-001',
+      scheduledFor: plusHours(20),
       reminderAt: plusHours(18),
-      createdAt: minusHours(12)
+      reminderLeadMinutes: 120,
+      checklist: 'Confirm hook in first line\nVerify CTA asks for one clear action',
+      createdAt: minusHours(12),
+      updatedAt: minusHours(1)
     },
     {
       id: 'pub-002',
       title: 'How to convert delivery lessons into authority posts',
       body: 'Every client sprint leaves repeatable lessons. Distill one mistake, one correction, and one operating principle. That becomes a post and a sales asset.',
-      platforms: ['linkedin', 'newsletter'],
+      platforms: ['linkedin'],
       tags: ['consulting', 'systems'],
-      status: 'scheduled',
+      status: 'queued',
+      contentLibraryItemId: 'cli-002',
+      scheduledFor: plusHours(46),
       reminderAt: plusHours(46),
-      createdAt: minusHours(30)
+      reminderLeadMinutes: 1440,
+      checklist: 'Add one client-safe metric\nReplace generic opening with stronger hook',
+      createdAt: minusHours(30),
+      updatedAt: minusHours(3)
     }
   ],
   contentLibrary: [
