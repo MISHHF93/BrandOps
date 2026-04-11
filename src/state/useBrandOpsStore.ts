@@ -6,7 +6,10 @@ import {
   BrandVault,
   BrandVaultListField,
   Contact,
-  ContentAsset,
+  ContentItemStatus,
+  ContentItemType,
+  ContentLibraryItem,
+  PublishChannel,
   MessagingVaultEntry,
   OutreachDraft,
   PublishingItem,
@@ -35,7 +38,23 @@ interface StoreState {
   addNote: (payload: { title: string; detail: string }) => Promise<void>;
   toggleFollowUp: (id: string) => Promise<void>;
   addVaultEntry: (payload: Omit<MessagingVaultEntry, 'id'>) => Promise<void>;
-  addContentAsset: (payload: Omit<ContentAsset, 'id'>) => Promise<void>;
+  addContentLibraryItem: (payload: {
+    type: ContentItemType;
+    title: string;
+    body: string;
+    tags: string[];
+    audience: string;
+    goal: string;
+    status: ContentItemStatus;
+    publishChannel: PublishChannel;
+    notes: string;
+  }) => Promise<void>;
+  updateContentLibraryItem: (
+    id: string,
+    payload: Partial<Omit<ContentLibraryItem, 'id' | 'createdAt'>>
+  ) => Promise<void>;
+  duplicateContentLibraryItem: (id: string) => Promise<void>;
+  archiveContentLibraryItem: (id: string) => Promise<void>;
   updateBrandVaultTextField: (
     field: 'positioningStatement' | 'shortBio' | 'fullAboutSummary',
     value: string
@@ -227,13 +246,89 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
     );
   },
 
-  async addContentAsset(payload) {
+  async addContentLibraryItem(payload) {
     const current = get().data;
-    const asset: ContentAsset = { id: uid('asset'), ...payload };
+    const now = new Date().toISOString();
+    const item: ContentLibraryItem = {
+      id: uid('cli'),
+      ...payload,
+      createdAt: now,
+      updatedAt: now
+    };
 
     await updateData(
       current,
-      (currentData) => ({ ...currentData, contentLibrary: [asset, ...currentData.contentLibrary] }),
+      (currentData) => ({ ...currentData, contentLibrary: [item, ...currentData.contentLibrary] }),
+      (data) => set({ data })
+    );
+  },
+
+  async updateContentLibraryItem(id, payload) {
+    const current = get().data;
+
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        contentLibrary: currentData.contentLibrary.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                ...payload,
+                updatedAt: new Date().toISOString()
+              }
+            : item
+        )
+      }),
+      (data) => set({ data })
+    );
+  },
+
+  async duplicateContentLibraryItem(id) {
+    const current = get().data;
+
+    await updateData(
+      current,
+      (currentData) => {
+        const source = currentData.contentLibrary.find((item) => item.id === id);
+        if (!source) return currentData;
+
+        const now = new Date().toISOString();
+        const duplicate: ContentLibraryItem = {
+          ...source,
+          id: uid('cli'),
+          title: `${source.title} (Copy)`,
+          status: source.status === 'archived' ? 'idea' : source.status,
+          createdAt: now,
+          updatedAt: now
+        };
+
+        return {
+          ...currentData,
+          contentLibrary: [duplicate, ...currentData.contentLibrary]
+        };
+      },
+      (data) => set({ data })
+    );
+  },
+
+  async archiveContentLibraryItem(id) {
+    const current = get().data;
+
+    await updateData(
+      current,
+      (currentData) => ({
+        ...currentData,
+        contentLibrary: currentData.contentLibrary.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: 'archived',
+                updatedAt: new Date().toISOString()
+              }
+            : item
+        )
+      }),
       (data) => set({ data })
     );
   },

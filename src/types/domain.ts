@@ -30,12 +30,38 @@ export interface PublishingItem {
   createdAt: string;
 }
 
-export interface ContentAsset {
+export type ContentItemType =
+  | 'post-draft'
+  | 'post-idea'
+  | 'article-note'
+  | 'carousel-outline'
+  | 'hook-bank-entry'
+  | 'cta-snippet'
+  | 'reusable-paragraph';
+
+export type ContentItemStatus =
+  | 'idea'
+  | 'drafting'
+  | 'ready'
+  | 'scheduled'
+  | 'published'
+  | 'archived';
+
+export type PublishChannel = 'linkedin' | 'newsletter' | 'x' | 'blog' | 'youtube' | 'podcast';
+
+export interface ContentLibraryItem {
   id: string;
-  label: string;
-  category: 'hook' | 'cta' | 'story' | 'objection-handle' | 'proof-point';
-  text: string;
-  lastUsedAt?: string;
+  type: ContentItemType;
+  title: string;
+  body: string;
+  tags: string[];
+  audience: string;
+  goal: string;
+  status: ContentItemStatus;
+  publishChannel: PublishChannel;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type OutreachStatus = 'draft' | 'queued' | 'sent' | 'replied';
@@ -169,7 +195,7 @@ export interface BrandOpsData {
   brandVault: BrandVault;
   modules: WorkspaceModule[];
   publishingQueue: PublishingItem[];
-  contentLibrary: ContentAsset[];
+  contentLibrary: ContentLibraryItem[];
   contacts: Contact[];
   notes: ActivityNote[];
   outreachDrafts: OutreachDraft[];
