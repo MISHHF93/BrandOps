@@ -428,6 +428,49 @@ const normalizeActivityNotes = (items: unknown): ActivityNote[] => {
     .filter((item): item is ActivityNote => Boolean(item));
 };
 
+const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
+  const fallback = seedData.settings;
+  if (!settings || typeof settings !== 'object') {
+    return fallback;
+  }
+
+  const candidate = settings as Partial<BrandOpsData['settings']>;
+  return {
+    timezone: typeof candidate.timezone === 'string' ? candidate.timezone : fallback.timezone,
+    defaultReminderLeadHours:
+      typeof candidate.defaultReminderLeadHours === 'number' ? candidate.defaultReminderLeadHours : fallback.defaultReminderLeadHours,
+    weekStartsOn: candidate.weekStartsOn === 'sunday' ? 'sunday' : 'monday',
+    localModelEnabled: Boolean(candidate.localModelEnabled),
+    aiAdapterMode:
+      candidate.aiAdapterMode === 'local-only' || candidate.aiAdapterMode === 'external-opt-in'
+        ? candidate.aiAdapterMode
+        : 'disabled',
+    debugMode: Boolean(candidate.debugMode),
+    overlay: {
+      enabled: Boolean(candidate.overlay?.enabled),
+      compactMode: Boolean(candidate.overlay?.compactMode),
+      showContactInsights: Boolean(candidate.overlay?.showContactInsights)
+    },
+    automationRules: Array.isArray(candidate.automationRules)
+      ? candidate.automationRules
+          .filter((rule): rule is BrandOpsData['settings']['automationRules'][number] => {
+            return (
+              Boolean(rule) &&
+              typeof rule.id === 'string' &&
+              typeof rule.name === 'string' &&
+              (rule.trigger === 'publish-reminder' ||
+                rule.trigger === 'follow-up-overdue' ||
+                rule.trigger === 'weekly-review') &&
+              (rule.action === 'badge-highlight' ||
+                rule.action === 'dashboard-pin' ||
+                rule.action === 'notification') &&
+              typeof rule.enabled === 'boolean'
+            );
+          })
+      : fallback.automationRules
+  };
+};
+
 const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   seed: {
@@ -448,6 +491,7 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   outreachDrafts: normalizeOutreachDrafts(base.outreachDrafts),
   outreachTemplates: normalizeOutreachTemplates(base.outreachTemplates),
   outreachHistory: normalizeOutreachHistory(base.outreachHistory),
+  settings: normalizeSettings(base.settings),
   scheduler: base.scheduler ?? {
     tasks: [],
     updatedAt: new Date().toISOString(),
@@ -458,7 +502,14 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
 const isBrandOpsData = (value: unknown): value is BrandOpsData => {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<BrandOpsData>;
-  return Array.isArray(candidate.modules) && Array.isArray(candidate.publishingQueue);
+  return (
+    Array.isArray(candidate.modules) &&
+    Array.isArray(candidate.publishingQueue) &&
+    Array.isArray(candidate.contentLibrary) &&
+    Array.isArray(candidate.contacts) &&
+    Array.isArray(candidate.opportunities) &&
+    Boolean(candidate.settings)
+  );
 };
 
 export const storageService = {
