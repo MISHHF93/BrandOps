@@ -4,7 +4,7 @@ import { GoogleSignInButton } from '../../shared/ui/oauth/GoogleSignInButton';
 import { GitHubSignInButton } from '../../shared/ui/oauth/GitHubSignInButton';
 import { LinkedInSignInButton } from '../../shared/ui/oauth/LinkedInSignInButton';
 import { getPrimaryIdentityLabel } from '../../shared/identity/primaryIdentityLabel';
-import { canAccessApp } from '../../shared/identity/sessionAccess';
+import { canAccessApp, isDemoBypassBuild } from '../../shared/identity/sessionAccess';
 import { InlineAlert } from '../../shared/ui/components';
 import type { OAuthButtonVariant } from '../../shared/ui/oauth/oauthButtonStyles';
 import { oauthWelcomeMarketingOutlineClass } from '../../shared/ui/oauth/oauthButtonStyles';
@@ -36,6 +36,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
   const [localError, setLocalError] = useState<string | null>(null);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const isDev = import.meta.env.DEV;
+  const demoBypass = isDemoBypassBuild();
   /** `undefined` while store is loading — URL sync waits until session is known. */
   const sessionSignedIn = data == null ? undefined : canAccessApp(data);
   const { authMode, setAuthMode } = useWelcomeAuthMode(sessionSignedIn);
@@ -148,7 +149,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
             />
           </div>
 
-          {isDev ? (
+          {isDev || demoBypass ? (
             <button
               type="button"
               className="mt-4 w-full rounded-lg border border-border bg-surface/60 px-4 py-2.5 text-sm font-medium text-text transition hover:bg-surfaceHover/70"
@@ -159,7 +160,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
                 await onContinue();
               }}
             >
-              Enter demo mode (dev only)
+              {demoBypass && !isDev ? 'Enter demo mode (preview)' : 'Enter demo mode (dev only)'}
             </button>
           ) : null}
 

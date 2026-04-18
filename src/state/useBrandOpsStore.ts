@@ -38,6 +38,7 @@ import {
   IdentityProviderId,
   IntegrationSource
 } from '../types/domain';
+import { isDemoBypassBuild } from '../shared/identity/sessionAccess';
 
 interface StoreState {
   data: BrandOpsData | null;
@@ -767,7 +768,7 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
   async startDemoSession() {
     const current = get().data;
     if (!current) return;
-    if (!import.meta.env.DEV) return;
+    if (!import.meta.env.DEV && !isDemoBypassBuild()) return;
 
     const now = new Date().toISOString();
     await updateData(
