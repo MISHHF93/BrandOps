@@ -23,6 +23,11 @@ import { hasExtensionIdentity, WELCOME_LEGAL_STORAGE_KEY } from './welcomeUtils'
 
 const oauthMarketingClass = `w-full ${oauthWelcomeMarketingOutlineClass} !text-text`;
 
+/** Setup hints (missing client IDs) vs real failures — avoids “Something went wrong” for configuration. */
+type WelcomeAlert =
+  | { kind: 'setup'; message: string }
+  | { kind: 'error'; title: string; message: string };
+
 export interface WelcomeAuthPanelProps {
   onContinue: () => void;
   canContinue: boolean;
@@ -38,7 +43,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
     connectLinkedInIdentity,
     startDemoSession
   } = useBrandOpsStore();
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [alert, setAlert] = useState<WelcomeAlert | null>(null);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const isDev = import.meta.env.DEV;
   const demoBypass = isDemoBypassBuild();
@@ -84,16 +89,12 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
   };
 
   const run = async (fn: () => Promise<void>) => {
-    setLocalError(null);
+    setAlert(null);
     try {
       await fn();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Connection failed.';
-      if (/oauth|client id|client_id/i.test(message)) {
-        setLocalError('This sign-in provider is not available yet. Please try another provider.');
-        return;
-      }
-      setLocalError(message);
+      setAlert({ kind: 'error', title: 'Cannot complete sign-in', message });
     }
   };
 
@@ -103,11 +104,15 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
     missingProviderMessage: string
   ) => {
     if (!legalAccepted) {
-      setLocalError('Please accept the Terms of Service and Privacy Policy first.');
+      setAlert({
+        kind: 'error',
+        title: 'Terms required',
+        message: 'Please accept the Terms of Service and Privacy Policy first.'
+      });
       return;
     }
     if (!providerConfigured) {
-      setLocalError(missingProviderMessage);
+      setAlert({ kind: 'setup', message: missingProviderMessage });
       return;
     }
     await run(connect);
@@ -126,7 +131,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
               <InlineAlert
                 tone="info"
                 title="Preview in your browser"
-                message="No OAuth client IDs are set for this preview build. Use **Enter demo mode (browser preview)** below, or add VITE_GOOGLE_CLIENT_ID / VITE_GITHUB_CLIENT_ID / VITE_LINKEDIN_CLIENT_ID so sign-in can run in the browser (popup)."
+                message="No OAuth client IDs detected yet. Use **Enter demo mode** below, or set VITE_* env vars (redeploy), or edit **public/brandops-oauth-public.json** on the server, then reload."
                 className="rounded-lg border-border bg-surface/35 text-text"
               />
             </div>
@@ -143,13 +148,17 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
             </div>
           ) : null}
 
-          {localError ? (
+          {alert ? (
             <div className="mt-6">
               <InlineAlert
-                tone="danger"
-                title="Something went wrong"
-                message={localError}
-                className="rounded-lg border-danger/40 bg-dangerSoft/15 text-text"
+                tone={alert.kind === 'setup' ? 'warning' : 'danger'}
+                title={alert.kind === 'setup' ? 'OAuth not configured for web sign-in' : alert.title}
+                message={alert.message}
+                className={
+                  alert.kind === 'setup'
+                    ? 'rounded-lg border-border bg-surface/35 text-text'
+                    : 'rounded-lg border-danger/40 bg-dangerSoft/15 text-text'
+                }
               />
             </div>
           ) : null}
@@ -160,7 +169,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
               className="mt-5 w-full rounded-xl border border-primary/35 bg-primary/10 px-4 py-3 text-sm font-semibold text-text transition hover:bg-primary/16"
               disabled={loading}
               onClick={async () => {
-                setLocalError(null);
+                setAlert(null);
                 await startDemoSession();
                 await onContinue();
               }}
@@ -178,8 +187,8 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
                   () => connectGoogleIdentity(),
                   runtimeReady || Boolean(googleOAuthId),
                   webPreviewDemo
-                    ? 'Add VITE_GOOGLE_CLIENT_ID (or a Google client ID in Settings) to sign in from this browser, or use Enter demo mode.'
-                    : 'Add VITE_GOOGLE_CLIENT_ID or a Google client ID in Settings to sign in from this browser, or open BrandOps from the Chrome extension.'
+                    ? 'No Google client ID for this site. Set VITE_GOOGLE_CLIENT_ID (redeploy), or put it in public/brandops-oauth-public.json as googleClientId, or use Enter demo mode / the extension.'
+                    : 'No Google client ID for this site. Set VITE_GOOGLE_CLIENT_ID (redeploy), add googleClientId in public/brandops-oauth-public.json, or sign in from the installed Chrome extension.'
                 )
               }
               disabled={loading}
@@ -193,8 +202,8 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
                   () => connectGitHubIdentity(),
                   runtimeReady || Boolean(githubOAuthId),
                   webPreviewDemo
-                    ? 'Add VITE_GITHUB_CLIENT_ID (or a GitHub client ID in Settings) to sign in from this browser, or use Enter demo mode.'
-                    : 'Add VITE_GITHUB_CLIENT_ID or a GitHub client ID in Settings to sign in from this browser, or open BrandOps from the Chrome extension.'
+                    ? 'No GitHub client ID for this site. Set VITE_GITHUB_CLIENT_ID (redeploy), or githubClientId in public/brandops-oauth-public.json, or use Enter demo mode / the extension.'
+                    : 'No GitHub client ID for this site. Set VITE_GITHUB_CLIENT_ID (redeploy), add githubClientId in public/brandops-oauth-public.json, or sign in from the installed Chrome extension.'
                 )
               }
               disabled={loading}
@@ -208,8 +217,8 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
                   () => connectLinkedInIdentity(),
                   runtimeReady || Boolean(linkedinOAuthId),
                   webPreviewDemo
-                    ? 'Add VITE_LINKEDIN_CLIENT_ID (or a LinkedIn client ID in Settings) to sign in from this browser, or use Enter demo mode.'
-                    : 'Add VITE_LINKEDIN_CLIENT_ID or a LinkedIn client ID in Settings to sign in from this browser, or open BrandOps from the Chrome extension.'
+                    ? 'No LinkedIn client ID for this site. Set VITE_LINKEDIN_CLIENT_ID (redeploy), or linkedinClientId in public/brandops-oauth-public.json, or use Enter demo mode / the extension.'
+                    : 'No LinkedIn client ID for this site. Set VITE_LINKEDIN_CLIENT_ID (redeploy), add linkedinClientId in public/brandops-oauth-public.json, or sign in from the installed Chrome extension.'
                 )
               }
               disabled={loading}
@@ -226,7 +235,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
                 className="mt-4 w-full rounded-lg border border-border bg-surface/60 px-4 py-2.5 text-sm font-medium text-text transition hover:bg-surfaceHover/70"
                 disabled={loading}
                 onClick={async () => {
-                  setLocalError(null);
+                  setAlert(null);
                   await startDemoSession();
                   await onContinue();
                 }}
@@ -243,7 +252,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
           ) : null}
           {showWebPreviewInfo ? (
             <p className="mt-2 text-center text-xs text-textMuted">
-              Add VITE_* OAuth client IDs in your deploy environment (and provider redirect URLs), or tap a provider below for details. Extension sign-in uses the Chrome Web Store build.
+              Use VITE_* env vars, or edit brandops-oauth-public.json on the host, then reload. Register redirect URLs in each provider console (see .env.example).
             </p>
           ) : !runtimeReady && hasWebOAuthClients ? (
             <p className="mt-2 text-center text-xs text-textMuted">

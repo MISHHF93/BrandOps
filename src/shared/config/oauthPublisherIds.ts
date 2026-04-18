@@ -5,19 +5,32 @@ function envString(key: 'VITE_GOOGLE_CLIENT_ID' | 'VITE_GITHUB_CLIENT_ID' | 'VIT
   return typeof v === 'string' ? v.trim() : '';
 }
 
+/** Optional IDs from `public/brandops-oauth-public.json` (no rebuild; set after deploy). */
+let runtimePublicOverrides: { google?: string; github?: string; linkedin?: string } = {};
+
+export function setOAuthClientIdRuntimeOverrides(next: Partial<typeof runtimePublicOverrides>): void {
+  runtimePublicOverrides = { ...runtimePublicOverrides, ...next };
+}
+
 /** Build-time OAuth client ID from the publisher’s Google Cloud / Chrome Web Store app (optional). */
 export function getPublisherGoogleClientId(): string {
-  return envString('VITE_GOOGLE_CLIENT_ID');
+  const envId = envString('VITE_GOOGLE_CLIENT_ID');
+  if (envId) return envId;
+  return runtimePublicOverrides.google?.trim() ?? '';
 }
 
 /** Build-time OAuth client ID from the publisher’s GitHub OAuth App (optional). */
 export function getPublisherGitHubClientId(): string {
-  return envString('VITE_GITHUB_CLIENT_ID');
+  const envId = envString('VITE_GITHUB_CLIENT_ID');
+  if (envId) return envId;
+  return runtimePublicOverrides.github?.trim() ?? '';
 }
 
 /** Build-time OAuth client ID from the publisher’s LinkedIn app (optional). */
 export function getPublisherLinkedInClientId(): string {
-  return envString('VITE_LINKEDIN_CLIENT_ID');
+  const envId = envString('VITE_LINKEDIN_CLIENT_ID');
+  if (envId) return envId;
+  return runtimePublicOverrides.linkedin?.trim() ?? '';
 }
 
 /** Prefer publisher env, then value saved in Settings. */

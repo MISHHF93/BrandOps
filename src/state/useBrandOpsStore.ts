@@ -10,6 +10,7 @@ import {
   applyAiSettingsOperations
 } from '../services/ai/aiSettingsMode';
 import { normalizeExternalSyncSectionReferences as normalizeSectionReferences } from '../shared/config/legacySectionIds';
+import { loadOAuthPublicOverrides } from '../shared/config/loadOAuthPublicOverrides';
 import {
   getEffectiveGitHubClientId,
   getEffectiveGoogleClientId,
@@ -309,6 +310,7 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
     set({ loading: true, error: undefined });
 
     try {
+      await loadOAuthPublicOverrides();
       const data = await storageService.getData();
       const withScheduler = { ...data, scheduler: scheduler.reconcile(data) };
       const persisted = await storageService.setData(withScheduler);
