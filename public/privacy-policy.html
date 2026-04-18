@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BrandOps — Privacy Policy</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --fg: #0f172a;
+        --muted: #475569;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --border: #e2e8f0;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #f1f5f9;
+          --muted: #94a3b8;
+          --bg: #0f172a;
+          --card: #1e293b;
+          --border: #334155;
+        }
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.55;
+        color: var(--fg);
+        background: var(--bg);
+      }
+      main {
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin: 0 0 0.5rem;
+      }
+      .meta {
+        font-size: 0.875rem;
+        color: var(--muted);
+        margin-bottom: 1.5rem;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+      }
+      h2 {
+        font-size: 1.05rem;
+        margin: 0 0 0.5rem;
+      }
+      p,
+      ul {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin: 0.5rem 0 0;
+      }
+      ul {
+        padding-left: 1.2rem;
+      }
+      li {
+        margin: 0.35rem 0;
+      }
+      table {
+        width: 100%;
+        font-size: 0.8rem;
+        border-collapse: collapse;
+        margin-top: 0.5rem;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 0.4rem 0.5rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        color: var(--fg);
+        background: rgba(148, 163, 184, 0.12);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>BrandOps Privacy Policy</h1>
+      <p class="meta"><strong>Effective date:</strong> April 16, 2026</p>
+
+      <section>
+        <h2>1. Who this applies to</h2>
+        <p>
+          Anyone who installs and uses BrandOps from the Chrome Web Store (or an equivalent distribution of this
+          extension package).
+        </p>
+      </section>
+
+      <section>
+        <h2>2. What BrandOps stores on your device</h2>
+        <p>
+          BrandOps keeps your workspace (tasks, pipeline, content, settings, and exports you create) in Chrome
+          extension storage on your device. That data stays on your device unless you export it or a future version
+          syncs to a server you configure.
+        </p>
+        <p>
+          The main dashboard requires a <strong>connected</strong> federated sign-in (Google, GitHub, or LinkedIn).
+        </p>
+      </section>
+
+      <section>
+        <h2>3. Federated sign-in (Google, GitHub, LinkedIn)</h2>
+        <p>
+          BrandOps uses OAuth 2.0 with PKCE. Tokens and minimal profile data for “Signed in as …” are stored locally.
+          The default build does not send those tokens to a BrandOps-operated backend. OAuth client IDs are supplied
+          at build time and/or optionally in Settings; client secrets are not embedded in the extension.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>Use in BrandOps</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Google</td>
+              <td>Sign-in; name, email, avatar per granted scopes</td>
+            </tr>
+            <tr>
+              <td>GitHub</td>
+              <td>Sign-in; name, email, avatar per granted scopes</td>
+            </tr>
+            <tr>
+              <td>LinkedIn</td>
+              <td>Sign-in; name, email, avatar per granted scopes</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>4. Network requests</h2>
+        <p>Besides Chrome’s own services, BrandOps may contact:</p>
+        <ul>
+          <li>Google (accounts, OAuth token, OpenID userinfo) for Google sign-in.</li>
+          <li>GitHub (authorize, token, user and email APIs) for GitHub sign-in.</li>
+          <li>LinkedIn (OAuth and userinfo) for LinkedIn sign-in; a content script may run on LinkedIn pages you visit for in-product features.</li>
+        </ul>
+        <p>We do not sell your personal information.</p>
+      </section>
+
+      <section>
+        <h2>5. Sign out and disconnect</h2>
+        <p>
+          Dashboard <strong>Sign out</strong> clears federated sessions as implemented. Settings
+          <strong>Disconnect</strong> removes a single provider. Removing the extension deletes locally stored data
+          subject to browser behavior.
+        </p>
+      </section>
+
+      <section>
+        <h2>6. Changes and contact</h2>
+        <p>
+          We may update this policy when the product changes. The effective date above will be revised. For questions,
+          use the support or privacy contact on the <strong>Chrome Web Store listing</strong> for BrandOps.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

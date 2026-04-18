@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BrandOps</title>
+    <link rel="icon" type="image/svg+xml" href="/brandops-crown.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/32.png" />
+    <meta name="theme-color" content="#ffffff" />
+  </head>
+  <body>
+    <script>
+      const target = new URL('/welcome.html', window.location.origin);
+      target.search = window.location.search;
+      target.hash = window.location.hash;
+      window.location.replace(target.toString());
+    </script>
+    <p>
+      Redirecting to
+      <a href="/welcome.html">BrandOps Welcome</a>
+      ...
+    </p>
+  </body>
+</html>

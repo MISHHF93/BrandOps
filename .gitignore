@@ -1,0 +1,12 @@
+node_modules/
+dist/
+release/
+*.tsbuildinfo
+
+# Local Vite / dev logs
+.vite*.log
+.vite-launch*.log
+
+# Local env (OAuth client IDs, privacy URL, etc.) — not committed
+.env.local
+.env.*.local
