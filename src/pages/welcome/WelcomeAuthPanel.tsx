@@ -56,6 +56,12 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
 
   const primaryLabel = getPrimaryIdentityLabel(data);
   const runtimeReady = hasExtensionIdentity();
+  /** Built with VITE_DEMO_BYPASS — safe for Vercel / Safari / any browser demo (OAuth still needs extension). */
+  const webPreviewDemo = demoBypass;
+  const oauthAvailable = runtimeReady;
+  const showInstallExtensionWarning = !oauthAvailable && !webPreviewDemo;
+  const showWebPreviewInfo = !oauthAvailable && webPreviewDemo;
+  const showDemoEscapeHatch = isDev || demoBypass;
 
   const persistLegal = (next: boolean) => {
     setLegalAccepted(next);
@@ -86,8 +92,12 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
       setLocalError('Please accept the Terms of Service and Privacy Policy first.');
       return;
     }
-    if (!runtimeReady) {
-      setLocalError('Open this page from the installed BrandOps extension to continue sign-in.');
+    if (!oauthAvailable) {
+      setLocalError(
+        webPreviewDemo
+          ? 'OAuth sign-in only runs inside the installed Chrome extension. Use Enter demo mode for this preview, or install BrandOps from the store.'
+          : 'Open this page from the installed BrandOps extension to continue sign-in.'
+      );
       return;
     }
     await run(connect);
@@ -101,7 +111,18 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
         <>
           <WelcomeAuthModeTabs authMode={authMode} onModeChange={setAuthMode} />
 
-          {!runtimeReady ? (
+          {showWebPreviewInfo ? (
+            <div className="mt-6">
+              <InlineAlert
+                tone="info"
+                title="Preview in your browser"
+                message="Google, GitHub, and LinkedIn sign-in uses the Chrome extension only. On this preview site, use **Enter demo mode (browser preview)** below—works in any browser, no install."
+                className="rounded-lg border-border bg-surface/35 text-text"
+              />
+            </div>
+          ) : null}
+
+          {showInstallExtensionWarning ? (
             <div className="mt-6">
               <InlineAlert
                 tone="warning"
@@ -123,36 +144,10 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
             </div>
           ) : null}
 
-          <WelcomeTermsConsent accepted={legalAccepted} onAcceptedChange={persistLegal} />
-
-          <div className="mt-6 space-y-2.5">
-            <GoogleSignInButton
-              onClick={() => void startProviderConnect(() => connectGoogleIdentity())}
-              disabled={loading}
-              loading={loading}
-              variant={buttonVariant}
-              className={oauthMarketingClass}
-            />
-            <GitHubSignInButton
-              onClick={() => void startProviderConnect(() => connectGitHubIdentity())}
-              disabled={loading}
-              loading={loading}
-              variant={buttonVariant}
-              className={oauthMarketingClass}
-            />
-            <LinkedInSignInButton
-              onClick={() => void startProviderConnect(() => connectLinkedInIdentity())}
-              disabled={loading}
-              loading={loading}
-              variant={buttonVariant}
-              className={oauthMarketingClass}
-            />
-          </div>
-
-          {isDev || demoBypass ? (
+          {showWebPreviewInfo ? (
             <button
               type="button"
-              className="mt-4 w-full rounded-lg border border-border bg-surface/60 px-4 py-2.5 text-sm font-medium text-text transition hover:bg-surfaceHover/70"
+              className="mt-5 w-full rounded-xl border border-primary/35 bg-primary/10 px-4 py-3 text-sm font-semibold text-text transition hover:bg-primary/16"
               disabled={loading}
               onClick={async () => {
                 setLocalError(null);
@@ -160,13 +155,61 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
                 await onContinue();
               }}
             >
-              {demoBypass && !isDev ? 'Enter demo mode (preview)' : 'Enter demo mode (dev only)'}
+              Enter demo mode (browser preview)
             </button>
           ) : null}
 
-          {!runtimeReady ? (
+          <WelcomeTermsConsent accepted={legalAccepted} onAcceptedChange={persistLegal} />
+
+          <div className="mt-6 space-y-2.5">
+            <GoogleSignInButton
+              onClick={() => void startProviderConnect(() => connectGoogleIdentity())}
+              disabled={loading || !oauthAvailable}
+              loading={loading}
+              variant={buttonVariant}
+              className={oauthMarketingClass}
+            />
+            <GitHubSignInButton
+              onClick={() => void startProviderConnect(() => connectGitHubIdentity())}
+              disabled={loading || !oauthAvailable}
+              loading={loading}
+              variant={buttonVariant}
+              className={oauthMarketingClass}
+            />
+            <LinkedInSignInButton
+              onClick={() => void startProviderConnect(() => connectLinkedInIdentity())}
+              disabled={loading || !oauthAvailable}
+              loading={loading}
+              variant={buttonVariant}
+              className={oauthMarketingClass}
+            />
+          </div>
+
+          {oauthAvailable || !showWebPreviewInfo ? (
+            showDemoEscapeHatch ? (
+              <button
+                type="button"
+                className="mt-4 w-full rounded-lg border border-border bg-surface/60 px-4 py-2.5 text-sm font-medium text-text transition hover:bg-surfaceHover/70"
+                disabled={loading}
+                onClick={async () => {
+                  setLocalError(null);
+                  await startDemoSession();
+                  await onContinue();
+                }}
+              >
+                {demoBypass && !isDev ? 'Enter demo mode (preview)' : 'Enter demo mode (dev only)'}
+              </button>
+            ) : null
+          ) : null}
+
+          {showInstallExtensionWarning ? (
             <p className="mt-2 text-center text-xs text-textSoft">
               Open this page from the extension to complete sign-in.
+            </p>
+          ) : null}
+          {showWebPreviewInfo ? (
+            <p className="mt-2 text-center text-xs text-textMuted">
+              OAuth buttons stay disabled here; they work after you install BrandOps from the Chrome Web Store.
             </p>
           ) : null}
 
