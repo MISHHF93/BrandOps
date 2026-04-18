@@ -6,7 +6,9 @@ import type {
 import {
   createCodeChallenge,
   getOAuthRedirectUrl,
+  getWebOAuthRedirectUrl,
   isExtensionIdentityAvailable,
+  launchOAuthWebAuthFlow,
   randomString
 } from './oauthPkce';
 
@@ -109,7 +111,7 @@ const fetchLinkedInUserinfo = async (
 
 const linkedinAuthError = (message: string) =>
   new Error(
-    `${message} LinkedIn sign-in needs the BrandOps extension and a LinkedIn app client ID with this redirect URL registered.`
+    `${message} Add a LinkedIn app client ID and register the redirect URL: extension redirect from Settings, or https://YOUR_ORIGIN/oauth/linkedin-brandops.html for browser sign-in.`
   );
 
 export const getLinkedInRedirectUri = (): string | null => getOAuthRedirectUrl('linkedin-brandops');
@@ -140,10 +142,6 @@ export const linkedinIdentitySync = {
   },
 
   async connect(data: BrandOpsData): Promise<BrandOpsData> {
-    if (!isExtensionIdentityAvailable()) {
-      throw linkedinAuthError('Open this screen inside the installed extension to connect LinkedIn.');
-    }
-
     const clientId = data.settings.syncHub.linkedin.clientId.trim();
     if (!clientId) {
       throw linkedinAuthError(
@@ -151,7 +149,12 @@ export const linkedinIdentitySync = {
       );
     }
 
-    const redirectUri = chrome.identity.getRedirectURL('linkedin-brandops');
+    const redirectUri = isExtensionIdentityAvailable()
+      ? chrome.identity.getRedirectURL('linkedin-brandops')
+      : getWebOAuthRedirectUrl('linkedin-brandops');
+    if (!redirectUri) {
+      throw linkedinAuthError('OAuth redirect could not be resolved for this environment.');
+    }
     const state = randomString(24);
     const codeVerifier = randomString(96);
     const codeChallenge = await createCodeChallenge(codeVerifier);
@@ -165,10 +168,7 @@ export const linkedinIdentitySync = {
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('code_challenge_method', 'S256');
 
-    const resultUrl = await chrome.identity.launchWebAuthFlow({
-      url: authUrl.toString(),
-      interactive: true
-    });
+    const resultUrl = await launchOAuthWebAuthFlow(authUrl.toString(), redirectUri);
 
     if (!resultUrl) {
       throw new Error('LinkedIn authorization was cancelled before completion.');

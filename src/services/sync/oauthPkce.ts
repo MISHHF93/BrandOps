@@ -1,5 +1,9 @@
 /** Shared PKCE helpers for OAuth in the extension (Google, GitHub, LinkedIn). */
 
+import { launchBrowserOAuthWebAuthFlow } from './oauthBrowserFlow';
+
+export { getWebOAuthRedirectUrl } from './oauthBrowserFlow';
+
 export const randomString = (length: number) => {
   const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   const bytes = crypto.getRandomValues(new Uint8Array(length));
@@ -29,3 +33,15 @@ export const getOAuthRedirectUrl = (pathSuffix: string): string | null => {
   if (!isExtensionIdentityAvailable()) return null;
   return chrome.identity.getRedirectURL(pathSuffix);
 };
+
+/** Extension: chrome.identity flow. Browser: popup + /oauth/*.html callback + postMessage. */
+export async function launchOAuthWebAuthFlow(authUrl: string, redirectUri: string): Promise<string | null> {
+  if (isExtensionIdentityAvailable()) {
+    const url = await chrome.identity.launchWebAuthFlow({
+      url: authUrl,
+      interactive: true
+    });
+    return url ?? null;
+  }
+  return launchBrowserOAuthWebAuthFlow(authUrl, redirectUri);
+}

@@ -5,6 +5,11 @@ import { GitHubSignInButton } from '../../shared/ui/oauth/GitHubSignInButton';
 import { LinkedInSignInButton } from '../../shared/ui/oauth/LinkedInSignInButton';
 import { getPrimaryIdentityLabel } from '../../shared/identity/primaryIdentityLabel';
 import { canAccessApp, isDemoBypassBuild } from '../../shared/identity/sessionAccess';
+import {
+  getEffectiveGitHubClientId,
+  getEffectiveGoogleClientId,
+  getEffectiveLinkedInClientId
+} from '../../shared/config/oauthPublisherIds';
 import { InlineAlert } from '../../shared/ui/components';
 import type { OAuthButtonVariant } from '../../shared/ui/oauth/oauthButtonStyles';
 import { oauthWelcomeMarketingOutlineClass } from '../../shared/ui/oauth/oauthButtonStyles';
@@ -56,11 +61,16 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
 
   const primaryLabel = getPrimaryIdentityLabel(data);
   const runtimeReady = hasExtensionIdentity();
-  /** Built with VITE_DEMO_BYPASS — safe for Vercel / Safari / any browser demo (OAuth still needs extension). */
+  /** Built with VITE_DEMO_BYPASS — optional browser demo when OAuth env IDs are absent. */
   const webPreviewDemo = demoBypass;
-  const oauthAvailable = runtimeReady;
-  const showInstallExtensionWarning = !oauthAvailable && !webPreviewDemo;
-  const showWebPreviewInfo = !oauthAvailable && webPreviewDemo;
+  const googleOAuthId = getEffectiveGoogleClientId(data).trim();
+  const githubOAuthId = getEffectiveGitHubClientId(data).trim();
+  const linkedinOAuthId = getEffectiveLinkedInClientId(data).trim();
+  const hasWebOAuthClients = Boolean(googleOAuthId || githubOAuthId || linkedinOAuthId);
+  /** Extension chrome.identity, or browser + at least one VITE_/Settings client ID (popup OAuth). */
+  const oauthAvailable = runtimeReady || hasWebOAuthClients;
+  const showInstallExtensionWarning = !runtimeReady && !webPreviewDemo && !hasWebOAuthClients;
+  const showWebPreviewInfo = !runtimeReady && webPreviewDemo && !hasWebOAuthClients;
   const showDemoEscapeHatch = isDev || demoBypass;
 
   const persistLegal = (next: boolean) => {
@@ -87,17 +97,17 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
     }
   };
 
-  const startProviderConnect = async (connect: () => Promise<void>) => {
+  const startProviderConnect = async (
+    connect: () => Promise<void>,
+    providerConfigured: boolean,
+    missingProviderMessage: string
+  ) => {
     if (!legalAccepted) {
       setLocalError('Please accept the Terms of Service and Privacy Policy first.');
       return;
     }
-    if (!oauthAvailable) {
-      setLocalError(
-        webPreviewDemo
-          ? 'OAuth sign-in only runs inside the installed Chrome extension. Use Enter demo mode for this preview, or install BrandOps from the store.'
-          : 'Open this page from the installed BrandOps extension to continue sign-in.'
-      );
+    if (!providerConfigured) {
+      setLocalError(missingProviderMessage);
       return;
     }
     await run(connect);
@@ -116,7 +126,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
               <InlineAlert
                 tone="info"
                 title="Preview in your browser"
-                message="Google, GitHub, and LinkedIn sign-in uses the Chrome extension only. On this preview site, use **Enter demo mode (browser preview)** below—works in any browser, no install."
+                message="No OAuth client IDs are set for this preview build. Use **Enter demo mode (browser preview)** below, or add VITE_GOOGLE_CLIENT_ID / VITE_GITHUB_CLIENT_ID / VITE_LINKEDIN_CLIENT_ID so sign-in can run in the browser (popup)."
                 className="rounded-lg border-border bg-surface/35 text-text"
               />
             </div>
@@ -163,22 +173,46 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
 
           <div className="mt-6 space-y-2.5">
             <GoogleSignInButton
-              onClick={() => void startProviderConnect(() => connectGoogleIdentity())}
-              disabled={loading || !oauthAvailable}
+              onClick={() =>
+                void startProviderConnect(
+                  () => connectGoogleIdentity(),
+                  runtimeReady || Boolean(googleOAuthId),
+                  webPreviewDemo
+                    ? 'Add VITE_GOOGLE_CLIENT_ID (or a Google client ID in Settings) to sign in from this browser, or use Enter demo mode.'
+                    : 'Add VITE_GOOGLE_CLIENT_ID or a Google client ID in Settings to sign in from this browser, or open BrandOps from the Chrome extension.'
+                )
+              }
+              disabled={loading || (!runtimeReady && !googleOAuthId)}
               loading={loading}
               variant={buttonVariant}
               className={oauthMarketingClass}
             />
             <GitHubSignInButton
-              onClick={() => void startProviderConnect(() => connectGitHubIdentity())}
-              disabled={loading || !oauthAvailable}
+              onClick={() =>
+                void startProviderConnect(
+                  () => connectGitHubIdentity(),
+                  runtimeReady || Boolean(githubOAuthId),
+                  webPreviewDemo
+                    ? 'Add VITE_GITHUB_CLIENT_ID (or a GitHub client ID in Settings) to sign in from this browser, or use Enter demo mode.'
+                    : 'Add VITE_GITHUB_CLIENT_ID or a GitHub client ID in Settings to sign in from this browser, or open BrandOps from the Chrome extension.'
+                )
+              }
+              disabled={loading || (!runtimeReady && !githubOAuthId)}
               loading={loading}
               variant={buttonVariant}
               className={oauthMarketingClass}
             />
             <LinkedInSignInButton
-              onClick={() => void startProviderConnect(() => connectLinkedInIdentity())}
-              disabled={loading || !oauthAvailable}
+              onClick={() =>
+                void startProviderConnect(
+                  () => connectLinkedInIdentity(),
+                  runtimeReady || Boolean(linkedinOAuthId),
+                  webPreviewDemo
+                    ? 'Add VITE_LINKEDIN_CLIENT_ID (or a LinkedIn client ID in Settings) to sign in from this browser, or use Enter demo mode.'
+                    : 'Add VITE_LINKEDIN_CLIENT_ID or a LinkedIn client ID in Settings to sign in from this browser, or open BrandOps from the Chrome extension.'
+                )
+              }
+              disabled={loading || (!runtimeReady && !linkedinOAuthId)}
               loading={loading}
               variant={buttonVariant}
               className={oauthMarketingClass}
@@ -209,7 +243,11 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
           ) : null}
           {showWebPreviewInfo ? (
             <p className="mt-2 text-center text-xs text-textMuted">
-              OAuth buttons stay disabled here; they work after you install BrandOps from the Chrome Web Store.
+              Set OAuth env vars above to enable provider buttons, or install BrandOps from the Chrome Web Store for extension sign-in.
+            </p>
+          ) : !runtimeReady && hasWebOAuthClients ? (
+            <p className="mt-2 text-center text-xs text-textMuted">
+              Sign-in opens in a popup; allow popups if your browser blocks them.
             </p>
           ) : null}
 

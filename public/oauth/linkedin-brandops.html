@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LinkedIn sign-in</title>
+  </head>
+  <body>
+    <script>
+      (function () {
+        var url = window.location.href;
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'brandops-oauth-redirect', url: url }, window.location.origin);
+          } catch (e) {}
+          window.close();
+        } else {
+          document.body.innerHTML =
+            '<p style="font-family:system-ui,sans-serif;padding:1.25rem;margin:0">You can close this window and return to BrandOps.</p>';
+        }
+      })();
+    </script>
+  </body>
+</html>

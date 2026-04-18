@@ -2,7 +2,9 @@ import type { BrandOpsData, LinkedInIdentityProfile, LinkedInOAuthState } from '
 import {
   createCodeChallenge,
   getOAuthRedirectUrl,
+  getWebOAuthRedirectUrl,
   isExtensionIdentityAvailable,
+  launchOAuthWebAuthFlow,
   randomString
 } from './oauthPkce';
 
@@ -64,7 +66,7 @@ const fetchGoogleUserinfo = async (accessToken: string): Promise<LinkedInIdentit
 
 const googleAuthError = (message: string) =>
   new Error(
-    `${message} Google sign-in needs the BrandOps extension and a Google OAuth client ID (Web application or Desktop) with this redirect URL registered.`
+    `${message} Add a Google OAuth client ID and register the redirect URL: in the extension use the chrome-extension redirect from Settings; in a browser use https://YOUR_ORIGIN/oauth/google-brandops.html (same client or a dedicated Web client).`
   );
 
 export const getGoogleRedirectUri = (): string | null => getOAuthRedirectUrl('google-brandops');
@@ -93,10 +95,6 @@ export const googleIdentitySync = {
   },
 
   async connect(data: BrandOpsData): Promise<BrandOpsData> {
-    if (!isExtensionIdentityAvailable()) {
-      throw googleAuthError('Open this screen inside the installed extension to connect Google.');
-    }
-
     const clientId = data.settings.syncHub.google.clientId.trim();
     if (!clientId) {
       throw googleAuthError(
@@ -104,7 +102,12 @@ export const googleIdentitySync = {
       );
     }
 
-    const redirectUri = chrome.identity.getRedirectURL('google-brandops');
+    const redirectUri = isExtensionIdentityAvailable()
+      ? chrome.identity.getRedirectURL('google-brandops')
+      : getWebOAuthRedirectUrl('google-brandops');
+    if (!redirectUri) {
+      throw googleAuthError('OAuth redirect could not be resolved for this environment.');
+    }
     const state = randomString(24);
     const codeVerifier = randomString(96);
     const codeChallenge = await createCodeChallenge(codeVerifier);
@@ -118,10 +121,7 @@ export const googleIdentitySync = {
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('code_challenge_method', 'S256');
 
-    const resultUrl = await chrome.identity.launchWebAuthFlow({
-      url: authUrl.toString(),
-      interactive: true
-    });
+    const resultUrl = await launchOAuthWebAuthFlow(authUrl.toString(), redirectUri);
 
     if (!resultUrl) {
       throw new Error('Google authorization was cancelled before completion.');

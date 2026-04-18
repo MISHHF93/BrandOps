@@ -2,7 +2,9 @@ import type { BrandOpsData, LinkedInIdentityProfile, LinkedInOAuthState } from '
 import {
   createCodeChallenge,
   getOAuthRedirectUrl,
+  getWebOAuthRedirectUrl,
   isExtensionIdentityAvailable,
+  launchOAuthWebAuthFlow,
   randomString
 } from './oauthPkce';
 
@@ -92,7 +94,7 @@ const fetchGithubProfile = async (accessToken: string): Promise<LinkedInIdentity
 
 const githubAuthError = (message: string) =>
   new Error(
-    `${message} GitHub sign-in needs the BrandOps extension and a GitHub OAuth App with this redirect URL registered (PKCE; no client secret required).`
+    `${message} Add a GitHub OAuth App client ID and register the redirect URL: extension redirect from Settings, or https://YOUR_ORIGIN/oauth/github-brandops.html for browser sign-in (PKCE; no client secret required).`
   );
 
 export const getGithubRedirectUri = (): string | null => getOAuthRedirectUrl('github-brandops');
@@ -121,10 +123,6 @@ export const githubIdentitySync = {
   },
 
   async connect(data: BrandOpsData): Promise<BrandOpsData> {
-    if (!isExtensionIdentityAvailable()) {
-      throw githubAuthError('Open this screen inside the installed extension to connect GitHub.');
-    }
-
     const clientId = data.settings.syncHub.github.clientId.trim();
     if (!clientId) {
       throw githubAuthError(
@@ -132,7 +130,12 @@ export const githubIdentitySync = {
       );
     }
 
-    const redirectUri = chrome.identity.getRedirectURL('github-brandops');
+    const redirectUri = isExtensionIdentityAvailable()
+      ? chrome.identity.getRedirectURL('github-brandops')
+      : getWebOAuthRedirectUrl('github-brandops');
+    if (!redirectUri) {
+      throw githubAuthError('OAuth redirect could not be resolved for this environment.');
+    }
     const state = randomString(24);
     const codeVerifier = randomString(96);
     const codeChallenge = await createCodeChallenge(codeVerifier);
@@ -145,10 +148,7 @@ export const githubIdentitySync = {
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('code_challenge_method', 'S256');
 
-    const resultUrl = await chrome.identity.launchWebAuthFlow({
-      url: authUrl.toString(),
-      interactive: true
-    });
+    const resultUrl = await launchOAuthWebAuthFlow(authUrl.toString(), redirectUri);
 
     if (!resultUrl) {
       throw new Error('GitHub authorization was cancelled before completion.');
