@@ -182,7 +182,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
                     : 'Add VITE_GOOGLE_CLIENT_ID or a Google client ID in Settings to sign in from this browser, or open BrandOps from the Chrome extension.'
                 )
               }
-              disabled={loading || (!runtimeReady && !googleOAuthId)}
+              disabled={loading}
               loading={loading}
               variant={buttonVariant}
               className={oauthMarketingClass}
@@ -197,7 +197,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
                     : 'Add VITE_GITHUB_CLIENT_ID or a GitHub client ID in Settings to sign in from this browser, or open BrandOps from the Chrome extension.'
                 )
               }
-              disabled={loading || (!runtimeReady && !githubOAuthId)}
+              disabled={loading}
               loading={loading}
               variant={buttonVariant}
               className={oauthMarketingClass}
@@ -212,7 +212,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
                     : 'Add VITE_LINKEDIN_CLIENT_ID or a LinkedIn client ID in Settings to sign in from this browser, or open BrandOps from the Chrome extension.'
                 )
               }
-              disabled={loading || (!runtimeReady && !linkedinOAuthId)}
+              disabled={loading}
               loading={loading}
               variant={buttonVariant}
               className={oauthMarketingClass}
@@ -243,7 +243,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
           ) : null}
           {showWebPreviewInfo ? (
             <p className="mt-2 text-center text-xs text-textMuted">
-              Set OAuth env vars above to enable provider buttons, or install BrandOps from the Chrome Web Store for extension sign-in.
+              Add VITE_* OAuth client IDs in your deploy environment (and provider redirect URLs), or tap a provider below for details. Extension sign-in uses the Chrome Web Store build.
             </p>
           ) : !runtimeReady && hasWebOAuthClients ? (
             <p className="mt-2 text-center text-xs text-textMuted">
