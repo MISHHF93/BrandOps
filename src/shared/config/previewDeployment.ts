@@ -35,10 +35,20 @@ export function canUseVercelPreviewSignIn(): boolean {
 }
 
 /**
- * Hosted preview only: load the cockpit without a federated OAuth session (local seed data).
- * Set on Vercel env for demos; omit for production extension / store builds.
+ * Load the dashboard with local seed data — no Google / GitHub / LinkedIn OAuth session.
+ *
+ * - **Vercel:** Automatic when the bundle is built on Vercel (`VERCEL=1` → `import.meta.env.VITE_VERCEL`).
+ *   No OAuth client IDs required for a hosted demo. Opt out with `VITE_PREVIEW_COCKPIT_UNGATED=0`.
+ * - **Local:** Set `VITE_PREVIEW_COCKPIT_UNGATED=1` in `.env.development` (see repo).
+ * - **Extension zip / local `vite build`:** `VERCEL` is unset → gated unless you set the explicit flag.
  */
 export function isPreviewCockpitUngated(): boolean {
-  const v = import.meta.env.VITE_PREVIEW_COCKPIT_UNGATED;
-  return v === 'true' || v === '1';
+  const raw = (import.meta.env.VITE_PREVIEW_COCKPIT_UNGATED ?? '').trim().toLowerCase();
+  if (raw === '0' || raw === 'false' || raw === 'off') {
+    return false;
+  }
+  if (raw === '1' || raw === 'true' || raw === 'on') {
+    return true;
+  }
+  return import.meta.env.VITE_VERCEL === '1';
 }

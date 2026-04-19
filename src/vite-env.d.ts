@@ -18,9 +18,11 @@ interface ImportMetaEnv {
   readonly VITE_PREVIEW_OPEN_SIGNIN?: string;
   /**
    * Hosted preview only: allow opening dashboard.html without OAuth (seed workspace).
-   * Pair with site root redirect to dashboard; omit for Chrome Web Store builds.
+   * On Vercel, cockpit is ungated automatically unless set to `0`/`false`.
    */
   readonly VITE_PREVIEW_COCKPIT_UNGATED?: string;
+  /** Injected on Vercel builds (`VERCEL=1`); used for hosted demo routing only. */
+  readonly VITE_VERCEL?: string;
 }
 
 interface ImportMeta {

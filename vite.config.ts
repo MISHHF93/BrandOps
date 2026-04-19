@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 
 export default defineConfig({
+  /** Vercel sets `VERCEL=1` during `vite build`; expose for client demo mode (see `isPreviewCockpitUngated`). */
+  define: {
+    'import.meta.env.VITE_VERCEL': JSON.stringify(process.env.VERCEL ?? '')
+  },
   plugins: [react()],
   server: {
     port: 5173,

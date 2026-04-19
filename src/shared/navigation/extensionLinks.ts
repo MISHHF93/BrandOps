@@ -4,7 +4,7 @@
  * Layer 1 — Shell / HTML surfaces (each is its own document):
  *   index.html          → site root; redirects to dashboard.html (hosted preview entry)
  *   welcome.html        → OAuth gateway (Google / GitHub / LinkedIn); optional sign-in surface
- *   dashboard.html      → main workspace (OAuth required unless VITE_PREVIEW_COCKPIT_UNGATED)
+ *   dashboard.html      → main workspace (OAuth required locally unless VITE_PREVIEW_COCKPIT_UNGATED; Vercel builds are ungated automatically)
  *   options.html        → Settings (open via in-app links; manifest options_page removed — see docs)
  *   help.html           → Knowledge Center
  *   privacy-policy.html → static legal (bundled)
