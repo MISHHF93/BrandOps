@@ -33,3 +33,12 @@ export function canUseVercelPreviewSignIn(): boolean {
   if (!isPreviewDeploymentSignInEnabled()) return false;
   return isPreviewOpenSignInEnabled() || isPreviewMagicConfigured();
 }
+
+/**
+ * Hosted preview only: load the cockpit without a federated OAuth session (local seed data).
+ * Set on Vercel env for demos; omit for production extension / store builds.
+ */
+export function isPreviewCockpitUngated(): boolean {
+  const v = import.meta.env.VITE_PREVIEW_COCKPIT_UNGATED;
+  return v === 'true' || v === '1';
+}

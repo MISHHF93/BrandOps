@@ -16,6 +16,11 @@ interface ImportMetaEnv {
   readonly VITE_PREVIEW_MAGIC_TOKEN?: string;
   /** If `1`/`true`, allow one-click preview sign-in without a token (private demos only). */
   readonly VITE_PREVIEW_OPEN_SIGNIN?: string;
+  /**
+   * Hosted preview only: allow opening dashboard.html without OAuth (seed workspace).
+   * Pair with site root redirect to dashboard; omit for Chrome Web Store builds.
+   */
+  readonly VITE_PREVIEW_COCKPIT_UNGATED?: string;
 }
 
 interface ImportMeta {

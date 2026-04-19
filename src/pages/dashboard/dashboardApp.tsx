@@ -36,6 +36,7 @@ import { dailyNotificationCenter } from '../../services/intelligence/dailyNotifi
 import { operatorCadenceFlow } from '../../services/intelligence/operatorCadenceFlow';
 import { applyDocumentTheme } from '../../shared/ui/theme';
 import { getPrimaryIdentityLabel } from '../../shared/identity/primaryIdentityLabel';
+import { isPreviewCockpitUngated } from '../../shared/config/previewDeployment';
 import { canAccessApp } from '../../shared/identity/sessionAccess';
 import {
   canonicalizeDashboardSectionId,
@@ -616,6 +617,11 @@ export function DashboardApp() {
 
   useEffect(() => {
     void init();
+    if (isPreviewCockpitUngated()) {
+      setShowOnboarding(false);
+      setProfileSetupOpen(false);
+      return;
+    }
     let arrivedFromWelcome = false;
     try {
       arrivedFromWelcome = sessionStorage.getItem('bo:dashboard-after-welcome') === '1';

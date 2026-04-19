@@ -14,7 +14,7 @@
 
 | Surface | File | Primary job | Must stay separate? |
 |--------|------|-------------|---------------------|
-| **Index** | `index.html` | Dev redirect → welcome | Yes (thin redirect only) |
+| **Index** | `index.html` | Redirect → `dashboard.html` | Yes (thin redirect only) |
 | **Welcome** | `welcome.html` | Auth gateway, legal entry, “continue to app” | **Yes** — OAuth and first-run contract |
 | **Dashboard / Cockpit** | `dashboard.html` | Execution: pipeline, content, CRM modules, mission map, scheduler context | **Target: canonical “one pager” shell** |
 | **Settings** | `options.html` | Manifest `options_page`: OAuth, import/export, integrations, diagnostics, AI tools | **Yes for Chrome** — deep config + `chrome.identity` flows |

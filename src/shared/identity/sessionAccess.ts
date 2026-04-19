@@ -1,4 +1,5 @@
 import type { BrandOpsData } from '../../types/domain';
+import { isPreviewCockpitUngated } from '../config/previewDeployment';
 
 /** At least one IdP (Google, GitHub, LinkedIn) is connected with a live OAuth session. */
 export function hasFederatedSession(data: BrandOpsData): boolean {
@@ -8,5 +9,6 @@ export function hasFederatedSession(data: BrandOpsData): boolean {
 
 /** User may open the main app surfaces (e.g. Dashboard) only with a connected IdP session. */
 export function canAccessApp(data: BrandOpsData): boolean {
+  if (isPreviewCockpitUngated()) return true;
   return hasFederatedSession(data);
 }

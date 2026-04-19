@@ -2,10 +2,10 @@
  * BrandOps extension — URL & page hierarchy (single source of truth)
  *
  * Layer 1 — Shell / HTML surfaces (each is its own document):
- *   index.html          → dev only; redirects to welcome.html
- *   welcome.html        → OAuth gateway (Google / GitHub / LinkedIn); entry for signed-out users
- *   dashboard.html      → main workspace (requires federated session)
- *   options.html        → Settings (manifest options_page)
+ *   index.html          → site root; redirects to dashboard.html (hosted preview entry)
+ *   welcome.html        → OAuth gateway (Google / GitHub / LinkedIn); optional sign-in surface
+ *   dashboard.html      → main workspace (OAuth required unless VITE_PREVIEW_COCKPIT_UNGATED)
+ *   options.html        → Settings (open via in-app links; manifest options_page removed — see docs)
  *   help.html           → Knowledge Center
  *   privacy-policy.html → static legal (bundled)
  *
@@ -73,7 +73,7 @@ export const EXTENSION_ROUTE_CATALOG: Array<{ page: string; query: string; value
     page: PAGE.index,
     query: '—',
     values: '—',
-    notes: 'Dev: redirects to welcome.html preserving search/hash.'
+    notes: 'Redirects to dashboard.html preserving search/hash.'
   }
 ];
 
