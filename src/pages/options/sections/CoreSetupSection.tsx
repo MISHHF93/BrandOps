@@ -1,4 +1,9 @@
 import { cockpitCapabilities, surfaceLabel } from '../../../shared/config/capabilityMap';
+import {
+  CockpitLayoutDensityFields,
+  CockpitThemeField,
+  CockpitVisualMotionAmbientFields
+} from '../../../shared/ui/components/CockpitAppearanceFields';
 import type {
   BrandOpsData,
   CadenceFlowSettings,
@@ -56,104 +61,23 @@ export function CoreSetupSection({
             {data.settings.overlay.compactMode ? 'On' : 'Off'}
           </p>
         </article>
-        <label className="rounded-xl border border-border bg-bg/40 p-3 text-sm space-y-1">
-          <span>Theme</span>
-          <select
-            value={data.settings.theme}
-            onChange={(event) => onThemeChange(event.target.value as typeof data.settings.theme)}
-            className="w-full rounded-xl border border-border bg-bg/60 px-3 py-2 text-xs"
-          >
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-          </select>
-        </label>
+        <CockpitThemeField data={data} onThemeChange={onThemeChange} fieldSize="comfortable" />
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <label className="space-y-1 text-sm">
-          <span>Visual mode</span>
-          <select
-            value={data.settings.visualMode}
-            onChange={(event) =>
-              void onUpdateVisualSettings({
-                visualMode: event.target.value as typeof data.settings.visualMode
-              })
-            }
-            className="w-full rounded-xl border border-border bg-bg/60 px-3 py-2 text-xs"
-          >
-            <option value="classic">Classic</option>
-            <option value="retroMagic">Retro magic</option>
-          </select>
-        </label>
-        <label className="space-y-1 text-sm">
-          <span>Motion mode</span>
-          <select
-            value={data.settings.motionMode}
-            onChange={(event) =>
-              void onUpdateVisualSettings({
-                motionMode: event.target.value as typeof data.settings.motionMode
-              })
-            }
-            className="w-full rounded-xl border border-border bg-bg/60 px-3 py-2 text-xs"
-          >
-            <option value="off">Off</option>
-            <option value="balanced">Balanced</option>
-            <option value="wild">Wild</option>
-          </select>
-        </label>
-        <label className="flex items-center justify-between rounded-xl border border-border bg-bg/40 p-3 text-sm">
-          <span>Ambient FX overlays</span>
-          <input
-            type="checkbox"
-            checked={data.settings.ambientFxEnabled}
-            onChange={(event) =>
-              void onUpdateVisualSettings({
-                ambientFxEnabled: event.target.checked
-              })
-            }
-          />
-        </label>
-      </div>
+      <CockpitVisualMotionAmbientFields
+        data={data}
+        onUpdateVisualSettings={onUpdateVisualSettings}
+        fieldSize="comfortable"
+        ambientLabel="long"
+      />
 
-      <article className="rounded-xl border border-border bg-bg/40 p-3 space-y-3">
-        <p className="text-sm font-medium">Cockpit layout and density</p>
-        <p className="text-xs text-textMuted">
-          Unified scroll: one long dashboard with anchors for all areas. Section mode: mount one area at a time (lighter
-          first paint). Compact density tucks metrics and mission-map detail behind disclosures by default.
-        </p>
-        <div className="grid gap-3 md:grid-cols-2">
-          <label className="space-y-1 text-sm">
-            <span>Dashboard layout</span>
-            <select
-              value={data.settings.cockpitLayout}
-              onChange={(event) =>
-                void onUpdateCockpitPreferences({
-                  cockpitLayout: event.target.value as CockpitLayoutMode
-                })
-              }
-              className="w-full rounded-xl border border-border bg-bg/60 px-3 py-2 text-xs"
-            >
-              <option value="sections">Section focus (default)</option>
-              <option value="unified-scroll">Unified scroll (one page)</option>
-            </select>
-          </label>
-          <label className="space-y-1 text-sm">
-            <span>Density</span>
-            <select
-              value={data.settings.cockpitDensity}
-              onChange={(event) =>
-                void onUpdateCockpitPreferences({
-                  cockpitDensity: event.target.value as CockpitDensityMode
-                })
-              }
-              className="w-full rounded-xl border border-border bg-bg/60 px-3 py-2 text-xs"
-            >
-              <option value="comfortable">Comfortable</option>
-              <option value="compact">Compact</option>
-            </select>
-          </label>
-        </div>
-      </article>
+      <CockpitLayoutDensityFields
+        data={data}
+        onUpdateCockpitPreferences={onUpdateCockpitPreferences}
+        fieldSize="comfortable"
+        layoutDescription="Unified scroll: one long dashboard with anchors for all areas. Section mode: mount one area at a time (lighter
+          first paint). Compact density tucks metrics and mission-map detail behind disclosures by default."
+      />
 
       <article className="rounded-xl border border-border bg-bg/40 p-3 space-y-3">
         <p className="text-sm font-medium">Execution center</p>

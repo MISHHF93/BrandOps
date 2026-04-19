@@ -399,9 +399,26 @@ html[data-app-surface="welcome"] body::after {
     margin-right: calc(clamp(0.4rem, 0.7vw, 0.8rem) + var(--bo-nav-dock-width));
     padding: clamp(0.72rem, 1.05vw, 1.05rem);
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     transition:
       margin var(--duration-slow) var(--ease-liquid-out),
       padding var(--duration-slow) var(--ease-liquid-out);
+  }
+
+  /**
+   * Cockpit content stack: full width of the shell (nav dock margin is the only horizontal inset).
+   * No extra max-width cap — use the full browser width for the dashboard column.
+   */
+  .bo-dashboard-canvas {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    isolation: isolate;
   }
 
   .bo-dashboard-shell::before {
@@ -416,6 +433,11 @@ html[data-app-surface="welcome"] body::after {
   }
 
   .bo-dashboard-shell--sidebar-open {}
+
+  /** Cockpit compact density: tighter page padding (see docs/cockpit-compact-ux-spec.md). */
+  .bo-dashboard-shell--compact {
+    padding: clamp(0.48rem, 0.75vw, 0.65rem);
+  }
 
   .bo-dashboard-shell > section {
     width: 100%;
@@ -569,6 +591,29 @@ html[data-app-surface="welcome"] body::after {
       0 16px 32px rgb(var(--color-shadow) / 0.44),
       0 0 0 1px rgb(var(--color-primary) / 0.09),
       0 0 18px rgb(var(--color-primary) / 0.09);
+  }
+
+  /** Collapsible cockpit rows: same card family as `.bo-card` but flatter — matches Operating board chrome. */
+  .bo-cockpit-collapsible.bo-card {
+    border-color: rgb(var(--color-border) / 0.42);
+    box-shadow:
+      0 4px 16px rgb(var(--color-shadow) / 0.2),
+      0 0 0 1px rgb(var(--color-border) / 0.1),
+      inset 0 1px 0 rgb(var(--color-text) / 0.03);
+    transform: none;
+  }
+
+  .bo-cockpit-collapsible.bo-card::before {
+    opacity: 0.1;
+  }
+
+  .bo-cockpit-collapsible.bo-card:hover {
+    border-color: rgb(var(--color-border) / 0.52);
+    transform: none;
+    box-shadow:
+      0 6px 20px rgb(var(--color-shadow) / 0.24),
+      0 0 0 1px rgb(var(--color-border) / 0.14),
+      inset 0 1px 0 rgb(var(--color-text) / 0.035);
   }
 
   .bo-system-screen :where(
@@ -1178,6 +1223,14 @@ html[data-app-surface="welcome"] body::after {
 
   .bo-navdock-anchor {
     right: calc(env(safe-area-inset-right, 0px) + clamp(0.35rem, 1.8vw, 0.75rem));
+  }
+}
+
+@media (min-width: 1536px) {
+  /* Wide / ultrawide: reclaim horizontal space for cockpit grids (still clears right nav dock). */
+  .bo-dashboard-shell {
+    padding-left: clamp(0.55rem, 0.85vw, 0.95rem);
+    padding-right: clamp(0.55rem, 0.85vw, 0.95rem);
   }
 }
 

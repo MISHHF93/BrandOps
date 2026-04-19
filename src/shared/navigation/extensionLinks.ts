@@ -16,7 +16,8 @@
  * Legacy: ?auth=signup|signin is still read and normalized to ?flow= or a clean URL.
  *
  * Layer 3 — Other queries:
- *   dashboard.html?section=<id>   → cockpit section
+ *   dashboard.html?section=<id>     → cockpit section
+ *   dashboard.html?overlay=help|settings → open overlay after load (then stripped from URL)
  *   help.html?topic=<id>            → Knowledge Center scroll target
  */
 import type { DashboardSectionId } from '../config/dashboardNavigation';
@@ -36,6 +37,8 @@ export const QUERY = {
   /** @deprecated Legacy; still read. Prefer `flow`. */
   welcomeAuthLegacy: 'auth',
   dashboardSection: 'section',
+  /** Opens Knowledge or Quick settings overlay on the dashboard (consumed once, then removed from URL). */
+  cockpitOverlay: 'overlay',
   helpTopic: 'topic'
 } as const;
 
@@ -50,9 +53,9 @@ export const EXTENSION_ROUTE_CATALOG: Array<{ page: string; query: string; value
   },
   {
     page: PAGE.dashboard,
-    query: QUERY.dashboardSection,
-    values: 'today | pipeline | brand-content | connections',
-    notes: 'Cockpit section; legacy #hash migrated once on load.'
+    query: `${QUERY.dashboardSection} | ${QUERY.cockpitOverlay} (optional)`,
+    values: 'sections as above; overlay = help | settings',
+    notes: 'Cockpit section; overlay opens in-page panel once. Legacy #hash migrated once on load.'
   },
   {
     page: PAGE.help,
@@ -105,8 +108,16 @@ export function buildWelcomeUrl(opts?: { flow?: 'signup'; auth?: 'signup' | 'sig
   return buildWelcomeSignInUrl();
 }
 
-export function buildDashboardUrl(opts?: { section?: DashboardSectionId }): string {
-  return withQuery(PAGE.dashboard, opts?.section ? { [QUERY.dashboardSection]: opts.section } : {});
+export type CockpitOverlayParam = 'help' | 'settings';
+
+export function buildDashboardUrl(opts?: {
+  section?: DashboardSectionId;
+  overlay?: CockpitOverlayParam;
+}): string {
+  const params: Record<string, string> = {};
+  if (opts?.section) params[QUERY.dashboardSection] = opts.section;
+  if (opts?.overlay) params[QUERY.cockpitOverlay] = opts.overlay;
+  return withQuery(PAGE.dashboard, params);
 }
 
 export function buildHelpUrl(opts?: { topic?: string }): string {

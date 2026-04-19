@@ -1,7 +1,11 @@
 import { getPrivacyPolicyHref } from '../config/privacyPolicyUrl';
-import { buildWelcomeSignInUrl, buildWelcomeSignUpUrl, PAGE } from './extensionLinks';
+import {
+  buildDashboardUrl,
+  buildWelcomeSignInUrl,
+  buildWelcomeSignUpUrl,
+  PAGE
+} from './extensionLinks';
 import { resolveExtensionUrl } from './extensionRuntime';
-import { openExtensionSurface } from './openExtensionSurface';
 
 const linkClass =
   'font-medium text-textMuted hover:text-text underline-offset-2 hover:underline';
@@ -19,6 +23,9 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
   const signInHref = resolveExtensionUrl(buildWelcomeSignInUrl());
   const signUpHref = resolveExtensionUrl(buildWelcomeSignUpUrl());
   const settingsHref = resolveExtensionUrl(PAGE.options);
+  const dashboardHref = resolveExtensionUrl(buildDashboardUrl());
+  const dashboardHelpHref = resolveExtensionUrl(buildDashboardUrl({ overlay: 'help' }));
+  const connectionsHref = resolveExtensionUrl(buildDashboardUrl({ section: 'connections' }));
 
   return (
     <div
@@ -33,22 +40,18 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       <a className={linkClass} href={signUpHref}>
         Sign up
       </a>
-      <button type="button" className={linkClass} onClick={() => openExtensionSurface('dashboard')}>
+      <a className={linkClass} href={dashboardHref}>
         Dashboard
-      </button>
+      </a>
       <a className={linkClass} href={settingsHref}>
         Settings
       </a>
-      <button type="button" className={linkClass} onClick={() => openExtensionSurface('help')}>
+      <a className={linkClass} href={dashboardHelpHref}>
         Knowledge Center
-      </button>
-      <button
-        type="button"
-        className={linkClass}
-        onClick={() => openExtensionSurface('integration-hub')}
-      >
+      </a>
+      <a className={linkClass} href={connectionsHref}>
         Connections
-      </button>
+      </a>
       <a
         className={linkClass}
         href={privacyHref}

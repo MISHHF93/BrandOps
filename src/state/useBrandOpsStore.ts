@@ -18,6 +18,11 @@ import {
   withEffectiveOAuthClientIds
 } from '../shared/config/oauthPublisherIds';
 import {
+  isPreviewDeploymentSignInEnabled,
+  isPreviewMagicTokenValid,
+  isPreviewOpenSignInEnabled
+} from '../shared/config/previewDeployment';
+import {
   ActivityNote,
   BrandOpsData,
   BrandVault,
@@ -39,8 +44,6 @@ import {
   IdentityProviderId,
   IntegrationSource
 } from '../types/domain';
-import { isDemoBypassBuild } from '../shared/identity/sessionAccess';
-
 interface StoreState {
   data: BrandOpsData | null;
   loading: boolean;
@@ -57,8 +60,6 @@ interface StoreState {
   init: () => Promise<void>;
   /** Production-empty workspace (default for new installs and recovery). */
   resetWorkspaceToEmpty: () => Promise<void>;
-  /** Rich sample data for QA (Alex Mercer demo). */
-  loadDemoSampleData: () => Promise<void>;
   setTheme: (theme: BrandOpsData['settings']['theme']) => Promise<void>;
   updateVisualSettings: (
     payload: Partial<Pick<BrandOpsData['settings'], 'visualMode' | 'motionMode' | 'ambientFxEnabled'>>
@@ -86,9 +87,10 @@ interface StoreState {
   disconnectGitHubIdentity: () => Promise<void>;
   disconnectLinkedInIdentity: () => Promise<void>;
   setPrimaryIdentityProvider: (provider: IdentityProviderId | null) => Promise<void>;
-  startDemoSession: () => Promise<void>;
   completeWelcomeOnboarding: () => Promise<void>;
   signOutSession: () => Promise<void>;
+  /** Hosted Vercel preview only (see VITE_VERCEL_PREVIEW_SIGNIN). Not available in store builds without the flag. */
+  signInWithVercelPreview: (options?: { magicToken?: string }) => Promise<void>;
   addIntegrationSource: (payload: {
     name: string;
     kind: IntegrationSource['kind'];
@@ -118,7 +120,6 @@ interface StoreState {
     tags: string[];
     commandHints: string[];
   }) => Promise<void>;
-  generateMockActivityBurst: () => Promise<void>;
   addPublishingDraft: (payload: {
     title: string;
     body: string;
@@ -322,13 +323,6 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
 
   async resetWorkspaceToEmpty() {
     const data = await storageService.resetToSeed();
-    const withScheduler = { ...data, scheduler: scheduler.reconcile(data) };
-    const persisted = await storageService.setData(withScheduler);
-    set({ data: persisted, error: undefined });
-  },
-
-  async loadDemoSampleData() {
-    const data = await storageService.resetToDemoSample();
     const withScheduler = { ...data, scheduler: scheduler.reconcile(data) };
     const persisted = await storageService.setData(withScheduler);
     set({ data: persisted, error: undefined });
@@ -767,26 +761,6 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
     );
   },
 
-  async startDemoSession() {
-    const current = get().data;
-    if (!current) return;
-    if (!import.meta.env.DEV && !isDemoBypassBuild()) return;
-
-    const now = new Date().toISOString();
-    await updateData(
-      current,
-      (currentData) => ({
-        ...currentData,
-        seed: {
-          ...currentData.seed,
-          guestSessionAt: now,
-          welcomeCompletedAt: currentData.seed.welcomeCompletedAt ?? now
-        }
-      }),
-      (data) => set({ data, error: undefined })
-    );
-  },
-
   async completeWelcomeOnboarding() {
     const current = get().data;
     if (!current) return;
@@ -821,7 +795,8 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
       seed: {
         ...next.seed,
         guestSessionAt: undefined,
-        welcomeCompletedAt: undefined
+        welcomeCompletedAt: undefined,
+        previewMagicSignInAt: undefined
       }
     };
     const withFeed = withFeedEntry(cleared, {
@@ -833,6 +808,70 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
     const withScheduler = { ...withFeed, scheduler: scheduler.reconcile(withFeed) };
     const persisted = await storageService.setData(withScheduler);
     set({ data: persisted, error: undefined });
+  },
+
+  async signInWithVercelPreview(options?: { magicToken?: string }) {
+    if (!isPreviewDeploymentSignInEnabled()) {
+      throw new Error('Preview sign-in is not enabled for this build.');
+    }
+    const allowOpen = isPreviewOpenSignInEnabled();
+    const token = options?.magicToken?.trim() ?? '';
+    if (!allowOpen && !isPreviewMagicTokenValid(token)) {
+      throw new Error(
+        'Invalid or missing preview magic token. Set VITE_PREVIEW_MAGIC_TOKEN (8+ characters) in Vercel environment variables, or set VITE_PREVIEW_OPEN_SIGNIN for a private one-click demo.'
+      );
+    }
+
+    const current = get().data;
+    if (!current) return;
+
+    set({ loading: true });
+    try {
+      const now = new Date().toISOString();
+      const googleRow = current.settings.syncHub.google;
+      const next: BrandOpsData = {
+        ...current,
+        seed: {
+          ...current.seed,
+          previewMagicSignInAt: now,
+          guestSessionAt: undefined
+        },
+        settings: {
+          ...current.settings,
+          primaryIdentityProvider: 'google',
+          syncHub: {
+            ...current.settings.syncHub,
+            google: {
+              ...googleRow,
+              clientId: googleRow.clientId,
+              connectionStatus: 'connected',
+              lastError: undefined,
+              lastConnectedAt: now,
+              auth: { scope: [] },
+              profile: {
+                sub: 'brandops-vercel-preview',
+                name: 'Vercel preview',
+                email: 'preview@vercel.deploy'
+              }
+            }
+          }
+        }
+      };
+      const withFeed = withFeedEntry(next, {
+        source: 'Session',
+        title: 'Preview session',
+        detail: allowOpen
+          ? 'Open preview access (hosted demo; not a live OAuth token).'
+          : 'Signed in with preview magic link (hosted demo; not a live OAuth token).',
+        level: 'info'
+      });
+      const withScheduler = { ...withFeed, scheduler: scheduler.reconcile(withFeed) };
+      const persisted = await storageService.setData(withScheduler);
+      set({ data: persisted, loading: false, error: undefined });
+    } catch (error) {
+      set({ loading: false });
+      throw error;
+    }
   },
 
   async addIntegrationSource(payload) {
@@ -978,87 +1017,6 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
             level: 'info'
           }
         ),
-      (data) => set({ data, error: undefined })
-    );
-  },
-
-  async generateMockActivityBurst() {
-    const current = get().data;
-    const now = new Date().toISOString();
-
-    await updateData(
-      current,
-      (currentData) => {
-        const syntheticContentId = uid('cli');
-        const syntheticOpportunityId = uid('opp');
-        const syntheticContactId = uid('contact');
-
-        return {
-          ...currentData,
-          contentLibrary: [
-            {
-              id: syntheticContentId,
-              type: 'post-idea',
-              title: 'QA synthetic content idea',
-              body: 'Generated test content to validate first-launch empty and loaded states.',
-              tags: ['qa', 'synthetic'],
-              audience: 'Internal QA',
-              goal: 'Exercise rendering and search index paths',
-              status: 'idea',
-              publishChannel: 'linkedin',
-              notes: 'Auto-generated from developer tools.',
-              createdAt: now,
-              updatedAt: now
-            },
-            ...currentData.contentLibrary
-          ],
-          contacts: [
-            {
-              id: syntheticContactId,
-              name: 'QA Synthetic Contact',
-              company: 'Demo Labs',
-              role: 'Operator',
-              source: 'debug-generator',
-              relationshipStage: 'new',
-              status: 'active',
-              nextAction: 'Validate follow-up scheduling flow',
-              followUpDate: now,
-              notes: 'Generated for QA checks.',
-              links: [],
-              relatedOutreachDraftIds: [],
-              relatedContentTags: ['qa'],
-              lastContactAt: now,
-              fullName: 'QA Synthetic Contact',
-              title: 'Operator',
-              relationship: 'new'
-            },
-            ...currentData.contacts
-          ],
-          opportunities: [
-            {
-              id: syntheticOpportunityId,
-              name: 'QA Pipeline Opportunity',
-              company: 'Demo Labs',
-              role: 'Buyer',
-              source: 'debug-generator',
-              relationshipStage: 'building',
-              opportunityType: 'consulting',
-              status: 'prospect',
-              nextAction: 'Run CRM status transition checks',
-              followUpDate: now,
-              notes: 'Generated for test coverage of pipeline cards.',
-              links: [],
-              relatedOutreachDraftIds: [],
-              relatedContentTags: ['qa'],
-              createdAt: now,
-              updatedAt: now,
-              valueUsd: 7500,
-              confidence: 35
-            },
-            ...currentData.opportunities
-          ]
-        };
-      },
       (data) => set({ data, error: undefined })
     );
   },

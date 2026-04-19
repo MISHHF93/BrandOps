@@ -24,7 +24,7 @@ export function CollapsibleSection({
   return (
     <details
       id={id}
-      className={cn('bo-card group border-border/80 open:border-border', className)}
+      className={cn('bo-card bo-cockpit-collapsible group', className)}
       open={open}
       onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}
     >
@@ -39,7 +39,7 @@ export function CollapsibleSection({
           </span>
         </div>
       </summary>
-      <div className={cn('border-t border-border/60 px-4 pb-4 pt-3', bodyClassName)}>{children}</div>
+      <div className={cn('border-t border-border/45 px-4 pb-4 pt-3', bodyClassName)}>{children}</div>
     </details>
   );
 }

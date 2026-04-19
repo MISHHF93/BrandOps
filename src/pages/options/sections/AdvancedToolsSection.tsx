@@ -19,9 +19,7 @@ interface AdvancedToolsSectionProps {
   onApplyAiSettings: () => Promise<void>;
   onUndoAiSettings: () => Promise<void>;
   onSetDebugMode: (enabled: boolean) => Promise<void>;
-  onGenerateMockBurst: () => Promise<void>;
   onResetWorkspaceToEmpty: () => Promise<void>;
-  onLoadDemoSampleData: () => Promise<void>;
 }
 
 export function AdvancedToolsSection({
@@ -33,9 +31,7 @@ export function AdvancedToolsSection({
   onApplyAiSettings,
   onUndoAiSettings,
   onSetDebugMode,
-  onGenerateMockBurst,
-  onResetWorkspaceToEmpty,
-  onLoadDemoSampleData
+  onResetWorkspaceToEmpty
 }: AdvancedToolsSectionProps) {
   const [open, setOpen] = useState(false);
 
@@ -123,14 +119,8 @@ export function AdvancedToolsSection({
               section if needed.
             </p>
             <div className="flex flex-wrap gap-2">
-              <button type="button" className="bo-link" onClick={() => void onGenerateMockBurst()}>
-                Generate mock activity burst
-              </button>
               <button type="button" className="bo-link" onClick={() => void onResetWorkspaceToEmpty()}>
                 Reset workspace (empty)
-              </button>
-              <button type="button" className="bo-link" onClick={() => void onLoadDemoSampleData()}>
-                Load sample demo data
               </button>
             </div>
           </article>

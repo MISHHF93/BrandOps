@@ -41,7 +41,6 @@ export function OptionsApp() {
     exportWorkspace,
     importWorkspace,
     resetWorkspaceToEmpty,
-    loadDemoSampleData,
     updateVisualSettings,
     updateCockpitPreferences,
     setDebugMode,
@@ -58,7 +57,6 @@ export function OptionsApp() {
     disconnectGitHubIdentity,
     disconnectLinkedInIdentity,
     setPrimaryIdentityProvider,
-    generateMockActivityBurst,
     applyAiWorkspaceAdjustments,
     undoLastAiWorkspaceAdjustments,
     aiSettingsLastResult,
@@ -339,12 +337,6 @@ export function OptionsApp() {
     setNotice(`Debug mode ${enabled ? 'enabled' : 'disabled'}.`)
   }
 
-  const handleGenerateMockBurst = async () => {
-    await generateMockActivityBurst()
-    setFailureNotice(null)
-    setNotice('Mock activity burst generated.')
-  }
-
   const handleResetWorkspaceToEmpty = async () => {
     const confirmed = window.confirm(
       'Reset workspace to a clean production state? This removes all local tasks, contacts, pipeline, and content and cannot be undone.'
@@ -353,16 +345,6 @@ export function OptionsApp() {
     await resetWorkspaceToEmpty()
     setFailureNotice(null)
     setNotice('Workspace reset to an empty production baseline.')
-  }
-
-  const handleLoadDemoSample = async () => {
-    const confirmed = window.confirm(
-      'Load the full sample dataset (demo contacts, pipeline, and content)? This replaces your current local workspace.'
-    )
-    if (!confirmed) return
-    await loadDemoSampleData()
-    setFailureNotice(null)
-    setNotice('Sample demo data loaded.')
   }
 
   return (
@@ -465,9 +447,7 @@ export function OptionsApp() {
         onApplyAiSettings={handleApplyAiSettings}
         onUndoAiSettings={handleUndoAiSettings}
         onSetDebugMode={handleSetDebugMode}
-        onGenerateMockBurst={handleGenerateMockBurst}
         onResetWorkspaceToEmpty={handleResetWorkspaceToEmpty}
-        onLoadDemoSampleData={handleLoadDemoSample}
       />
     </main>
     <RightPillNavDock hostSurface="options" onSelectItem={handleNavSelect} />

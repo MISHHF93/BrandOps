@@ -5,6 +5,8 @@ interface BrandHeaderProps {
   showCrown?: boolean;
   /** Distinguishes surface intent: Capture (popup), Work (dashboard), Settings (options). */
   roleBadge?: 'Capture' | 'Work' | 'Settings';
+  /** Tighter header block and subtitle for cockpit compact density. */
+  compact?: boolean;
 }
 
 export function BrandHeader({
@@ -12,10 +14,13 @@ export function BrandHeader({
   title = 'Workspace',
   eyebrow = 'BrandOps',
   showCrown = false,
-  roleBadge
+  roleBadge,
+  compact
 }: BrandHeaderProps) {
   return (
-    <header className="bo-card bo-retro-panel bo-retro-ambient">
+    <header
+      className={`bo-card bo-retro-panel bo-retro-ambient w-full min-w-0 ${compact ? '!p-3' : ''}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -26,8 +31,12 @@ export function BrandHeader({
               </span>
             ) : null}
           </div>
-          <h1 className="mt-3 text-lg font-semibold">{title}</h1>
-          <p className="mt-1 text-xs text-textMuted">{subtitle}</p>
+          <h1 className={`${compact ? 'mt-2 text-base' : 'mt-3 text-lg'} font-semibold`}>{title}</h1>
+          <p
+            className={`mt-1 text-textMuted ${compact ? 'line-clamp-2 text-[11px] leading-snug' : 'text-xs'}`}
+          >
+            {subtitle}
+          </p>
         </div>
         {showCrown ? (
           <div className="bo-header-crown rounded-xl border p-2">

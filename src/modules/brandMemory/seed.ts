@@ -62,7 +62,7 @@ export const seedData: BrandOpsData = {
     motionMode: 'balanced',
     ambientFxEnabled: false,
     cockpitLayout: 'sections',
-    cockpitDensity: 'comfortable',
+    cockpitDensity: 'compact',
     localModelEnabled: false,
     aiAdapterMode: 'disabled',
     debugMode: false,

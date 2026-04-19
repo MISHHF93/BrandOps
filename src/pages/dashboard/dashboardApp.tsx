@@ -8,13 +8,27 @@ import { BrandHeader } from '../../shared/ui/BrandHeader';
 import { CurrentSectionBar, InlineAlert } from '../../shared/ui/components';
 import { RightPillNavDock } from '../../shared/ui/components/navigation/RightPillNavDock';
 import {
+  CockpitOperatingBoard,
+  CockpitSettingsQuickPanel,
+  CockpitSurfaceOverlay,
   CollapsibleSection,
   DashboardAuthGate,
   DashboardSystemsLean,
-  MissionMapMetrics,
+  CockpitPulseStrip,
+  ExecutionHeatMeter,
   MissionMapOverview,
   StatCard
 } from './components';
+import type { ExecutionHeatItem } from './executionHeatModel';
+import {
+  followUpHeatAndFactors,
+  managerialNotificationFactors,
+  outreachHeatAndFactors,
+  pipelineHeatAndFactors,
+  publishHeatAndFactors,
+  technicalNotificationFactors
+} from './executionHeatModel';
+import { KnowledgeCenterBody } from '../../shared/help/KnowledgeCenterBody';
 import { useBrandOpsStore } from '../../state/useBrandOpsStore';
 import { scheduler } from '../../services/scheduling/scheduler';
 import { localIntelligence } from '../../services/intelligence/localIntelligence';
@@ -53,15 +67,6 @@ const markProfileSetupComplete = () => {
 const isProfileSetupComplete = () =>
   localStorage.getItem(PROFILE_SETUP_KEY) === 'yes' ||
   localStorage.getItem(PROFILE_SETUP_KEY_LEGACY) === 'yes';
-
-interface ExecutionHeatItem {
-  id: string;
-  title: string;
-  detail: string;
-  sectionId: DashboardSectionId;
-  heat: number;
-  reason: string;
-}
 
 interface ProfileDraft {
   operatorName: string;
@@ -502,11 +507,15 @@ export function DashboardApp() {
     addPublishingDraft,
     addOutreachDraft,
     addNote,
-    signOutSession
+    signOutSession,
+    setTheme,
+    updateVisualSettings,
+    updateCockpitPreferences
   } = useBrandOpsStore();
 
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [cockpitOverlay, setCockpitOverlay] = useState<null | 'help' | 'settings'>(null);
   const [activeSectionId, setActiveSectionId] = useState<DashboardSectionId>(initialSectionFromLocation);
   const [activeSectionPage, setActiveSectionPage] = useState<DashboardSectionId>(initialSectionFromLocation);
   const initialScrollDoneRef = useRef(false);
@@ -546,6 +555,12 @@ export function DashboardApp() {
     });
   }, []);
 
+  const openFullSettingsWindow = useCallback(() => {
+    if (typeof chrome !== 'undefined' && typeof chrome.runtime?.openOptionsPage === 'function') {
+      void chrome.runtime.openOptionsPage();
+    }
+  }, []);
+
   const handleCockpitNavigation = useCallback(
     (item: DashboardNavItem) => {
       if (data?.settings.motionMode === 'wild') {
@@ -558,10 +573,46 @@ export function DashboardApp() {
         return;
       }
 
+      if (item.target === 'help') {
+        setCockpitOverlay('help');
+        return;
+      }
+      if (item.target === 'options') {
+        setCockpitOverlay('settings');
+        return;
+      }
+      if (item.target === 'dashboard') {
+        return;
+      }
+
       openExtensionSurface(item.target);
     },
     [data?.settings.motionMode, navigateToSection]
   );
+
+  useEffect(() => {
+    if (!cockpitOverlay) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setCockpitOverlay(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [cockpitOverlay]);
+
+  useEffect(() => {
+    if (!data) return;
+    const url = new URL(window.location.href);
+    const overlay = url.searchParams.get(QUERY.cockpitOverlay);
+    if (overlay === 'help' || overlay === 'settings') {
+      setCockpitOverlay(overlay);
+      url.searchParams.delete(QUERY.cockpitOverlay);
+      const qs = url.searchParams.toString();
+      window.history.replaceState({}, '', `${url.pathname}${qs ? `?${qs}` : ''}${url.hash}`);
+    }
+  }, [data]);
 
   useEffect(() => {
     void init();
@@ -731,6 +782,21 @@ export function DashboardApp() {
     };
   }, [data]);
 
+  const cockpitPulse = useMemo(() => {
+    if (!data || !derived) return null;
+    const publishingInPlay = data.publishingQueue.filter(
+      (item) => item.status !== 'posted' && item.status !== 'skipped'
+    ).length;
+    const activeOutreachDrafts = data.outreachDrafts.filter((draft) => draft.status !== 'archived').length;
+    return {
+      urgentFollowUps: derived.overdueFollowUps,
+      queueDueToday: derived.groups.today.length,
+      weightedPipelineUsd: derived.weightedPipeline,
+      publishingInPlay,
+      activeOutreachDrafts
+    };
+  }, [data, derived]);
+
   const notificationDigest = useMemo(
     () => (data ? dailyNotificationCenter.build(data) : null),
     [data]
@@ -778,25 +844,25 @@ export function DashboardApp() {
     data.followUps
       .filter((task) => !task.completed)
       .forEach((task) => {
+        const { heat, factors } = followUpHeatAndFactors(task.dueAt, now);
         const dueH = hoursUntil(task.dueAt);
-        const heat =
-          dueH <= 0 ? 97 : dueH <= 8 ? 86 : dueH <= 24 ? 72 : dueH <= 48 ? 54 : 36;
         items.push({
           id: `heat-followup-${task.id}`,
           title: `Follow-up: ${task.reason}`,
           detail: `Due ${new Date(task.dueAt).toLocaleString()}`,
           sectionId: 'today',
           heat,
-          reason: dueH <= 0 ? 'overdue' : dueH <= 24 ? 'due window' : 'upcoming'
+          reason: dueH <= 0 ? 'overdue' : dueH <= 24 ? 'due window' : 'upcoming',
+          kind: 'followup',
+          heatFactors: factors
         });
       });
 
     data.publishingQueue
       .filter((item) => item.status !== 'posted' && item.status !== 'skipped')
       .forEach((item) => {
+        const { heat, factors } = publishHeatAndFactors(item.scheduledFor, item.reminderAt, now);
         const dueH = hoursUntil(item.scheduledFor ?? item.reminderAt);
-        const heat =
-          dueH <= 0 ? 92 : dueH <= 6 ? 82 : dueH <= 24 ? 70 : dueH <= 48 ? 52 : 34;
         items.push({
           id: `heat-publish-${item.id}`,
           title: `Publish: ${item.title}`,
@@ -805,24 +871,25 @@ export function DashboardApp() {
             : 'No publish window set yet',
           sectionId: 'brand-content',
           heat,
-          reason: item.scheduledFor ? (dueH <= 24 ? 'due window' : 'scheduled') : 'missing schedule'
+          reason: item.scheduledFor ? (dueH <= 24 ? 'due window' : 'scheduled') : 'missing schedule',
+          kind: 'publish',
+          heatFactors: factors
         });
       });
 
     data.outreachDrafts
       .filter((draft) => draft.status !== 'archived')
       .forEach((draft) => {
-        const ageH = (now - new Date(draft.updatedAt).getTime()) / (1000 * 60 * 60);
-        const statusBoost =
-          draft.status === 'scheduled follow-up' ? 30 : draft.status === 'ready' ? 22 : 14;
-        const heat = Math.min(90, Math.round(statusBoost + Math.min(ageH / 3, 24)));
+        const { heat, factors } = outreachHeatAndFactors(draft.updatedAt, draft.status, now);
         items.push({
           id: `heat-outreach-${draft.id}`,
           title: `Outreach: ${draft.targetName}`,
           detail: `${draft.company} · ${draft.outreachGoal}`,
           sectionId: 'pipeline',
           heat,
-          reason: draft.status === 'scheduled follow-up' ? 'follow-up due' : 'relationship momentum'
+          reason: draft.status === 'scheduled follow-up' ? 'follow-up due' : 'relationship momentum',
+          kind: 'outreach',
+          heatFactors: factors
         });
       });
 
@@ -830,41 +897,51 @@ export function DashboardApp() {
       .filter((opp) => opp.status !== 'won' && opp.status !== 'lost')
       .forEach((opp) => {
         const followH = hoursUntil(opp.followUpDate);
-        const followBoost = followH <= 0 ? 34 : followH <= 24 ? 20 : 10;
-        const valueBoost = Math.min(22, Math.round(opp.valueUsd / 2500));
-        const confidenceBoost = Math.round(opp.confidence / 8);
-        const heat = Math.min(95, 24 + followBoost + valueBoost + confidenceBoost);
+        const { heat, factors } = pipelineHeatAndFactors(
+          {
+            followUpDate: opp.followUpDate,
+            valueUsd: opp.valueUsd,
+            confidence: opp.confidence
+          },
+          now
+        );
         items.push({
           id: `heat-pipeline-${opp.id}`,
           title: `Pipeline: ${opp.name}`,
           detail: `${opp.company} · next: ${opp.nextAction}`,
           sectionId: 'pipeline',
           heat,
-          reason: followH <= 24 ? 'next action due' : 'revenue impact'
+          reason: followH <= 24 ? 'next action due' : 'revenue impact',
+          kind: 'pipeline',
+          heatFactors: factors
         });
       });
 
     notificationDigest.managerialActions.forEach((action) => {
-      const severityHeat = action.severity === 'focus' ? 84 : 62;
+      const { heat, factors } = managerialNotificationFactors(action.severity);
       items.push({
         id: `heat-managerial-${action.id}`,
         title: action.title,
         detail: action.detail,
         sectionId: isDashboardSectionId(action.sectionId) ? action.sectionId : 'today',
-        heat: severityHeat,
-        reason: `managerial ${action.severity}`
+        heat,
+        reason: `managerial ${action.severity}`,
+        kind: 'managerial',
+        heatFactors: factors
       });
     });
 
     notificationDigest.technicalActions.forEach((action) => {
-      const severityHeat = action.severity === 'focus' ? 80 : 58;
+      const { heat, factors } = technicalNotificationFactors(action.severity);
       items.push({
         id: `heat-technical-${action.id}`,
         title: action.title,
         detail: action.detail,
         sectionId: isDashboardSectionId(action.sectionId) ? action.sectionId : 'today',
-        heat: severityHeat,
-        reason: `technical ${action.severity}`
+        heat,
+        reason: `technical ${action.severity}`,
+        kind: 'technical',
+        heatFactors: factors
       });
     });
 
@@ -984,97 +1061,118 @@ export function DashboardApp() {
   return (
     <>
     <main
-      className={`bo-system-screen bo-dashboard-shell bo-retro-ambient min-w-0 space-y-3 transition-all ${
+      className={`bo-system-screen bo-dashboard-shell bo-retro-ambient flex min-h-0 min-w-0 flex-1 flex-col transition-all ${
+        isCompact ? 'bo-dashboard-shell--compact' : ''
+      } ${
         data.settings.visualMode === 'retroMagic' ? 'bo-retro-panel' : ''
       } ${
         data.settings.motionMode !== 'off' ? 'bo-retro-surface-enter' : ''
       }`}
     >
       <div className={`bo-nav-signal ${navSignalActive ? 'bo-nav-signal--active' : ''}`} aria-hidden />
-      <BrandHeader
-        eyebrow="BrandOps"
-        title="Cockpit"
-        roleBadge="Work"
-        subtitle={
-          unifiedScroll
-            ? 'Your daily control center for tasks, pipeline, content, and integrations.'
-            : 'Focused mode: open one area at a time from the compass.'
-        }
-      />
-
-      {primaryIdentityLine ? (
-        <p className="-mt-1 text-xs text-textMuted">
-          Signed in as <span className="font-medium text-text">{primaryIdentityLine}</span>
-        </p>
-      ) : null}
-
-      <div className="-mt-1 flex flex-wrap items-center gap-2 text-xs">
-        <button type="button" className="bo-link" onClick={() => void signOutSession()}>
-          Sign out
-        </button>
-        <span className="text-textSoft">
-          Ends every federated session. To remove only one provider, use Settings → Integrations.
-        </span>
+      <div className={`bo-dashboard-canvas w-full min-w-0 ${isCompact ? 'gap-2' : 'gap-3'} flex-1`}>
+      <div className="flex w-full min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:justify-between xl:gap-6 2xl:gap-10">
+        <div className="min-w-0 flex-1">
+          <BrandHeader
+            eyebrow="BrandOps"
+            title="Cockpit"
+            roleBadge="Work"
+            compact={isCompact}
+            subtitle={
+              isCompact
+                ? unifiedScroll
+                  ? 'Control center · compass (Alt+M) for areas.'
+                  : 'Focused view · compass (Alt+M).'
+                : unifiedScroll
+                  ? 'Your daily control center for tasks, pipeline, content, and integrations.'
+                  : 'Focused mode: open one area at a time from the compass.'
+            }
+          />
+        </div>
+        <div className="flex min-w-0 shrink-0 flex-col gap-2 border-t border-border/60 pt-3 sm:max-w-lg xl:max-w-[min(22rem,32vw)] xl:border-t-0 xl:pt-1 xl:text-right">
+          {primaryIdentityLine ? (
+            <p className={`${isCompact ? 'text-[11px]' : 'text-xs'} text-textMuted`}>
+              Signed in as <span className="font-medium text-text">{primaryIdentityLine}</span>
+            </p>
+          ) : null}
+          <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${isCompact ? 'text-[11px]' : 'text-xs'} xl:justify-end`}>
+            <button type="button" className="bo-link" onClick={() => void signOutSession()}>
+              Sign out
+            </button>
+            {isCompact ? (
+              <span className="text-[11px] text-textSoft">Federated session.</span>
+            ) : (
+              <span className="text-left text-textSoft xl:text-right">
+                Ends every federated session. To remove only one provider, use Settings → Integrations.
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       <CurrentSectionBar
+        className="shrink-0"
         label={activeNavItem?.label ?? 'Today'}
         description={
-          activeNavItem?.description ??
-          (unifiedScroll
-            ? 'Use the right menu to jump between major areas.'
-            : 'Use the compass (Alt+M) to switch sections.')
+          isCompact
+            ? undefined
+            : activeNavItem?.description ??
+              (unifiedScroll
+                ? 'Use the right menu to jump between major areas.'
+                : 'Use the compass (Alt+M) to switch sections.')
         }
       />
 
       <div
         key={unifiedScroll ? 'unified' : activeSectionPage}
-        className={`grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_18rem] ${data.settings.motionMode === 'off' ? '' : 'bo-retro-section-enter'}`}
+        className={`grid w-full min-w-0 items-start ${isCompact ? 'gap-3' : 'gap-4'} xl:grid-cols-[minmax(0,1fr)_minmax(16rem,18rem)] xl:gap-x-6 xl:gap-y-4 2xl:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)] 2xl:gap-x-8 2xl:gap-y-5 ${data.settings.motionMode === 'off' ? '' : 'bo-retro-section-enter'}`}
       >
-        <div className="space-y-3">
+        <div className={`w-full min-w-0 ${isCompact ? 'space-y-2' : 'space-y-3'}`}>
         {shouldRenderSection('today') ? (
-          <section id="today-command-deck" className="bo-card space-y-3 border border-primary/35 bg-bg/75">
-            <header className="space-y-1.5">
+          <CockpitOperatingBoard compact={isCompact}>
+          <section
+            id="today-command-deck"
+            className={`w-full min-w-0 rounded-xl border border-border/50 bg-surface/25 shadow-sm ring-1 ring-border/20 ${isCompact ? 'space-y-2 p-3' : 'space-y-3 p-3 sm:p-4'}`}
+          >
+            <header className={isCompact ? 'space-y-1' : 'space-y-1.5'}>
               <p className="bo-crown-kicker">Command deck</p>
-              <h2 className="text-lg font-semibold text-text">Today objective: protect momentum, ship output, close loops.</h2>
-              <p className="text-xs text-textMuted">
-                Run only the highest-leverage actions now; defer everything else into next-up windows.
-              </p>
-            </header>
-            <div className="grid gap-3 md:grid-cols-3">
-              <article className="rounded-xl border border-warning/45 bg-warningSoft/14 p-3">
-                <p className="text-[11px] uppercase tracking-[0.12em] text-warning">Urgent follow-ups</p>
-                <p className="mt-1 text-3xl font-semibold leading-none text-text">{derived.overdueFollowUps}</p>
-                <p className="mt-1 text-[11px] text-textMuted">Needs action today.</p>
-              </article>
-              <article className="rounded-xl border border-danger/45 bg-dangerSoft/12 p-3">
-                <p className="text-[11px] uppercase tracking-[0.12em] text-danger">Queue due today</p>
-                <p className="mt-1 text-3xl font-semibold leading-none text-text">{derived.groups.today.length}</p>
-                <p className="mt-1 text-[11px] text-textMuted">Scheduled commitments due.</p>
-              </article>
-              <article className="rounded-xl border border-success/45 bg-successSoft/14 p-3">
-                <p className="text-[11px] uppercase tracking-[0.12em] text-success">Weighted pipeline</p>
-                <p className="mt-1 text-3xl font-semibold leading-none text-text">
-                  ${Math.round(derived.weightedPipeline).toLocaleString()}
+              <h2
+                className={
+                  isCompact ? 'text-base font-semibold text-text' : 'text-lg font-semibold text-text'
+                }
+              >
+                {isCompact
+                  ? 'Today: ship output, close loops.'
+                  : 'Today objective: protect momentum, ship output, close loops.'}
+              </h2>
+              {isCompact ? null : (
+                <p className="text-xs text-textMuted">
+                  Run only the highest-leverage actions now; defer everything else into next-up windows.
                 </p>
-                <p className="mt-1 text-[11px] text-textMuted">Forecast from active opportunities.</p>
-              </article>
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs">
-              <button className="bo-link" onClick={() => navigateToSection('today-execution')}>
-                Open execute-now lane
-              </button>
-              <button className="bo-link" onClick={() => navigateToSection('pipeline')}>
-                Jump to revenue engine
-              </button>
-              <button className="bo-link" onClick={() => navigateToSection('brand-content')}>
-                Jump to presence engine
-              </button>
-            </div>
+              )}
+            </header>
+            {cockpitPulse ? (
+              <CockpitPulseStrip pulse={cockpitPulse} compact={isCompact} />
+            ) : null}
+            {isCompact ? (
+              <p className="text-[11px] text-textMuted">
+                Other areas: use the compass (right) · <kbd className="rounded border border-border px-1">Alt+M</kbd>
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2 text-xs">
+                <button className="bo-link" onClick={() => navigateToSection('today-execution')}>
+                  Open execute-now lane
+                </button>
+                <button className="bo-link" onClick={() => navigateToSection('pipeline')}>
+                  Jump to revenue engine
+                </button>
+                <button className="bo-link" onClick={() => navigateToSection('brand-content')}>
+                  Jump to presence engine
+                </button>
+              </div>
+            )}
           </section>
-        ) : null}
 
-        {shouldRenderSection('today') ? (
           <CollapsibleSection
             key={`workspace-map-${isCompact ? 'c' : 'h'}`}
             defaultOpen={false}
@@ -1087,7 +1185,6 @@ export function DashboardApp() {
               density={data.settings.cockpitDensity}
             />
           </CollapsibleSection>
-        ) : null}
 
       {showOnboarding ? (
         <CockpitOnboardingOverlay
@@ -1317,7 +1414,6 @@ export function DashboardApp() {
         </div>
       ) : null}
 
-      {shouldRenderSection('today') ? (
       <CollapsibleSection
         key={`cockpit-metrics-${isCompact ? 'c' : 'h'}`}
         defaultOpen={false}
@@ -1326,12 +1422,9 @@ export function DashboardApp() {
         }
       >
         <div className="space-y-4">
-          <MissionMapMetrics
-            publishingQueueLength={data.publishingQueue.length}
-            outreachDraftsLength={data.outreachDrafts.length}
-            weightedPipeline={derived.weightedPipeline}
-            overdueFollowUps={derived.overdueFollowUps}
-          />
+          <p className="text-xs text-textMuted">
+            Pulse row above is the single odometer strip. Below: health severity detail for today.
+          </p>
           <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5" aria-label="Today health strip">
             {overviewHealthMetrics.map((metric) => (
               <article
@@ -1349,10 +1442,8 @@ export function DashboardApp() {
           </section>
         </div>
       </CollapsibleSection>
-      ) : null}
 
-        {shouldRenderSection('today') ? (
-        <section className="bo-card space-y-4 border border-border/90 bg-bg/65" id="today-execution" aria-label="Today Queue">
+        <section className="rounded-xl border border-border/70 bg-bg/50 space-y-4 p-3 sm:p-4" id="today-execution" aria-label="Today Queue">
           <header className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <h2 className="text-sm font-semibold">Today Queue</h2>
@@ -1426,8 +1517,8 @@ export function DashboardApp() {
           </article>
         </CollapsibleSection>
 
-        <div className="grid gap-2.5 xl:grid-cols-3">
-          <article className="bo-glass-panel bo-glass-panel--muted rounded-xl border border-border bg-bg/45 p-2.5 text-xs xl:col-span-2">
+        <div className="grid gap-2.5 xl:grid-cols-3 2xl:grid-cols-12 2xl:gap-4">
+          <article className="bo-glass-panel bo-glass-panel--muted rounded-xl border border-border bg-bg/45 p-2.5 text-xs xl:col-span-2 2xl:col-span-8">
             <h3 className="text-sm font-semibold">Execute now</h3>
             <div className="mt-3 space-y-2">
               {executeNowItems.length === 0 ? (
@@ -1436,32 +1527,34 @@ export function DashboardApp() {
                 </p>
               ) : (
                 executeNowItems.map((item) => (
-                  <button
+                  <div
                     key={item.id}
-                    className={`w-full rounded-xl border p-3 text-left ${
+                    className={`overflow-hidden rounded-xl border ${
                       item.heat >= 85
                         ? 'border-danger/30 bg-dangerSoft/10'
                         : item.heat >= 70
                           ? 'border-warning/30 bg-warningSoft/10'
                           : 'border-border/80 bg-bg/45'
                     }`}
-                    onClick={() => navigateToSection(item.sectionId)}
                   >
-                    <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      className="w-full p-3 text-left transition-colors hover:bg-bg/55"
+                      onClick={() => navigateToSection(item.sectionId)}
+                    >
                       <p className="font-medium text-text">{item.title}</p>
-                      <span className={`rounded-full px-2 py-1 text-[11px] ${severityClasses(item.heat >= 85 ? 'critical' : item.heat >= 70 ? 'warning' : 'healthy')}`}>
-                        heat {item.heat}
-                      </span>
+                      <p className="mt-1 text-textMuted">{item.detail}</p>
+                    </button>
+                    <div className="border-t border-border/40 px-3 pb-3 pt-2">
+                      <ExecutionHeatMeter item={item} />
                     </div>
-                    <p className="mt-1 text-textMuted">{item.detail}</p>
-                    <p className="mt-1 text-[11px] text-textSoft">Reason: {item.reason}</p>
-                  </button>
+                  </div>
                 ))
               )}
             </div>
           </article>
 
-          <article className="bo-glass-panel bo-glass-panel--muted rounded-xl border border-primary/25 bg-bg/45 p-2.5 text-xs">
+          <article className="bo-glass-panel bo-glass-panel--muted rounded-xl border border-primary/25 bg-bg/45 p-2.5 text-xs 2xl:col-span-4">
             <h3 className="text-sm font-semibold">Close loop</h3>
             <div className="mt-3 space-y-2">
               <p className="rounded-xl border border-border/80 bg-bg/45 p-3 text-textMuted">
@@ -1474,8 +1567,8 @@ export function DashboardApp() {
           </article>
         </div>
 
-        <div className="grid gap-2.5 xl:grid-cols-3">
-          <article className="bo-glass-panel bo-glass-panel--muted rounded-xl border border-border bg-bg/40 p-2.5 text-xs xl:col-span-2">
+        <div className="grid gap-2.5 xl:grid-cols-3 2xl:grid-cols-12 2xl:gap-4">
+          <article className="bo-glass-panel bo-glass-panel--muted rounded-xl border border-border bg-bg/40 p-2.5 text-xs xl:col-span-2 2xl:col-span-8">
             <h3 className="text-sm font-semibold">Next up</h3>
             <div className="mt-3 grid gap-2 md:grid-cols-2">
               {nextUpItems.length === 0 ? (
@@ -1484,26 +1577,34 @@ export function DashboardApp() {
                 </p>
               ) : (
                 nextUpItems.map((item) => (
-                  <button
+                  <div
                     key={item.id}
-                    className={`rounded-xl border p-3 text-left ${
+                    className={`overflow-hidden rounded-xl border ${
                       item.heat >= 85
                         ? 'border-danger/30 bg-dangerSoft/10'
                         : item.heat >= 70
                           ? 'border-warning/30 bg-warningSoft/10'
                           : 'border-border/80 bg-bg/45'
                     }`}
-                    onClick={() => navigateToSection(item.sectionId)}
                   >
-                    <p className="font-medium text-text">{item.title}</p>
-                    <p className="mt-1 text-textMuted">{item.detail}</p>
-                  </button>
+                    <button
+                      type="button"
+                      className="w-full p-3 text-left transition-colors hover:bg-bg/55"
+                      onClick={() => navigateToSection(item.sectionId)}
+                    >
+                      <p className="font-medium text-text">{item.title}</p>
+                      <p className="mt-1 text-textMuted">{item.detail}</p>
+                    </button>
+                    <div className="border-t border-border/40 px-3 pb-3 pt-2">
+                      <ExecutionHeatMeter item={item} layout="inline" />
+                    </div>
+                  </div>
                 ))
               )}
             </div>
           </article>
 
-          <article className="bo-glass-panel bo-glass-panel--muted rounded-xl border border-border bg-bg/40 p-2.5 text-xs">
+          <article className="bo-glass-panel bo-glass-panel--muted rounded-xl border border-border bg-bg/40 p-2.5 text-xs 2xl:col-span-4">
             <h3 className="text-sm font-semibold">Unblockers</h3>
             <div className="mt-3 space-y-2">
               {executionUnblockers.length === 0 ? (
@@ -1526,9 +1627,7 @@ export function DashboardApp() {
           </article>
         </div>
         </section>
-        ) : null}
 
-      {shouldRenderSection('today') ? (
       <CollapsibleSection
         key={`advanced-diag-${isCompact ? 'c' : 'h'}`}
         defaultOpen={false}
@@ -1605,7 +1704,8 @@ export function DashboardApp() {
           </section>
         </section>
       </CollapsibleSection>
-      ) : null}
+          </CockpitOperatingBoard>
+        ) : null}
 
       {shouldRenderSection('pipeline') ? (
         <section id="pipeline" className="space-y-3 scroll-mt-4">
@@ -1708,8 +1808,8 @@ export function DashboardApp() {
       ) : null}
         </div>
 
-        <aside className="hidden xl:block">
-          <div className="sticky top-24 space-y-2.5">
+        <aside className="hidden min-w-0 border-border/40 xl:block xl:border-l xl:pl-5 2xl:pl-6">
+          <div className="sticky top-20 space-y-2.5 2xl:top-24">
             <article className="bo-card space-y-2">
               <p className="bo-crown-kicker">Quick capture rail</p>
               <button
@@ -1792,6 +1892,7 @@ export function DashboardApp() {
           </div>
         </aside>
       </div>
+      </div>
 
       {paletteOpen ? (
         <div className="bo-system-overlay bo-system-overlay--soft fixed inset-0 z-50 flex min-h-0 items-start justify-center overflow-y-auto p-4 sm:items-center" role="dialog" aria-label="Command palette">
@@ -1818,11 +1919,11 @@ export function DashboardApp() {
                 type="button"
                 className="bo-link md:col-span-2"
                 onClick={() => {
-                  openExtensionSurface('help');
+                  setCockpitOverlay('help');
                   setPaletteOpen(false);
                 }}
               >
-                Open Knowledge Center (new tab)
+                Open Knowledge Center
               </button>
             </div>
             <button className="bo-link mt-3 w-full" onClick={() => setPaletteOpen(false)}>Close</button>
@@ -1837,6 +1938,33 @@ export function DashboardApp() {
       onSelectItem={handleCockpitNavigation}
       closedFocusLabel={activeNavItem?.label}
     />
+
+    {cockpitOverlay ? (
+      <CockpitSurfaceOverlay
+        title={cockpitOverlay === 'help' ? 'Knowledge Center' : 'Quick settings'}
+        open
+        onClose={() => setCockpitOverlay(null)}
+      >
+        {cockpitOverlay === 'help' ? (
+          <KnowledgeCenterBody topicLinkMode="embedded-hash" />
+        ) : (
+          <CockpitSettingsQuickPanel
+            data={data}
+            onThemeChange={(theme) => void setTheme(theme)}
+            onUpdateVisualSettings={updateVisualSettings}
+            onUpdateCockpitPreferences={updateCockpitPreferences}
+            onOpenFullSettings={() => {
+              setCockpitOverlay(null);
+              openFullSettingsWindow();
+            }}
+            onJumpToConnections={() => {
+              setCockpitOverlay(null);
+              navigateToSection('connections');
+            }}
+          />
+        )}
+      </CockpitSurfaceOverlay>
+    ) : null}
     </>
   );
 }

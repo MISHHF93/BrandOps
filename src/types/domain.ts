@@ -545,6 +545,8 @@ export interface SeedMetadata {
    * Distinct from per-provider **Disconnect** in Settings (revoke one IdP only).
    */
   guestSessionAt?: string;
+  /** Hosted preview only: magic-link / open-preview session started at (ISO). Not used for Chrome Web Store builds. */
+  previewMagicSignInAt?: string;
 }
 
 export interface BrandProfile {

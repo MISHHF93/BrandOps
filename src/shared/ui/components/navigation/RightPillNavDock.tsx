@@ -11,8 +11,8 @@ export type RightPillNavDockHostSurface = 'dashboard' | 'options' | 'help';
 
 function cockpitGroupsForHost(hostSurface: RightPillNavDockHostSurface | undefined) {
   if (!hostSurface) return cockpitNavigationGroups;
-  /** Today section opens dashboard with ?section=today; same as "Full Dashboard" from popup/options. */
-  const hideRedundantFullDashboard = hostSurface === 'options';
+  /** Hide "Full Dashboard" when already on that HTML surface (dashboard or options). */
+  const hideRedundantFullDashboard = hostSurface === 'options' || hostSurface === 'dashboard';
   return cockpitNavigationGroups
     .map((group) => ({
       ...group,

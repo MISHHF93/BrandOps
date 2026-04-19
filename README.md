@@ -252,6 +252,8 @@ npm install
 npm run dev
 ```
 
+The dev server is **fixed to `http://localhost:5173`** (`strictPort` in `vite.config.ts`). `npm run dev` runs `scripts/dev.mjs`, which on **Windows** tries to stop whatever is already **listening** on 5173 (stale Vite, etc.), then starts Vite. If it still fails, use `netstat -ano | findstr :5173` and end the PID in Task Manager. Use that origin for local OAuth redirect URIs.
+
 ### 3) Build extension
 
 ```bash
@@ -374,3 +376,6 @@ See [docs/data-model.md](docs/data-model.md) for the runtime type mapping and fi
 - Data model details: [docs/data-model.md](docs/data-model.md)
 - Design system: [docs/design-system.md](docs/design-system.md)
 - Component library: [docs/component-library.md](docs/component-library.md)
+- One-pager IA (surfaces, compass, KPIs): [docs/one-pager-ia-and-surface-map.md](docs/one-pager-ia-and-surface-map.md)
+- Cockpit overlays (Knowledge / Quick settings on dashboard): [dashboard-cockpit-overlay-plan.md](dashboard-cockpit-overlay-plan.md)
+- Compact cockpit UX (minimal signal / growth & portfolio glance): [docs/cockpit-compact-ux-spec.md](docs/cockpit-compact-ux-spec.md)

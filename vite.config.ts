@@ -6,8 +6,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    /** Prefer picking the next free port over failing when 5173 is taken. */
-    strictPort: false
+    /** Fail fast if 5173 is busy so the app never silently moves to 5174. */
+    strictPort: true
+  },
+  preview: {
+    port: 4173,
+    strictPort: true
   },
   build: {
     outDir: 'dist',

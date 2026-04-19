@@ -1,4 +1,3 @@
-import { demoSampleData } from '../../modules/brandMemory/demoSeed';
 import { seedData } from '../../modules/brandMemory/seed';
 import { browserLocalStorage } from '../../shared/storage/browserStorage';
 import {
@@ -1208,9 +1207,11 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
       typeof base.seed?.onboardingVersion === 'string' && base.seed.onboardingVersion.trim().length > 0
         ? base.seed.onboardingVersion
         : seedData.seed.onboardingVersion,
-    guestSessionAt:
-      typeof base.seed?.guestSessionAt === 'string' && base.seed.guestSessionAt.length > 0
-        ? base.seed.guestSessionAt
+    /** Legacy guest/demo sessions removed — production requires federated OAuth. */
+    guestSessionAt: undefined,
+    previewMagicSignInAt:
+      typeof base.seed?.previewMagicSignInAt === 'string' && base.seed.previewMagicSignInAt.length > 0
+        ? base.seed.previewMagicSignInAt
         : undefined
   }
 });
@@ -1229,8 +1230,6 @@ const isBrandOpsData = (value: unknown): value is BrandOpsData => {
 };
 
 const createSeededWorkspace = () => withDefaults(withFreshSeedMetadata(seedData));
-
-const createDemoSampleWorkspace = () => withDefaults(withFreshSeedMetadata(demoSampleData));
 
 export const storageService = {
   async getData(): Promise<BrandOpsData> {
@@ -1258,13 +1257,6 @@ export const storageService = {
 
   async resetToSeed(): Promise<BrandOpsData> {
     const seeded = createSeededWorkspace();
-    await browserLocalStorage.set(DATA_KEY, seeded);
-    return seeded;
-  },
-
-  /** Rich demo dataset (contacts, pipeline, content) for QA — not the production default. */
-  async resetToDemoSample(): Promise<BrandOpsData> {
-    const seeded = createDemoSampleWorkspace();
     await browserLocalStorage.set(DATA_KEY, seeded);
     return seeded;
   },
