@@ -121,33 +121,13 @@ chrome.notifications?.onClicked.addListener((notificationId) => {
 chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResponse) => {
   void (async () => {
     try {
-      if (message.type === 'GET_DATA') {
-        sendResponse(await loadWorkspaceSafely());
-        return;
-      }
-
-      if (message.type === 'RESET_DATA') {
-        const data = await storageService.resetToSeed();
-        const next = { ...data, scheduler: scheduler.reconcile(data) };
-        await storageService.setData(next);
-        await scheduleAlarms();
-        sendResponse(next);
-        return;
-      }
-
-      if (message.type === 'OPEN_DASHBOARD') {
-        await chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
-        sendResponse({ ok: true });
-        return;
-      }
-
       if (message.type === 'SYNC_SCHEDULER') {
         await scheduleAlarms();
         sendResponse({ ok: true });
         return;
       }
 
-      sendResponse({ ok: message.type === 'PING' });
+      sendResponse({ ok: false, error: `Unsupported runtime message: ${message.type}` });
     } catch (error) {
       console.error('[BrandOps] Runtime message handler failed.', message.type, error);
       sendResponse({

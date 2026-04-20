@@ -62,6 +62,7 @@ import { QUERY } from '../../shared/navigation/extensionLinks';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import { CockpitNavItemIcon } from '../../shared/ui/icons/cockpitNavIcons';
 import { CockpitOnboardingOverlay } from '../../shared/onboarding/CockpitOnboardingOverlay';
+import { useFocusTrap } from '../../shared/ui/components/utils/focusTrap';
 import {
   computeOverviewHealthMetrics,
   severityClasses,
@@ -560,6 +561,8 @@ export function DashboardApp() {
   const [resumeExtractPreview, setResumeExtractPreview] = useState('');
   const [resumeSourceFileName, setResumeSourceFileName] = useState('');
   const [navSignalActive, setNavSignalActive] = useState(false);
+  const profileSetupRef = useRef<HTMLDivElement>(null);
+  const paletteRef = useRef<HTMLDivElement>(null);
   const navigateToSection = useCallback((sectionId: string) => {
     if (!isDashboardSectionId(sectionId)) return;
     setActiveSectionId(sectionId);
@@ -855,6 +858,21 @@ export function DashboardApp() {
     }
     prevCockpitLayoutRef.current = cur;
   }, [data, data?.settings.cockpitLayout]);
+
+  useFocusTrap({
+    enabled: profileSetupOpen,
+    containerRef: profileSetupRef,
+    onEscape: () => {
+      markProfileSetupComplete();
+      setProfileSetupOpen(false);
+    }
+  });
+
+  useFocusTrap({
+    enabled: paletteOpen,
+    containerRef: paletteRef,
+    onEscape: () => setPaletteOpen(false)
+  });
 
   const executionHeatItems = useMemo<ExecutionHeatItem[]>(() => {
     if (!data || !notificationDigest) return [];
@@ -1267,7 +1285,11 @@ export function DashboardApp() {
 
       {profileSetupOpen ? (
         <div className="bo-system-overlay fixed inset-0 z-50 flex min-h-0 items-center justify-center overflow-y-auto p-4">
-          <section className="bo-system-sheet w-full max-w-3xl rounded-3xl border p-4">
+          <section
+            ref={profileSetupRef}
+            tabIndex={-1}
+            className="bo-system-sheet w-full max-w-3xl rounded-3xl border p-4"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
                 <p className="bo-crown-kicker">First run</p>
@@ -1977,8 +1999,12 @@ export function DashboardApp() {
       </div>
 
       {paletteOpen ? (
-        <div className="bo-system-overlay bo-system-overlay--soft fixed inset-0 z-50 flex min-h-0 items-start justify-center overflow-y-auto p-4 sm:items-center" role="dialog" aria-label="Command palette">
-          <div className="bo-system-sheet bo-system-sheet--compact mx-auto my-auto w-full max-w-2xl rounded-2xl border p-3">
+        <div className="bo-system-overlay bo-system-overlay--soft fixed inset-0 z-50 flex min-h-0 items-start justify-center overflow-y-auto p-4 sm:items-center" role="dialog" aria-modal="true" aria-label="Command palette">
+          <div
+            ref={paletteRef}
+            tabIndex={-1}
+            className="bo-system-sheet bo-system-sheet--compact mx-auto my-auto w-full max-w-2xl rounded-2xl border p-3"
+          >
             <p className="text-xs text-textMuted">
               Operator shortcuts · Ctrl/Cmd+K palette · Alt+M compass · Alt+1–4 area jumps · / opens palette. With
               unified scroll, the compass scrolls to anchors; in section mode it swaps the mounted area.
