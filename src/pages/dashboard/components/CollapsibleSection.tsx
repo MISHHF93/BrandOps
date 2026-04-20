@@ -4,6 +4,8 @@ import { cn } from '../../../shared/ui/components/utils/cn';
 export interface CollapsibleSectionProps {
   id?: string;
   summary: ReactNode;
+  /** Decorative icon before summary text (paired with visible title). */
+  summaryIcon?: ReactNode;
   defaultOpen?: boolean;
   className?: string;
   bodyClassName?: string;
@@ -14,6 +16,7 @@ export interface CollapsibleSectionProps {
 export function CollapsibleSection({
   id,
   summary,
+  summaryIcon,
   defaultOpen = false,
   className,
   bodyClassName,
@@ -30,7 +33,14 @@ export function CollapsibleSection({
     >
       <summary className="cursor-pointer list-none px-4 py-3 marker:hidden [&::-webkit-details-marker]:hidden">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="min-w-0">{summary}</div>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {summaryIcon ? (
+              <span className="shrink-0 text-primary/85 [&_svg]:block" aria-hidden>
+                {summaryIcon}
+              </span>
+            ) : null}
+            <div className="min-w-0">{summary}</div>
+          </div>
           <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-textSoft group-open:hidden">
             Show
           </span>

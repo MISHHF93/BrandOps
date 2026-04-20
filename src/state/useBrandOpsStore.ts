@@ -11,6 +11,7 @@ import {
 } from '../services/ai/aiSettingsMode';
 import { normalizeExternalSyncSectionReferences as normalizeSectionReferences } from '../shared/config/legacySectionIds';
 import { loadOAuthPublicOverrides } from '../shared/config/loadOAuthPublicOverrides';
+import { initIntelligenceRulesFromRemote } from '../rules/intelligenceRulesRuntime';
 import {
   getEffectiveGitHubClientId,
   getEffectiveGoogleClientId,
@@ -57,6 +58,8 @@ interface StoreState {
     warnings: string[];
     unsupportedRequests: string[];
   } | null;
+  /** Bumps after remote intelligence rules resolve so dashboard memos recompute. */
+  intelligenceRulesEpoch: number;
   init: () => Promise<void>;
   /** Production-empty workspace (default for new installs and recovery). */
   resetWorkspaceToEmpty: () => Promise<void>;
@@ -306,16 +309,22 @@ export const useBrandOpsStore = create<StoreState>((set, get) => ({
   loading: false,
   aiSettingsLastSnapshot: null,
   aiSettingsLastResult: null,
+  intelligenceRulesEpoch: 0,
 
   async init() {
     set({ loading: true, error: undefined });
 
     try {
       await loadOAuthPublicOverrides();
+      await initIntelligenceRulesFromRemote();
       const data = await storageService.getData();
       const withScheduler = { ...data, scheduler: scheduler.reconcile(data) };
       const persisted = await storageService.setData(withScheduler);
-      set({ data: persisted, loading: false });
+      set({
+        data: persisted,
+        loading: false,
+        intelligenceRulesEpoch: get().intelligenceRulesEpoch + 1
+      });
     } catch (error) {
       set({ loading: false, error: (error as Error).message });
     }

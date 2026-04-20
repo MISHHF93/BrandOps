@@ -1,4 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Activity,
+  CalendarRange,
+  Cpu,
+  KanbanSquare,
+  Layers2,
+  ListChecks,
+  ListTree,
+  Map as MapIcon,
+  Plug2
+} from 'lucide-react';
 import { BrandVaultPanel } from '../../modules/brandVault/BrandVaultPanel';
 import { ContentLibraryPanel } from '../../modules/contentLibrary/ContentLibraryPanel';
 import { OutreachWorkspacePanel } from '../../modules/outreachWorkspace/OutreachWorkspacePanel';
@@ -49,6 +60,7 @@ import {
 } from '../../shared/config/dashboardNavigation';
 import { QUERY } from '../../shared/navigation/extensionLinks';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
+import { CockpitNavItemIcon } from '../../shared/ui/icons/cockpitNavIcons';
 import { CockpitOnboardingOverlay } from '../../shared/onboarding/CockpitOnboardingOverlay';
 import {
   computeOverviewHealthMetrics,
@@ -58,16 +70,23 @@ import {
 
 const ONBOARDING_KEY = 'brandops:onboarding-complete';
 const PROFILE_SETUP_KEY = 'brandops:profile-setup-complete';
+/** One-time read for installs that only had the pre-rename key; migrated on first check. */
 const PROFILE_SETUP_KEY_LEGACY = 'operatoros:profile-setup-complete';
 
 const markProfileSetupComplete = () => {
   localStorage.setItem(PROFILE_SETUP_KEY, 'yes');
-  localStorage.setItem(PROFILE_SETUP_KEY_LEGACY, 'yes');
+  localStorage.removeItem(PROFILE_SETUP_KEY_LEGACY);
 };
 
-const isProfileSetupComplete = () =>
-  localStorage.getItem(PROFILE_SETUP_KEY) === 'yes' ||
-  localStorage.getItem(PROFILE_SETUP_KEY_LEGACY) === 'yes';
+const isProfileSetupComplete = (): boolean => {
+  if (localStorage.getItem(PROFILE_SETUP_KEY) === 'yes') return true;
+  if (localStorage.getItem(PROFILE_SETUP_KEY_LEGACY) === 'yes') {
+    localStorage.setItem(PROFILE_SETUP_KEY, 'yes');
+    localStorage.removeItem(PROFILE_SETUP_KEY_LEGACY);
+    return true;
+  }
+  return false;
+};
 
 interface ProfileDraft {
   operatorName: string;
@@ -501,6 +520,7 @@ export function DashboardApp() {
     data,
     init,
     error,
+    intelligenceRulesEpoch,
     snoozeSchedulerTask,
     completeSchedulerTask,
     exportWorkspace,
@@ -786,7 +806,7 @@ export function DashboardApp() {
       pipelineHealth,
       publishingRecommendations
     };
-  }, [data]);
+  }, [data, intelligenceRulesEpoch]);
 
   const cockpitPulse = useMemo(() => {
     if (!data || !derived) return null;
@@ -805,9 +825,9 @@ export function DashboardApp() {
 
   const notificationDigest = useMemo(
     () => (data ? dailyNotificationCenter.build(data) : null),
-    [data]
+    [data, intelligenceRulesEpoch]
   );
-  const cadencePlan = useMemo(() => (data ? operatorCadenceFlow.build(data) : null), [data]);
+  const cadencePlan = useMemo(() => (data ? operatorCadenceFlow.build(data) : null), [data, intelligenceRulesEpoch]);
 
   useEffect(() => {
     if (useBrandOpsStore.getState().data?.settings.cockpitLayout !== 'unified-scroll') {
@@ -952,7 +972,7 @@ export function DashboardApp() {
     });
 
     return items.sort((a, b) => b.heat - a.heat);
-  }, [data, notificationDigest]);
+  }, [data, notificationDigest, intelligenceRulesEpoch]);
 
   const executeNowItems = executionHeatItems.slice(0, 5);
   const nextUpItems = executionHeatItems.slice(5, 9);
@@ -1118,6 +1138,11 @@ export function DashboardApp() {
 
       <CurrentSectionBar
         className="shrink-0"
+        leading={
+          activeNavItem ? (
+            <CockpitNavItemIcon item={activeNavItem} size={20} className="text-primary/90" />
+          ) : null
+        }
         label={activeNavItem?.label ?? 'Today'}
         description={
           isCompact
@@ -1143,13 +1168,21 @@ export function DashboardApp() {
             <header className={isCompact ? 'space-y-1' : 'space-y-1.5'}>
               <p className="bo-crown-kicker">Command deck</p>
               <h2
-                className={
+                className={`flex items-center gap-2 ${
                   isCompact ? 'text-base font-semibold text-text' : 'text-lg font-semibold text-text'
-                }
+                }`}
               >
-                {isCompact
-                  ? 'Today: ship output, close loops.'
-                  : 'Today objective: protect momentum, ship output, close loops.'}
+                <CalendarRange
+                  size={isCompact ? 16 : 18}
+                  strokeWidth={2}
+                  className="shrink-0 text-primary/90"
+                  aria-hidden
+                />
+                <span>
+                  {isCompact
+                    ? 'Today: ship output, close loops.'
+                    : 'Today objective: protect momentum, ship output, close loops.'}
+                </span>
               </h2>
               {isCompact ? null : (
                 <p className="text-xs text-textMuted">
@@ -1182,6 +1215,7 @@ export function DashboardApp() {
           <CollapsibleSection
             key={`workspace-map-${isCompact ? 'c' : 'h'}`}
             defaultOpen={false}
+            summaryIcon={<MapIcon size={18} strokeWidth={2} />}
             summary={<p className="text-sm font-semibold text-text">Workspace map (advanced)</p>}
           >
             <MissionMapOverview
@@ -1423,6 +1457,7 @@ export function DashboardApp() {
       <CollapsibleSection
         key={`cockpit-metrics-${isCompact ? 'c' : 'h'}`}
         defaultOpen={false}
+        summaryIcon={<Activity size={18} strokeWidth={2} />}
         summary={
           <p className="text-sm font-semibold text-text">Cockpit metrics</p>
         }
@@ -1452,7 +1487,10 @@ export function DashboardApp() {
         <section className="rounded-xl border border-border/70 bg-bg/50 space-y-4 p-3 sm:p-4" id="today-execution" aria-label="Today Queue">
           <header className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
-            <h2 className="text-sm font-semibold">Today Queue</h2>
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <ListChecks size={17} strokeWidth={2} className="shrink-0 text-primary/90" aria-hidden />
+              Today Queue
+            </h2>
             <p className="text-xs text-textMuted">
               Your highest-priority actions right now, next, and blockers to clear.
             </p>
@@ -1476,6 +1514,7 @@ export function DashboardApp() {
         <CollapsibleSection
           key={`exec-ctx-${isCompact ? 'c' : 'h'}`}
           defaultOpen={false}
+          summaryIcon={<ListTree size={18} strokeWidth={2} />}
           summary={<p className="text-sm font-semibold text-text">More execution context</p>}
         >
           <div className="grid gap-3 xl:grid-cols-4">
@@ -1637,6 +1676,7 @@ export function DashboardApp() {
       <CollapsibleSection
         key={`advanced-diag-${isCompact ? 'c' : 'h'}`}
         defaultOpen={false}
+        summaryIcon={<Cpu size={18} strokeWidth={2} />}
         summary={
           <div>
             <p className="text-sm font-semibold text-text">Advanced diagnostics</p>
@@ -1718,7 +1758,10 @@ export function DashboardApp() {
           <article className="bo-card space-y-3">
             <header className="space-y-1">
               <p className="bo-crown-kicker">Revenue</p>
-              <h2 className="text-sm font-semibold text-text">Pipeline and outreach</h2>
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-text">
+                <KanbanSquare size={17} strokeWidth={2} className="shrink-0 text-primary/90" aria-hidden />
+                Pipeline and outreach
+              </h2>
               <p className="text-xs text-textMuted">
                 Run relationship momentum, follow-up discipline, and deal progression in one operating block.
               </p>
@@ -1763,7 +1806,10 @@ export function DashboardApp() {
           <article className="bo-card space-y-3">
             <header className="space-y-1">
               <p className="bo-crown-kicker">Content</p>
-              <h2 className="text-sm font-semibold text-text">Publishing, library, and brand</h2>
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-text">
+                <Layers2 size={17} strokeWidth={2} className="shrink-0 text-primary/90" aria-hidden />
+                Publishing, library, and brand
+              </h2>
               <p className="text-xs text-textMuted">
                 Publishing Queue and Content Library drive cadence; Brand Vault keeps strategic voice consistent.
               </p>
@@ -1804,7 +1850,10 @@ export function DashboardApp() {
       <section id="connections" className="space-y-3 scroll-mt-4">
         <article className="bo-card space-y-1">
           <p className="bo-crown-kicker">Integrations</p>
-          <h2 className="text-sm font-semibold text-text">Connections and sync health</h2>
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-text">
+            <Plug2 size={17} strokeWidth={2} className="shrink-0 text-primary/90" aria-hidden />
+            Connections and sync health
+          </h2>
           <p className="text-xs text-textMuted">
             Track identity status, synced artifacts, and external source signals from one diagnostics lane.
           </p>

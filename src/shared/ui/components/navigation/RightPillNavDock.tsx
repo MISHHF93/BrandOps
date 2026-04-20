@@ -5,6 +5,7 @@ import {
   type DashboardNavItem,
   type DashboardSectionId
 } from '../../../config/dashboardNavigation';
+import { CockpitNavItemIcon } from '../../icons/cockpitNavIcons';
 
 /** Extension HTML surface hosting the dock; hides same-surface destinations from the Other windows group. */
 export type RightPillNavDockHostSurface = 'dashboard' | 'options' | 'help';
@@ -194,7 +195,14 @@ export function RightPillNavDock({
                       tabIndex={menuOpen ? (visualIndex === focusIndex ? 0 : -1) : -1}
                       title={item.description}
                     >
-                      <span className="bo-navdock-pill__label">{item.label}</span>
+                      <span className="flex min-w-0 flex-1 items-center gap-2">
+                        <CockpitNavItemIcon
+                          item={item}
+                          size={15}
+                          className={`shrink-0 ${isActive ? 'text-primary' : 'text-textSoft'}`}
+                        />
+                        <span className="bo-navdock-pill__label">{item.label}</span>
+                      </span>
                       <span className="bo-pill !px-1.5 !py-0.5 text-[9px] uppercase tracking-[0.08em]">
                         {item.type}
                       </span>

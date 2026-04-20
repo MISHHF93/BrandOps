@@ -1,8 +1,10 @@
 /**
  * Execution heat (0–100) ranks cockpit queue items. Higher = act sooner.
  * Formulas live alongside factor labels so the UI can explain scores transparently.
+ * Coefficients resolve from `getIntelligenceRules().heat` (defaults + optional remote pack).
  */
 
+import { getIntelligenceRules } from '../../rules/intelligenceRulesRuntime';
 import type { DashboardSectionId } from '../../shared/config/dashboardNavigation';
 
 export type ExecutionHeatKind =
@@ -34,17 +36,23 @@ export interface ExecutionHeatItem {
   heatFactors: HeatFactor[];
 }
 
-export const HEAT_BAND_CRITICAL = 85;
-export const HEAT_BAND_WARNING = 70;
+export function getHeatBandCritical(): number {
+  return getIntelligenceRules().heat.bandCritical;
+}
 
-/** Static copy for the operating board legend */
-export const HEAT_SCORE_GUIDE =
-  'Heat is a 0–100 priority score. It blends time pressure, deal impact, publishing windows, outreach age, and notification severity. Higher = address sooner. Bands: ≥85 critical · 70–84 warning · <70 watch.';
+export function getHeatBandWarning(): number {
+  return getIntelligenceRules().heat.bandWarning;
+}
+
+export function getHeatScoreGuide(): string {
+  const { bandCritical, bandWarning } = getIntelligenceRules().heat;
+  return `Heat is a 0–100 priority score. It blends time pressure, deal impact, publishing windows, outreach age, and notification severity. Higher = address sooner. Bands: ≥${bandCritical} critical · ${bandWarning}–${bandCritical - 1} warning · <${bandWarning} watch.`;
+}
 
 export function followUpHeatAndFactors(taskDueAt: string, now: number): { heat: number; factors: HeatFactor[] } {
+  const b = getIntelligenceRules().heat.followUp;
   const dueH = (new Date(taskDueAt).getTime() - now) / (1000 * 60 * 60);
-  const heat =
-    dueH <= 0 ? 97 : dueH <= 8 ? 86 : dueH <= 24 ? 72 : dueH <= 48 ? 54 : 36;
+  const heat = dueH <= 0 ? b.overdue : dueH <= 8 ? b.within8h : dueH <= 24 ? b.within24h : dueH <= 48 ? b.within48h : b.beyond;
   const tier =
     dueH <= 0
       ? 'Overdue — highest urgency'
@@ -72,12 +80,12 @@ export function publishHeatAndFactors(
   reminderAt: string | undefined,
   now: number
 ): { heat: number; factors: HeatFactor[] } {
+  const b = getIntelligenceRules().heat.publish;
   const target = scheduledFor ?? reminderAt;
   const dueH = target
     ? (new Date(target).getTime() - now) / (1000 * 60 * 60)
     : Number.POSITIVE_INFINITY;
-  const heat =
-    !target ? 34 : dueH <= 0 ? 92 : dueH <= 6 ? 82 : dueH <= 24 ? 70 : dueH <= 48 ? 52 : 34;
+  const heat = !target ? b.noSchedule : dueH <= 0 ? b.overdue : dueH <= 6 ? b.within6h : dueH <= 24 ? b.within24h : dueH <= 48 ? b.within48h : b.beyond;
   if (!target) {
     return {
       heat,
@@ -117,11 +125,16 @@ export function outreachHeatAndFactors(
   status: string,
   now: number
 ): { heat: number; factors: HeatFactor[] } {
+  const o = getIntelligenceRules().heat.outreach;
   const ageH = (now - new Date(updatedAt).getTime()) / (1000 * 60 * 60);
   const statusBoost =
-    status === 'scheduled follow-up' ? 30 : status === 'ready' ? 22 : 14;
-  const agePoints = Math.min(ageH / 3, 24);
-  const heat = Math.min(90, Math.round(statusBoost + agePoints));
+    status === 'scheduled follow-up'
+      ? o.statusScheduledBoost
+      : status === 'ready'
+        ? o.statusReadyBoost
+        : o.statusDefaultBoost;
+  const agePoints = Math.min(ageH / o.ageDivisorHours, o.agePointsCap);
+  const heat = Math.min(o.heatCap, Math.round(statusBoost + agePoints));
   return {
     heat,
     factors: [
@@ -133,7 +146,7 @@ export function outreachHeatAndFactors(
       {
         label: 'Idle age',
         points: Math.round(agePoints),
-        note: `${ageH.toFixed(1)}h since last update (caps at +24 pts)`
+        note: `${ageH.toFixed(1)}h since last update (caps at +${o.agePointsCap} pts)`
       }
     ]
   };
@@ -143,17 +156,17 @@ export function pipelineHeatAndFactors(
   opp: { followUpDate: string; valueUsd: number; confidence: number },
   now: number
 ): { heat: number; factors: HeatFactor[] } {
+  const p = getIntelligenceRules().heat.pipeline;
   const { followUpDate, valueUsd, confidence } = opp;
   const followH = (new Date(followUpDate).getTime() - now) / (1000 * 60 * 60);
-  const followBoost = followH <= 0 ? 34 : followH <= 24 ? 20 : 10;
-  const valueBoost = Math.min(22, Math.round(valueUsd / 2500));
-  const confidenceBoost = Math.round(confidence / 8);
-  const base = 24;
-  const heat = Math.min(95, base + followBoost + valueBoost + confidenceBoost);
+  const followBoost = followH <= 0 ? p.followOverdueBoost : followH <= 24 ? p.followWithin24Boost : p.followBeyondBoost;
+  const valueBoost = Math.min(p.valueBoostCap, Math.round(valueUsd / p.valueDivisorUsd));
+  const confidenceBoost = Math.round(confidence / p.confidenceDivisor);
+  const heat = Math.min(p.heatCap, p.base + followBoost + valueBoost + confidenceBoost);
   return {
     heat,
     factors: [
-      { label: 'Cockpit base', points: base, note: 'Active opportunity floor' },
+      { label: 'Cockpit base', points: p.base, note: 'Active opportunity floor' },
       {
         label: 'Next-action window',
         points: followBoost,
@@ -167,12 +180,12 @@ export function pipelineHeatAndFactors(
       {
         label: 'Deal size',
         points: valueBoost,
-        note: `Up to +22 from value ÷ $2.5k (this deal $${Math.round(valueUsd).toLocaleString()})`
+        note: `Up to +${p.valueBoostCap} from value ÷ $${(p.valueDivisorUsd / 1000).toFixed(1)}k (this deal $${Math.round(valueUsd).toLocaleString()})`
       },
       {
         label: 'Confidence',
         points: confidenceBoost,
-        note: `confidence ÷ 8 (=${confidence}% → +${confidenceBoost})`
+        note: `confidence ÷ ${p.confidenceDivisor} (=${confidence}% → +${confidenceBoost})`
       }
     ]
   };
@@ -181,7 +194,8 @@ export function pipelineHeatAndFactors(
 export function managerialNotificationFactors(
   severity: string
 ): { heat: number; factors: HeatFactor[] } {
-  const heat = severity === 'focus' ? 84 : 62;
+  const m = getIntelligenceRules().heat.notificationManagerial;
+  const heat = severity === 'focus' ? m.focusHeat : m.routineHeat;
   return {
     heat,
     factors: [
@@ -197,7 +211,8 @@ export function managerialNotificationFactors(
 export function technicalNotificationFactors(
   severity: string
 ): { heat: number; factors: HeatFactor[] } {
-  const heat = severity === 'focus' ? 80 : 58;
+  const t = getIntelligenceRules().heat.notificationTechnical;
+  const heat = severity === 'focus' ? t.focusHeat : t.routineHeat;
   return {
     heat,
     factors: [

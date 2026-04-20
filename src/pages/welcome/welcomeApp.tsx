@@ -4,6 +4,7 @@ import { buildDashboardUrl, PAGE } from '../../shared/navigation/extensionLinks'
 import { getExtensionManifestVersion, resolveExtensionUrl } from '../../shared/navigation/extensionRuntime';
 import { applyDocumentTheme } from '../../shared/ui/theme';
 import { canAccessApp } from '../../shared/identity/sessionAccess';
+import { InlineAlert } from '../../shared/ui/components';
 import { WelcomeAuthLayout } from './WelcomeAuthLayout';
 import { WelcomeAuthPanel } from './WelcomeAuthPanel';
 import { WelcomeLegalFooter } from './WelcomeLegalFooter';
@@ -43,7 +44,7 @@ export function WelcomeApp() {
     return (
       <WelcomeAuthLayout>
         <WelcomePlaceholderCard>
-          <p className="text-center text-sm leading-relaxed text-danger">Could not load BrandOps: {error}</p>
+          <InlineAlert tone="danger" title="Could not load BrandOps" message={error} />
         </WelcomePlaceholderCard>
       </WelcomeAuthLayout>
     );
@@ -53,7 +54,7 @@ export function WelcomeApp() {
     return (
       <WelcomeAuthLayout>
         <WelcomePlaceholderCard>
-          <p className="text-center text-sm text-textMuted">Loading…</p>
+          <p className="text-center text-sm text-textMuted">Loading welcome…</p>
         </WelcomePlaceholderCard>
       </WelcomeAuthLayout>
     );

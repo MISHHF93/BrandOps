@@ -103,5 +103,29 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
       'Open the compass menu with Alt+M. From the Dashboard, Ctrl/Cmd+K opens the command palette for quick actions like new drafts or copying workspace JSON.',
       'Section shortcuts are documented inside the command palette when you open it from the Dashboard.'
     ]
+  },
+  {
+    id: 'visual-wayfinding',
+    title: 'Visual wayfinding (icons)',
+    summary:
+      'Icons repeat the same meaning as labels: compass destinations, the “you are here” strip, and major section headers.',
+    paragraphs: [
+      'The right-hand compass lists Dashboard areas and other windows. Each row shows a small icon plus text so you can scan the map before reading descriptions.',
+      'The strip under the header (BrandOps / …) shows the same icon family for your current section so orientation stays consistent when you scroll.',
+      'Collapsible panels such as Workspace map, Cockpit metrics, and Advanced diagnostics include a leading icon in the summary row to hint at what is inside.',
+      'Icons are decorative complements: labels and headings remain the source of truth for screen readers and clarity.'
+    ]
+  },
+  {
+    id: 'intelligence-tuning',
+    title: 'Optional intelligence tuning',
+    summary:
+      'Ranking helpers always work offline from built-in defaults; hosted or preview builds can layer a small JSON patch.',
+    paragraphs: [
+      'Content priority, outreach urgency, overdue risk, pipeline health, publishing windows, and template matching use fixed, explainable math in the extension.',
+      'When you self-host a web preview (or an internal build), maintainers may place `brandops-intelligence-rules.json` next to the app or set an environment URL so coefficients can be tuned without shipping a new binary.',
+      'If no file or URL is provided, nothing changes: defaults stay in effect and the cockpit behaves the same as a stock install.',
+      'Repository contributors: see `docs/intelligence-rules-remote-layers.md` for the full layering, validation, and security notes.'
+    ]
   }
 ];

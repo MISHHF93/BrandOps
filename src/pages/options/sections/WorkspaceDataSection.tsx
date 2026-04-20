@@ -1,4 +1,5 @@
 import type { ChangeEvent, RefObject } from 'react';
+import { Database } from 'lucide-react';
 
 interface WorkspaceDataSectionProps {
   importText: string;
@@ -20,8 +21,11 @@ export function WorkspaceDataSection({
   onFileSelected
 }: WorkspaceDataSectionProps) {
   return (
-    <section className="bo-card space-y-3">
-      <h2 className="text-base font-semibold">Workspace data</h2>
+    <section id="options-workspace-data" className="bo-card scroll-mt-4 space-y-3">
+      <h2 className="flex items-center gap-2 text-base font-semibold">
+        <Database size={18} strokeWidth={2} className="shrink-0 text-primary/90" aria-hidden />
+        Workspace data
+      </h2>
       <p className="text-xs text-textMuted">
         Export, import, and restore local workspace snapshots including settings, scheduler, and sync metadata.
       </p>

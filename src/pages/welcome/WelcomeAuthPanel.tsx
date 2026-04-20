@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useBrandOpsStore } from '../../state/useBrandOpsStore';
 import { GoogleSignInButton } from '../../shared/ui/oauth/GoogleSignInButton';
 import { GitHubSignInButton } from '../../shared/ui/oauth/GitHubSignInButton';
@@ -43,7 +44,10 @@ export interface WelcomeAuthPanelProps {
   optionsHref: string;
 }
 
+const panelEase = [0.22, 1, 0.36, 1] as const;
+
 export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: WelcomeAuthPanelProps) {
+  const reduce = useReducedMotion();
   const { data, loading, connectGoogleIdentity, connectGitHubIdentity, connectLinkedInIdentity } =
     useBrandOpsStore();
   const persistLegalAccepted = useCallback(() => {
@@ -123,7 +127,12 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
   };
 
   return (
-    <div className="w-full rounded-2xl border border-border bg-bgElevated px-7 py-8 shadow-panel sm:px-8">
+    <motion.div
+      className="w-full rounded-2xl border border-border/90 bg-bgElevated/95 px-7 py-8 shadow-[0_24px_80px_rgba(0,0,0,0.12)] backdrop-blur-sm dark:border-border dark:bg-bgElevated/90 dark:shadow-[0_28px_90px_rgba(0,0,0,0.45)] sm:px-8"
+      initial={reduce ? false : { opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduce ? 0 : 0.65, ease: panelEase, delay: reduce ? 0 : 0.04 }}
+    >
       <WelcomeHero signedIn={Boolean(sessionSignedIn)} authMode={authMode} />
 
       {!sessionSignedIn ? (
@@ -222,6 +231,6 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
           onContinue={onContinue}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

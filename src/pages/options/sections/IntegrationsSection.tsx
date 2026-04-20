@@ -9,6 +9,7 @@ import { IntegrationHubSetupPanel } from '../../../modules/integrationHub/Integr
 import { GitHubSignInButton } from '../../../shared/ui/oauth/GitHubSignInButton';
 import { GoogleSignInButton } from '../../../shared/ui/oauth/GoogleSignInButton';
 import { LinkedInSignInButton } from '../../../shared/ui/oauth/LinkedInSignInButton';
+import { Plug2 } from 'lucide-react';
 
 interface IntegrationsSectionProps {
   primaryIdentityProvider: IdentityProviderId | null;
@@ -89,9 +90,12 @@ export function IntegrationsSection({
     Boolean(getPublisherLinkedInClientId());
 
   return (
-    <section className="bo-card space-y-4">
+    <section id="options-integrations" className="bo-card scroll-mt-4 space-y-4">
       <header className="space-y-1">
-        <h2 className="text-base font-semibold">Integrations</h2>
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <Plug2 size={18} strokeWidth={2} className="shrink-0 text-primary/90" aria-hidden />
+          Integrations
+        </h2>
         <p className="text-xs text-textMuted">
           <strong>Third-party sign-in</strong> (Google, GitHub, LinkedIn): connect/disconnect per provider. The published
           build may include OAuth client IDs via <code className="text-text">VITE_*_CLIENT_ID</code>; the fields below

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FlaskConical } from 'lucide-react';
 import { ComponentLibraryShowcase } from '../componentLibraryShowcase';
 import type { BrandOpsData } from '../../../types/domain';
 
@@ -36,14 +37,17 @@ export function AdvancedToolsSection({
   const [open, setOpen] = useState(false);
 
   return (
-    <section className="bo-card space-y-3">
+    <section id="options-advanced-tools" className="bo-card scroll-mt-4 space-y-3">
       <button
         type="button"
         className="w-full text-left"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
       >
-        <h2 className="text-base font-semibold">Advanced and developer tools</h2>
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <FlaskConical size={18} strokeWidth={2} className="shrink-0 text-primary/90" aria-hidden />
+          Advanced and developer tools
+        </h2>
         <p className="text-xs text-textMuted">
           AI adjustment mode, automation references, QA controls, and component previews.
         </p>

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "contentPriority": {
+    "readyBonus": 42,
+    "discoveryGoalBonus": 16
+  },
+  "outreachUrgency": {
+    "staleAfterHours": 48,
+    "staleBonus": 24
+  },
+  "publishing": {
+    "urgentWithinHours": 2,
+    "prepWithinHours": 24,
+    "previewQueueSlice": 5
+  },
+  "templateSuggestions": {
+    "minTokenLength": 4,
+    "maxResults": 3
+  },
+  "heat": {
+    "bandCritical": 88,
+    "bandWarning": 68,
+    "followUp": {
+      "overdue": 97,
+      "within8h": 86
+    },
+    "pipeline": {
+      "valueDivisorUsd": 3000
+    }
+  },
+  "digest": {
+    "opportunityFollowUpWithinHours": 24,
+    "technicalContentPriorityTop": 2,
+    "artifactThinSummaryMaxLen": 28,
+    "sourceThinNotesMaxLen": 10,
+    "sourceThinArtifactTypesMin": 1
+  }
+}

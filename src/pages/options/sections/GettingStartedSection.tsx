@@ -1,3 +1,4 @@
+import { Rocket } from 'lucide-react';
 import type { CadenceFlowMode, UiTheme } from '../../../types/domain';
 import { openExtensionSurface } from '../../../shared/navigation/openExtensionSurface';
 
@@ -29,9 +30,12 @@ export function GettingStartedSection({
   const completedCount = setupChecklist.filter((item) => item.done).length;
 
   return (
-    <section className="bo-card space-y-4">
+    <section id="options-getting-started" className="bo-card scroll-mt-4 space-y-4">
       <header className="space-y-1">
-        <h2 className="text-base font-semibold">Getting started</h2>
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <Rocket size={18} strokeWidth={2} className="shrink-0 text-primary/90" aria-hidden />
+          Getting started
+        </h2>
         <p className="text-xs text-textMuted">
           Set up the essentials first: baseline theme and execution cadence. LinkedIn and integrations live in the
           sections below.

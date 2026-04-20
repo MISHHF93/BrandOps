@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect } from 'react';
 import { BrandHeader } from '../../shared/ui/BrandHeader';
+import { InlineAlert } from '../../shared/ui/components';
 import { RightPillNavDock } from '../../shared/ui/components/navigation/RightPillNavDock';
 import { KnowledgeCenterBody } from '../../shared/help/KnowledgeCenterBody';
 import type { DashboardNavItem } from '../../shared/config/dashboardNavigation';
@@ -48,11 +49,22 @@ export function HelpApp() {
   }, []);
 
   if (error) {
-    return <div className="p-4 text-sm text-danger">Could not load BrandOps: {error}</div>;
+    return (
+      <main className="bo-system-screen bo-dashboard-shell min-h-screen p-4">
+        <section className="bo-card max-w-xl space-y-3" role="alert" aria-live="assertive">
+          <h1 className="text-base font-semibold text-text">Knowledge Center</h1>
+          <InlineAlert tone="danger" title="Could not load BrandOps" message={error} />
+        </section>
+      </main>
+    );
   }
 
   if (!data) {
-    return <div className="p-4 text-textMuted">Loading…</div>;
+    return (
+      <main className="bo-system-screen bo-dashboard-shell min-h-screen p-4">
+        <p className="text-sm text-textMuted">Loading Knowledge Center…</p>
+      </main>
+    );
   }
 
   return (

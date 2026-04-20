@@ -1,3 +1,4 @@
+import { SlidersHorizontal } from 'lucide-react';
 import { cockpitCapabilities, surfaceLabel } from '../../../shared/config/capabilityMap';
 import {
   CockpitLayoutDensityFields,
@@ -43,9 +44,12 @@ export function CoreSetupSection({
   onUpdateCadenceFlow
 }: CoreSetupSectionProps) {
   return (
-    <section className="bo-card space-y-4">
+    <section id="options-core-setup" className="bo-card scroll-mt-4 space-y-4">
       <header className="space-y-1">
-        <h2 className="text-base font-semibold">Core setup</h2>
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <SlidersHorizontal size={18} strokeWidth={2} className="shrink-0 text-primary/90" aria-hidden />
+          Core setup
+        </h2>
         <p className="text-xs text-textMuted">
           Runtime appearance, execution center, and daily cadence in one place.
         </p>

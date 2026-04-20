@@ -1,3 +1,4 @@
+import { getIntelligenceRules } from '../../rules/intelligenceRulesRuntime';
 import { BrandOpsData, ContentLibraryItem, Opportunity, OutreachDraft, PublishingItem } from '../../types/domain';
 
 export interface IntelligenceSignal {
@@ -19,45 +20,57 @@ const hoursUntil = (iso?: string) => {
 };
 
 const contentPriorityScore = (item: ContentLibraryItem) => {
-  let score = 20;
-  if (item.status === 'ready') score += 40;
-  if (item.status === 'drafting') score += 20;
-  if (item.status === 'idea') score += 10;
-  score += Math.min(item.tags.length * 4, 16);
-  if (item.goal.toLowerCase().includes('discovery') || item.goal.toLowerCase().includes('lead')) score += 14;
+  const r = getIntelligenceRules().contentPriority;
+  let score = r.baseScore;
+  if (item.status === 'ready') score += r.readyBonus;
+  if (item.status === 'drafting') score += r.draftingBonus;
+  if (item.status === 'idea') score += r.ideaBonus;
+  score += Math.min(item.tags.length * r.tagWeight, r.tagCap);
+  if (item.goal.toLowerCase().includes('discovery') || item.goal.toLowerCase().includes('lead')) {
+    score += r.discoveryGoalBonus;
+  }
   return clamp(score);
 };
 
 const outreachUrgencyScore = (draft: OutreachDraft) => {
-  let score = 10;
-  if (draft.status === 'ready') score += 35;
-  if (draft.status === 'scheduled follow-up') score += 30;
-  if (draft.status === 'replied') score += 5;
+  const r = getIntelligenceRules().outreachUrgency;
+  let score = r.baseScore;
+  if (draft.status === 'ready') score += r.readyBonus;
+  if (draft.status === 'scheduled follow-up') score += r.scheduledFollowUpBonus;
+  if (draft.status === 'replied') score += r.repliedBonus;
   const ageHours = (Date.now() - new Date(draft.updatedAt).getTime()) / (1000 * 60 * 60);
-  if (ageHours > 72) score += 20;
-  if (draft.outreachGoal.toLowerCase().includes('call')) score += 10;
+  if (ageHours > r.staleAfterHours) score += r.staleBonus;
+  if (draft.outreachGoal.toLowerCase().includes('call')) score += r.callIntentBonus;
   return clamp(score);
 };
 
 const overdueRiskScore = (dueAt?: string) => {
+  const b = getIntelligenceRules().overdueRisk;
   const dueHours = hoursUntil(dueAt);
   if (!Number.isFinite(dueHours)) return 0;
-  if (dueHours <= -24) return 95;
-  if (dueHours <= 0) return 80;
-  if (dueHours <= 24) return 60;
-  if (dueHours <= 48) return 35;
-  return 10;
+  if (dueHours <= -24) return b.pastDue24hScore;
+  if (dueHours <= 0) return b.pastDueScore;
+  if (dueHours <= 24) return b.within24hScore;
+  if (dueHours <= 48) return b.within48hScore;
+  return b.beyond48hScore;
 };
 
 const opportunityHealth = (opportunity: Opportunity) => {
+  const h = getIntelligenceRules().opportunityHealth;
   const followUpRisk = overdueRiskScore(opportunity.followUpDate);
-  const confidenceBonus = opportunity.confidence * 0.45;
-  const valueBonus = Math.min(opportunity.valueUsd / 2000, 25);
-  const stagePenalty = opportunity.status === 'lost' ? 80 : opportunity.status === 'won' ? -20 : 0;
+  const confidenceBonus = opportunity.confidence * h.confidenceMultiplier;
+  const valueBonus = Math.min(opportunity.valueUsd / h.valueDivisor, h.valueBonusCap);
+  const stagePenalty =
+    opportunity.status === 'lost'
+      ? h.lostPenalty
+      : opportunity.status === 'won'
+        ? -h.wonAdjustment
+        : 0;
   return clamp(100 - followUpRisk + confidenceBonus + valueBonus - stagePenalty);
 };
 
 const publishingRecommendation = (item: PublishingItem): Recommendation => {
+  const p = getIntelligenceRules().publishing;
   const dueInHours = hoursUntil(item.scheduledFor);
   if (!item.scheduledFor) {
     return {
@@ -66,17 +79,17 @@ const publishingRecommendation = (item: PublishingItem): Recommendation => {
     };
   }
 
-  if (dueInHours < 2) {
+  if (dueInHours < p.urgentWithinHours) {
     return {
       title: 'Publish-ready check',
-      rationale: 'This item is due within 2 hours. Verify hook clarity and CTA before posting.'
+      rationale: `This item is due within ${p.urgentWithinHours} hour(s). Verify hook clarity and CTA before posting.`
     };
   }
 
-  if (dueInHours < 24) {
+  if (dueInHours < p.prepWithinHours) {
     return {
       title: 'Prep supporting assets',
-      rationale: 'This item is due in under 24 hours. Queue links, visuals, and first-comment copy now.'
+      rationale: `This item is due in under ${p.prepWithinHours} hours. Queue links, visuals, and first-comment copy now.`
     };
   }
 
@@ -146,9 +159,10 @@ export const localIntelligence = {
   },
 
   publishingRecommendations(queue: PublishingItem[]): Recommendation[] {
+    const slice = getIntelligenceRules().publishing.previewQueueSlice;
     return queue
       .filter((item) => item.status !== 'posted' && item.status !== 'skipped')
-      .slice(0, 5)
+      .slice(0, slice)
       .map((item) => ({
         title: `${item.title}: ${publishingRecommendation(item).title}`,
         rationale: publishingRecommendation(item).rationale
@@ -156,6 +170,7 @@ export const localIntelligence = {
   },
 
   templateSuggestionsFromVault(snippets: string[], draftText: string): string[] {
+    const t = getIntelligenceRules().templateSuggestions;
     const normalizedDraft = draftText.toLowerCase();
     return snippets
       .map((snippet) => ({
@@ -163,10 +178,10 @@ export const localIntelligence = {
         overlap: snippet
           .toLowerCase()
           .split(/\s+/)
-          .filter((token) => token.length > 4 && normalizedDraft.includes(token)).length
+          .filter((token) => token.length > t.minTokenLength && normalizedDraft.includes(token)).length
       }))
       .sort((a, b) => b.overlap - a.overlap)
-      .slice(0, 3)
+      .slice(0, t.maxResults)
       .map((item) => item.snippet);
   }
 };

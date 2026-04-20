@@ -1,5 +1,6 @@
 import type { ExecutionHeatItem } from '../executionHeatModel';
-import { HEAT_BAND_CRITICAL, HEAT_BAND_WARNING } from '../executionHeatModel';
+import { getHeatBandCritical, getHeatBandWarning } from '../executionHeatModel';
+import { AlertTriangle, Circle, Flame } from 'lucide-react';
 
 interface ExecutionHeatMeterProps {
   item: ExecutionHeatItem;
@@ -8,15 +9,25 @@ interface ExecutionHeatMeterProps {
 }
 
 function bandLabel(heat: number) {
-  if (heat >= HEAT_BAND_CRITICAL) return 'Critical';
-  if (heat >= HEAT_BAND_WARNING) return 'Warning';
+  if (heat >= getHeatBandCritical()) return 'Critical';
+  if (heat >= getHeatBandWarning()) return 'Warning';
   return 'Watch';
 }
 
 function bandBarClass(heat: number) {
-  if (heat >= HEAT_BAND_CRITICAL) return 'from-danger/90 to-danger/50';
-  if (heat >= HEAT_BAND_WARNING) return 'from-warning/90 to-warning/50';
+  if (heat >= getHeatBandCritical()) return 'from-danger/90 to-danger/50';
+  if (heat >= getHeatBandWarning()) return 'from-warning/90 to-warning/50';
   return 'from-success/70 to-success/40';
+}
+
+function BandGlyph({ heat }: { heat: number }) {
+  if (heat >= getHeatBandCritical()) {
+    return <Flame size={12} strokeWidth={2} className="shrink-0 text-danger" aria-hidden />;
+  }
+  if (heat >= getHeatBandWarning()) {
+    return <AlertTriangle size={12} strokeWidth={2} className="shrink-0 text-warning" aria-hidden />;
+  }
+  return <Circle size={12} strokeWidth={2} className="shrink-0 text-success" aria-hidden />;
 }
 
 export function ExecutionHeatMeter({ item, layout = 'stack' }: ExecutionHeatMeterProps) {
@@ -43,7 +54,16 @@ export function ExecutionHeatMeter({ item, layout = 'stack' }: ExecutionHeatMete
 
   const meta = (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-textSoft">
-      <span className={`rounded px-1.5 py-0.5 ${item.heat >= HEAT_BAND_CRITICAL ? 'bg-dangerSoft/25 text-danger' : item.heat >= HEAT_BAND_WARNING ? 'bg-warningSoft/25 text-warning' : 'bg-successSoft/20 text-success'}`}>
+      <span
+        className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 ${
+          item.heat >= getHeatBandCritical()
+            ? 'bg-dangerSoft/25 text-danger'
+            : item.heat >= getHeatBandWarning()
+              ? 'bg-warningSoft/25 text-warning'
+              : 'bg-successSoft/20 text-success'
+        }`}
+      >
+        <BandGlyph heat={item.heat} />
         {bandLabel(item.heat)}
       </span>
       <span className="text-textMuted">{item.reason}</span>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { HEAT_SCORE_GUIDE } from '../executionHeatModel';
+import { motion, useReducedMotion } from 'motion/react';
+import { getHeatScoreGuide } from '../executionHeatModel';
 
 interface CockpitOperatingBoardProps {
   children: ReactNode;
@@ -9,11 +10,18 @@ interface CockpitOperatingBoardProps {
 /**
  * Single visual “board” wrapping Today’s command deck, pulse, and queue so the cockpit reads as one surface.
  */
+const boardEase = [0.22, 1, 0.36, 1] as const;
+
 export function CockpitOperatingBoard({ children, compact }: CockpitOperatingBoardProps) {
+  const reduce = useReducedMotion();
+
   return (
-    <section
+    <motion.section
       className="bo-cockpit-board w-full rounded-2xl border border-border/55 bg-gradient-to-b from-surface/40 via-bg/30 to-bg/25 p-4 shadow-sm ring-1 ring-border/25 sm:p-5"
       aria-label="Operating board"
+      initial={reduce ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduce ? 0 : 0.45, ease: boardEase }}
     >
       <header className={`mb-4 border-b border-border/45 pb-3 ${compact ? 'space-y-1' : 'space-y-1.5'}`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 lg:gap-6">
@@ -31,12 +39,12 @@ export function CockpitOperatingBoard({ children, compact }: CockpitOperatingBoa
               How heat scores work (0–100)
             </summary>
             <p className={`mt-2 border-t border-border/35 pt-2 ${compact ? 'text-[11px]' : 'text-xs'}`}>
-              {HEAT_SCORE_GUIDE}
+              {getHeatScoreGuide()}
             </p>
           </details>
         </div>
       </header>
       <div className={`${compact ? 'space-y-2' : 'space-y-4'}`}>{children}</div>
-    </section>
+    </motion.section>
   );
 }

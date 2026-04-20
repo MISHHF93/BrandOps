@@ -11,7 +11,8 @@ import {
   Inbox,
   Plus,
   Search,
-  Sparkles
+  Sparkles,
+  Workflow
 } from 'lucide-react';
 import {
   ActivityItem,
@@ -75,6 +76,7 @@ export function ComponentLibraryShowcase() {
       <SectionHeader
         title="Component Library Preview"
         helperText="Reusable operator-grade components using semantic BrandOps tokens."
+        icon={<Sparkles size={18} strokeWidth={2} />}
         action={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setDrawerOpen(true)}>
@@ -233,6 +235,7 @@ export function ComponentLibraryShowcase() {
             <SectionHeader
               title="Workflow surfaces"
               helperText="Cards, rows, columns, and tiles that support daily execution."
+              icon={<Workflow size={18} strokeWidth={2} />}
               count={9}
             />
             <div className="grid gap-3 md:grid-cols-2">

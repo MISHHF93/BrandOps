@@ -2,6 +2,7 @@ import {
   knowledgeCenterDailyPlaybook,
   knowledgeCenterTopics
 } from './knowledgeCenterTopics';
+import { KnowledgeTopicIcon } from './knowledgeCenterTopicIcons';
 import { QUERY } from '../navigation/extensionLinks';
 
 export type KnowledgeCenterBodyProps = {
@@ -58,7 +59,12 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
 
         <nav aria-label="Knowledge Center topics" className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs">
           {knowledgeCenterTopics.map((topic) => (
-            <a key={topic.id} className="bo-link !py-0.5" href={topicHref(topic.id)}>
+            <a
+              key={topic.id}
+              className="bo-link inline-flex items-center gap-1.5 !py-0.5"
+              href={topicHref(topic.id)}
+            >
+              <KnowledgeTopicIcon topicId={topic.id} size={14} />
               {topic.title}
             </a>
           ))}
@@ -72,7 +78,10 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
 
             return (
               <article key={topic.id} id={topic.id} className="bo-card scroll-mt-24 space-y-2.5 p-4">
-                <h2 className="text-base font-semibold text-text">{topic.title}</h2>
+                <h2 className="flex items-center gap-2 text-base font-semibold text-text">
+                  <KnowledgeTopicIcon topicId={topic.id} size={18} />
+                  {topic.title}
+                </h2>
                 {preview ? <p className="text-sm text-textMuted">{preview}</p> : null}
                 <details className="group rounded-xl border border-border/80 bg-bg/35 p-2.5">
                   <summary className="cursor-pointer list-none text-sm font-medium text-text [&::-webkit-details-marker]:hidden">

@@ -1,3 +1,4 @@
+import { getIntelligenceRules } from '../../rules/intelligenceRulesRuntime';
 import { BrandOpsData } from '../../types/domain';
 import { localIntelligence } from './localIntelligence';
 
@@ -108,6 +109,7 @@ const scheduleBlocks = (
 };
 
 const createManagerialActions = (data: BrandOpsData): DailyNotificationAction[] => {
+  const d = getIntelligenceRules().digest;
   const overdueFollowUps = data.followUps.filter(
     (item) => !item.completed && new Date(item.dueAt).getTime() < Date.now()
   );
@@ -115,13 +117,16 @@ const createManagerialActions = (data: BrandOpsData): DailyNotificationAction[] 
     (item) =>
       item.status !== 'won' &&
       item.status !== 'lost' &&
-      hoursUntil(item.followUpDate) <= 24
+      hoursUntil(item.followUpDate) <= d.opportunityFollowUpWithinHours
   );
   const readyOutreach = data.outreachDrafts.filter(
     (item) => item.status === 'ready' || item.status === 'scheduled follow-up'
   );
   const duePublishing = data.publishingQueue.filter(
-    (item) => item.status !== 'posted' && item.status !== 'skipped' && hoursUntil(item.scheduledFor) <= 24
+    (item) =>
+      item.status !== 'posted' &&
+      item.status !== 'skipped' &&
+      hoursUntil(item.scheduledFor) <= d.publishingDueWithinHours
   );
 
   const actions: DailyNotificationAction[] = [];
@@ -185,7 +190,8 @@ const createManagerialActions = (data: BrandOpsData): DailyNotificationAction[] 
 };
 
 const createTechnicalActions = (data: BrandOpsData): DailyNotificationAction[] => {
-  const contentPriority = localIntelligence.contentPriority(data.contentLibrary).slice(0, 2);
+  const top = getIntelligenceRules().digest.technicalContentPriorityTop;
+  const contentPriority = localIntelligence.contentPriority(data.contentLibrary).slice(0, top);
   const plannedSources = data.integrationHub.sources.filter((item) => item.status === 'planned');
   const sourcesWithoutArtifacts = data.integrationHub.sources.filter(
     (source) => !data.integrationHub.artifacts.some((artifact) => artifact.sourceId === source.id)
@@ -253,14 +259,20 @@ const createTechnicalActions = (data: BrandOpsData): DailyNotificationAction[] =
 };
 
 const createDatasetActions = (data: BrandOpsData): DailyNotificationAction[] => {
+  const d = getIntelligenceRules().digest;
   const untaggedContent = data.contentLibrary.filter((item) => item.tags.length === 0);
   const thinArtifacts = data.integrationHub.artifacts.filter(
-    (item) => item.tags.length === 0 || item.summary.trim().length < 25
+    (item) =>
+      item.tags.length === 0 || item.summary.trim().length < d.artifactThinSummaryMaxLen
   );
   const thinSources = data.integrationHub.sources.filter(
-    (item) => item.notes.trim().length < 10 || item.artifactTypes.length === 0
+    (item) =>
+      item.notes.trim().length < d.sourceThinNotesMaxLen ||
+      item.artifactTypes.length < d.sourceThinArtifactTypesMin
   );
-  const notesToCodify = data.notes.filter((item) => item.detail.trim().length > 0).slice(0, 3);
+  const notesToCodify = data.notes
+    .filter((item) => item.detail.trim().length > 0)
+    .slice(0, d.notesRecentSlice);
 
   const actions: DailyNotificationAction[] = [];
 
@@ -348,7 +360,10 @@ export const dailyNotificationCenter = {
     const managerialActions = createManagerialActions(data).slice(0, settings.maxDailyTasks);
     const technicalActions = createTechnicalActions(data).slice(0, settings.maxDailyTasks);
     const datasetActions = settings.datasetReviewEnabled
-      ? createDatasetActions(data).slice(0, Math.max(2, settings.maxDailyTasks - 1))
+      ? createDatasetActions(data).slice(
+          0,
+          Math.max(getIntelligenceRules().digest.datasetActionsMinSlice, settings.maxDailyTasks - 1)
+        )
       : [];
 
     const baseDigest = {

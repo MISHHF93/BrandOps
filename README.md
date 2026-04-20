@@ -99,7 +99,7 @@ BrandOps includes rule-based helpers that score and rank work using data already
 - pipeline health heuristics,
 - vault-based snippet suggestions.
 
-These helpers are deterministic and explainable. Every score is derived from transparent rules in code.
+These helpers are deterministic and explainable. Every score is derived from transparent rules in code, with **embedded defaults** plus an optional **remote rule pack** merge (see [`docs/intelligence-rules-remote-layers.md`](docs/intelligence-rules-remote-layers.md)).
 
 ---
 
@@ -133,6 +133,17 @@ src/
 - **Dashboard:** full workspace with global search, onboarding, and command palette.
 - **Options:** backup/import/export and settings controls.
 - **Background worker:** lightweight scheduler sync and extension orchestration.
+
+### Documentation (this repository)
+
+These files ship with **source** and **self-hosted previews**; they are not bundled into the Chrome Web Store zip as standalone pages, but the **product behavior** they describe is in the build.
+
+| Document | Contents |
+|----------|----------|
+| [`docs/intelligence-rules-remote-layers.md`](docs/intelligence-rules-remote-layers.md) | Rule domains, L1/L2/L3 layers, optional `brandops-intelligence-rules.json` / `VITE_INTELLIGENCE_RULES_URL`, validation, roadmap. |
+| [`ICONOGRAPHY.md`](ICONOGRAPHY.md) | Lucide icon map for the cockpit, sizes, accessibility, and where symbols appear in the UI. |
+
+In-app summaries live under **Help → Knowledge Center** (topics *Visual wayfinding* and *Optional intelligence tuning*).
 
 ---
 

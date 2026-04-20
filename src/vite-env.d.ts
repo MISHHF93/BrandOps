@@ -23,6 +23,11 @@ interface ImportMetaEnv {
   readonly VITE_PREVIEW_COCKPIT_UNGATED?: string;
   /** Injected on Vercel builds (`VERCEL=1`); used for hosted demo routing only. */
   readonly VITE_VERCEL?: string;
+  /**
+   * Optional HTTPS URL to a JSON intelligence rules pack (partial patch over embedded defaults).
+   * When unset, the client may still load `/brandops-intelligence-rules.json` from the deploy origin.
+   */
+  readonly VITE_INTELLIGENCE_RULES_URL?: string;
 }
 
 interface ImportMeta {

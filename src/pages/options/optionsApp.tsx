@@ -14,6 +14,7 @@ import {
   getEffectiveGoogleClientId,
   getEffectiveLinkedInClientId
 } from '../../shared/config/oauthPublisherIds'
+import { OptionsSettingsJumpNav } from './OptionsSettingsJumpNav'
 import { AdvancedToolsSection } from './sections/AdvancedToolsSection'
 import { CoreSetupSection } from './sections/CoreSetupSection'
 import { GettingStartedSection } from './sections/GettingStartedSection'
@@ -102,11 +103,22 @@ export function OptionsApp() {
   }, [])
 
   if (error) {
-    return <div className="p-4 text-sm text-danger">Settings failed to load: {error}</div>
+    return (
+      <main className="bo-system-screen bo-options-shell min-h-screen p-4">
+        <section className="bo-card max-w-xl space-y-3" role="alert" aria-live="assertive">
+          <h1 className="text-base font-semibold text-text">Settings</h1>
+          <InlineAlert tone="danger" title="Settings failed to load" message={error} />
+        </section>
+      </main>
+    )
   }
 
   if (!data) {
-    return <div className="p-4 text-textMuted">Loading BrandOps settings…</div>
+    return (
+      <main className="bo-system-screen bo-options-shell min-h-screen p-4">
+        <p className="text-sm text-textMuted">Loading BrandOps settings…</p>
+      </main>
+    )
   }
 
   const googleSync = data.settings.syncHub.google
@@ -375,6 +387,8 @@ export function OptionsApp() {
           message={failureNotice}
         />
       ) : null}
+
+      <OptionsSettingsJumpNav />
 
       <GettingStartedSection
         theme={data.settings.theme}
