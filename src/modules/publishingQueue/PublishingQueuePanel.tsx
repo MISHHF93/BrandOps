@@ -225,14 +225,14 @@ export function PublishingQueuePanel() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="bo-link !px-2 !py-1"
+            className="bo-link bo-link--sm"
             onClick={() => setViewMode('list')}
             disabled={viewMode === 'list'}
           >
             List
           </button>
           <button
-            className="bo-link !px-2 !py-1"
+            className="bo-link bo-link--sm"
             onClick={() => setViewMode('calendar')}
             disabled={viewMode === 'calendar'}
           >
@@ -247,16 +247,16 @@ export function PublishingQueuePanel() {
           Ship the next queued post with minimal friction: copy, publish, and mark status in one pass.
         </p>
         <div className="flex flex-wrap gap-2">
-          <button className="bo-link !px-2 !py-1" onClick={saveShipSlot}>
+          <button className="bo-link bo-link--sm" onClick={saveShipSlot}>
             Save ship slot
           </button>
-          <button className="bo-link !px-2 !py-1" onClick={copyNextShipDraft}>
+          <button className="bo-link bo-link--sm" onClick={copyNextShipDraft}>
             Copy next post
           </button>
-          <button className="bo-link !px-2 !py-1" onClick={openLinkedInComposer}>
+          <button className="bo-link bo-link--sm" onClick={openLinkedInComposer}>
             Open LinkedIn
           </button>
-          <button className="bo-link !px-2 !py-1" onClick={markNextAsPosted}>
+          <button className="bo-link bo-link--sm" onClick={markNextAsPosted}>
             Mark next as posted
           </button>
         </div>
@@ -402,14 +402,14 @@ export function PublishingQueuePanel() {
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-            <button className="bo-link !px-2 !py-1" onClick={() => void quickReschedulePublishingItem(item.id, 60)}>
+            <button className="bo-link bo-link--sm" onClick={() => void quickReschedulePublishingItem(item.id, 60)}>
               +1h
             </button>
-            <button className="bo-link !px-2 !py-1" onClick={() => void quickReschedulePublishingItem(item.id, 1440)}>
+            <button className="bo-link bo-link--sm" onClick={() => void quickReschedulePublishingItem(item.id, 1440)}>
               +1 day
             </button>
             <button
-              className="bo-link !px-2 !py-1"
+              className="bo-link bo-link--sm"
               onClick={() => {
                 void navigator.clipboard.writeText(item.body);
                 setNotice(`Copied “${item.title}” to clipboard.`);
@@ -418,15 +418,15 @@ export function PublishingQueuePanel() {
               <Copy size={12} className="mr-1 inline" /> Copy post content
             </button>
             <button
-              className="bo-link !px-2 !py-1"
+              className="bo-link bo-link--sm"
               onClick={openLinkedInComposer}
             >
               <ExternalLink size={12} className="mr-1 inline" /> Open LinkedIn
             </button>
-            <button className="bo-link !px-2 !py-1" onClick={() => void updatePublishingStatus(item.id, 'posted')}>
+            <button className="bo-link bo-link--sm" onClick={() => void updatePublishingStatus(item.id, 'posted')}>
               <CheckCircle2 size={12} className="mr-1 inline" /> Mark posted
             </button>
-            <button className="bo-link !px-2 !py-1" onClick={() => void updatePublishingStatus(item.id, 'skipped')}>
+            <button className="bo-link bo-link--sm" onClick={() => void updatePublishingStatus(item.id, 'skipped')}>
               <SkipForward size={12} className="mr-1 inline" /> Mark skipped
             </button>
           </div>

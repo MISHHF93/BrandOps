@@ -1301,7 +1301,7 @@ export function DashboardApp() {
                 </p>
               </div>
               <button
-                className="bo-link !px-2 !py-1"
+                className="bo-link bo-link--sm"
                 onClick={() => {
                   markProfileSetupComplete();
                   setProfileSetupOpen(false);
@@ -1786,10 +1786,10 @@ export function DashboardApp() {
                     {task.sourceType.toUpperCase()} • Due {new Date(task.dueAt).toLocaleString()} • {task.status}
                   </p>
                   <div className="mt-2 flex gap-2">
-                    <button className="bo-link !px-2 !py-1" onClick={() => void snoozeSchedulerTask(task.id, 15)}>
+                    <button className="bo-link bo-link--sm" onClick={() => void snoozeSchedulerTask(task.id, 15)}>
                       Snooze 15m
                     </button>
-                    <button className="bo-link !px-2 !py-1" onClick={() => void completeSchedulerTask(task.id)}>
+                    <button className="bo-link bo-link--sm" onClick={() => void completeSchedulerTask(task.id)}>
                       Complete
                     </button>
                   </div>

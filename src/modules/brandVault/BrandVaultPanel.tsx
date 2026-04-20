@@ -193,23 +193,23 @@ export function BrandVaultPanel() {
         <p className="bo-now-label">What does the operator need right now?</p>
         <p className="text-sm text-textMuted">Reuse consistent narrative blocks across content, outreach, and profile surfaces.</p>
         <div className="flex flex-wrap gap-2">
-          <button className="bo-link !px-2 !py-1" onClick={() => void copyWithNotice('Operator brief', operatorBrief)}>
+          <button className="bo-link bo-link--sm" onClick={() => void copyWithNotice('Operator brief', operatorBrief)}>
             Copy operator brief
           </button>
           <button
-            className="bo-link !px-2 !py-1"
+            className="bo-link bo-link--sm"
             onClick={() => void copyWithNotice('Positioning statement', brandVault.positioningStatement)}
           >
             Copy positioning
           </button>
           <button
-            className="bo-link !px-2 !py-1"
+            className="bo-link bo-link--sm"
             onClick={() => void copyWithNotice('Primary CTA pack', brandVault.callsToAction.join('\n'))}
           >
             Copy CTA pack
           </button>
           <button
-            className="bo-link !px-2 !py-1"
+            className="bo-link bo-link--sm"
             onClick={() =>
               void (async () => {
                 const payload = await exportBrandVault();
@@ -348,27 +348,27 @@ export function BrandVaultPanel() {
                   />
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
-                      className="bo-link !px-2 !py-1"
+                      className="bo-link bo-link--sm"
                       onClick={() => void navigator.clipboard.writeText(item)}
                     >
                       <ClipboardCopy size={11} className="mr-1 inline" /> Copy
                     </button>
                     <button
                       disabled={index === 0}
-                      className="bo-link !px-2 !py-1 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="bo-link bo-link--sm disabled:cursor-not-allowed disabled:opacity-40"
                       onClick={() => void reorderBrandVaultListItem(section.key, index, index - 1)}
                     >
                       Move up
                     </button>
                     <button
                       disabled={index === brandVault[section.key].length - 1}
-                      className="bo-link !px-2 !py-1 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="bo-link bo-link--sm disabled:cursor-not-allowed disabled:opacity-40"
                       onClick={() => void reorderBrandVaultListItem(section.key, index, index + 1)}
                     >
                       Move down
                     </button>
                     <button
-                      className="bo-link !px-2 !py-1"
+                      className="bo-link bo-link--sm"
                       onClick={() => void deleteBrandVaultListItem(section.key, index)}
                     >
                       Delete

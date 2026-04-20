@@ -179,13 +179,13 @@ export function ContentLibraryPanel() {
           Capture one usable draft, then copy the next ready block into your publishing flow.
         </p>
         <div className="flex flex-wrap gap-2">
-          <button className="bo-link !px-2 !py-1" onClick={saveDraftItem}>
+          <button className="bo-link bo-link--sm" onClick={saveDraftItem}>
             Save current draft
           </button>
-          <button className="bo-link !px-2 !py-1" onClick={copyFirstVisibleDraft}>
+          <button className="bo-link bo-link--sm" onClick={copyFirstVisibleDraft}>
             Copy next visible draft
           </button>
-          <button className="bo-link !px-2 !py-1" onClick={copyVisibleTitleList}>
+          <button className="bo-link bo-link--sm" onClick={copyVisibleTitleList}>
             Copy visible titles
           </button>
         </div>
@@ -368,13 +368,13 @@ export function ContentLibraryPanel() {
                 ))}
               </select>
               <button
-                className="bo-link !px-2 !py-1"
+                className="bo-link bo-link--sm"
                 onClick={() => void duplicateContentLibraryItem(item.id)}
               >
                 <Layers3 size={12} className="mr-1 inline" /> Duplicate
               </button>
               <button
-                className="bo-link !px-2 !py-1"
+                className="bo-link bo-link--sm"
                 onClick={() => {
                   void navigator.clipboard.writeText(item.body);
                   setNotice(`Copied “${item.title}” to clipboard.`);
@@ -383,7 +383,7 @@ export function ContentLibraryPanel() {
                 <Copy size={12} className="mr-1 inline" /> Copy
               </button>
               <button
-                className="bo-link !px-2 !py-1"
+                className="bo-link bo-link--sm"
                 onClick={() => void archiveContentLibraryItem(item.id)}
                 disabled={item.status === 'archived'}
               >

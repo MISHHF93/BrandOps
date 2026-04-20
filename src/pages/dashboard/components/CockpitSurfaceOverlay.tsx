@@ -20,18 +20,18 @@ export function CockpitSurfaceOverlay({ title, open, onClose, children }: Cockpi
     >
       <button
         type="button"
-        className="absolute inset-0 bg-bg/55 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-bg/55 backdrop-blur-[4px]"
         aria-label="Close panel"
         onClick={onClose}
       />
-      <div className="relative z-[1] flex h-full min-h-0 w-full max-w-2xl flex-col border-l border-borderStrong bg-bg/96 shadow-[0_0_48px_rgb(var(--color-shadow)/0.35)]">
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-bg/90 px-4 py-3">
+      <div className="bo-overlay-drawer relative z-[1] flex h-full min-h-0 w-full max-w-2xl flex-col">
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-bg/60 px-4 py-3">
           <h2 id="cockpit-surface-overlay-title" className="min-w-0 truncate text-base font-semibold text-text">
             {title}
           </h2>
           <button
             type="button"
-            className="bo-link inline-flex shrink-0 items-center gap-1 !px-2 !py-1 text-xs"
+            className="bo-link bo-link--sm inline-flex shrink-0 items-center gap-1 text-xs"
             onClick={onClose}
             aria-label="Close"
           >

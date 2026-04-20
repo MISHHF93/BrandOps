@@ -197,16 +197,16 @@ export function PipelineCrmPanel() {
           Focus the next revenue move, copy a brief, and keep follow-up momentum without menu digging.
         </p>
         <div className="flex flex-wrap gap-2">
-          <button className="bo-link !px-2 !py-1" onClick={focusUrgentOpportunity}>
+          <button className="bo-link bo-link--sm" onClick={focusUrgentOpportunity}>
             Focus next urgent
           </button>
-          <button className="bo-link !px-2 !py-1" onClick={copyOpportunityBrief}>
+          <button className="bo-link bo-link--sm" onClick={copyOpportunityBrief}>
             Copy opportunity brief
           </button>
-          <button className="bo-link !px-2 !py-1" onClick={snoozeSelectedOpportunity}>
+          <button className="bo-link bo-link--sm" onClick={snoozeSelectedOpportunity}>
             Snooze follow-up +1 day
           </button>
-          <button className="bo-link !px-2 !py-1" onClick={copySelectedContactSummary}>
+          <button className="bo-link bo-link--sm" onClick={copySelectedContactSummary}>
             Copy contact summary
           </button>
         </div>
@@ -366,7 +366,7 @@ export function PipelineCrmPanel() {
                   ? new Date(selectedContact.followUpDate).toLocaleDateString()
                   : 'Not set'}
               </p>
-              <button className="bo-link !mt-1 !px-2 !py-1" onClick={copySelectedContactSummary}>
+              <button className="bo-link bo-link--sm !mt-1" onClick={copySelectedContactSummary}>
                 <Copy size={12} className="mr-1 inline" /> Copy contact
               </button>
             </div>

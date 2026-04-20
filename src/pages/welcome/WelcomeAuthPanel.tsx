@@ -128,7 +128,7 @@ export function WelcomeAuthPanel({ onContinue, canContinue, optionsHref }: Welco
 
   return (
     <motion.div
-      className="w-full rounded-2xl border border-border/90 bg-bgElevated/95 px-7 py-8 shadow-[0_24px_80px_rgba(0,0,0,0.12)] backdrop-blur-sm dark:border-border dark:bg-bgElevated/90 dark:shadow-[0_28px_90px_rgba(0,0,0,0.45)] sm:px-8"
+      className="bo-auth-sheet w-full"
       initial={reduce ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduce ? 0 : 0.65, ease: panelEase, delay: reduce ? 0 : 0.04 }}

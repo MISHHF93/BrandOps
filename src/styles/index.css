@@ -4,6 +4,9 @@
 
 :root {
   color-scheme: dark;
+  /* ============================ */
+  /* Primitive tokens (dark mode) */
+  /* ============================ */
   /* Monochrome dark token system: black/charcoal surfaces + white/grays. */
   --color-bg: 8 9 11;
   --color-bg-elevated: 12 14 17;
@@ -63,6 +66,35 @@
   --glass-border-alpha: 0.68;
   --glass-panel-alpha: 0.82;
   --glass-shadow-alpha: 0.34;
+  /* ============================ */
+  /* Semantic aliases             */
+  /* ============================ */
+  --bg-page: var(--color-bg);
+  --bg-surface-1: var(--color-bg-elevated);
+  --bg-surface-2: var(--color-surface);
+  --fg-primary: var(--color-text);
+  --fg-secondary: var(--color-text-muted);
+  --stroke-default: var(--color-border);
+  --focus-default: var(--color-focus-ring);
+  /* ============================ */
+  /* Component-level contracts    */
+  /* ============================ */
+  --card-bg: var(--color-surface);
+  --card-border: var(--color-border);
+  --card-shadow: var(--color-shadow);
+  --panel-bg: var(--color-bg-elevated);
+  --panel-border: var(--color-border);
+  --panel-shadow: var(--color-shadow);
+  --link-bg: var(--color-surface);
+  --link-border: var(--color-border);
+  --link-fg: var(--color-text-muted);
+  --link-focus-ring: var(--color-focus-ring);
+  --overlay-backdrop: var(--color-shadow);
+  --sheet-bg: var(--color-bg-elevated);
+  --sheet-shadow: var(--color-shadow);
+  --field-bg: var(--color-bg-elevated);
+  --field-border: var(--color-border);
+  --field-focus-ring: var(--color-focus-ring);
   font-family:
     "Segoe UI Variable Text",
     "Segoe UI",
@@ -76,6 +108,7 @@
 /* Monochrome light: paper / ink hierarchy (no blue identity). */
 :root[data-theme="light"] {
   color-scheme: light;
+  /* Primitive tokens (light mode) */
   --color-bg: 248 249 251;
   --color-bg-elevated: 255 255 255;
   --color-bg-subtle: 241 243 246;
@@ -117,6 +150,31 @@
   --glass-border-alpha: 0.55;
   --glass-panel-alpha: 0.72;
   --glass-shadow-alpha: 0.12;
+  /* Semantic aliases */
+  --bg-page: var(--color-bg);
+  --bg-surface-1: var(--color-bg-elevated);
+  --bg-surface-2: var(--color-surface);
+  --fg-primary: var(--color-text);
+  --fg-secondary: var(--color-text-muted);
+  --stroke-default: var(--color-border);
+  --focus-default: var(--color-focus-ring);
+  /* Component-level contracts */
+  --card-bg: var(--color-surface);
+  --card-border: var(--color-border);
+  --card-shadow: var(--color-shadow);
+  --panel-bg: var(--color-bg-elevated);
+  --panel-border: var(--color-border);
+  --panel-shadow: var(--color-shadow);
+  --link-bg: var(--color-surface);
+  --link-border: var(--color-border);
+  --link-fg: var(--color-text-muted);
+  --link-focus-ring: var(--color-focus-ring);
+  --overlay-backdrop: var(--color-shadow);
+  --sheet-bg: var(--color-bg-elevated);
+  --sheet-shadow: var(--color-shadow);
+  --field-bg: var(--color-bg-elevated);
+  --field-border: var(--color-border);
+  --field-focus-ring: var(--color-focus-ring);
 }
 
 body {
@@ -593,6 +651,50 @@ html[data-app-surface="welcome"] body::after {
       0 0 18px rgb(var(--color-primary) / 0.09);
   }
 
+  .bo-panel {
+    @apply rounded-xl border p-3;
+    border-color: rgb(var(--color-border) / 0.72);
+    background:
+      linear-gradient(
+        158deg,
+        rgb(var(--panel-bg) / 0.78),
+        rgb(var(--bg-page) / 0.74) 62%,
+        rgb(var(--bg-page) / 0.8)
+      );
+    box-shadow:
+      inset 0 1px 0 rgb(var(--color-text) / 0.035),
+      0 8px 20px rgb(var(--panel-shadow) / 0.28);
+    backdrop-filter: blur(var(--glass-blur-soft)) saturate(var(--glass-saturate));
+  }
+
+  .bo-panel-muted {
+    @apply rounded-xl border p-3;
+    border-color: rgb(var(--color-border) / 0.62);
+    background:
+      linear-gradient(
+        158deg,
+        rgb(var(--panel-bg) / 0.62),
+        rgb(var(--bg-page) / 0.58) 62%,
+        rgb(var(--bg-page) / 0.66)
+      );
+    box-shadow:
+      inset 0 1px 0 rgb(var(--color-text) / 0.03),
+      0 6px 16px rgb(var(--panel-shadow) / 0.24);
+    backdrop-filter: blur(var(--glass-blur-soft)) saturate(var(--glass-saturate));
+  }
+
+  .bo-control-row {
+    @apply rounded-xl border p-3 text-sm;
+    border-color: rgb(var(--color-border) / 0.72);
+    background:
+      linear-gradient(
+        156deg,
+        rgb(var(--field-bg) / 0.72),
+        rgb(var(--bg-page) / 0.66)
+      );
+    box-shadow: inset 0 1px 0 rgb(var(--color-text) / 0.03);
+  }
+
   /** Collapsible cockpit rows: same card family as `.bo-card` but flatter — matches Operating board chrome. */
   .bo-cockpit-collapsible.bo-card {
     border-color: rgb(var(--color-border) / 0.42);
@@ -778,6 +880,52 @@ html[data-app-surface="welcome"] body::after {
 
   .bo-link:active {
     transform: translateY(0) scale(0.99);
+  }
+
+  .bo-link--sm {
+    @apply !px-2 !py-1 text-xs;
+  }
+
+  .bo-link:focus-visible,
+  .bo-navdock-toggle:focus-visible,
+  .bo-navdock-pill:focus-visible {
+    outline: none;
+    border-color: rgb(var(--color-focus-ring) / 0.68);
+    box-shadow:
+      0 0 0 2px rgb(var(--color-focus-ring) / var(--alpha-focus-ring)),
+      0 0 18px rgb(var(--color-focus-ring) / 0.22);
+  }
+
+  .bo-auth-sheet {
+    @apply rounded-2xl border px-7 py-8 sm:px-8;
+    border-color: rgb(var(--color-border) / 0.9);
+    background:
+      linear-gradient(
+        154deg,
+        rgb(var(--sheet-bg) / 0.94),
+        rgb(var(--bg-page) / 0.9) 62%,
+        rgb(var(--bg-page) / 0.92)
+      );
+    box-shadow:
+      0 24px 80px rgb(var(--sheet-shadow) / 0.42),
+      0 0 0 1px rgb(var(--color-primary) / 0.08),
+      inset 0 1px 0 rgb(var(--color-text) / 0.04);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  }
+
+  .bo-overlay-drawer {
+    border-left: 1px solid rgb(var(--color-border-strong) / 0.86);
+    background:
+      linear-gradient(
+        158deg,
+        rgb(var(--sheet-bg) / 0.96),
+        rgb(var(--bg-page) / 0.92) 64%,
+        rgb(var(--bg-page) / 0.94)
+      );
+    box-shadow:
+      0 0 48px rgb(var(--sheet-shadow) / 0.35),
+      -1px 0 0 rgb(var(--color-primary) / 0.08);
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
   }
 
   .bo-crown-kicker {

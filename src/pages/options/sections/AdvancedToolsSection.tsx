@@ -59,7 +59,7 @@ export function AdvancedToolsSection({
 
       {open ? (
         <div className="space-y-4">
-          <article className="rounded-xl border border-border bg-bg/40 p-3 space-y-3">
+          <article className="bo-panel space-y-3">
             <h3 className="text-sm font-semibold">AI settings mode</h3>
             <textarea
               value={aiPrompt}
@@ -82,7 +82,7 @@ export function AdvancedToolsSection({
               </button>
             </div>
             {aiSettingsLastResult ? (
-              <article className="rounded-xl border border-border bg-bg/55 p-3 text-xs">
+              <article className="bo-panel-muted text-xs">
                 <p className="font-medium">Last AI run summary</p>
                 <p className="mt-1 text-textMuted">Prompt: {aiSettingsLastResult.prompt}</p>
                 <p className="mt-1 text-textMuted">
@@ -93,11 +93,11 @@ export function AdvancedToolsSection({
             ) : null}
           </article>
 
-          <article className="rounded-xl border border-border bg-bg/40 p-3">
+          <article className="bo-panel">
             <h3 className="text-sm font-semibold">Automation rules</h3>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
               {data.settings.automationRules.map((rule) => (
-                <article key={rule.id} className="rounded-xl border border-border bg-bg/55 p-3 text-sm">
+                <article key={rule.id} className="bo-panel-muted text-sm">
                   <p className="font-medium">{rule.name}</p>
                   <p className="text-xs text-textMuted">
                     Trigger: {rule.trigger} / Action: {rule.action}
@@ -108,9 +108,9 @@ export function AdvancedToolsSection({
             </div>
           </article>
 
-          <article className="rounded-xl border border-border bg-bg/40 p-3 space-y-3">
+          <article className="bo-panel space-y-3">
             <h3 className="text-sm font-semibold">Flight deck tools</h3>
-            <label className="flex items-center justify-between rounded-xl border border-border bg-bg/55 p-3 text-sm">
+            <label className="bo-control-row flex items-center justify-between">
               <span>Debug mode</span>
               <input
                 type="checkbox"

@@ -5,7 +5,15 @@ BrandOps uses a semantic-token Tailwind foundation so all modules share one oper
 ## Token Source
 
 - Tailwind semantic token mapping: `tailwind.config.cjs`
-- Runtime token values (dark mode only): `src/styles/index.css`
+- Runtime token values and component contracts: `src/styles/index.css`
+
+## Token Layers
+
+BrandOps uses a 3-layer token model:
+
+1. **Primitive tokens**: raw color/motion values (`--color-*`, `--duration-*`).
+2. **Semantic aliases**: meaning-based mappings (`--bg-page`, `--fg-primary`, `--focus-default`).
+3. **Component contracts**: reusable surface/link/overlay/field tokens (`--card-*`, `--panel-*`, `--sheet-*`, `--field-*`).
 
 ## Semantic Token Rules
 
@@ -15,6 +23,18 @@ BrandOps uses a semantic-token Tailwind foundation so all modules share one oper
 4. Use shared radius (`rounded-sm` through `rounded-2xl`) and shadows (`shadow-panel`, `shadow-hover`, `shadow-glow`) for consistency.
 5. Keep motion subtle with the shared duration tokens (`duration-fast`, `duration-base`, `duration-slow`).
 6. Use `bg-signal-grid` only for dashboard/background surfaces, never for dense content containers.
+
+## Shared Surface Classes
+
+Prefer these reusable classes before composing long utility strings:
+
+- `bo-card`: primary high-elevation card shell
+- `bo-panel`: standard section panel
+- `bo-panel-muted`: quieter nested panel
+- `bo-control-row`: interactive settings row
+- `bo-link` and `bo-link--sm`: action buttons (standard + compact)
+- `bo-auth-sheet`: welcome auth container
+- `bo-overlay-drawer`: dashboard side overlay shell
 
 ## Accessibility Baseline
 

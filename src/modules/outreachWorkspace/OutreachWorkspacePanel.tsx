@@ -246,14 +246,14 @@ export function OutreachWorkspacePanel() {
             Ship one high-quality outreach message: generate, copy, send, and mark status.
           </p>
           <div className="flex flex-wrap gap-2">
-            <button className="bo-link !px-2 !py-1" onClick={createRelationshipDraft}>
+            <button className="bo-link bo-link--sm" onClick={createRelationshipDraft}>
               Save relationship draft
             </button>
-            <button className="bo-link !px-2 !py-1" onClick={copyBestVariant}>
+            <button className="bo-link bo-link--sm" onClick={copyBestVariant}>
               Copy best variant
             </button>
             <button
-              className="bo-link !px-2 !py-1"
+              className="bo-link bo-link--sm"
               onClick={() => void copyWithNotice('Current message body', form.messageBody)}
             >
               Copy current message

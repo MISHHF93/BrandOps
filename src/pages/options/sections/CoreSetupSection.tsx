@@ -56,7 +56,7 @@ export function CoreSetupSection({
       </header>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <article className="rounded-xl border border-border bg-bg/40 p-3 space-y-1">
+        <article className="bo-panel space-y-1">
           <p className="text-sm font-medium">Runtime</p>
           <p className="text-xs text-textMuted">AI mode: {data.settings.aiAdapterMode}</p>
           <p className="text-xs text-textMuted">Timezone: {data.settings.timezone}</p>
@@ -83,9 +83,9 @@ export function CoreSetupSection({
           first paint). Compact density tucks metrics and mission-map detail behind disclosures by default."
       />
 
-      <article className="rounded-xl border border-border bg-bg/40 p-3 space-y-3">
+      <article className="bo-panel space-y-3">
         <p className="text-sm font-medium">Execution center</p>
-        <label className="flex items-center justify-between rounded-xl border border-border/70 bg-bg/55 p-3 text-sm">
+        <label className="bo-control-row flex items-center justify-between">
           <span>Enable execution center</span>
           <input
             type="checkbox"
@@ -181,7 +181,7 @@ export function CoreSetupSection({
               className="w-full rounded-xl border border-border bg-bg/60 px-3 py-2 text-xs"
             />
           </label>
-          <label className="flex items-center justify-between rounded-xl border border-border bg-bg/55 p-3 text-sm">
+          <label className="bo-control-row flex items-center justify-between">
             <span>Include dataset hygiene reminders</span>
             <input
               type="checkbox"
@@ -193,7 +193,7 @@ export function CoreSetupSection({
           </label>
         </div>
 
-        <label className="flex items-center justify-between rounded-xl border border-border bg-bg/55 p-3 text-sm">
+        <label className="bo-control-row flex items-center justify-between">
           <span>Include integration review reminders</span>
           <input
             type="checkbox"
@@ -230,7 +230,7 @@ export function CoreSetupSection({
         </label>
       </article>
 
-      <article className="rounded-xl border border-border bg-bg/40 p-3 space-y-3">
+      <article className="bo-panel space-y-3">
         <p className="text-sm font-medium">Cadence + data flow</p>
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1 text-sm">
@@ -289,7 +289,7 @@ export function CoreSetupSection({
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <label className="flex items-center justify-between rounded-xl border border-border bg-bg/55 p-3 text-sm">
+          <label className="bo-control-row flex items-center justify-between">
             <span>Include startup scan block</span>
             <input
               type="checkbox"
@@ -297,7 +297,7 @@ export function CoreSetupSection({
               onChange={(event) => void onUpdateCadenceFlow({ includeStartupBlock: event.target.checked })}
             />
           </label>
-          <label className="flex items-center justify-between rounded-xl border border-border bg-bg/55 p-3 text-sm">
+          <label className="bo-control-row flex items-center justify-between">
             <span>Include artifact review block</span>
             <input
               type="checkbox"
@@ -305,7 +305,7 @@ export function CoreSetupSection({
               onChange={(event) => void onUpdateCadenceFlow({ includeArtifactReviewBlock: event.target.checked })}
             />
           </label>
-          <label className="flex items-center justify-between rounded-xl border border-border bg-bg/55 p-3 text-sm">
+          <label className="bo-control-row flex items-center justify-between">
             <span>Include shutdown review block</span>
             <input
               type="checkbox"
@@ -313,7 +313,7 @@ export function CoreSetupSection({
               onChange={(event) => void onUpdateCadenceFlow({ includeShutdownBlock: event.target.checked })}
             />
           </label>
-          <label className="flex items-center justify-between rounded-xl border border-border bg-bg/55 p-3 text-sm">
+          <label className="bo-control-row flex items-center justify-between">
             <span>Log daily sync snapshots to integration hub</span>
             <input
               type="checkbox"
@@ -322,7 +322,7 @@ export function CoreSetupSection({
             />
           </label>
         </div>
-        <label className="flex items-center justify-between rounded-xl border border-border bg-bg/55 p-3 text-sm">
+        <label className="bo-control-row flex items-center justify-between">
           <span>Show cadence lead reminders (timed prompts before each block)</span>
           <input
             type="checkbox"
@@ -332,14 +332,14 @@ export function CoreSetupSection({
         </label>
       </article>
 
-      <article className="rounded-xl border border-border bg-bg/40 p-3">
+      <article className="bo-panel">
         <h3 className="text-sm font-semibold">Workspace map</h3>
         <p className="mt-1 text-xs text-textMuted">
           Each capability has one primary home; other surfaces are quick-entry or read-only context.
         </p>
         <ul className="mt-3 grid gap-2 text-sm md:grid-cols-2">
           {cockpitCapabilities.map((cap) => (
-            <li key={cap.id} className="rounded-xl border border-border/80 bg-bg/55 px-3 py-2">
+            <li key={cap.id} className="bo-panel-muted px-3 py-2">
               <p className="font-medium text-text">{cap.label}</p>
               <p className="text-xs text-textMuted">{cap.summary}</p>
               <p className="mt-1 text-[11px] text-textSoft">
