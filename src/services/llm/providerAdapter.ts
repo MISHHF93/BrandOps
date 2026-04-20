@@ -5,10 +5,11 @@ class LocalTemplateProvider implements AiProviderAdapter {
   id = 'local' as const;
 
   async generate(request: AiGenerationRequest): Promise<AiGenerationResponse> {
+    const objective = request.objective.trim() || 'your workflow objective';
     return {
       provider: this.id,
       model: 'template-v1',
-      text: `Placeholder generation for objective: ${request.objective}`
+      text: `AI generation is not enabled for this build yet. Capture objective "${objective}" in your notes and complete this draft manually from the dashboard context.`
     };
   }
 }

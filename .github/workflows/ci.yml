@@ -26,6 +26,9 @@ jobs:
       - name: Run static checks
         run: npm run check
 
+      - name: Run unit tests
+        run: npm run test:unit
+
       - name: Build extension
         run: npm run build
 

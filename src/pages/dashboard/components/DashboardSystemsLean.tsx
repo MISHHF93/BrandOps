@@ -328,7 +328,7 @@ export function DashboardSystemsLean({ data }: DashboardSystemsLeanProps) {
           <div className="mt-3 grid gap-2">
             {syncedArtifactsPreview.length === 0 ? (
               <p className="rounded-xl border border-border/80 bg-bg/45 p-3 text-textMuted">
-                No external artifacts yet. Run sync from Settings.
+                No external artifacts yet. Connect providers and add records from Settings.
               </p>
             ) : (
               syncedArtifactsPreview.map((artifact) => (

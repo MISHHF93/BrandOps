@@ -8,7 +8,11 @@ const requiredFiles = [
   'dist/options.html',
   'dist/welcome.html',
   'dist/help.html',
-  'dist/privacy-policy.html'
+  'dist/privacy-policy.html',
+  'dist/brandops-oauth-public.json',
+  'dist/oauth/google-brandops.html',
+  'dist/oauth/github-brandops.html',
+  'dist/oauth/linkedin-brandops.html'
 ];
 
 const ensureFileExists = async (path) => {
@@ -36,6 +40,14 @@ const assertManifest = async () => {
 
   if (!Array.isArray(manifest.permissions)) {
     throw new Error('manifest permissions must be an array.');
+  }
+
+  if (manifest.background?.service_worker !== 'background.js') {
+    throw new Error('manifest background.service_worker must be "background.js".');
+  }
+
+  if (manifest.options_ui?.page !== 'options.html') {
+    throw new Error('manifest options_ui.page must be "options.html".');
   }
 };
 
