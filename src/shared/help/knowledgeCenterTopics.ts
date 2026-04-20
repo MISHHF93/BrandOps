@@ -44,8 +44,8 @@ export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
       body: 'Move the publishing queue or content drafts forward: copy the draft, post or send in the real channel, then update status in BrandOps.'
     },
     {
-      title: 'Capture from Quick actions; configure in Settings',
-      body: 'Use the toolbar popup for quick capture and counts. Reserve Settings for OAuth, integrations, backups, and layout—avoid mid-day settings rabbit holes.'
+      title: 'Capture from the Dashboard; configure in Settings',
+      body: 'Click the extension icon to open the Dashboard in a new tab for cockpit work and capture. Reserve Settings for OAuth, integrations, backups, and layout—avoid mid-day settings rabbit holes.'
     }
   ]
 };
@@ -55,11 +55,11 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     id: 'surfaces',
     title: 'Where BrandOps runs',
     summary:
-      'Dashboard, Quick actions popup, Settings, and this Knowledge Center—each surface has a clear job.',
+      'Dashboard, Settings, Welcome, and this Knowledge Center—each surface has a clear job.',
     paragraphs: [
-      'BrandOps is a browser extension with a few full pages: the Dashboard (your cockpit), Quick actions (toolbar popup), Settings, and this Knowledge Center.',
+      'BrandOps is a browser extension with full pages: the Dashboard (your cockpit), Settings, Welcome (sign-in), and this Knowledge Center. The toolbar icon opens the Dashboard in a new tab (there is no separate toolbar popup page in the manifest today).',
       'The full dashboard can be one vertical page with four anchors (Today, Pipeline, Brand & content, Connections), or section mode that mounts one area at a time — choose under Settings → Core setup → Cockpit layout and density.',
-      'Heavy configuration (OAuth client IDs, LinkedIn identity, backups) lives in Settings. Quick capture and counts stay in Quick actions.'
+      'Heavy configuration (OAuth client IDs, LinkedIn identity, backups) lives in Settings. Day-to-day execution and capture happen on the Dashboard.'
     ]
   },
   {

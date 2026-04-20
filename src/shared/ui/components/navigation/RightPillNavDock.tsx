@@ -8,7 +8,7 @@ import {
 import { CockpitNavItemIcon } from '../../icons/cockpitNavIcons';
 
 /** Extension HTML surface hosting the dock; hides same-surface destinations from the Other windows group. */
-export type RightPillNavDockHostSurface = 'dashboard' | 'options' | 'help';
+export type RightPillNavDockHostSurface = 'dashboard' | 'options' | 'help' | 'welcome';
 
 function cockpitGroupsForHost(hostSurface: RightPillNavDockHostSurface | undefined) {
   if (!hostSurface) return cockpitNavigationGroups;

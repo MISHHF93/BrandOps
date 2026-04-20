@@ -104,20 +104,26 @@ export function OptionsApp() {
 
   if (error) {
     return (
-      <main className="bo-system-screen bo-options-shell min-h-screen p-4">
-        <section className="bo-card max-w-xl space-y-3" role="alert" aria-live="assertive">
-          <h1 className="text-base font-semibold text-text">Settings</h1>
-          <InlineAlert tone="danger" title="Settings failed to load" message={error} />
-        </section>
-      </main>
+      <>
+        <main className="bo-system-screen bo-options-shell min-h-screen p-4">
+          <section className="bo-card max-w-xl space-y-3" role="alert" aria-live="assertive">
+            <h1 className="text-base font-semibold text-text">Settings</h1>
+            <InlineAlert tone="danger" title="Settings failed to load" message={error} />
+          </section>
+        </main>
+        <RightPillNavDock hostSurface="options" onSelectItem={handleNavSelect} />
+      </>
     )
   }
 
   if (!data) {
     return (
-      <main className="bo-system-screen bo-options-shell min-h-screen p-4">
-        <p className="text-sm text-textMuted">Loading BrandOps settings…</p>
-      </main>
+      <>
+        <main className="bo-system-screen bo-options-shell min-h-screen p-4">
+          <p className="text-sm text-textMuted">Loading BrandOps settings…</p>
+        </main>
+        <RightPillNavDock hostSurface="options" onSelectItem={handleNavSelect} />
+      </>
     )
   }
 

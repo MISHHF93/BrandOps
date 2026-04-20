@@ -79,7 +79,7 @@ export const cockpitNavigationGroups: Array<{
   },
   {
     title: 'Other windows',
-    description: 'Open the toolbar menu or full settings in a separate window.',
+    description: 'Open the Dashboard tab, Settings, or Knowledge Center from the compass.',
     items: [
       {
         id: 'nav-options',

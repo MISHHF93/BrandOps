@@ -56,3 +56,22 @@ Result: `tsc -b` OK; Vitest `tests/unit` — 10 files, 38 tests passed.
 2. Cockpit → **Settings**: should open **`options.html`** in a **new tab**.
 3. Quick settings overlay → **Open full Settings**: same.
 4. **Open Connections area** should navigate dashboard to **Connections** only when that control is used.
+
+---
+
+## Compass (`RightPillNavDock`) coverage (2026-04-20)
+
+**Vite MPA inputs:** `index.html` (redirect), `dashboard.html`, `welcome.html`, `options.html`, `help.html`.
+
+| Surface | React app | Compass on loading / error / auth | Notes |
+|---------|-----------|-----------------------------------|--------|
+| Dashboard | `dashboardApp.tsx` | Yes | Replaces blank loading with “Loading cockpit…” + dock; error and `DashboardAuthGate` include dock |
+| Settings | `optionsApp.tsx` | Yes | Error and loading branches mount dock |
+| Help | `helpApp.tsx` | Yes | Same |
+| Welcome | `welcomeApp.tsx` | Yes | `hostSurface="welcome"`; all branches |
+| Static | `public/privacy-policy.html` | N/A | Footer links to sibling HTML pages only (no React bundle) |
+| OAuth callbacks | `public/oauth/*.html` | N/A | Minimal redirect UIs |
+
+**Toolbar:** Manifest has no `action.default_popup`; background opens `dashboard.html` in a new tab. Knowledge Center copy matches this behavior.
+
+**Host type:** `RightPillNavDockHostSurface` includes `welcome`; `cockpitGroupsForHost` still hides redundant same-surface entries only for `dashboard` / `options` / `help`.

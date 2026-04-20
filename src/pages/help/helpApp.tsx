@@ -50,20 +50,26 @@ export function HelpApp() {
 
   if (error) {
     return (
-      <main className="bo-system-screen bo-dashboard-shell min-h-screen p-4">
-        <section className="bo-card max-w-xl space-y-3" role="alert" aria-live="assertive">
-          <h1 className="text-base font-semibold text-text">Knowledge Center</h1>
-          <InlineAlert tone="danger" title="Could not load BrandOps" message={error} />
-        </section>
-      </main>
+      <>
+        <main className="bo-system-screen bo-dashboard-shell min-h-screen p-4">
+          <section className="bo-card max-w-xl space-y-3" role="alert" aria-live="assertive">
+            <h1 className="text-base font-semibold text-text">Knowledge Center</h1>
+            <InlineAlert tone="danger" title="Could not load BrandOps" message={error} />
+          </section>
+        </main>
+        <RightPillNavDock hostSurface="help" onSelectItem={handleNavSelect} />
+      </>
     );
   }
 
   if (!data) {
     return (
-      <main className="bo-system-screen bo-dashboard-shell min-h-screen p-4">
-        <p className="text-sm text-textMuted">Loading Knowledge Center…</p>
-      </main>
+      <>
+        <main className="bo-system-screen bo-dashboard-shell min-h-screen p-4">
+          <p className="text-sm text-textMuted">Loading Knowledge Center…</p>
+        </main>
+        <RightPillNavDock hostSurface="help" onSelectItem={handleNavSelect} />
+      </>
     );
   }
 

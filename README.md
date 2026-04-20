@@ -112,7 +112,7 @@ src/
   content/                    # Content script entry points
     linkedinCompanionSafety   # companion validation and manual-capture logic
   modules/                    # Product modules (vault, content, queue, outreach, CRM)
-  pages/                      # popup / dashboard / options React entry surfaces
+  pages/                      # dashboard / welcome / options / help React entry surfaces (MPA)
   services/
     intelligence/             # local heuristic scoring + ranking
     scheduling/               # reminder lifecycle + grouping
@@ -129,8 +129,8 @@ src/
 
 ### Runtime shape
 
-- **Popup:** high-frequency quick actions.
-- **Dashboard:** full workspace with global search, onboarding, and command palette.
+- **Toolbar (extension icon):** opens the Dashboard in a new tab (`chrome.action.onClicked`); there is no `default_popup` HTML surface in the manifest today.
+- **Dashboard:** full workspace with global search, onboarding, command palette, and compass navigation.
 - **Options:** backup/import/export and settings controls.
 - **Background worker:** lightweight scheduler sync and extension orchestration.
 
@@ -234,7 +234,7 @@ release/brandops-extension-v<version>.tar.gz
 ### Known limitations
 
 - Browser notifications/scheduler execution are best-effort while the browser is running.
-- Debug mode currently exposes internal QA utilities only in the Options page (not popup/dashboard surfaces).
+- Debug mode currently exposes internal QA utilities only in the Options page (not the Dashboard or other full-page surfaces).
 - Resume parsing remains heuristic-first for PDF and DOCX and may need manual profile edits on complex resume layouts.
 - Modal/drawer focus trapping is still limited in some component-library overlays and can be further hardened.
 - LinkedIn profile parsing depends on common selectors and `og:title`; major LinkedIn DOM changes can reduce auto-prefill quality.

@@ -1010,23 +1010,52 @@ export function DashboardApp() {
 
   if (error) {
     return (
-      <main className="bo-system-screen bo-dashboard-shell min-w-0">
-        <section className="bo-card space-y-2" role="alert" aria-live="assertive">
-          <h2 className="text-base font-semibold text-danger">Dashboard failed to load</h2>
-          <p className="text-sm text-textMuted">{error}</p>
-          <p className="text-xs text-textMuted">Try reloading this extension page from the browser extension manager.</p>
-        </section>
-      </main>
+      <>
+        <main className="bo-system-screen bo-dashboard-shell min-w-0">
+          <section className="bo-card space-y-2" role="alert" aria-live="assertive">
+            <h2 className="text-base font-semibold text-danger">Dashboard failed to load</h2>
+            <p className="text-sm text-textMuted">{error}</p>
+            <p className="text-xs text-textMuted">Try reloading this extension page from the browser extension manager.</p>
+          </section>
+        </main>
+        <RightPillNavDock
+          hostSurface="dashboard"
+          activeSectionId={activeSectionId}
+          onSelectItem={handleCockpitNavigation}
+          closedFocusLabel={activeNavItem?.label}
+        />
+      </>
     );
   }
 
   if (!data || !derived || !notificationDigest || !cadencePlan) {
-    /* No intermediate “loading surface”: body canvas + optional theme bootstrap match the real shell. */
-    return null;
+    return (
+      <>
+        <main className="bo-system-screen bo-dashboard-shell min-h-0 min-w-0 p-4">
+          <p className="text-sm text-textMuted">Loading cockpit…</p>
+        </main>
+        <RightPillNavDock
+          hostSurface="dashboard"
+          activeSectionId={activeSectionId}
+          onSelectItem={handleCockpitNavigation}
+          closedFocusLabel={activeNavItem?.label}
+        />
+      </>
+    );
   }
 
   if (!canAccessApp(data)) {
-    return <DashboardAuthGate />;
+    return (
+      <>
+        <DashboardAuthGate />
+        <RightPillNavDock
+          hostSurface="dashboard"
+          activeSectionId={activeSectionId}
+          onSelectItem={handleCockpitNavigation}
+          closedFocusLabel={activeNavItem?.label}
+        />
+      </>
+    );
   }
 
   const unifiedScroll = data.settings.cockpitLayout === 'unified-scroll';
