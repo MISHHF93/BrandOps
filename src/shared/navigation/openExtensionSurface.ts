@@ -4,6 +4,16 @@ import { resolveExtensionUrl } from './extensionRuntime';
 
 export type ExtensionSurfaceTarget = 'dashboard' | 'options' | 'integration-hub' | 'help';
 
+/** Opens a bundled extension HTML page in a new tab (or window fallback) — reliable for MV3 even when `openOptionsPage` is a no-op. */
+function openPackagedPageInNewTab(spec: string) {
+  const targetUrl = resolveExtensionUrl(spec);
+  if (typeof chrome !== 'undefined' && typeof chrome.tabs?.create === 'function') {
+    void chrome.tabs.create({ url: targetUrl });
+    return;
+  }
+  window.open(targetUrl, '_blank', 'noopener,noreferrer');
+}
+
 const transitionDurationMs = () => {
   const motion = document.documentElement.getAttribute('data-motion-mode');
   if (motion === 'off') return 0;
@@ -15,31 +25,18 @@ const transitionDurationMs = () => {
  * Opens another extension HTML surface (options, help, or dashboard with optional section query).
  */
 export function openExtensionSurface(surface: ExtensionSurfaceTarget, section?: DashboardSectionId) {
-  if (
-    surface === 'options' &&
-    typeof chrome !== 'undefined' &&
-    typeof chrome.runtime?.openOptionsPage === 'function'
-  ) {
-    void chrome.runtime.openOptionsPage();
+  if (surface === 'options') {
+    openPackagedPageInNewTab(PAGE.options);
     return;
   }
 
   if (surface === 'help') {
-    const surfacePath = PAGE.help;
-    const targetUrl = resolveExtensionUrl(surfacePath);
-
-    if (typeof chrome !== 'undefined' && typeof chrome.tabs?.create === 'function') {
-      void chrome.tabs.create({ url: targetUrl });
-      return;
-    }
-    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    openPackagedPageInNewTab(PAGE.help);
     return;
   }
 
   let surfacePath: string;
-  if (surface === 'options') {
-    surfacePath = PAGE.options;
-  } else if (surface === 'integration-hub') {
+  if (surface === 'integration-hub') {
     surfacePath = buildDashboardUrl({ section: 'connections' });
   } else {
     surfacePath = section ? buildDashboardUrl({ section }) : buildDashboardUrl();

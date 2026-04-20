@@ -5,7 +5,7 @@
  *   index.html          → site root; redirects to dashboard.html (hosted preview entry)
  *   welcome.html        → OAuth gateway (Google / GitHub / LinkedIn); optional sign-in surface
  *   dashboard.html      → main workspace (OAuth required locally unless VITE_PREVIEW_COCKPIT_UNGATED; Vercel builds are ungated automatically)
- *   options.html        → Settings (open via in-app links; manifest options_page removed — see docs)
+ *   options.html        → Settings (`options_ui` in manifest + `openExtensionSurface('options')`)
  *   help.html           → Knowledge Center
  *   privacy-policy.html → static legal (bundled)
  *

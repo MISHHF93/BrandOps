@@ -56,15 +56,15 @@ export function CockpitSettingsQuickPanel({
       />
 
       <div className="flex flex-col gap-2 border-t border-border/70 pt-4">
-        <button type="button" className="bo-link w-full justify-center text-sm" onClick={onJumpToConnections}>
-          Open Connections area
-        </button>
         <button
           type="button"
           className="w-full rounded-xl border border-primary/35 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-text transition hover:bg-primary/16"
           onClick={onOpenFullSettings}
         >
           Open full Settings
+        </button>
+        <button type="button" className="bo-link w-full justify-center text-sm" onClick={onJumpToConnections}>
+          Open Connections area
         </button>
       </div>
     </div>

@@ -577,9 +577,7 @@ export function DashboardApp() {
   }, []);
 
   const openFullSettingsWindow = useCallback(() => {
-    if (typeof chrome !== 'undefined' && typeof chrome.runtime?.openOptionsPage === 'function') {
-      void chrome.runtime.openOptionsPage();
-    }
+    openExtensionSurface('options');
   }, []);
 
   const handleCockpitNavigation = useCallback(
@@ -599,7 +597,7 @@ export function DashboardApp() {
         return;
       }
       if (item.target === 'options') {
-        setCockpitOverlay('settings');
+        openExtensionSurface('options');
         return;
       }
       if (item.target === 'dashboard') {
