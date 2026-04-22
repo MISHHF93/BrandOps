@@ -23,7 +23,7 @@ export const MobileIntegrationsView = ({
     <div className="mt-2 space-y-5" aria-label="Integrations">
       <MobileTabPageHeader
         title="Integrations"
-        subtitle="Sources, OAuth, and quick-adds — not CRM pipeline (Cockpit)"
+        subtitle="Sources, OAuth, artifacts, and SSH — pipeline metrics live on Today"
         icon={PlugZap}
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-sky-500/30 bg-sky-950/30"
         iconClassName="text-sky-300"
@@ -84,10 +84,10 @@ export const MobileIntegrationsView = ({
                 </div>
                 <button
                   type="button"
-                  onClick={() => void runCommand(`integration source status: ${row.name}`)}
+                  onClick={() => void runCommand(`add note: check integration source ${row.name}`)}
                   className={mobileChipClass(btnFocus)}
                 >
-                  Refine in Chat
+                  Log note in Chat
                 </button>
               </li>
             ))}
@@ -116,6 +116,68 @@ export const MobileIntegrationsView = ({
       </MobileTabSection>
 
       <MobileTabSection
+        id="integrations-artifacts"
+        title="Synced artifacts"
+        description="Registered integration artifacts; add more from Chat with add artifact or add integration artifact."
+      >
+        {snapshot.integrationArtifactsPeek.length === 0 ? (
+          <p className="mt-2 text-[11px] text-zinc-500">No artifacts yet. Total: {snapshot.integrationArtifactCount}.</p>
+        ) : (
+          <ul className="mt-2 space-y-2">
+            {snapshot.integrationArtifactsPeek.map((row) => (
+              <li
+                key={row.id}
+                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+              >
+                <p className="font-medium text-zinc-100">{row.title}</p>
+                <p className="text-[10px] text-zinc-500">{row.artifactType}</p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void runCommand(`add note: review artifact ${row.title.replace(/"/g, "'")}`)
+                  }
+                  className={`mt-2 ${mobileChipClass(btnFocus)}`}
+                >
+                  Log note in Chat
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </MobileTabSection>
+
+      <MobileTabSection
+        id="integrations-ssh"
+        title="SSH targets"
+        description="Infrastructure nodes in the hub; register new targets from Chat."
+      >
+        {snapshot.sshTargetsPeek.length === 0 ? (
+          <p className="mt-2 text-[11px] text-zinc-500">No SSH targets. Total: {snapshot.sshTargetsCount}.</p>
+        ) : (
+          <ul className="mt-2 space-y-2">
+            {snapshot.sshTargetsPeek.map((row) => (
+              <li
+                key={row.id}
+                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+              >
+                <p className="font-medium text-zinc-100">{row.name}</p>
+                <p className="text-[10px] text-zinc-500">{row.host}</p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void runCommand(`add note: SSH target ${row.name} (${row.host})`)
+                  }
+                  className={`mt-2 ${mobileChipClass(btnFocus)}`}
+                >
+                  Log note in Chat
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </MobileTabSection>
+
+      <MobileTabSection
         id="integrations-quick-add"
         title="Quick add"
         description="Sends a command like Chat — use Chat for ad-hoc phrasing."
@@ -134,6 +196,22 @@ export const MobileIntegrationsView = ({
             className={mobileChipClass(btnFocus)}
           >
             Add contact source
+          </button>
+          <button
+            type="button"
+            onClick={() => void runCommand('add integration artifact: weekly metrics rollup')}
+            className={mobileChipClass(btnFocus)}
+          >
+            Add artifact stub
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void runCommand('add ssh: name: staging host: staging.internal port: 22 user: deploy')
+            }
+            className={mobileChipClass(btnFocus)}
+          >
+            Add SSH stub
           </button>
         </div>
       </MobileTabSection>

@@ -5,6 +5,7 @@ import {
   History,
   MessageCircle
 } from 'lucide-react';
+import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
 
 export interface ChatMessage {
   id: string;
@@ -20,18 +21,6 @@ export interface ChatMessage {
     opportunities: number;
   };
 }
-
-/** Curated starters; full flexibility stays in the composer. */
-const CHAT_QUICK_STARTERS = [
-  'add note: prep growth sprint summary for Monday',
-  'draft outreach: quick follow-up with warm lead from demo',
-  'draft post: three lessons from building an AI growth system',
-  'pipeline health',
-  'update opportunity to proposal',
-  'reschedule posts to friday 11am',
-  'configure: cadence balanced, remind before 20 min',
-  'connect notion source: Growth workspace'
-] as const;
 
 function chipClass(btnFocus: string) {
   return `rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-left text-xs text-zinc-300 ${btnFocus}`;
@@ -74,7 +63,8 @@ export const MobileChatView = ({
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Chat</h2>
             <p className="text-[11px] text-zinc-500">
-              Commands to the local agent — counts and pulse live on Today; clear transcript in Settings.
+              Commands run locally on-device. Starters and history run as soon as you tap them; counts and pulse live on
+              Today; clear transcript in Settings.
             </p>
           </div>
         </div>
@@ -158,19 +148,28 @@ export const MobileChatView = ({
         >
           <span className="inline-flex items-center gap-2">
             Command starters
-            <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">(tap to expand)</span>
+            <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">
+              (tap to expand — chips run immediately)
+            </span>
           </span>
         </summary>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {CHAT_QUICK_STARTERS.map((command) => (
-            <button
-              key={command}
-              type="button"
-              onClick={() => onQuickCommand(command)}
-              className={chipClass(btnFocus)}
-            >
-              {command}
-            </button>
+        <div className="mt-3 space-y-4">
+          {CHAT_QUICK_STARTER_GROUPS.map((group) => (
+            <div key={group.id}>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{group.label}</p>
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {group.commands.map((command) => (
+                  <button
+                    key={command}
+                    type="button"
+                    onClick={() => onQuickCommand(command)}
+                    className={chipClass(btnFocus)}
+                  >
+                    {command}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </details>

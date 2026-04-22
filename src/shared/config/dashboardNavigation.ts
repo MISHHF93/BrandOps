@@ -79,7 +79,7 @@ export const cockpitNavigationGroups: Array<{
   },
   {
     title: 'Other windows',
-    description: 'Integrations + Settings, Help, or the primary app on the Chat tab (mobile.html).',
+    description: 'Same four-tab shell in another HTML entry (extension packaging): Integrations options page, Help, or primary mobile with Chat selected.',
     items: [
       {
         id: 'nav-integrations',
@@ -91,14 +91,14 @@ export const cockpitNavigationGroups: Array<{
       {
         id: 'nav-knowledge',
         label: 'Help page',
-        description: 'Full manual (opens help.html, Cockpit tab).',
+        description: 'Full manual (opens help.html, starts on Today tab in the same shell).',
         type: 'surface',
         target: 'help'
       },
       {
         id: 'nav-dashboard',
-        label: 'Main app (Chat)',
-        description: 'Primary mobile surface with the Chat tab selected.',
+        label: 'Primary app (Chat)',
+        description: 'mobile.html or dashboard.html with the Chat tab selected.',
         type: 'surface',
         target: 'dashboard'
       }

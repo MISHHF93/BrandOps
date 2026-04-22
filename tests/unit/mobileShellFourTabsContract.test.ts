@@ -28,6 +28,14 @@ describe('MobileApp four-tab wiring (contract)', () => {
     expect(mobileApp).toContain('onSelectWorkstream={handleSelectWorkstream}');
   });
 
+  it('threads primeChat into Today and workspace data handlers into Settings', () => {
+    const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
+    expect(cockpitJsx).toContain('primeChat={primeChat}');
+    expect(mobileApp).toContain('onExportWorkspace={exportWorkspace}');
+    expect(mobileApp).toContain('onImportWorkspace={importWorkspace}');
+    expect(mobileApp).toContain('onRequestResetWorkspace');
+  });
+
   it('exposes bottom nav labels aligned with URL tokens (chat, today, integrations, settings)', () => {
     expect(mobileApp).toContain('MOBILE_SHELL_NAV_TABS');
     const tabConfig = read('src/pages/mobile/mobileTabConfig.ts');

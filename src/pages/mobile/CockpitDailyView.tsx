@@ -2,20 +2,51 @@ import { CalendarCheck2, Sparkles } from 'lucide-react';
 import type { IntelligenceSignal } from '../../services/intelligence/localIntelligence';
 import {
   cockpitNavigationGroups,
+  workspaceModuleToDashboardSection,
   type DashboardSectionId
 } from '../../shared/config/dashboardNavigation';
+import { workspaceModules } from '../../shared/config/modules';
 import { hrefExtensionIntegrationsPage } from '../../shared/navigation/navigationIntents';
+import type { WorkspaceModuleId } from '../../types/domain';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 import { CockpitWorkstreamBar } from './CockpitWorkstreamBar';
 import { MobileTabPageHeader } from './mobileTabPrimitives';
 
 const dashboardAreas = cockpitNavigationGroups[0]?.items.filter((item) => item.type === 'section') ?? [];
 
+const MODULE_WORKSTREAM: Partial<Record<WorkspaceModuleId, DashboardSectionId>> = {
+  ...workspaceModuleToDashboardSection,
+  'command-center': 'today',
+  settings: 'connections',
+  'linkedin-companion': 'brand-content'
+};
+
+const MODULE_TRY_COMMAND: Partial<Record<WorkspaceModuleId, string>> = {
+  'command-center': 'pipeline health',
+  'brand-vault': 'add content: brand narrative asset',
+  'content-library': 'add content: library seed idea',
+  'publishing-queue': 'draft post: weekly insight from the workspace',
+  'outreach-workspace': 'draft outreach: warm follow-up after intro call',
+  'pipeline-crm': 'pipeline health',
+  'scheduler-engine': 'create follow up: weekly plan review',
+  'linkedin-companion': 'add note: LinkedIn companion capture',
+  settings: 'configure: cadence balanced, remind before 20 min'
+};
+
+const SECTION_JUMP_LABEL: Record<DashboardSectionId, string> = {
+  today: 'Today',
+  pipeline: 'Pipeline',
+  'brand-content': 'Brand & content',
+  connections: 'Connections'
+};
+
 export interface CockpitDailyViewProps {
   snapshot: CockpitDailySnapshot;
   btnFocus: string;
   runCommand: (command: string) => void | Promise<void>;
   goToChat: () => void;
+  /** Puts text in the Chat composer (does not send). Use when the agent only targets “first” rows. */
+  primeChat: (line: string) => void;
   onOpenInAppSettings: () => void;
   activeWorkstream: DashboardSectionId;
   onSelectWorkstream: (target: DashboardSectionId) => void;
@@ -64,6 +95,7 @@ export const CockpitDailyView = ({
   btnFocus,
   runCommand,
   goToChat,
+  primeChat,
   onOpenInAppSettings,
   activeWorkstream,
   onSelectWorkstream
@@ -225,6 +257,53 @@ export const CockpitDailyView = ({
             'Create a follow-up in Chat so due-soon items can rank here.'
           )}
         </div>
+        {snapshot.cockpitOpportunityPeek.length > 0 ? (
+          <div className="mt-3 border-t border-white/5 pt-3">
+            <p className="text-[11px] font-medium text-zinc-400">Opportunities in workspace</p>
+            <p className="mt-0.5 text-[10px] text-zinc-600">
+              Read-only peek. Agent stage updates still apply to the first active deal unless you name fields in Chat.
+            </p>
+            <ul className="mt-2 space-y-2">
+              {snapshot.cockpitOpportunityPeek.map((row) => (
+                <li
+                  key={row.id}
+                  className="rounded-lg border border-white/5 bg-zinc-950/35 px-2 py-2 text-[11px] text-zinc-300"
+                >
+                  <p className="font-medium text-zinc-100">
+                    {row.name}
+                    <span className="font-normal text-zinc-500"> · {row.company}</span>
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-zinc-500">
+                    {row.status}
+                    {row.nextAction ? ` · ${row.nextAction}` : ''}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        primeChat(
+                          `add note: review deal ${row.company} — ${row.name} (${row.status})`
+                        )
+                      }
+                      className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus}`}
+                    >
+                      Draft note in Chat
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        primeChat(`draft outreach: follow up on ${row.company} re: ${row.name}`)
+                      }
+                      className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus}`}
+                    >
+                      Draft outreach in Chat
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <div className="mt-2 flex flex-wrap gap-1.5">
           <button
             type="button"
@@ -264,6 +343,54 @@ export const CockpitDailyView = ({
           'No content in the library yet.',
           'In Chat: add content: … and optional status so priority can rank (e.g. add content: AI growth memo draft, status draft).'
         )}
+        {snapshot.cockpitContentPeek.length > 0 ? (
+          <div className="mt-3 border-t border-white/5 pt-3">
+            <p className="text-[11px] font-medium text-zinc-400">Content library (top)</p>
+            <ul className="mt-2 space-y-2">
+              {snapshot.cockpitContentPeek.map((row) => (
+                <li
+                  key={row.id}
+                  className="rounded-lg border border-white/5 bg-zinc-950/35 px-2 py-2 text-[11px] text-zinc-300"
+                >
+                  <p className="font-medium text-zinc-100">{row.title}</p>
+                  <p className="text-[10px] text-zinc-500">{row.status}</p>
+                  <button
+                    type="button"
+                    onClick={() => primeChat(`add note: refine content "${row.title.replace(/"/g, "'")}"`)}
+                    className={`mt-2 rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus}`}
+                  >
+                    Draft note in Chat
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {snapshot.cockpitPublishingPeek.length > 0 ? (
+          <div className="mt-3 border-t border-white/5 pt-3">
+            <p className="text-[11px] font-medium text-zinc-400">Publishing queue (top)</p>
+            <ul className="mt-2 space-y-2">
+              {snapshot.cockpitPublishingPeek.map((row) => (
+                <li
+                  key={row.id}
+                  className="rounded-lg border border-white/5 bg-zinc-950/35 px-2 py-2 text-[11px] text-zinc-300"
+                >
+                  <p className="font-medium text-zinc-100">{row.title}</p>
+                  <p className="text-[10px] text-zinc-500">{row.status}</p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      primeChat(`update publishing: ${row.title.replace(/"/g, "'")} checklist ready`)
+                    }
+                    className={`mt-2 rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus}`}
+                  >
+                    Prime publishing command
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <div className="mt-2 flex flex-wrap gap-1.5">
           <button
             type="button"
@@ -307,7 +434,65 @@ export const CockpitDailyView = ({
             SSH targets: <span className="text-zinc-100">{snapshot.sshTargetsCount}</span>
           </li>
         </ul>
+        <p className="mt-2 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Sync providers</p>
+        <ul className="mt-1 space-y-1 text-[11px] text-zinc-400">
+          {snapshot.providerStatuses.map((p) => (
+            <li key={p.id} className="flex justify-between gap-2">
+              <span className="text-zinc-500">{p.id}</span>
+              <span className="text-zinc-200">{p.status}</span>
+            </li>
+          ))}
+        </ul>
       </section>
+
+      <details className="group rounded-xl border border-white/10 bg-zinc-950/25 p-3 open:shadow-inner">
+        <summary
+          className={`cursor-pointer list-none text-xs font-semibold uppercase tracking-wide text-zinc-500 ${btnFocus} [&::-webkit-details-marker]:hidden`}
+        >
+          <span className="inline-flex items-center gap-2">
+            Workspace lanes (from product modules)
+            <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">(tap)</span>
+          </span>
+        </summary>
+        <p className="mt-2 text-[10px] leading-snug text-zinc-600">
+          Maps your migrated web-era modules to Today work areas and Chat commands — deep panels were folded into the agent;
+          this is your compass.
+        </p>
+        <ul className="mt-3 space-y-3">
+          {workspaceModules
+            .filter((m) => m.status === 'active')
+            .map((m) => {
+              const section = MODULE_WORKSTREAM[m.id];
+              const seed = MODULE_TRY_COMMAND[m.id];
+              return (
+                <li key={m.id} className="rounded-lg border border-white/5 bg-zinc-900/40 p-2.5">
+                  <p className="text-[12px] font-medium text-zinc-100">{m.title}</p>
+                  <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">{m.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {section ? (
+                      <button
+                        type="button"
+                        onClick={() => onSelectWorkstream(section)}
+                        className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-[10px] ${btnFocus}`}
+                      >
+                        Go to {SECTION_JUMP_LABEL[section]}
+                      </button>
+                    ) : null}
+                    {seed ? (
+                      <button
+                        type="button"
+                        onClick={() => void runCommand(seed)}
+                        className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-[10px] ${btnFocus}`}
+                      >
+                        Run starter
+                      </button>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+        </ul>
+      </details>
     </div>
   );
 };

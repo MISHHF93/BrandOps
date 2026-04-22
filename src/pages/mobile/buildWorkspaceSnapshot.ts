@@ -14,6 +14,39 @@ export type MobileIntegrationSourceRow = {
   status: 'planned' | 'connected' | 'monitoring';
 };
 
+/** Read-only Today tab / Cockpit pipeline peek (agent still mutates “first” opportunity by default). */
+export type CockpitOpportunityPeekRow = {
+  id: string;
+  name: string;
+  company: string;
+  status: string;
+  nextAction: string;
+};
+
+export type CockpitContentPeekRow = {
+  id: string;
+  title: string;
+  status: string;
+};
+
+export type CockpitPublishingPeekRow = {
+  id: string;
+  title: string;
+  status: string;
+};
+
+export type CockpitArtifactPeekRow = {
+  id: string;
+  title: string;
+  artifactType: string;
+};
+
+export type CockpitSshPeekRow = {
+  id: string;
+  name: string;
+  host: string;
+};
+
 /**
  * Per-tab aggregate view of `BrandOpsData` for `MobileApp` (Cockpit, Settings, Integrations).
  * Always built from a real or provisional {@link BrandOpsData} so UI never null-gates on snapshot.
@@ -60,6 +93,11 @@ export interface MobileWorkspaceSnapshot {
   sshTargetsCount: number;
   nextPublishingHint: string | null;
   settingsFullReadout: MobileSettingsFullReadout;
+  cockpitOpportunityPeek: CockpitOpportunityPeekRow[];
+  cockpitContentPeek: CockpitContentPeekRow[];
+  cockpitPublishingPeek: CockpitPublishingPeekRow[];
+  integrationArtifactsPeek: CockpitArtifactPeekRow[];
+  sshTargetsPeek: CockpitSshPeekRow[];
 }
 
 /** Fields required by {@link CockpitDailyView}; keeps props in sync with {@link MobileWorkspaceSnapshot}. */
@@ -85,6 +123,10 @@ export type CockpitDailySnapshot = Pick<
   | 'integrationArtifactCount'
   | 'sshTargetsCount'
   | 'nextPublishingHint'
+  | 'cockpitOpportunityPeek'
+  | 'cockpitContentPeek'
+  | 'cockpitPublishingPeek'
+  | 'providerStatuses'
 >;
 
 export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspaceSnapshot {
@@ -143,6 +185,36 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     pipelineSignals,
     cadenceHeadline,
     settingsFullReadout: buildMobileSettingsFullReadout(workspace),
+    cockpitOpportunityPeek: activeOpportunities.slice(0, 5).map((o) => ({
+      id: o.id,
+      name: o.name,
+      company: o.company,
+      status: o.status,
+      nextAction: o.nextAction
+    })),
+    cockpitContentPeek: workspace.contentLibrary
+      .filter((c) => c.status !== 'archived')
+      .slice(0, 5)
+      .map((c) => ({
+        id: c.id,
+        title: c.title,
+        status: c.status
+      })),
+    cockpitPublishingPeek: workspace.publishingQueue.slice(0, 5).map((p) => ({
+      id: p.id,
+      title: p.title,
+      status: p.status
+    })),
+    integrationArtifactsPeek: workspace.integrationHub.artifacts.slice(0, 8).map((a) => ({
+      id: a.id,
+      title: a.title,
+      artifactType: a.artifactType
+    })),
+    sshTargetsPeek: workspace.integrationHub.sshTargets.slice(0, 8).map((s) => ({
+      id: s.id,
+      name: s.name,
+      host: s.host
+    })),
     ...cockpitExtras
   };
 }

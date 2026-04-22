@@ -34,6 +34,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     );
     expect(html).toContain('aria-label="Chat"');
     expect(html).toContain('Command starters');
+    expect(html).toContain('Today &amp; capture');
+    expect(html).toContain('Pipeline &amp; outreach');
     expect(html).toContain('Recent commands');
     expect(html).toContain('pipeline health');
     expect(html).toContain('details');
@@ -46,6 +48,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         btnFocus: '',
         runCommand: noop,
         goToChat: noop,
+        primeChat: noop,
         onOpenInAppSettings: noop,
         activeWorkstream: 'today',
         onSelectWorkstream: noop
@@ -78,6 +81,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Provider status');
     expect(html).toContain('Quick add');
     expect(html).toContain('Add connection');
+    expect(html).toContain('Synced artifacts');
+    expect(html).toContain('SSH targets');
   });
 
   it('Integrations: lists hub rows when workspace has sources', () => {
@@ -88,7 +93,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         runCommand: noop
       })
     );
-    expect(html).toContain('Refine in Chat');
+    expect(html).toContain('Log note in Chat');
     expect(html).not.toContain('No sources in this workspace yet');
   });
 
@@ -118,6 +123,15 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     });
   });
 
+  it('buildWorkspaceSnapshot exposes cockpit peek rows for Today and Integrations tabs', () => {
+    const demo = buildWorkspaceSnapshot(cloneDemoSampleData());
+    expect(Array.isArray(demo.cockpitOpportunityPeek)).toBe(true);
+    expect(Array.isArray(demo.cockpitContentPeek)).toBe(true);
+    expect(Array.isArray(demo.cockpitPublishingPeek)).toBe(true);
+    expect(Array.isArray(demo.integrationArtifactsPeek)).toBe(true);
+    expect(Array.isArray(demo.sshTargetsPeek)).toBe(true);
+  });
+
   it('Settings: preferences panel, presets, session, extension block (mobile host shows new-tab CTA)', () => {
     const html = renderToString(
       React.createElement(MobileSettingsView, {
@@ -127,6 +141,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         applySettingsConfigure: asyncNoop,
         applyBusy: false,
         onRequestClearChat: noop,
+        onExportWorkspace: asyncNoop,
+        onImportWorkspace: asyncNoop,
+        onRequestResetWorkspace: noop,
         documentSurface: 'mobile'
       })
     );
@@ -134,6 +151,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Preferences');
     expect(html).toContain('One-tap configure presets');
     expect(html).toContain('Session');
+    expect(html).toContain('Workspace data');
+    expect(html).toContain('Export workspace JSON');
     expect(html).toContain('Extension shell');
     expect(html).toContain('Open integrations page in a new tab');
   });
@@ -147,6 +166,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         applySettingsConfigure: asyncNoop,
         applyBusy: false,
         onRequestClearChat: noop,
+        onExportWorkspace: asyncNoop,
+        onImportWorkspace: asyncNoop,
+        onRequestResetWorkspace: noop,
         documentSurface: 'integrations'
       })
     );

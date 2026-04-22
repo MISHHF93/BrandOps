@@ -1,67 +1,73 @@
-/** Single source of truth: where each capability primarily lives vs quick entry points. */
-
-export type CockpitSurfaceId = 'dashboard' | 'integrations';
+/**
+ * Where each capability primarily lives in the four-tab `MobileApp` shell.
+ * Tab ids match bottom nav / `MobileShellTabId` in `src/pages/mobile/mobileShellQuery.ts`.
+ */
+export type AppShellTabId = 'chat' | 'daily' | 'integrations' | 'settings';
 
 export interface CockpitCapability {
   id: string;
   label: string;
   summary: string;
-  primarySurface: CockpitSurfaceId;
-  secondarySurfaces: CockpitSurfaceId[];
+  primaryTab: AppShellTabId;
+  secondaryTabs: AppShellTabId[];
 }
 
 export const cockpitCapabilities: CockpitCapability[] = [
   {
     id: 'brand-vault',
     label: 'Brand narrative',
-    summary: 'Dashboard · Brand & content — positioning, offers, voice, and reusable story assets.',
-    primarySurface: 'dashboard',
-    secondarySurfaces: []
+    summary: 'Today · Brand & content — positioning, offers, voice, and reusable story assets. Refine in Chat.',
+    primaryTab: 'daily',
+    secondaryTabs: ['chat']
   },
   {
     id: 'content-publishing',
     label: 'Content library and publishing',
-    summary: 'Dashboard · Brand & content — ideas, drafts, queue, and ship rhythm.',
-    primarySurface: 'dashboard',
-    secondarySurfaces: []
+    summary: 'Today · Brand & content — ideas, drafts, queue, and ship rhythm. Refine in Chat.',
+    primaryTab: 'daily',
+    secondaryTabs: ['chat']
   },
   {
     id: 'growth-pipeline',
     label: 'Outreach and pipeline',
-    summary: 'Dashboard · Pipeline — targets, CRM, follow-ups, and revenue motion.',
-    primarySurface: 'dashboard',
-    secondarySurfaces: []
+    summary: 'Today · Pipeline — targets, CRM, follow-ups, and revenue motion. Refine in Chat.',
+    primaryTab: 'daily',
+    secondaryTabs: ['chat']
   },
   {
     id: 'scheduler-cadence',
     label: 'Scheduler and cadence',
-    summary: 'Due work, reminders, and day shape — deep tuning in Settings.',
-    primarySurface: 'dashboard',
-    secondarySurfaces: ['integrations']
+    summary: 'Due work and reminders on Today; cadence and workday caps in Settings.',
+    primaryTab: 'daily',
+    secondaryTabs: ['settings']
   },
   {
     id: 'integrations-manual',
     label: 'Manual integrations hub',
-    summary: 'External sources, artifacts, SSH nodes — register and edit here.',
-    primarySurface: 'integrations',
-    secondarySurfaces: ['dashboard']
+    summary: 'Integrations tab — sources, artifacts, SSH nodes. Register and refine via Chat when needed.',
+    primaryTab: 'integrations',
+    secondaryTabs: ['chat', 'daily']
   },
   {
     id: 'sync-models-archive',
     label: 'Identity, models, backups, debug',
-    summary: 'Provider accounts, AI mode, export/import, and diagnostics.',
-    primarySurface: 'integrations',
-    secondarySurfaces: []
+    summary: 'Settings — provider accounts, AI mode, export/import, reset, and diagnostics.',
+    primaryTab: 'settings',
+    secondaryTabs: ['integrations']
   }
 ];
 
-export function surfaceLabel(surface: CockpitSurfaceId): string {
-  switch (surface) {
-    case 'dashboard':
-      return 'Dashboard';
+export function appShellTabLabel(tab: AppShellTabId): string {
+  switch (tab) {
+    case 'chat':
+      return 'Chat';
+    case 'daily':
+      return 'Today';
     case 'integrations':
       return 'Integrations';
+    case 'settings':
+      return 'Settings';
     default:
-      return surface;
+      return tab;
   }
 }

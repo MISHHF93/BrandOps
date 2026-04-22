@@ -20,6 +20,7 @@ import { MobileSettingsView } from './MobileSettingsView';
 import { buildWorkspaceSnapshot, type MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
+import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
 
 const uid = () => `msg-${Math.random().toString(36).slice(2, 9)}`;
@@ -156,8 +157,10 @@ function readInitialShellState(initialTab: MobileShellTabId): {
 export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: MobileAppProps) => {
   const dialogDestrId = useId();
   const dialogClearId = useId();
+  const dialogResetId = useId();
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
   const clearConfirmRef = useRef<HTMLButtonElement>(null);
+  const resetConfirmRef = useRef<HTMLButtonElement>(null);
   const cockpitSectionScrollRef = useRef(false);
 
   const [initialShell] = useState(() => readInitialShellState(initialTab));
@@ -171,6 +174,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [commandHistory, setCommandHistory] = useState<string[]>(() => readCommandChips());
   const [pendingDestructive, setPendingDestructive] = useState<string | null>(null);
   const [pendingClearChat, setPendingClearChat] = useState(false);
+  const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
+  const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
@@ -250,10 +255,17 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     }
   }, [pendingClearChat]);
 
-  const sendQuickCommand = (command: string) => {
-    setInput(command);
-    commitTab('chat');
-  };
+  useEffect(() => {
+    if (pendingResetWorkspace) {
+      resetConfirmRef.current?.focus();
+    }
+  }, [pendingResetWorkspace]);
+
+  useEffect(() => {
+    if (!dataOpsHint) return;
+    const t = window.setTimeout(() => setDataOpsHint(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [dataOpsHint]);
 
   const executeCommandFlow = async (trimmed: string) => {
     if (!trimmed || loading) return;
@@ -307,6 +319,17 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     void executeCommandFlow(trimmed);
   };
 
+  /** Switches to Chat and runs the command immediately (same engine as Send). */
+  const sendQuickCommand = (command: string) => {
+    const trimmed = command.trim();
+    if (!trimmed || loading) return;
+    commitTab('chat');
+    setInput('');
+    queueMicrotask(() => {
+      startSend(trimmed);
+    });
+  };
+
   const runCommand = async (command: string) => {
     const trimmed = command.trim();
     if (!trimmed || loading) return;
@@ -316,6 +339,39 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     }
     await executeCommandFlow(trimmed);
   };
+
+  const primeChat = useCallback(
+    (line: string) => {
+      commitTab('chat');
+      setInput(line);
+    },
+    [commitTab]
+  );
+
+  const exportWorkspace = useCallback(async () => {
+    try {
+      const raw = await storageService.exportData();
+      const blob = new Blob([raw], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `brandops-workspace-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDataOpsHint('Export downloaded.');
+    } catch (e) {
+      setDataOpsHint(e instanceof Error ? e.message : 'Export failed.');
+    }
+  }, []);
+
+  const importWorkspace = useCallback(
+    async (raw: string) => {
+      await storageService.importData(raw);
+      await refreshWorkspaceSnapshot();
+      setDataOpsHint('Workspace imported.');
+    },
+    [refreshWorkspaceSnapshot]
+  );
 
   /** Same engine as Chat `configure:`, but does not append to the chat thread (use from Settings forms). */
   const applySettingsConfigure = useCallback(
@@ -350,9 +406,25 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900/80 to-zinc-950 text-zinc-100">
       <header className="sticky top-0 z-10 border-b border-white/5 bg-gradient-to-r from-indigo-950/40 via-zinc-950/90 to-zinc-950/95 px-4 py-3 shadow-lg shadow-black/20 backdrop-blur-md">
-        <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">BrandOps Mobile</p>
-        <h1 className="text-lg font-semibold tracking-tight text-zinc-50">AI Agent</h1>
-        <p className="text-[11px] text-zinc-500">Command-first workspace; local execution</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">BrandOps Mobile</p>
+            <h1 className="text-lg font-semibold tracking-tight text-zinc-50">AI Agent</h1>
+            <p className="text-[11px] text-zinc-500">Command-first workspace; local execution</p>
+            {dataOpsHint ? (
+              <p className="mt-1 text-[10px] text-indigo-300/90" role="status">
+                {dataOpsHint}
+              </p>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={() => openExtensionSurface('help')}
+            className={`shrink-0 rounded-lg border border-white/10 bg-zinc-900/60 px-2.5 py-1.5 text-[11px] font-medium text-zinc-200 hover:border-white/20 hover:bg-zinc-900/80 ${btnFocus}`}
+          >
+            Help
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto w-full max-w-md px-4 pb-32 pt-4">
@@ -381,6 +453,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 btnFocus={btnFocus}
                 runCommand={runCommand}
                 goToChat={() => commitTab('chat')}
+                primeChat={primeChat}
                 onOpenInAppSettings={() => commitTab('settings')}
                 activeWorkstream={cockpitWorkstream}
                 onSelectWorkstream={handleSelectWorkstream}
@@ -404,6 +477,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 applySettingsConfigure={applySettingsConfigure}
                 applyBusy={loading}
                 onRequestClearChat={() => setPendingClearChat(true)}
+                onExportWorkspace={exportWorkspace}
+                onImportWorkspace={importWorkspace}
+                onRequestResetWorkspace={() => setPendingResetWorkspace(true)}
                 documentSurface={surfaceLabel}
               />
             ) : null}
@@ -523,6 +599,59 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 }}
               >
                 Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingResetWorkspace ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setPendingResetWorkspace(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={dialogResetId}
+            className="w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-900 p-4 shadow-2xl"
+          >
+            <h2 id={dialogResetId} className="text-base font-semibold text-zinc-100">
+              Reset workspace to seed data?
+            </h2>
+            <p className="mt-2 text-sm text-zinc-400">
+              Replaces all BrandOps workspace data on this device with the default seed. Chat transcript and command chips
+              are not cleared — use Settings session actions if you want those gone.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                className={`rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-300 ${btnFocus}`}
+                onClick={() => setPendingResetWorkspace(false)}
+              >
+                Cancel
+              </button>
+              <button
+                ref={resetConfirmRef}
+                type="button"
+                className={`rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white ${btnFocus}`}
+                onClick={() => {
+                  setPendingResetWorkspace(false);
+                  void (async () => {
+                    try {
+                      await storageService.resetToSeed();
+                      await refreshWorkspaceSnapshot();
+                      setDataOpsHint('Workspace reset to seed.');
+                    } catch (e) {
+                      setDataOpsHint(e instanceof Error ? e.message : 'Reset failed.');
+                    }
+                  })();
+                }}
+              >
+                Reset workspace
               </button>
             </div>
           </div>

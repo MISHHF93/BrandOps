@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { Settings2 } from 'lucide-react';
 import type { CadenceFlowMode, VisualMode, MotionMode } from '../../types/domain';
+import { hrefHelpPage } from '../../shared/navigation/navigationIntents';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
@@ -388,6 +390,9 @@ export interface MobileSettingsViewProps {
   applySettingsConfigure: (configurePayloadOrLine: string) => Promise<void>;
   applyBusy: boolean;
   onRequestClearChat: () => void;
+  onExportWorkspace: () => Promise<void>;
+  onImportWorkspace: (raw: string) => Promise<void>;
+  onRequestResetWorkspace: () => void;
   /** Host document; avoids offering a duplicate `integrations.html` tab when already there. */
   documentSurface: AppDocumentSurfaceId | 'chatbot';
 }
@@ -399,11 +404,37 @@ export const MobileSettingsView = ({
   snapshot,
   btnFocus,
   onRequestClearChat,
+  onExportWorkspace,
+  onImportWorkspace,
+  onRequestResetWorkspace,
   documentSurface,
   runCommand,
   applySettingsConfigure,
   applyBusy
 }: MobileSettingsViewProps) => {
+  const importRef = useRef<HTMLInputElement>(null);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!importMessage) return;
+    const t = window.setTimeout(() => setImportMessage(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [importMessage]);
+
+  const onImportPick = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      await onImportWorkspace(await file.text());
+      setImportMessage('Imported successfully.');
+    } catch (err) {
+      setImportMessage(err instanceof Error ? err.message : 'Import failed.');
+    }
+  };
+
+  const dataBtn = `w-full rounded-lg border border-zinc-600/50 bg-zinc-900/50 px-2.5 py-2 text-left text-[12px] text-zinc-200 hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
+
   return (
     <div className="mt-2 space-y-5" aria-label="Settings">
       <MobileTabPageHeader
@@ -420,6 +451,21 @@ export const MobileSettingsView = ({
         applyBusy={applyBusy}
         btnFocus={btnFocus}
       />
+
+      <MobileTabSection
+        id="settings-help"
+        title="Help"
+        description="Command reference, onboarding, and troubleshooting — opens the packaged Help page (same extension)."
+      >
+        <a
+          href={hrefHelpPage()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`mt-2 flex w-full items-center justify-center rounded-lg border border-indigo-500/40 bg-indigo-950/40 px-2.5 py-2 text-center text-[12px] font-medium text-indigo-100 hover:bg-indigo-900/30 ${btnFocus}`}
+        >
+          Open Help (new tab)
+        </a>
+      </MobileTabSection>
 
       <MobileTabSection
         id="settings-presets"
@@ -451,6 +497,91 @@ export const MobileSettingsView = ({
               {preset.label}
             </button>
           ))}
+        </div>
+      </MobileTabSection>
+
+      <MobileTabSection
+        id="settings-audit"
+        title="Recent agent activity"
+        description="Commands that touched workspace data, newest first. Re-run repeats the same line in Chat."
+      >
+        {snapshot.recentAudit.length === 0 ? (
+          <p className="mt-2 text-[11px] text-zinc-500">
+            No commands recorded yet. Run a command in Chat to populate this list.
+          </p>
+        ) : (
+          <ul className="mt-2 space-y-2">
+            {snapshot.recentAudit.map((entry) => (
+              <li
+                key={entry.id}
+                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2.5 py-2 text-[11px] text-zinc-300"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <code className="break-all text-left text-[10px] text-indigo-200/95">{entry.commandPreview}</code>
+                  <span
+                    className={`shrink-0 text-[10px] font-medium uppercase ${
+                      entry.ok ? 'text-emerald-400/90' : 'text-amber-300/90'
+                    }`}
+                  >
+                    {entry.ok ? 'ok' : 'issue'}
+                  </span>
+                </div>
+                <p className="mt-1 text-[10px] leading-snug text-zinc-500">{entry.summary}</p>
+                <button
+                  type="button"
+                  onClick={() => void runCommand(entry.commandPreview)}
+                  className={`mt-2 ${mobileChipClass(btnFocus)}`}
+                >
+                  Run again
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </MobileTabSection>
+
+      <MobileTabSection
+        id="settings-data"
+        title="Workspace data"
+        description="Export a JSON backup, import a prior export, or reset to the built-in seed (destructive)."
+      >
+        <input
+          ref={importRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => void onImportPick(e)}
+        />
+        {importMessage ? (
+          <p className="mb-2 rounded border border-zinc-600/40 bg-zinc-950/50 px-2 py-1.5 text-[11px] text-zinc-300">
+            {importMessage}
+          </p>
+        ) : null}
+        <div className="mt-2 flex flex-col gap-2">
+          <button
+            type="button"
+            disabled={applyBusy}
+            onClick={() => void onExportWorkspace()}
+            className={dataBtn}
+          >
+            Export workspace JSON
+          </button>
+          <button
+            type="button"
+            disabled={applyBusy}
+            onClick={() => importRef.current?.click()}
+            className={dataBtn}
+          >
+            Import workspace JSON…
+          </button>
+          <button
+            type="button"
+            disabled={applyBusy}
+            onClick={onRequestResetWorkspace}
+            className={`${dataBtn} border-amber-600/40 text-amber-100/95`}
+          >
+            Reset workspace to seed…
+          </button>
         </div>
       </MobileTabSection>
 
