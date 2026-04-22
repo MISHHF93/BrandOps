@@ -1,13 +1,34 @@
 /**
  * BrandOps extension — URL & page hierarchy (single source of truth)
  *
+ * **Knowledge Center (two valid entry points, different UX):** `SurfaceNavLinks` and footer links
+ * use `dashboard.html?overlay=help` to open the **in-dashboard Knowledge overlay** on the Chat
+ * tab without leaving the document. A separate `help.html` page loads the same `MobileApp` shell
+ * with **initial tab daily** (Cockpit / daily-brief) — use `buildHelpUrl` / the Help extension page
+ * when a full page is needed. Do not add a third “help” route without updating this file.
+ *
+ * **Settings / Integrations (two valid entry points):** Chrome MV3 `options_ui` points at `integrations.html`
+ * (merged shell: Integrations tab default, Settings on the bar). In-app: `mobile.html?section=settings` for Settings only.
+ *
+ * **Programmatic navigation** (see `openExtensionSurface`):
+ *   • `openExtensionSurface('integrations'|'help')` → new tab: `integrations.html` | `help.html`
+ *   • `openExtensionSurface('dashboard', section?)` → `mobile.html?section=<workstream>` or, if no section,
+ *     `mobile.html?section=chat` (not `dashboard.html`)
+ *   • `openExtensionSurface('integration-hub')` → `integrations.html` (alias)
+ * Build helpers: `buildDashboardUrl`, `buildMobileCockpitUrl`, `buildMobileShellUrl`, `buildHelpUrl`, `buildWelcome*`.
+ * Link matrix for humans: `SurfaceNavLinks`, `src/shared/navigation/navigateCrownFromExtensionSurface`.
+ *
+ * Layer 0 — Peripheral (not `MobileApp`; OAuth redirect / legal):
+ *   public/oauth/{google,github,linkedin}-brandops.html   OAuth callback UIs
+ *   public/privacy-policy.html  → bundled legal; `getPrivacyPolicyHref` may point hosted URL
+ *
  * Layer 1 — Shell / HTML surfaces (each is its own document):
  *   index.html          → site root; redirects to mobile.html (chatbot-first hosted preview entry)
- *   mobile.html         → primary AI chatbot application surface
- *   welcome.html        → chatbot surface (welcome-oriented entry route)
- *   dashboard.html      → chatbot surface (legacy route retained for compatibility)
- *   options.html        → chatbot settings surface (`options_ui` in manifest + `openExtensionSurface('options')`)
- *   help.html           → chatbot daily-brief surface
+ *   mobile.html         → primary AI chatbot application surface (`data-app-surface="mobile"`)
+ *   welcome.html        → chatbot surface (`data-app-surface="welcome"`)
+ *   dashboard.html      → chatbot surface; `?section` without `overlay` → redirect to `mobile.html`
+ *   integrations.html  → same `MobileApp` shell (`options_ui` in manifest; `data-app-surface="integrations"`)
+ *   help.html           → `MobileApp` on Cockpit/daily initial tab (`data-app-surface="help"`)
  *   privacy-policy.html → static legal (bundled)
  *
  * Layer 2 — Welcome deep link (one optional query param):
@@ -17,20 +38,31 @@
  * Legacy: ?auth=signup|signin is still read and normalized to ?flow= or a clean URL.
  *
  * Layer 3 — Other queries:
- *   dashboard.html?section=<id>     → cockpit section
+ *   mobile.html?section=<token>  → in-app `MobileApp` (see `parseMobileShellFromSearchParams` in `src/pages/mobile/mobileShellQuery.ts`):
+ *     • Tab: `chat` | `settings` | `integrations` | `daily` | `cockpit` (Cockpit defaults workstream to today)
+ *     • Workstream: `today` | `pipeline` | `brand-content` | `connections` and legacy names (`overview` → today, etc.)
+ *   dashboard.html?section=   → legacy/compat; prefer mobile.html for workstream deep links
  *   dashboard.html?overlay=help|settings → open overlay after load (then stripped from URL)
- *   help.html?topic=<id>            → Knowledge Center scroll target
+ *   help.html?topic=<id>            → scroll target in Knowledge (when implemented on that page)
  */
 import type { DashboardSectionId } from '../config/dashboardNavigation';
 
 export const PAGE = {
   welcome: 'welcome.html',
+  mobile: 'mobile.html',
   dashboard: 'dashboard.html',
   help: 'help.html',
-  options: 'options.html',
+  integrations: 'integrations.html',
   privacyPolicy: 'privacy-policy.html',
   index: 'index.html'
 } as const;
+
+/** OAuth callback HTML under `public/`; not the main `MobileApp` shell. */
+export const PERIPHERAL_OAUTH_CALLBACK_PAGES = [
+  'public/oauth/google-brandops.html',
+  'public/oauth/github-brandops.html',
+  'public/oauth/linkedin-brandops.html'
+] as const;
 
 export const QUERY = {
   /** `signup` only. Omitted URL = sign-in flow (canonical: bare welcome.html). */
@@ -53,10 +85,23 @@ export const EXTENSION_ROUTE_CATALOG: Array<{ page: string; query: string; value
     notes: 'Omit param = sign in at welcome.html; ?flow=signup = create account. Legacy ?auth= normalized on load.'
   },
   {
+    page: PAGE.mobile,
+    query: `${QUERY.dashboardSection} (optional)`,
+    values:
+      'Tab: chat | settings | integrations | daily | cockpit — Workstream: today | pipeline | brand-content | connections (+ legacy)',
+    notes: 'One param: tab tokens for bottom nav; workstream ids open Cockpit and scroll. See `mobileShellQuery.ts`.'
+  },
+  {
     page: PAGE.dashboard,
     query: `${QUERY.dashboardSection} | ${QUERY.cockpitOverlay} (optional)`,
-    values: 'sections as above; overlay = help | settings',
-    notes: 'Cockpit section; overlay opens in-page panel once. Legacy #hash migrated once on load.'
+    values: 'legacy section param; overlay = help | settings',
+    notes: 'Chat-first surface; workstreams should use mobile.html?section=. Overlay opens in-page panel once.'
+  },
+  {
+    page: PAGE.integrations,
+    query: `${QUERY.dashboardSection} (optional)`,
+    values: 'Same tab + Cockpit workstream tokens as mobile.html; default UI tab is Integrations',
+    notes: 'Chrome `options_ui` page; `data-app-surface=integrations`.'
   },
   {
     page: PAGE.help,
@@ -119,6 +164,29 @@ export function buildDashboardUrl(opts?: {
   if (opts?.section) params[QUERY.dashboardSection] = opts.section;
   if (opts?.overlay) params[QUERY.cockpitOverlay] = opts.overlay;
   return withQuery(PAGE.dashboard, params);
+}
+
+/**
+ * In-app `mobile.html` with `?section=` for either a **tab** or a **Cockpit workstream** (use `buildMobileCockpitUrl` / `{ workstream }` for the latter only).
+ */
+export function buildMobileShellUrl(
+  opts:
+    | { tab: 'chat' | 'settings' | 'integrations' }
+    | { tab: 'daily' | 'cockpit' }
+    | { workstream: DashboardSectionId }
+): string {
+  if ('workstream' in opts) {
+    return withQuery(PAGE.mobile, { [QUERY.dashboardSection]: opts.workstream });
+  }
+  return withQuery(PAGE.mobile, { [QUERY.dashboardSection]: opts.tab });
+}
+
+/**
+ * Canonical workstream / Cockpit deep link. Same `MobileApp` as the primary chat surface;
+ * `?section` is read on `mobile.html` to open the Cockpit tab and scroll.
+ */
+export function buildMobileCockpitUrl(opts: { section: DashboardSectionId }): string {
+  return buildMobileShellUrl({ workstream: opts.section });
 }
 
 export function buildHelpUrl(opts?: { topic?: string }): string {

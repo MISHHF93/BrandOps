@@ -14,7 +14,7 @@ This document inventories **defining rules** (deterministic scoring, thresholds,
 
 These are the main **deterministic** rule surfaces (good candidates for remote packs or future model proxies).
 
-### 2.1 Cockpit intelligence (`localIntelligence`)
+### 2.1 Heuristic intelligence (`localIntelligence`)
 
 - **Content priority**: base score, per-status bonuses, tag weight/cap, goal-keyword bonus.
 - **Outreach urgency**: status bonuses, stale age threshold (hours), call-intent keyword bonus.
@@ -23,14 +23,14 @@ These are the main **deterministic** rule surfaces (good candidates for remote p
 - **Publishing recommendations**: time windows (e.g. within 2h vs 24h) driving titles and rationale copy.
 - **Template suggestions**: token overlap length threshold and result count.
 
-**Implementation note:** Typed **`IntelligenceRulesPack`** (including **`heat`** / **`digest`**) merges from defaults + optional remote JSON; `localIntelligence`, `executionHeatModel`, and `dailyNotificationCenter` read **`getIntelligenceRules()`** at runtime.
+**Implementation note:** Typed **`IntelligenceRulesPack`** (including **`heat`** / **`digest`**) merges from defaults + optional remote JSON. **`localIntelligence`** and **`dailyNotificationCenter`** read **`getIntelligenceRules()`** at runtime. There is **no** `executionHeatModel` **source file** in `src/` after the chatbot migration; the former cockpit “execution heat” UI used these coefficients but is **not** in the current tree.
 
-### 2.2 Execution heat (`executionHeatModel`)
+### 2.2 Execution heat (rule pack coefficients)
 
-- Heat composition for follow-ups, outreach, publishing, pipeline (fixed point budgets, hour-based boosts, value curves).
-- Managerial / technical notification heat from severity.
+- Coefficients for follow-ups, outreach, publishing, and pipeline bands are defined on the pack under **`heat`** (see `src/rules/`) and merged with optional remote JSON.
+- Managerial / technical “heat” in copy used to power cockpit meters; those React surfaces were removed in favor of **MobileApp** + **`localIntelligence.pipelineHealth`** and digests.
 
-*Implemented:* coefficients live under **`heat`** on the intelligence rules pack (see `src/rules/`).
+*Runtime today:* the **`heat`** object is part of the merged pack and **exposed for tuning**, but `rg` shows **no** `getIntelligenceRules().heat` consumer in `src/services` yet; prefer **`localIntelligence`** outputs and **`dailyNotificationCenter`** for operator-facing signal until a new UI reads `heat` directly.
 
 ### 2.3 Daily execution digest (`dailyNotificationCenter`)
 
@@ -131,8 +131,8 @@ Chrome Web Store builds should document any fixed hosts in `host_permissions` if
 
 | Phase | Scope |
 |-------|--------|
-| **Phase 1 (done in repo)** | `IntelligenceRulesPack` types, defaults mirroring current heuristics, merge+clamp, optional fetch, `localIntelligence` wired to `getIntelligenceRules()`, store `intelligenceRulesEpoch` to refresh dashboard after load. |
-| **Phase 2 (done in repo)** | Nested **`heat`** and **`digest`** on the same pack: `executionHeatModel` + `ExecutionHeatMeter`/`CockpitOperatingBoard` bands and formulas; `dailyNotificationCenter` windows and slice limits. Same merge + `brandops-intelligence-rules.json` path. |
+| **Phase 1 (done in repo)** | `IntelligenceRulesPack` types, defaults, merge+clamp, optional fetch, `localIntelligence` wired to `getIntelligenceRules()`. (Legacy Zustand `intelligenceRulesEpoch` / dashboard refresh paths were **removed** with the chatbot migration.) |
+| **Phase 2 (pack done; UI retired)** | Nested **`heat`** and **`digest`** on the same pack, merged like Phase 1. **`dailyNotificationCenter`** and slice limits are **live**. The **cockpit-only** `ExecutionHeatMeter` / `CockpitOperatingBoard` / `executionHeatModel` **modules are not in `src/`** anymore; do not treat Phase 2 as “a dashboard feature exists.” |
 | **Phase 3** | Signed bundles + version compatibility matrix. |
 | **Phase 4** | Optional inference API: client sends minimal features; server returns scores; client validates and maps to existing UI. |
 
@@ -164,9 +164,9 @@ See `public/brandops-intelligence-rules.example.json` for a fuller template.
 |------|------|
 | Types, merge, runtime | `src/rules/` (`intelligenceRulesTypes.ts`, `intelligenceRulesDefaults.ts`, …) |
 | Heuristics consumer | `src/services/intelligence/localIntelligence.ts` |
-| Heat + digest consumers | `src/pages/dashboard/executionHeatModel.ts`, `src/services/intelligence/dailyNotificationCenter.ts` |
-| Load order | `src/state/useBrandOpsStore.ts` (`init`) |
-| UI refresh | `src/pages/dashboard/dashboardApp.tsx` (memo deps on `intelligenceRulesEpoch`) |
+| Heat + digest consumers | `src/services/intelligence/dailyNotificationCenter.ts` (and any callers that read `BrandOpsData`) |
+| Load order | `src/services/storage/storage.ts` (workspace load / merge into `BrandOpsData`) |
+| UI refresh | Surfaces that read `storageService` or workspace snapshots (e.g. `src/pages/mobile/mobileApp.tsx`); there is no separate rules “epoch” store after the Zustand removal. |
 
 ## 10. Discoverability (deployed as product + docs)
 

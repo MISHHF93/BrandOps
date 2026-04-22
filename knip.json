@@ -1,0 +1,17 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/background/index.ts",
+    "src/content/linkedinOverlay.ts",
+    "src/content/linkedinCompanionSafety.ts",
+    "src/pages/mobile/main.tsx",
+    "src/pages/chatbotWeb/renderChatbotSurface.tsx",
+    "src/pages/dashboard/main.tsx",
+    "src/pages/welcome/main.tsx",
+    "src/pages/help/main.tsx",
+    "src/pages/integrations/main.tsx"
+  ],
+  "project": ["src/**/*.ts", "src/**/*.tsx"],
+  "ignore": ["android/**", "dist/**", ".cursor/**", "scripts/**", "tests/**", "node_modules/**"],
+  "ignoreDependencies": ["@capacitor/android", "@capacitor/core", "knip"]
+}

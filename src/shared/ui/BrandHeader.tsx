@@ -3,7 +3,7 @@ interface BrandHeaderProps {
   title?: string;
   eyebrow?: string;
   showCrown?: boolean;
-  /** Distinguishes surface intent: Capture (popup), Work (dashboard), Settings (options). */
+  /** Distinguishes surface intent: Capture (popup), Work (dashboard), Settings (integrations page). */
   roleBadge?: 'Capture' | 'Work' | 'Settings';
   /** Tighter header block and subtitle for cockpit compact density. */
   compact?: boolean;

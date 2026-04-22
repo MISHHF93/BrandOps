@@ -1,6 +1,8 @@
 # BrandOps Styling Codebase Blueprint
 
-This blueprint is based on the current codebase structure and styling reality. It is meant to be implemented directly, phase by phase.
+> **Note:** Much of the **dashboard / cockpit** styling detail below predates the **chatbot (MobileApp)** shell. Treat shared `src/shared/ui` and `src/styles` sections as current; “dashboard”-specific file paths may be **historical**. For active surfaces, see [`../src/pages/mobile/mobileApp.tsx`](../src/pages/mobile/mobileApp.tsx) and [`APPLICATION_WIRING_STATUS.md`](../APPLICATION_WIRING_STATUS.md).
+
+This blueprint is based on the codebase structure and styling reality. It is meant to be implemented directly, phase by phase, where it still applies.
 
 ## What was analyzed
 

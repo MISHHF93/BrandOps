@@ -147,6 +147,10 @@ export const localIntelligence = {
     );
   },
 
+  /**
+   * Ranks opportunities by deterministic heuristics (follow-up risk, confidence, value, stage).
+   * This is not an LLM or financial forecast; for narrative “why” copy from a model, add a separate adapter.
+   */
   pipelineHealth(opportunities: Opportunity[]): IntelligenceSignal[] {
     return this.rankSignals(
       opportunities.map((item) => ({

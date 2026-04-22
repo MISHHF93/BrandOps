@@ -135,7 +135,7 @@ chrome.runtime.onStartup.addListener(async () => {
 });
 
 chrome.action.onClicked.addListener(() => {
-  void chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+  void chrome.tabs.create({ url: chrome.runtime.getURL('mobile.html') });
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -152,7 +152,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 chrome.notifications?.onClicked.addListener((notificationId) => {
   if (!notificationId.startsWith('reminder:')) return;
-  void chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+  void chrome.tabs.create({ url: chrome.runtime.getURL('mobile.html') });
 });
 
 chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResponse) => {

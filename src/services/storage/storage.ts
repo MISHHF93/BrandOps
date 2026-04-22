@@ -1,3 +1,4 @@
+import { defaultAppSettings, defaultBrandProfile } from '../../config/workspaceDefaults';
 import { seedData } from '../../modules/brandMemory/seed';
 import { browserLocalStorage } from '../../shared/storage/browserStorage';
 import {
@@ -446,7 +447,7 @@ const normalizeActivityNotes = (items: unknown): ActivityNote[] => {
 };
 
 const normalizeBrandProfile = (value: unknown): BrandProfile => {
-  const fallback = seedData.brand;
+  const fallback = defaultBrandProfile;
   if (!value || typeof value !== 'object') return fallback;
 
   const candidate = value as Partial<BrandProfile>;
@@ -484,7 +485,7 @@ const normalizeModules = (value: unknown): WorkspaceModule[] => {
             : seededModule.status,
         route:
           candidate.route === 'dashboard' ||
-          candidate.route === 'options' ||
+          candidate.route === 'integrations' ||
           candidate.route === 'content'
             ? candidate.route
             : seededModule.route
@@ -1089,7 +1090,7 @@ const normalizeIntegrationHubState = (value: unknown): BrandOpsData['integration
 };
 
 const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
-  const fallback = seedData.settings;
+  const fallback = defaultAppSettings;
   if (!settings || typeof settings !== 'object') {
     return fallback;
   }
@@ -1271,6 +1272,14 @@ const isBrandOpsData = (value: unknown): value is BrandOpsData => {
 };
 
 const createSeededWorkspace = () => withDefaults(withFreshSeedMetadata(seedData));
+
+/**
+ * In-memory default workspace (no I/O). Lets the mobile shell render Cockpit, Settings, and Integrations
+ * immediately; `getData()` then replaces the snapshot with persisted data when ready.
+ */
+export function createInMemorySeededWorkspace(): BrandOpsData {
+  return withDefaults(withFreshSeedMetadata(seedData));
+}
 
 export const storageService = {
   async getData(): Promise<BrandOpsData> {

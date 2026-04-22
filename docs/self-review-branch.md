@@ -50,8 +50,8 @@ Date: 2026-04-11
 
 1. **Client-side full-array operations on every render.**
    - Frequent `filter` + `sort` + `map` over full collections can degrade responsiveness as records grow.
-2. **Single monolithic Zustand store for all domains.**
-   - As modules expand, unrelated updates may increase render pressure and coupling.
+2. **Split mutation surfaces.**
+   - UI updates flow through the command engine, background, and direct storage helpers; keep new cross-cutting state out of ad-hoc globals.
 3. **ID generation via `Math.random()` can collide over long horizons.**
    - Low probability at small scale, but a UUID strategy is safer for growth and sync scenarios.
 4. **No conflict-resolution strategy for concurrent edits/imports.**

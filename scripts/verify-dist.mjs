@@ -5,7 +5,7 @@ import { constants } from 'node:fs';
 const requiredFiles = [
   'dist/manifest.json',
   'dist/dashboard.html',
-  'dist/options.html',
+  'dist/integrations.html',
   'dist/welcome.html',
   'dist/help.html',
   'dist/privacy-policy.html',
@@ -46,8 +46,8 @@ const assertManifest = async () => {
     throw new Error('manifest background.service_worker must be "background.js".');
   }
 
-  if (manifest.options_ui?.page !== 'options.html') {
-    throw new Error('manifest options_ui.page must be "options.html".');
+  if (manifest.options_ui?.page !== 'integrations.html') {
+    throw new Error('manifest options_ui.page must be "integrations.html".');
   }
 };
 

@@ -6,7 +6,7 @@ import { KnowledgeTopicIcon } from './knowledgeCenterTopicIcons';
 import { QUERY } from '../navigation/extensionLinks';
 
 export type KnowledgeCenterBodyProps = {
-  /** Full help page uses `?helpTopic=`; embedded overlay uses in-panel `#` jumps. */
+  /** Full help page uses `?topic=`; embedded overlay uses in-panel `#` jumps. */
   topicLinkMode: 'page-query' | 'embedded-hash';
 };
 

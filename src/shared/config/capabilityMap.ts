@@ -1,6 +1,6 @@
 /** Single source of truth: where each capability primarily lives vs quick entry points. */
 
-export type CockpitSurfaceId = 'dashboard' | 'options';
+export type CockpitSurfaceId = 'dashboard' | 'integrations';
 
 export interface CockpitCapability {
   id: string;
@@ -37,20 +37,20 @@ export const cockpitCapabilities: CockpitCapability[] = [
     label: 'Scheduler and cadence',
     summary: 'Due work, reminders, and day shape — deep tuning in Settings.',
     primarySurface: 'dashboard',
-    secondarySurfaces: ['options']
+    secondarySurfaces: ['integrations']
   },
   {
     id: 'integrations-manual',
     label: 'Manual integrations hub',
     summary: 'External sources, artifacts, SSH nodes — register and edit here.',
-    primarySurface: 'options',
+    primarySurface: 'integrations',
     secondarySurfaces: ['dashboard']
   },
   {
     id: 'sync-models-archive',
     label: 'Identity, models, backups, debug',
     summary: 'Provider accounts, AI mode, export/import, and diagnostics.',
-    primarySurface: 'options',
+    primarySurface: 'integrations',
     secondarySurfaces: []
   }
 ];
@@ -59,8 +59,8 @@ export function surfaceLabel(surface: CockpitSurfaceId): string {
   switch (surface) {
     case 'dashboard':
       return 'Dashboard';
-    case 'options':
-      return 'Settings';
+    case 'integrations':
+      return 'Integrations';
     default:
       return surface;
   }

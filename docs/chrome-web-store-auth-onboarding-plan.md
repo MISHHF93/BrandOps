@@ -143,7 +143,7 @@ Codebase alignment (ongoing; listing/policy items remain your responsibility):
 ## 10. Source of truth
 
 - **v2** supersedes any v1-era notes elsewhere: auth is **third-party login**, not optional “integration linking” as the primary story.
-- Implementation details live in code (`src/shared/identity/sessionAccess.ts`, `useBrandOpsStore.signOutSession`, Welcome/Dashboard copy). Do not duplicate conflicting phased “P0/P1” roadmaps in other markdown files.
+- Implementation details live in code (`src/shared/identity/sessionAccess.ts`, `src/services/storage/storage.ts` for `BrandOpsData`, chatbot web surfaces in `src/pages/chatbotWeb/` + `src/pages/mobile/`). The legacy Zustand store and its `signOutSession` path are removed; federated sign-out and OAuth will need a thin surface in `src/services/sync/*` when reintroduced to the product UI. Do not duplicate conflicting phased “P0/P1” roadmaps in other markdown files.
 
 ---
 

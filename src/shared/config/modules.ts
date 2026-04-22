@@ -6,7 +6,7 @@ import { WorkspaceModule } from '../../types/domain';
  *
  * Surface names (pair with BrandHeader on each HTML entry):
  * - dashboard.html → Dashboard (full workspace; Today is the default section)
- * - options.html → Settings
+ * - integrations.html → Integrations + Settings (MV3 options_ui)
  */
 export const workspaceModules: WorkspaceModule[] = [
   {
@@ -72,6 +72,6 @@ export const workspaceModules: WorkspaceModule[] = [
     description:
       'Sync, export/import, models, backups, and optional local intelligence configuration.',
     status: 'active',
-    route: 'options'
+    route: 'integrations'
   }
 ];

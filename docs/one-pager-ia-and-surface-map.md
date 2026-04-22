@@ -1,6 +1,8 @@
 # One-pager IA: surface map, compass navigation, and KPI consolidation
 
-**Implementation status:** **Synced with the repo** — Phases B–D are implemented in code (pulse strip, `SurfaceNavLinks` anchors + `?overlay=`, shared `CockpitAppearanceFields`). Phase A onboarding copy (“default unified scroll”) remains a **product copy** choice, not enforced in code.
+> **Historical / superseded:** The **cockpit / compass / dashboard** shell described here was **replaced** by a single **MobileApp** chatbot surface across extension HTML entry points. See [`APPLICATION_WIRING_STATUS.md`](../APPLICATION_WIRING_STATUS.md) and [`README.md`](../README.md). This document is retained for IA history only.
+
+**Implementation status (before chatbot migration):** Phases B–D referred to `dashboardApp`, pulse strip, and overlays. Those components are **not** in the current `src/pages` tree.
 
 **Purpose:** Distinguish what each extension **HTML page** does today, call out **duplication and redundant navigation**, and define a **target single-shell experience** where the **dashboard is the one pager** (KPIs + work), and the **compass** moves between **areas and lightweight panels** (settings preview, knowledge, connections) without opening extra documents when possible.
 
@@ -14,7 +16,7 @@
 
 | Surface | File | Primary job | Must stay separate? |
 |--------|------|-------------|---------------------|
-| **Index** | `index.html` | Redirect → `dashboard.html` | Yes (thin redirect only) |
+| **Index** | `index.html` | Redirect → `mobile.html` (current product) | Yes (thin redirect only) |
 | **Welcome** | `welcome.html` | Auth gateway, legal entry, “continue to app” | **Yes** — OAuth and first-run contract |
 | **Dashboard / Cockpit** | `dashboard.html` | Execution: pipeline, content, CRM modules, mission map, scheduler context | **Target: canonical “one pager” shell** |
 | **Settings** | `options.html` | Manifest `options_page`: OAuth, import/export, integrations, diagnostics, AI tools | **Yes for Chrome** — deep config + `chrome.identity` flows |

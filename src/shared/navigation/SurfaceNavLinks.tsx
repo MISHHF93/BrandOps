@@ -1,11 +1,13 @@
 import { getPrivacyPolicyHref } from '../config/privacyPolicyUrl';
 import {
-  buildDashboardUrl,
-  buildWelcomeSignInUrl,
-  buildWelcomeSignUpUrl,
-  PAGE
-} from './extensionLinks';
-import { resolveExtensionUrl } from './extensionRuntime';
+  hrefCockpitConnections,
+  hrefDashboardKnowledgeOverlay,
+  hrefHelpPage,
+  hrefPrimaryAppChat,
+  hrefPrimaryAppSettingsTab,
+  hrefSignIn,
+  hrefSignUp
+} from './navigationIntents';
 
 const linkClass =
   'font-medium text-textMuted hover:text-text underline-offset-2 hover:underline';
@@ -15,17 +17,19 @@ export interface SurfaceNavLinksProps {
 }
 
 /**
- * Hierarchy: Sign in (OAuth gateway, bare welcome) → Sign up (?flow=signup) → workspace → legal.
+ * Footer links: sign-in flow → primary app (`mobile.html`) by tab, Help page, legal.
+ * (Legacy `dashboard.html` kept for URLs that need Chat + overlay; see `hrefDashboardKnowledgeOverlay`.)
  */
 export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
   const privacyHref = getPrivacyPolicyHref();
   const privacyHosted = privacyHref.startsWith('https://');
-  const signInHref = resolveExtensionUrl(buildWelcomeSignInUrl());
-  const signUpHref = resolveExtensionUrl(buildWelcomeSignUpUrl());
-  const settingsHref = resolveExtensionUrl(PAGE.options);
-  const dashboardHref = resolveExtensionUrl(buildDashboardUrl());
-  const dashboardHelpHref = resolveExtensionUrl(buildDashboardUrl({ overlay: 'help' }));
-  const connectionsHref = resolveExtensionUrl(buildDashboardUrl({ section: 'connections' }));
+  const signInHref = hrefSignIn();
+  const signUpHref = hrefSignUp();
+  const settingsHref = hrefPrimaryAppSettingsTab();
+  const mainAppChatHref = hrefPrimaryAppChat();
+  const knowledgeOverlayHref = hrefDashboardKnowledgeOverlay();
+  const helpPageHref = hrefHelpPage();
+  const connectionsHref = hrefCockpitConnections();
 
   return (
     <div
@@ -40,17 +44,20 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       <a className={linkClass} href={signUpHref}>
         Sign up
       </a>
-      <a className={linkClass} href={dashboardHref}>
-        Dashboard
+      <a className={linkClass} href={mainAppChatHref}>
+        Main app (Chat)
       </a>
       <a className={linkClass} href={settingsHref}>
         Settings
       </a>
-      <a className={linkClass} href={dashboardHelpHref}>
-        Knowledge Center
+      <a className={linkClass} href={knowledgeOverlayHref}>
+        Knowledge (in dashboard)
+      </a>
+      <a className={linkClass} href={helpPageHref}>
+        Help page
       </a>
       <a className={linkClass} href={connectionsHref}>
-        Connections
+        Integrations
       </a>
       <a
         className={linkClass}

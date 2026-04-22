@@ -1,5 +1,7 @@
 # Product Structure
 
+> **UI note:** These are **domain / data** areas. The live **extension UI** is the **MobileApp** chatbot ([`src/pages/mobile/mobileApp.tsx`](../src/pages/mobile/mobileApp.tsx)), not separate “Command Center” pages. See [`APPLICATION_WIRING_STATUS.md`](../APPLICATION_WIRING_STATUS.md).
+
 BrandOps modules:
 
 - Command Center
@@ -15,7 +17,7 @@ BrandOps modules:
 Each module is:
 
 - independent
-- connected through shared state
+- connected through shared workspace data (`BrandOpsData`)
 - backed by local storage
 
 Implementation notes:
@@ -23,4 +25,4 @@ Implementation notes:
 - Canonical module definitions live in `src/shared/config/modules.ts`.
 - Module IDs are typed in `src/types/domain.ts` via `WorkspaceModuleId`.
 - Module metadata is seeded through `src/modules/brandMemory/seed.ts`.
-- Shared state and persistence are coordinated through `src/state/useBrandOpsStore.ts` and `src/services/storage/storage.ts`.
+- Persistence and normalization run through `src/services/storage/storage.ts`. Chat and channel ingress mutate workspace data via `src/services/agent/agentWorkspaceEngine.ts` (`executeAgentWorkspaceCommand`) or background/content-script paths; there is no global Zustand layer.

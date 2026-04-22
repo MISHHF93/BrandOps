@@ -35,7 +35,7 @@ export type DashboardNavItem =
       label: string;
       description: string;
       type: 'surface';
-      target: 'dashboard' | 'options' | 'help';
+      target: 'dashboard' | 'integrations' | 'help';
     };
 
 export const cockpitNavigationGroups: Array<{
@@ -44,8 +44,8 @@ export const cockpitNavigationGroups: Array<{
   items: DashboardNavItem[];
 }> = [
   {
-    title: 'Dashboard areas',
-    description: 'Same cockpit with ?section= deep links — jump without changing windows.',
+    title: 'Work areas',
+    description: 'Today (this tab), Pipeline, Brand & content, Connections — use chips to scroll.',
     items: [
       {
         id: 'nav-overview',
@@ -79,26 +79,26 @@ export const cockpitNavigationGroups: Array<{
   },
   {
     title: 'Other windows',
-    description: 'Open the Dashboard tab, Settings, or Knowledge Center from the compass.',
+    description: 'Integrations + Settings, Help, or the primary app on the Chat tab (mobile.html).',
     items: [
       {
-        id: 'nav-options',
-        label: 'Settings',
-        description: 'Sync setup, models, backups, and diagnostics.',
+        id: 'nav-integrations',
+        label: 'Integrations page',
+        description: 'Packaged page (MV3 options_ui): sources, providers, and Settings in the same shell.',
         type: 'surface',
-        target: 'options'
+        target: 'integrations'
       },
       {
         id: 'nav-knowledge',
-        label: 'Knowledge Center',
-        description: 'In-extension manual: surfaces, first run, execution, shortcuts.',
+        label: 'Help page',
+        description: 'Full manual (opens help.html, Cockpit tab).',
         type: 'surface',
         target: 'help'
       },
       {
         id: 'nav-dashboard',
-        label: 'Full Dashboard',
-        description: 'Open the full dashboard window.',
+        label: 'Main app (Chat)',
+        description: 'Primary mobile surface with the Chat tab selected.',
         type: 'surface',
         target: 'dashboard'
       }
@@ -109,6 +109,21 @@ export const cockpitNavigationGroups: Array<{
 export const observedSectionIds: DashboardSectionId[] = cockpitNavigationGroups.flatMap((group) =>
   group.items.flatMap((item) => (item.type === 'section' ? [item.target] : []))
 );
+
+/**
+ * `id` values on Cockpit (mobile) section headings in `CockpitDailyView`.
+ * Must stay in sync with `observedSectionIds` and deep links `?section=<DashboardSectionId>`.
+ */
+const COCKPIT_MOBILE_HEADING_IDS: Record<DashboardSectionId, string> = {
+  today: 'cockpit-today',
+  pipeline: 'cockpit-pipeline',
+  'brand-content': 'cockpit-brand',
+  connections: 'cockpit-connections'
+};
+
+export function getCockpitMobileSectionHeadingId(section: DashboardSectionId): string {
+  return COCKPIT_MOBILE_HEADING_IDS[section];
+}
 
 export const flattenedNavigationItems = cockpitNavigationGroups.flatMap((group) => group.items);
 

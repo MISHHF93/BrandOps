@@ -23,10 +23,9 @@ This plan tracks the remaining work to reach full migration.
 
 ### Remaining (follow-ups)
 
-- **Zustand store** still contains legacy mutations for unmounted module panels; chatbot paths should keep using the engine first.
 - **Semantic / LLM intent** with typed args + validation (beyond deterministic route strings).
 - **Remote shared nonce store** (Redis/KV) for multi-instance bridge proxies.
-- Full **retire or quarantine** `src/modules/*` panels if product confirms no future reuse.
+- **Reintroduce** OAuth / identity and any non-chat settings flows via small `services/*` surfaces (the legacy Zustand store and unmounted `src/modules/*` panels are removed; `brandMemory/seed` remains for defaults).
 
 ## End-State Definition (Done Criteria)
 

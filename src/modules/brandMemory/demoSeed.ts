@@ -1,4 +1,5 @@
 import { BrandOpsData } from '../../types/domain';
+import { defaultAppSettings, defaultBrandProfile } from '../../config/workspaceDefaults';
 import { workspaceModules } from '../../shared/config/modules';
 
 const now = new Date();
@@ -9,6 +10,7 @@ const minusHours = (hours: number) =>
 /** Rich sample workspace for QA and “Load sample data” in Settings — not used for new installs. */
 export const demoSampleData: BrandOpsData = {
   brand: {
+    ...defaultBrandProfile,
     operatorName: 'Alex Mercer',
     positioning: 'AI systems architect helping technical teams operationalize agentic workflows',
     primaryOffer: 'Fractional architecture + execution sprint for productized AI delivery',
@@ -491,88 +493,15 @@ Slide 7: CTA to request audit checklist`,
     lastHydratedAt: now.toISOString()
   },
   settings: {
-    timezone: 'America/New_York',
-    defaultReminderLeadHours: 24,
-    weekStartsOn: 'monday',
-    theme: 'dark',
-    visualMode: 'classic',
-    motionMode: 'balanced',
-    ambientFxEnabled: false,
-    cockpitLayout: 'sections',
+    ...defaultAppSettings,
     cockpitDensity: 'comfortable',
-    localModelEnabled: false,
-    aiAdapterMode: 'disabled',
-    debugMode: false,
-    primaryIdentityProvider: null,
-    overlay: {
-      enabled: true,
-      compactMode: true,
-      showContactInsights: true
-    },
-    automationRules: [
-      {
-        id: 'rule-001',
-        name: 'Highlight overdue follow-ups',
-        trigger: 'follow-up-overdue',
-        action: 'badge-highlight',
-        enabled: true
-      },
-      {
-        id: 'rule-002',
-        name: 'Pin weekly review card',
-        trigger: 'weekly-review',
-        action: 'dashboard-pin',
-        enabled: true
-      }
-    ],
-    syncHub: {
-      google: {
-        clientId: '',
-        connectionStatus: 'disconnected',
-        auth: {
-          scope: []
-        }
-      },
-      github: {
-        clientId: '',
-        connectionStatus: 'disconnected',
-        auth: {
-          scope: []
-        }
-      },
-      linkedin: {
-        clientId: '',
-        connectionStatus: 'disconnected',
-        auth: {
-          scope: []
-        }
-      }
-    },
     notificationCenter: {
-      enabled: true,
-      managerialWeight: 40,
-      workdayStartHour: 9,
-      workdayEndHour: 18,
-      maxDailyTasks: 3,
-      aiGuidanceMode: 'hybrid',
+      ...defaultAppSettings.notificationCenter,
       preferredModel: 'gpt-5.4-mini',
       roleContext:
         'Solo AI operator balancing product shipping, client delivery, public presence, and personal sustainability.',
       promptTemplate:
-        'You are my AI operating partner. Build today\'s plan for {{role_context}}. Use the managerial tasks, technical tasks, dataset hygiene tasks, integration status, and current workspace pressure to produce a calm, high-leverage day plan with sequencing, tradeoffs, one recovery checkpoint, and one end-of-day review question.',
-      datasetReviewEnabled: true,
-      integrationReviewEnabled: true
-    },
-    cadenceFlow: {
-      mode: 'balanced',
-      deepWorkBlockCount: 2,
-      deepWorkBlockHours: 2,
-      includeStartupBlock: true,
-      includeShutdownBlock: true,
-      includeArtifactReviewBlock: true,
-      remindBeforeMinutes: 15,
-      calendarSyncEnabled: true,
-      artifactSyncEnabled: true
+        "You are my AI operating partner. Build today's plan for {{role_context}}. Use the managerial tasks, technical tasks, dataset hygiene tasks, integration status, and current workspace pressure to produce a calm, high-leverage day plan with sequencing, tradeoffs, one recovery checkpoint, and one end-of-day review question."
     }
   },
   externalSync: {

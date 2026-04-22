@@ -24,7 +24,7 @@
     "https://api.github.com/*"
   ],
   "options_ui": {
-    "page": "options.html",
+    "page": "integrations.html",
     "open_in_tab": true
   },
   "background": {

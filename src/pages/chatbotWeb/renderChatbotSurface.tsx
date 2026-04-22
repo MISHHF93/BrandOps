@@ -4,12 +4,13 @@ import '../../styles/index.css';
 import { AppErrorBoundary } from '../../shared/ui/AppErrorBoundary';
 import { bootstrapDocumentThemeFromWebStorage } from '../../shared/ui/theme';
 import { MobileApp } from '../mobile/mobileApp';
-
-type ChatbotInitialTab = 'chat' | 'daily' | 'integrations' | 'settings';
+import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
+import type { MobileShellTabId } from '../mobile/mobileShellQuery';
 
 interface RenderChatbotSurfaceOptions {
-  surfaceLabel: string;
-  initialTab: ChatbotInitialTab;
+  /** Matches `data-app-surface` and `MobileApp` document identity (not the legacy `chatbot-web` string). */
+  surfaceLabel: AppDocumentSurfaceId;
+  initialTab: MobileShellTabId;
 }
 
 export const renderChatbotSurface = ({
@@ -22,7 +23,7 @@ export const renderChatbotSurface = ({
   createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <AppErrorBoundary surfaceLabel={`AI Chatbot: ${surfaceLabel}`}>
-        <MobileApp initialTab={initialTab} surfaceLabel="chatbot-web" />
+        <MobileApp initialTab={initialTab} surfaceLabel={surfaceLabel} />
       </AppErrorBoundary>
     </React.StrictMode>
   );

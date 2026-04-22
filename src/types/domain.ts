@@ -2,7 +2,7 @@
  * BrandOps persisted workspace types (Chrome `storage.local` / web LocalStorage).
  * Do not duplicate these shapes elsewhere — extend here, then normalize in `storage.ts`.
  */
-export type ExtensionSurface = 'dashboard' | 'options' | 'content';
+export type ExtensionSurface = 'dashboard' | 'integrations' | 'content';
 
 export type WorkspaceModuleId =
   | 'command-center'
@@ -226,6 +226,9 @@ export interface Opportunity {
   stage?: OpportunityStage;
   version?: number;
 }
+
+/** Batch payload for a hypothetical future LLM that narrates pipeline risk; ranking in-app uses deterministic heuristics only. */
+export type LlmOpportunityNarrativeRequest = { opportunities: Opportunity[] };
 
 export interface Contact {
   id: string;

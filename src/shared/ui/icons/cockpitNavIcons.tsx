@@ -17,7 +17,7 @@ const COCKPIT_NAV_ICONS: Record<string, LucideIcon> = {
   'nav-growth': KanbanSquare,
   'nav-content': Layers2,
   'nav-systems': Plug2,
-  'nav-options': Settings2,
+  'nav-integrations': Settings2,
   'nav-knowledge': BookOpen,
   'nav-dashboard': LayoutDashboard
 };

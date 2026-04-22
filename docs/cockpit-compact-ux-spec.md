@@ -1,6 +1,8 @@
 # Cockpit compact UX: minimum signal, minimum effort
 
-**Implementation status:** Phases **A** and **B** are implemented in code (see §4). **Default** workspace density for **new** seeded data is **`compact`** (`seed.ts`). Existing users keep their saved Settings. Phase **D** (minimal preset / 3-metric strip) not implemented.
+> **Historical / superseded:** This spec targeted the **legacy dashboard cockpit** (`CockpitPulseStrip`, unified scroll, density). The product **UI** is now **MobileApp** (chat + Daily). Heuristic and storage ideas here may still inform behavior, but there is no cockpit layout to implement. See [`APPLICATION_WIRING_STATUS.md`](../APPLICATION_WIRING_STATUS.md).
+
+**Implementation status (archived):** Phases A/B referred to `dashboardApp`-era components that are no longer in the active build.
 
 **Audience:** Operators using BrandOps for **growth and portfolio work** who want **fast orientation** (odometers / KPIs) without wading through narrative UI, duplicate metrics, or deep diagnostics on every visit.
 

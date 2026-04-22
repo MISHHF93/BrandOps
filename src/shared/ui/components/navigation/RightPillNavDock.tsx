@@ -1,3 +1,10 @@
+/**
+ * Alt+M compass: renders `cockpitNavigationGroups` as a right-hand dock. Not imported by
+ * current HTML entry points after the mobile shell migration. To wire it, mount on a page and
+ * pass `onSelectItem` → e.g. `navigateCrownFromExtensionSurface` from
+ * `src/shared/navigation/navigateCrownFromExtensionSurface.ts` (or same-origin navigation
+ * in a future dashboard host).
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Compass } from 'lucide-react';
 import {
@@ -8,12 +15,12 @@ import {
 import { CockpitNavItemIcon } from '../../icons/cockpitNavIcons';
 
 /** Extension HTML surface hosting the dock; hides same-surface destinations from the Other windows group. */
-export type RightPillNavDockHostSurface = 'dashboard' | 'options' | 'help' | 'welcome';
+export type RightPillNavDockHostSurface = 'dashboard' | 'integrations' | 'help' | 'welcome';
 
 function cockpitGroupsForHost(hostSurface: RightPillNavDockHostSurface | undefined) {
   if (!hostSurface) return cockpitNavigationGroups;
-  /** Hide "Full Dashboard" when already on that HTML surface (dashboard or options). */
-  const hideRedundantFullDashboard = hostSurface === 'options' || hostSurface === 'dashboard';
+  /** Hide "Full Dashboard" when already on that HTML surface (dashboard or integrations). */
+  const hideRedundantFullDashboard = hostSurface === 'integrations' || hostSurface === 'dashboard';
   return cockpitNavigationGroups
     .map((group) => ({
       ...group,

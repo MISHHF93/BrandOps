@@ -1,8 +1,8 @@
 import type { DashboardSectionId } from '../config/dashboardNavigation';
-import { buildDashboardUrl, PAGE } from './extensionLinks';
+import { buildMobileCockpitUrl, buildMobileShellUrl, PAGE } from './extensionLinks';
 import { resolveExtensionUrl } from './extensionRuntime';
 
-export type ExtensionSurfaceTarget = 'dashboard' | 'options' | 'integration-hub' | 'help';
+export type ExtensionSurfaceTarget = 'dashboard' | 'integrations' | 'integration-hub' | 'help';
 
 /** Opens a bundled extension HTML page in a new tab (or window fallback) — reliable for MV3 even when `openOptionsPage` is a no-op. */
 function openPackagedPageInNewTab(spec: string) {
@@ -22,11 +22,13 @@ const transitionDurationMs = () => {
 };
 
 /**
- * Opens another extension HTML surface (options, help, or dashboard with optional section query).
+ * Opens another extension HTML surface. Integrations and help use a new tab when possible.
+ * `dashboard` + `section` → **mobile.html?section=…** (Cockpit workstream).
+ * Bare `dashboard` → **mobile.html?section=chat** (primary app, Chat tab) — not `dashboard.html`.
  */
 export function openExtensionSurface(surface: ExtensionSurfaceTarget, section?: DashboardSectionId) {
-  if (surface === 'options') {
-    openPackagedPageInNewTab(PAGE.options);
+  if (surface === 'integrations' || surface === 'integration-hub') {
+    openPackagedPageInNewTab(PAGE.integrations);
     return;
   }
 
@@ -35,12 +37,9 @@ export function openExtensionSurface(surface: ExtensionSurfaceTarget, section?: 
     return;
   }
 
-  let surfacePath: string;
-  if (surface === 'integration-hub') {
-    surfacePath = buildDashboardUrl({ section: 'connections' });
-  } else {
-    surfacePath = section ? buildDashboardUrl({ section }) : buildDashboardUrl();
-  }
+  const surfacePath = section
+    ? buildMobileCockpitUrl({ section })
+    : buildMobileShellUrl({ tab: 'chat' });
 
   const targetUrl = resolveExtensionUrl(surfacePath);
 

@@ -17,7 +17,7 @@ This document captures the highest-impact gaps found across the full application
 1. **Sync promise vs implemented behavior mismatch**
    - UI copy points users to "Run sync from Settings", but state/services do not expose a real external sync write path.
    - Impact: user trust and feature expectation break.
-   - Primary files: `src/pages/dashboard/components/DashboardSystemsLean.tsx`, `src/state/useBrandOpsStore.ts`.
+   - Primary files: `src/services/storage/storage.ts`, `src/background/index.ts` (revisit as sync UX is reintroduced; legacy dashboard UIs are removed).
 
 2. **Placeholder AI output still active**
    - Local adapter returns placeholder generated text.

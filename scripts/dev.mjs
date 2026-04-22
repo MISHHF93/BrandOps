@@ -33,11 +33,16 @@ function freePort5173() {
 freePort5173();
 
 const viteCli = join(root, 'node_modules', 'vite', 'bin', 'vite.js');
-const child = spawn(process.execPath, [viteCli, '--port', '5173', '--strictPort'], {
-  cwd: root,
-  stdio: 'inherit',
-  env: process.env
-});
+// Match vite.config `host: '::'` so the CLI and config agree (localhost → ::1 on Windows needs IPv6 listen).
+const child = spawn(
+  process.execPath,
+  [viteCli, '--port', '5173', '--strictPort', '--host', '::'],
+  {
+    cwd: root,
+    stdio: 'inherit',
+    env: process.env
+  }
+);
 
 child.on('exit', (code, signal) => {
   if (signal) process.exit(1);

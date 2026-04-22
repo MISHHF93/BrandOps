@@ -1,4 +1,5 @@
 import { BrandOpsData, IntegrationSourceKind, OpportunityStage, PublishingItem } from '../../types/domain';
+import { localIntelligence } from '../intelligence/localIntelligence';
 import { scheduler } from '../scheduling/scheduler';
 import { storageService } from '../storage/storage';
 import { applyAiSettingsOperations, buildAiSettingsPlan } from '../ai/aiSettingsMode';
@@ -27,6 +28,7 @@ export type AgentAction =
   | 'archive-content-item'
   | 'update-publishing-item'
   | 'configure-workspace'
+  | 'pipeline-health'
   | 'unsupported';
 
 export interface AgentWorkspaceCommand {
@@ -809,6 +811,30 @@ const configureWorkspace = async (
 
 const MAX_AUDIT = 200;
 
+const MAX_PIPELINE_HEALTH_SUMMARY = 480;
+
+const runPipelineHealth = (workspace: BrandOpsData): AgentWorkspaceResult => {
+  const active = workspace.opportunities.filter((o) => !o.archivedAt);
+  if (active.length === 0) {
+    return {
+      ok: true,
+      action: 'pipeline-health',
+      summary:
+        'No active opportunities. Pipeline health ranks open deals by follow-up urgency, confidence, and value (deterministic rules; not an LLM).'
+    };
+  }
+  const ranked = localIntelligence.pipelineHealth(active);
+  const lines = ranked.slice(0, 8).map(
+    (s, i) =>
+      `${i + 1}) ${s.label} — score ${s.score}: ${s.reason.replace(/\s+/g, ' ').trim()}`
+  );
+  let summary = lines.join(' · ');
+  if (summary.length > MAX_PIPELINE_HEALTH_SUMMARY) {
+    summary = `${summary.slice(0, MAX_PIPELINE_HEALTH_SUMMARY - 1)}…`;
+  }
+  return { ok: true, action: 'pipeline-health', summary };
+};
+
 const recordCommandAudit = async (result: AgentWorkspaceResult, command: AgentWorkspaceCommand) => {
   try {
     const data = await storageService.getData();
@@ -879,6 +905,8 @@ const runParsedRoute = async (
       return updatePublishingItem(workspace, command);
     case 'configure-workspace':
       return configureWorkspace(workspace, command);
+    case 'pipeline-health':
+      return runPipelineHealth(workspace);
     case 'update-opportunity':
       if (opportunityUsesRichUpdate(command.text) || lower.includes('value') || lower.includes('confidence')) {
         return updateOpportunity(workspace, command);
@@ -890,7 +918,7 @@ const runParsedRoute = async (
         ok: false,
         action: 'unsupported',
         summary:
-          'Command not recognized. Try: add note, reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
+          'Command not recognized. Try: add note, pipeline health, reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
       };
   }
 };

@@ -1,5 +1,18 @@
 # Routing audit — extension surfaces & Settings (2026-04-20)
 
+## Addendum (2026) — deep link matrix (live)
+
+| URL | `MobileApp` initial tab (typical) | `?section` on this host |
+|-----|----------------------------------|---------------------------|
+| `mobile.html` | Chat, unless `?section=` (canonical workstreams) | Opens **Cockpit** + scrolls to workstream id |
+| `dashboard.html` | Chat (see `dashboard/main.tsx`) | **Does not** force Cockpit; `section` is legacy / compat |
+| `index.html` | Redirects to `mobile.html` (preserves query) | Inherits `mobile.html` behavior after redirect |
+| `openExtensionSurface('dashboard', section)` | Navigates to `mobile.html?section=…` | N/A (implementation in `openExtensionSurface`) |
+
+Source: [`src/shared/navigation/extensionLinks.ts`](../src/shared/navigation/extensionLinks.ts) (`EXTENSION_ROUTE_CATALOG`, `buildMobileCockpitUrl`), [`src/shared/navigation/openExtensionSurface.ts`](../src/shared/navigation/openExtensionSurface.ts), [`src/pages/mobile/mobileApp.tsx`](../src/pages/mobile/mobileApp.tsx).
+
+> **Historical / superseded (below):** The extension **web UI is now a single MobileApp / chatbot shell** ([`src/pages/mobile/mobileApp.tsx`](../src/pages/mobile/mobileApp.tsx)); files such as `dashboardApp.tsx` and many paths below **no longer exist**. For the current wiring, see [`APPLICATION_WIRING_STATUS.md`](../APPLICATION_WIRING_STATUS.md) and [`README.md`](../README.md) (Runtime shape). Keep the remainder as an archive of the pre-migration routing map.
+
 ## Scan (automated)
 
 **HTML entry surfaces (repo root / `public/`):**

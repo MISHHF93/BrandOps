@@ -1,6 +1,8 @@
 # Dashboard cockpit: quick overlays without leaving the page
 
-**Status:** **Implemented and synced with the codebase** (see files below). Optional follow-ups: focus trap in `CockpitSurfaceOverlay`, `React.lazy` for overlay panel bodies, `?helpTopic` on dashboard URL for Knowledge overlay.
+> **Historical / superseded:** In-browser **cockpit overlays** on `dashboard.html` are **not** the current model; all extension web pages now mount the **same** [`renderChatbotSurface`](../src/pages/chatbotWeb/renderChatbotSurface.tsx) / **MobileApp**. See [`APPLICATION_WIRING_STATUS.md`](APPLICATION_WIRING_STATUS.md).
+
+**Status (archived):** The implementation described below applied to a prior `dashboardApp` stack that has been removed.
 
 **Source context:** There is no file named “system crafty” in this repository. This plan consolidates intent from:
 

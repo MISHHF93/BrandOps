@@ -8,6 +8,6 @@ bootstrapDocumentThemeFromWebStorage();
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <MobileApp />
+    <MobileApp surfaceLabel="mobile" />
   </React.StrictMode>
 );

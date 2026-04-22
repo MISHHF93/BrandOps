@@ -23,6 +23,7 @@ export type CommandRoute =
   | 'archive-content'
   | 'update-publishing'
   | 'configure-workspace'
+  | 'pipeline-health'
   | 'update-opportunity'
   | 'unsupported';
 
@@ -93,6 +94,13 @@ export const parseCommandRoute = (text: string): CommandRoute => {
   }
   if (lower.includes('configure workspace') || lower.startsWith('configure:')) {
     return 'configure-workspace';
+  }
+  if (
+    lower.includes('pipeline health') ||
+    lower.includes('opportunity health') ||
+    (lower.includes('rank') && lower.includes('opportunit'))
+  ) {
+    return 'pipeline-health';
   }
   if (lower.includes('update opportunity') || lower.includes('set opportunity')) {
     return 'update-opportunity';

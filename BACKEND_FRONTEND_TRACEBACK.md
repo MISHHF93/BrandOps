@@ -7,8 +7,11 @@ Trace each active frontend control path to its backend handler and identify misc
 ## Entry Surface Routing
 
 - `index.html` redirects to `mobile.html`
-- `mobile.html` mounts `src/pages/mobile/main.tsx` -> `MobileApp`
-- `dashboard.html`, `options.html`, `help.html`, `welcome.html` mount `renderChatbotSurface(...)` -> `MobileApp`
+- `mobile.html` mounts `src/pages/mobile/main.tsx` -> `MobileApp` with `surfaceLabel="mobile"` (primary in-app `chatbot-mobile` source)
+- `dashboard.html`, `options.html`, `help.html`, `welcome.html` mount `renderChatbotSurface({ surfaceLabel, initialTab })` -> `MobileApp` with the same `surfaceLabel` on the component and on `<html data-app-surface>` (hosted documents use the `chatbot-web` source mapping)
+- `dashboard.html?section=...` without `overlay` redirects to `mobile.html?section=...` (see `shouldRedirectDashboardSectionToMobile`); workstream and crown navigation use `openExtensionSurface` / `buildMobileCockpitUrl` which target `mobile.html`
+
+**Mapping:** [`src/shared/navigation/appDocumentSurface.ts`](src/shared/navigation/appDocumentSurface.ts) — command `source` is still `chatbot-web` | `chatbot-mobile` as enforced by `executeAgentWorkspaceCommand`.
 
 Result: **Connected**
 

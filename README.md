@@ -13,7 +13,7 @@ This MVP focuses on **workflow quality** and **transparent helper logic** rather
 
 ## Operating philosophy
 
-BrandOps is designed as a **daily operator cockpit**, not a passive tool.
+BrandOps is designed as a **daily operator command surface** (chatbot + Daily tab), not a passive tool.
 
 The product assumes:
 - the user actively executes their workflow,
@@ -32,29 +32,11 @@ Core principles:
 
 ## Daily workflow
 
-BrandOps is optimized for a repeatable daily loop:
+BrandOps is optimized for a **command-first** daily loop in **Chat** and **Daily** (see MobileApp):
 
-1. Review Command Center
-   - upcoming posts
-   - due follow-ups
-   - active opportunities
-2. Execute Publishing Queue
-   - copy post
-   - publish manually
-   - mark as completed
-3. Run Outreach
-   - select targets
-   - use saved messaging
-   - send manually
-   - log status
-4. Update Pipeline
-   - move opportunities
-   - log replies
-   - schedule follow-ups
-5. Capture Insights
-   - save ideas
-   - refine messaging
-   - update vault
+1. **Chat:** natural-language commands (notes, follow-ups, publishing, opportunities, integrations, `pipeline health`, configuration presets) via the same agent engine as channels.
+2. **Daily:** snapshot counts, cadence headline, and ranked pipeline heuristics; quick action chips re-run real commands.
+3. **Content / outreach / publishing** happen in the real tools you use; BrandOps stores queue state, drafts, and follow-ups for prioritization and reminders.
 
 BrandOps is not passive. It is an execution system.
 
@@ -62,23 +44,11 @@ BrandOps is not passive. It is an execution system.
 
 ## Product structure
 
-BrandOps modules:
+Workspace **domain areas** (data + commands, not separate web layouts):
 
-- Command Center
-- Brand Vault
-- Content Library
-- Publishing Queue
-- Outreach Workspace
-- Pipeline CRM
-- Scheduler Engine
-- LinkedIn Companion
-- Settings / Export / Import / Local Intelligence
+- Brand voice and vault, content library, publishing queue, outreach, pipeline opportunities, scheduler, integration hub, LinkedIn companion, settings.
 
-Each module is:
-
-- independent
-- connected through shared state
-- backed by local storage
+The **user-facing shell** is a single **AI chatbot / MobileApp** (tabs: Chat, Daily, Integrations, Settings). Legacy multi-panel “cockpit” pages are not in the active build; see [APPLICATION_WIRING_STATUS.md](APPLICATION_WIRING_STATUS.md).
 
 ---
 
@@ -109,32 +79,31 @@ These helpers are deterministic and explainable. Every score is derived from tra
 
 ```text
 src/
-  app/                        # Shared layout primitives
-  background/                 # MV3 service worker
-  content/                    # Content script entry points
-    linkedinCompanionSafety   # companion validation and manual-capture logic
-  modules/                    # Product modules (vault, content, queue, outreach, CRM)
-  pages/                      # dashboard / welcome / options / help React entry surfaces (MPA)
+  background/                 # MV3 service worker (scheduler, channels, agent bridge)
+  content/                    # Content scripts (e.g. LinkedIn)
+  modules/                    # brandMemory/ seed + demo data only
+  pages/
+    mobile/                   # MobileApp: primary chatbot UI (Chat + Daily + …)
+    chatbotWeb/               # renderChatbotSurface → mounts MobileApp for web HTML
+    dashboard/, welcome/, options/, help/  # thin main.tsx → renderChatbotSurface → MobileApp
   services/
-    intelligence/             # local heuristic scoring + ranking
+    agent/                    # command engine, intent, channels, webhooks
+    intelligence/             # local heuristics (e.g. pipeline health, digests)
     scheduling/               # reminder lifecycle + grouping
     storage/                  # schema normalization + import/export
     messaging/                # runtime message contracts
-  shared/
-    config/                   # module registry
-    storage/                  # browser storage adapters
-    ui/                       # shared UI primitives
-  state/                      # Zustand state and user actions
+  shared/                     # config, help copy, navigation helpers, UI primitives
+  rules/                      # intelligence rule types, defaults, merge, runtime
   styles/                     # Tailwind and design tokens
   types/                      # domain models
 ```
 
-### Runtime shape
+### Runtime shape (chatbot-first)
 
-- **Toolbar (extension icon):** opens the Dashboard in a new tab (`chrome.action.onClicked`); there is no `default_popup` HTML surface in the manifest today.
-- **Dashboard:** full workspace with global search, onboarding, command palette, and compass navigation.
-- **Options:** backup/import/export and settings controls.
-- **Background worker:** lightweight scheduler sync and extension orchestration.
+- **Root / index:** [`index.html`](index.html) redirects to [`mobile.html`](mobile.html) → [`src/pages/mobile/main.tsx`](src/pages/mobile/main.tsx) → **MobileApp** (full-screen chat and tabs).
+- **Other extension web pages** (`dashboard.html`, `options.html`, `help.html`, `welcome.html`) each bootstrap **the same** [`renderChatbotSurface`](src/pages/chatbotWeb/renderChatbotSurface.tsx) → **MobileApp** (surface label / initial tab may differ). There is no separate “cockpit” React app or compass layout in `src/pages`.
+- **Toolbar (extension icon):** still opens a primary work tab (e.g. dashboard URL) per manifest; the page content is the chatbot shell, not a legacy dashboard stack.
+- **Background worker:** scheduler reconciliation, channel webhooks, agent bridge, storage writes as documented in [mutationSurfacePolicy](src/services/agent/mutationSurfacePolicy.ts).
 
 ### Documentation (this repository)
 
@@ -143,7 +112,7 @@ These files ship with **source** and **self-hosted previews**; they are not bund
 | Document | Contents |
 |----------|----------|
 | [`docs/intelligence-rules-remote-layers.md`](docs/intelligence-rules-remote-layers.md) | Rule domains, L1/L2/L3 layers, optional `brandops-intelligence-rules.json` / `VITE_INTELLIGENCE_RULES_URL`, validation, roadmap. |
-| [`ICONOGRAPHY.md`](ICONOGRAPHY.md) | Lucide icon map for the cockpit, sizes, accessibility, and where symbols appear in the UI. |
+| [`ICONOGRAPHY.md`](ICONOGRAPHY.md) | Lucide icon map, sizes, accessibility, and where symbols appear in the shared UI. |
 
 In-app summaries live under **Help → Knowledge Center** (topics *Visual wayfinding* and *Optional intelligence tuning*).
 
@@ -197,6 +166,8 @@ BrandOps now enforces a production-readiness baseline:
 - unified quality gate via `npm run check` (typecheck + lint),
 - CI validation on pull requests and pushes to `main`,
 - build artifact verification via `npm run verify:dist`.
+
+**Unused-code scan:** `npm run knip` (informational; see [APPLICATION_WIRING_STATUS.md](APPLICATION_WIRING_STATUS.md)).
 
 Recommended pre-release sequence:
 

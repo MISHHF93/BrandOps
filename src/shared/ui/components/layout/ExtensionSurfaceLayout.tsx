@@ -1,9 +1,14 @@
+/**
+ * Shared top bar for a compact “settings vs full dashboard” strip.
+ * Not mounted by any `src/pages` HTML entry main files in this repo; safe to use from a future
+ * popup or in-page options wrapper. Prefer `MobileApp` tab chrome + `openExtensionSurface` for flows.
+ */
 import type { ReactNode } from 'react';
 import { LayoutDashboard, Settings2 } from 'lucide-react';
 import { openExtensionSurface } from '../../../navigation/openExtensionSurface';
 import { cn } from '../utils/cn';
 
-export type ExtensionSurfaceName = 'options';
+export type ExtensionSurfaceName = 'integrations';
 
 interface ExtensionSurfaceLayoutProps {
   /** Which surface this page is (highlights the current pill). */
@@ -42,12 +47,12 @@ export function ExtensionSurfaceLayout({
             type="button"
             className={cn(
               'bo-link inline-flex items-center gap-1 !px-2 !py-1 text-[11px]',
-              current === 'options' && 'border-borderStrong bg-surface/80'
+              current === 'integrations' && 'border-borderStrong bg-surface/80'
             )}
-            onClick={() => openExtensionSurface('options')}
+            onClick={() => openExtensionSurface('integrations')}
           >
             <Settings2 size={12} aria-hidden />
-            Settings
+            Integrations
           </button>
           <button
             type="button"
@@ -57,7 +62,7 @@ export function ExtensionSurfaceLayout({
             }
           >
             <LayoutDashboard size={12} aria-hidden />
-            Full dashboard
+            Main app
           </button>
         </div>
       </nav>
