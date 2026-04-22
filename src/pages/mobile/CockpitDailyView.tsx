@@ -205,6 +205,45 @@ export const CockpitDailyView = ({
         <p className="mt-0.5 text-[11px] text-zinc-500">{pipelineMeta?.description}</p>
 
         <div className="mt-3 space-y-3">
+          <div
+            className="rounded-lg border border-emerald-500/25 bg-emerald-950/20 p-2.5"
+            aria-labelledby="cockpit-pipeline-projection-heading"
+          >
+            <p
+              id="cockpit-pipeline-projection-heading"
+              className="text-[10px] font-semibold uppercase tracking-wide text-emerald-400/90"
+            >
+              Weighted projection
+            </p>
+            <p className="mt-1 text-[10px] leading-snug text-zinc-500">
+              Open deals only (excludes won, lost, archived). <span className="text-zinc-400">Weighted</span> is Σ value ×
+              confidence% — a sizing lens from the same rules as deal health, not a forecast.
+            </p>
+            <div className="-mx-0.5 mt-2 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
+              {pulseTile(
+                'Weighted',
+                snapshot.pipelineProjection.activeDealCount > 0
+                  ? `$${snapshot.pipelineProjection.weightedOpenValueUsd.toLocaleString()}`
+                  : '—',
+                'value × conf%'
+              )}
+              {pulseTile(
+                'Raw open',
+                snapshot.pipelineProjection.activeDealCount > 0
+                  ? `$${snapshot.pipelineProjection.rawOpenValueUsd.toLocaleString()}`
+                  : '—',
+                `${snapshot.pipelineProjection.activeDealCount} deals`
+              )}
+            </div>
+          </div>
+
+          {signalList(
+            'Opportunities to close (proposal & negotiation)',
+            snapshot.opportunitiesToClose,
+            'No deals in proposal or negotiation yet.',
+            'In Chat: update opportunity to proposal, or add opportunities with stage, value, and confidence.'
+          )}
+
           <div>
             <div className="flex items-center justify-between gap-2">
               <p className="font-medium text-zinc-200">Deal health (heuristic)</p>

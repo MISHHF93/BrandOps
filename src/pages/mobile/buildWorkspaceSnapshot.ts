@@ -4,7 +4,7 @@ import type { AgentAuditEntry, BrandOpsData, IntegrationSourceKind } from '../..
 import type { MobileSettingsFullReadout } from './mobileSettingsReadout';
 import { buildMobileSettingsFullReadout } from './mobileSettingsReadout';
 import { buildCockpitIntelligenceExtras } from './cockpitSnapshot';
-import type { IntelligenceSignal } from '../../services/intelligence/localIntelligence';
+import type { IntelligenceSignal, PipelineProjectionReadout } from '../../services/intelligence/localIntelligence';
 
 /** Compact rows for Integrations tab (full hub lives in `BrandOpsData.integrationHub`). */
 export type MobileIntegrationSourceRow = {
@@ -85,6 +85,10 @@ export interface MobileWorkspaceSnapshot {
   missedTasks: number;
   recentAudit: AgentAuditEntry[];
   pipelineSignals: Array<{ id: string; label: string; score: number; reason: string }>;
+  /** Confidence-weighted open pipeline vs raw open value (see `localIntelligence.pipelineProjection`). */
+  pipelineProjection: PipelineProjectionReadout;
+  /** Proposal & negotiation deals ranked by health (see `localIntelligence.opportunitiesToClose`). */
+  opportunitiesToClose: IntelligenceSignal[];
   cadenceHeadline: string;
   contentTopSignals: IntelligenceSignal[];
   outreachUrgencyTop: IntelligenceSignal[];
@@ -116,6 +120,8 @@ export type CockpitDailySnapshot = Pick<
   | 'dueTodayTasks'
   | 'missedTasks'
   | 'pipelineSignals'
+  | 'pipelineProjection'
+  | 'opportunitiesToClose'
   | 'cadenceHeadline'
   | 'contentTopSignals'
   | 'outreachUrgencyTop'
@@ -132,6 +138,8 @@ export type CockpitDailySnapshot = Pick<
 export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspaceSnapshot {
   const activeOpportunities = workspace.opportunities.filter((item) => !item.archivedAt);
   const pipelineSignals = localIntelligence.pipelineHealth(activeOpportunities).slice(0, 8);
+  const pipelineProjection = localIntelligence.pipelineProjection(workspace.opportunities);
+  const opportunitiesToClose = localIntelligence.opportunitiesToClose(workspace.opportunities);
   const cadenceHeadline = operatorCadenceFlow.build(workspace).headline;
   const cockpitExtras = buildCockpitIntelligenceExtras(workspace);
 
@@ -183,6 +191,8 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     missedTasks: workspace.scheduler.tasks.filter((task) => task.status === 'missed').length,
     recentAudit: (workspace.agentAudit?.entries ?? []).slice(0, 8),
     pipelineSignals,
+    pipelineProjection,
+    opportunitiesToClose,
     cadenceHeadline,
     settingsFullReadout: buildMobileSettingsFullReadout(workspace),
     cockpitOpportunityPeek: activeOpportunities.slice(0, 5).map((o) => ({

@@ -69,6 +69,19 @@ const opportunityHealth = (opportunity: Opportunity) => {
   return clamp(100 - followUpRisk + confidenceBonus + valueBonus - stagePenalty);
 };
 
+/** Open pipeline totals: raw sum of valueUsd vs confidence-weighted (same weighting intuition as health rules). */
+export interface PipelineProjectionReadout {
+  /** Sum of valueUsd × (confidence/100) over active, non-terminal deals. */
+  weightedOpenValueUsd: number;
+  /** Sum of valueUsd over the same set. */
+  rawOpenValueUsd: number;
+  /** Count of deals included in the sums. */
+  activeDealCount: number;
+}
+
+const isTerminalOpportunity = (o: Opportunity) =>
+  o.archivedAt != null || o.status === 'won' || o.status === 'lost';
+
 const publishingRecommendation = (item: PublishingItem): Recommendation => {
   const p = getIntelligenceRules().publishing;
   const dueInHours = hoursUntil(item.scheduledFor);
@@ -160,6 +173,46 @@ export const localIntelligence = {
         reason: `Confidence ${item.confidence}%, value $${item.valueUsd.toLocaleString()}, status ${item.status}.`
       }))
     );
+  },
+
+  /**
+   * Confidence-weighted open pipeline (not a forecast). Excludes won/lost/archived.
+   * Weighted = Σ valueUsd × (confidence/100).
+   */
+  pipelineProjection(opportunities: Opportunity[]): PipelineProjectionReadout {
+    const open = opportunities.filter((o) => !isTerminalOpportunity(o));
+    const rawOpenValueUsd = Math.round(
+      open.reduce((sum, o) => sum + Math.max(0, o.valueUsd), 0)
+    );
+    const weightedOpenValueUsd = Math.round(
+      open.reduce(
+        (sum, o) => sum + Math.max(0, o.valueUsd) * (clamp(o.confidence, 0, 100) / 100),
+        0
+      )
+    );
+    return {
+      weightedOpenValueUsd,
+      rawOpenValueUsd,
+      activeDealCount: open.length
+    };
+  },
+
+  /**
+   * Deals in proposal or negotiation — ranked by the same health heuristic as pipeline health.
+   */
+  opportunitiesToClose(opportunities: Opportunity[], limit = 8): IntelligenceSignal[] {
+    const closingStages = new Set<Opportunity['status']>(['proposal', 'negotiation']);
+    const candidates = opportunities.filter(
+      (o) => !isTerminalOpportunity(o) && closingStages.has(o.status)
+    );
+    return this.rankSignals(
+      candidates.map((item) => ({
+        id: item.id,
+        label: `${item.name} • ${item.company}`,
+        score: opportunityHealth(item),
+        reason: `Stage ${item.status}; $${item.valueUsd.toLocaleString()} @ ${item.confidence}% · ${item.nextAction || 'set next action in Chat'}.`
+      }))
+    ).slice(0, limit);
   },
 
   publishingRecommendations(queue: PublishingItem[]): Recommendation[] {
