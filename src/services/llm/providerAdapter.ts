@@ -1,15 +1,24 @@
 import { AiGenerationRequest, AiGenerationResponse, AiProviderAdapter } from '../aiAdapters/types';
 import { isAiProviderEnabled } from '../aiAdapters/runtimePolicy';
+import { agentOrchestrator } from '../agent/orchestrator';
 
 class LocalTemplateProvider implements AiProviderAdapter {
   id = 'local' as const;
 
   async generate(request: AiGenerationRequest): Promise<AiGenerationResponse> {
     const objective = request.objective.trim() || 'your workflow objective';
+    const orchestrated = await agentOrchestrator.execute({
+      objective,
+      context: request.context
+    });
+
     return {
       provider: this.id,
       model: 'template-v1',
-      text: `AI generation is not enabled for this build yet. Capture objective "${objective}" in your notes and complete this draft manually from the dashboard context.`
+      text:
+        `${orchestrated.responseText} ` +
+        `Current objective: "${objective}". ` +
+        'This local provider is a deterministic scaffold; connect external providers for production-grade generation.'
     };
   }
 }

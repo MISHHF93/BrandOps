@@ -27,6 +27,7 @@ export default defineConfig({
         dashboard: resolve(__dirname, 'dashboard.html'),
         welcome: resolve(__dirname, 'welcome.html'),
         help: resolve(__dirname, 'help.html'),
+        mobile: resolve(__dirname, 'mobile.html'),
         background: resolve(__dirname, 'src/background/index.ts'),
         linkedinOverlay: resolve(__dirname, 'src/content/linkedinOverlay.ts')
       },

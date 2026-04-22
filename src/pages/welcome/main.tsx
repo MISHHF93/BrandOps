@@ -2,14 +2,14 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import '../../styles/index.css';
 import { AppErrorBoundary } from '../../shared/ui/AppErrorBoundary';
-import { WelcomeApp } from './welcomeApp';
+import { MobileApp } from '../mobile/mobileApp';
 
 document.documentElement.setAttribute('data-app-surface', 'welcome');
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AppErrorBoundary surfaceLabel="Welcome">
-      <WelcomeApp />
+      <MobileApp initialTab="chat" surfaceLabel="chatbot-web" />
     </AppErrorBoundary>
   </React.StrictMode>
 );

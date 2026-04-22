@@ -10,15 +10,19 @@
   </head>
   <body>
     <script>
-      const target = new URL('/dashboard.html', window.location.origin);
+      const target = new URL('/mobile.html', window.location.origin);
       target.search = window.location.search;
       target.hash = window.location.hash;
       window.location.replace(target.toString());
     </script>
     <p>
       Redirecting to
-      <a href="/dashboard.html">BrandOps Dashboard</a>
+      <a href="/mobile.html">BrandOps Mobile Chatbot</a>
       ...
+    </p>
+    <p>
+      Legacy operator cockpit:
+      <a href="/dashboard.html">Dashboard</a>
     </p>
   </body>
 </html>

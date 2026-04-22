@@ -1,6 +1,6 @@
-# BrandOps MVP
+# BrandOps AI Chatbot App
 
-BrandOps is a **local-first browser extension workspace** for solo operators and lean teams who run brand, outreach, publishing, and pipeline execution in one place.
+BrandOps is a **chatbot-first AI workspace application** for solo operators and lean teams who run brand, outreach, publishing, and pipeline execution from one command interface.
 
 This MVP focuses on **workflow quality** and **transparent helper logic** rather than hype:
 - no dependency on external model APIs,

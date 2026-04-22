@@ -1,9 +1,14 @@
 import { RuntimeMessage } from '../services/messaging/messages';
 import { scheduler } from '../services/scheduling/scheduler';
 import { storageService } from '../services/storage/storage';
+import { executeAgentWorkspaceCommand } from '../services/agent/agentWorkspaceEngine';
+import { normalizeChannelWebhookPayload } from '../services/agent/channelPayloadAdapters';
+import { BridgeReplayGuard } from '../services/agent/bridgeReplayGuard';
+import { toRuntimeWebhookMessage, verifyWebhookBridgeEnvelope } from '../services/agent/webhookBridge';
 import { hasFederatedSession } from '../shared/identity/sessionAccess';
 
 const ALARM_PREFIX = 'brandops:task:';
+const bridgeReplayGuard = new BridgeReplayGuard();
 
 const alarmNameForTask = (taskId: string) => `${ALARM_PREFIX}${taskId}`;
 const taskIdFromAlarm = (alarmName: string) => alarmName.replace(ALARM_PREFIX, '');
@@ -70,6 +75,37 @@ const sendReminderNotification = async (taskId: string) => {
   await storageService.setData(next);
 };
 
+const executeAndRespondFromWebhookPayload = async (
+  input: { platform: 'telegram' | 'whatsapp'; payload: unknown },
+  sendResponse: (response: unknown) => void,
+  invalidPayloadError: string
+) => {
+  const normalized = normalizeChannelWebhookPayload({
+    platform: input.platform,
+    payload: input.payload
+  });
+  if (!normalized) {
+    sendResponse({
+      ok: false,
+      error: invalidPayloadError
+    });
+    return;
+  }
+
+  const result = await executeAgentWorkspaceCommand({
+    text: normalized.text,
+    actorName: normalized.actorName ?? normalized.actorId,
+    source: normalized.platform
+  });
+  await scheduleAlarms();
+  sendResponse({
+    ok: result.ok,
+    action: result.action,
+    summary: result.summary,
+    normalized
+  });
+};
+
 chrome.runtime.onInstalled.addListener(async (details) => {
   try {
     await scheduleAlarms();
@@ -127,7 +163,70 @@ chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResp
         return;
       }
 
-      sendResponse({ ok: false, error: `Unsupported runtime message: ${message.type}` });
+      if (message.type === 'AGENT_CHANNEL_EVENT') {
+        const result = await executeAgentWorkspaceCommand({
+          text: message.payload.text,
+          actorName: message.payload.actorName ?? message.payload.actorId,
+          source: message.payload.platform
+        });
+        await scheduleAlarms();
+        sendResponse({
+          ok: result.ok,
+          action: result.action,
+          summary: result.summary
+        });
+        return;
+      }
+
+      if (message.type === 'AGENT_CHANNEL_WEBHOOK') {
+        await executeAndRespondFromWebhookPayload(
+          {
+            platform: message.payload.platform,
+            payload: message.payload.raw
+          },
+          sendResponse,
+          `Webhook payload could not be normalized for ${message.payload.platform}.`
+        );
+        return;
+      }
+
+      if (message.type === 'AGENT_BRIDGE_ENVELOPE') {
+        const replayed = bridgeReplayGuard.registerAndCheckReplay(
+          message.payload.envelope.nonce
+        );
+        if (replayed) {
+          sendResponse({
+            ok: false,
+            error: 'Bridge envelope rejected: replayed nonce.'
+          });
+          return;
+        }
+
+        const verification = await verifyWebhookBridgeEnvelope(
+          message.payload.secret,
+          message.payload.envelope
+        );
+        if (!verification.valid) {
+          sendResponse({
+            ok: false,
+            error: verification.reason ?? 'Bridge envelope verification failed.'
+          });
+          return;
+        }
+
+        const runtimeWebhookMessage = toRuntimeWebhookMessage(message.payload.envelope);
+        await executeAndRespondFromWebhookPayload(
+          {
+            platform: runtimeWebhookMessage.payload.platform,
+            payload: runtimeWebhookMessage.payload.raw
+          },
+          sendResponse,
+          `Signed bridge payload could not be normalized for ${runtimeWebhookMessage.payload.platform}.`
+        );
+        return;
+      }
+
+      sendResponse({ ok: false, error: 'Unsupported runtime message.' });
     } catch (error) {
       console.error('[BrandOps] Runtime message handler failed.', message.type, error);
       sendResponse({

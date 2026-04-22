@@ -3,14 +3,14 @@ import { createRoot } from 'react-dom/client';
 import '../../styles/index.css';
 import { bootstrapDocumentThemeFromWebStorage } from '../../shared/ui/theme';
 import { AppErrorBoundary } from '../../shared/ui/AppErrorBoundary';
-import { DashboardApp } from './dashboardApp';
+import { MobileApp } from '../mobile/mobileApp';
 
 bootstrapDocumentThemeFromWebStorage();
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AppErrorBoundary surfaceLabel="Dashboard">
-      <DashboardApp />
+      <MobileApp initialTab="chat" surfaceLabel="chatbot-web" />
     </AppErrorBoundary>
   </React.StrictMode>
 );

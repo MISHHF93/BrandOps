@@ -2,12 +2,12 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import '../../styles/index.css';
 import { AppErrorBoundary } from '../../shared/ui/AppErrorBoundary';
-import { OptionsApp } from './optionsApp';
+import { MobileApp } from '../mobile/mobileApp';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AppErrorBoundary surfaceLabel="Settings">
-      <OptionsApp />
+      <MobileApp initialTab="settings" surfaceLabel="chatbot-web" />
     </AppErrorBoundary>
   </React.StrictMode>
 );
