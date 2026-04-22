@@ -7,6 +7,8 @@ This MVP focuses on **workflow quality** and **transparent helper logic** rather
 - no black-box automation claims,
 - explainable local heuristics that help prioritize work.
 
+**AI chatbot model (how intent, execution, and memory fit together):** see [docs/AI_CHATBOT_FUNDAMENTALS.md](docs/AI_CHATBOT_FUNDAMENTALS.md).
+
 ---
 
 ## Operating philosophy
