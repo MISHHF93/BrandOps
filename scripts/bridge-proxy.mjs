@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from 'node:crypto';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 
 const PORT = Number(process.env.BRIDGE_PROXY_PORT ?? 8787);
@@ -6,6 +6,7 @@ const SHARED_SECRET = process.env.BRIDGE_SHARED_SECRET ?? '';
 const TARGET_URL = process.env.BRIDGE_TARGET_URL ?? '';
 const TELEGRAM_TOKEN = process.env.TELEGRAM_WEBHOOK_TOKEN ?? '';
 const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN ?? '';
+const WHATSAPP_APP_SECRET = process.env.WHATSAPP_APP_SECRET ?? '';
 
 if (!SHARED_SECRET) {
   console.error('[bridge-proxy] Missing BRIDGE_SHARED_SECRET.');
@@ -33,12 +34,25 @@ const sendJson = (res, statusCode, payload) => {
   res.end(JSON.stringify(payload));
 };
 
-const readJsonBody = async (req) => {
+const readRequestBody = async (req) => {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
-  if (chunks.length === 0) return {};
-  const raw = Buffer.concat(chunks).toString('utf8');
-  return JSON.parse(raw);
+  const raw = Buffer.concat(chunks);
+  if (raw.length === 0) return { raw, json: {} };
+  return { raw, json: JSON.parse(raw.toString('utf8')) };
+};
+
+const verifyWhatsAppSignature = (rawBuffer, headerValue) => {
+  if (!WHATSAPP_APP_SECRET) return true;
+  if (!headerValue || typeof headerValue !== 'string' || !headerValue.startsWith('sha256=')) {
+    return false;
+  }
+  const expected = createHmac('sha256', WHATSAPP_APP_SECRET)
+    .update(rawBuffer)
+    .digest();
+  const received = Buffer.from(headerValue.replace(/^sha256=/, ''), 'hex');
+  if (received.length !== expected.length) return false;
+  return timingSafeEqual(received, expected);
 };
 
 const verifyTelegramRequest = (req) => {
@@ -86,6 +100,25 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    /** WhatsApp Cloud API subscription verification (GET) */
+    if (req.method === 'GET' && req.url?.startsWith('/webhooks/whatsapp')) {
+      if (!WHATSAPP_VERIFY_TOKEN) {
+        sendJson(res, 503, { ok: false, error: 'WHATSAPP_VERIFY_TOKEN is not set.' });
+        return;
+      }
+      const u = new URL(req.url, 'http://127.0.0.1');
+      const mode = u.searchParams.get('hub.mode');
+      const token = u.searchParams.get('hub.verify_token');
+      const challenge = u.searchParams.get('hub.challenge');
+      if (mode === 'subscribe' && token === WHATSAPP_VERIFY_TOKEN && challenge) {
+        res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });
+        res.end(challenge);
+        return;
+      }
+      sendJson(res, 403, { ok: false, error: 'WhatsApp verification token mismatch.' });
+      return;
+    }
+
     if (req.method !== 'POST') {
       sendJson(res, 405, { ok: false, error: 'Method not allowed.' });
       return;
@@ -113,7 +146,11 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    const payload = await readJsonBody(req);
+    const { raw, json: payload } = await readRequestBody(req);
+    if (platform === 'whatsapp' && !verifyWhatsAppSignature(raw, req.headers['x-hub-signature-256'])) {
+      sendJson(res, 401, { ok: false, error: 'WhatsApp payload signature failed.' });
+      return;
+    }
     const unsignedEnvelope = {
       version: 'v1',
       platform,

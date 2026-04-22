@@ -141,6 +141,9 @@ export const seedData: BrandOpsData = {
     sources: [],
     artifacts: []
   },
+  agentAudit: {
+    entries: []
+  },
   seed: {
     seededAt: isoNow,
     source: 'production-empty',

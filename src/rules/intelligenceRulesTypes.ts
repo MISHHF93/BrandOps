@@ -1,7 +1,7 @@
 /** Monotonic pack version; bump when shape changes incompatibly. */
 export const INTELLIGENCE_RULES_SCHEMA_VERSION = 1 as const;
 
-/** Execution heat (0–100) — see `executionHeatModel.ts`. */
+/** Execution heat (0–100) thresholds used by intelligence scoring. */
 export interface HeatRulesPack {
   bandCritical: number;
   bandWarning: number;

@@ -371,6 +371,122 @@ describe('channelCommandExecutor', () => {
     expect(after.contentLibrary.length).toBeGreaterThan(1);
   });
 
+  it('updates contact relationship stage from command', async () => {
+    const seeded = await storageService.getData();
+    const now = new Date().toISOString();
+    await storageService.setData({
+      ...seeded,
+      contacts: [
+        {
+          id: 'c-rel-1',
+          name: 'Rel Contact',
+          company: 'Co',
+          role: 'PM',
+          source: 'manual',
+          relationshipStage: 'new',
+          status: 'active',
+          nextAction: 'Hi',
+          followUpDate: now,
+          notes: '',
+          links: [],
+          relatedOutreachDraftIds: [],
+          relatedContentTags: [],
+          lastContactAt: now
+        }
+      ]
+    });
+    const result = await executeChannelCommand({
+      platform: 'telegram',
+      text: 'update contact relationship: trusted'
+    });
+    const after = await storageService.getData();
+    expect(result.ok).toBe(true);
+    expect(result.action).toBe('update-contact-relationship');
+    expect(after.contacts[0].relationshipStage).toBe('trusted');
+  });
+
+  it('adds integration artifact and ssh target from commands', async () => {
+    const seeded = await storageService.getData();
+    const now = new Date().toISOString();
+    await storageService.setData({
+      ...seeded,
+      integrationHub: {
+        ...seeded.integrationHub,
+        sources: [
+          {
+            id: 'src-art-1',
+            name: 'Notion',
+            kind: 'notion' as const,
+            status: 'planned' as const,
+            artifactTypes: ['log'],
+            tags: [],
+            notes: '',
+            createdAt: now
+          }
+        ],
+        artifacts: [],
+        sshTargets: []
+      }
+    });
+    const art = await executeChannelCommand({
+      platform: 'whatsapp',
+      text: 'add integration artifact: title: Weekly, type: conversation-log, source: Notion'
+    });
+    const afterArt = await storageService.getData();
+    expect(art.ok).toBe(true);
+    expect(art.action).toBe('add-integration-artifact');
+    expect(afterArt.integrationHub.artifacts.length).toBe(1);
+
+    const ssh = await executeChannelCommand({
+      platform: 'telegram',
+      text: 'add ssh: name: prod host: db.internal port: 22 user: ops'
+    });
+    const afterSsh = await storageService.getData();
+    expect(ssh.ok).toBe(true);
+    expect(ssh.action).toBe('add-ssh-target');
+    expect(afterSsh.integrationHub.sshTargets.length).toBe(1);
+  });
+
+  it('updates opportunity with labeled name and company from command', async () => {
+    const seeded = await storageService.getData();
+    const now = new Date().toISOString();
+    await storageService.setData({
+      ...seeded,
+      opportunities: [
+        {
+          id: 'opp-meta-1',
+          name: 'Old',
+          company: 'OldCo',
+          role: 'VP',
+          source: 'manual',
+          relationshipStage: 'new',
+          opportunityType: 'consulting',
+          status: 'prospect',
+          nextAction: 'Call',
+          followUpDate: now,
+          notes: '',
+          links: [],
+          relatedOutreachDraftIds: [],
+          relatedContentTags: [],
+          createdAt: now,
+          updatedAt: now,
+          valueUsd: 1000,
+          confidence: 20
+        }
+      ]
+    });
+    const result = await executeChannelCommand({
+      platform: 'telegram',
+      text: 'update opportunity name: Big Deal, company: Globex, source: partner referral'
+    });
+    const after = await storageService.getData();
+    const opp = after.opportunities.find((o) => o.id === 'opp-meta-1');
+    expect(result.ok).toBe(true);
+    expect(result.action).toBe('update-opportunity');
+    expect(opp?.name).toContain('Big Deal');
+    expect(opp?.company).toContain('Globex');
+  });
+
   it('updates publishing item status and checklist from command', async () => {
     const seeded = await storageService.getData();
     const now = new Date().toISOString();

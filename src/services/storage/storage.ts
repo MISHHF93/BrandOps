@@ -2,6 +2,7 @@ import { seedData } from '../../modules/brandMemory/seed';
 import { browserLocalStorage } from '../../shared/storage/browserStorage';
 import {
   ActivityNote,
+  AgentAuditEntry,
   BrandProfile,
   BrandOpsData,
   BrandVault,
@@ -1157,6 +1158,45 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
   };
 };
 
+const MAX_AGENT_AUDIT_ENTRIES = 200;
+
+const normalizeAgentAudit = (value: unknown): NonNullable<BrandOpsData['agentAudit']> => {
+  if (!value || typeof value !== 'object') {
+    return { entries: [] };
+  }
+  const raw = (value as { entries?: unknown }).entries;
+  if (!Array.isArray(raw)) {
+    return { entries: [] };
+  }
+  const entries: AgentAuditEntry[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const e = item as Record<string, unknown>;
+    if (
+      typeof e.id !== 'string' ||
+      typeof e.at !== 'string' ||
+      typeof e.source !== 'string' ||
+      typeof e.action !== 'string' ||
+      typeof e.ok !== 'boolean' ||
+      typeof e.summary !== 'string' ||
+      typeof e.commandPreview !== 'string'
+    ) {
+      continue;
+    }
+    entries.push({
+      id: e.id,
+      at: e.at,
+      source: e.source,
+      action: e.action,
+      ok: e.ok,
+      summary: e.summary,
+      commandPreview: e.commandPreview
+    });
+    if (entries.length >= MAX_AGENT_AUDIT_ENTRIES) break;
+  }
+  return { entries: entries.slice(-MAX_AGENT_AUDIT_ENTRIES) };
+};
+
 const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   seed: {
@@ -1191,6 +1231,7 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   settings: normalizeSettings(base.settings),
   externalSync: normalizeExternalSyncState(base.externalSync),
   integrationHub: normalizeIntegrationHubState(base.integrationHub),
+  agentAudit: normalizeAgentAudit(base.agentAudit),
   scheduler: normalizeSchedulerState(base.scheduler),
   seed: {
     source: normalizeSeedSource(base.seed?.source),

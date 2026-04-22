@@ -1,5 +1,5 @@
 import { ChannelPlatform } from './types';
-import { executeAgentWorkspaceCommand } from './agentWorkspaceEngine';
+import { AgentAction, executeAgentWorkspaceCommand } from './agentWorkspaceEngine';
 
 export interface ChannelEventPayload {
   platform: Extract<ChannelPlatform, 'telegram' | 'whatsapp'>;
@@ -11,27 +11,7 @@ export interface ChannelEventPayload {
 export interface ChannelCommandResult {
   ok: boolean;
   summary: string;
-  action:
-    | 'add-note'
-    | 'reschedule-publishing'
-    | 'add-integration-source'
-    | 'add-outreach-draft'
-    | 'add-publishing-draft'
-    | 'update-opportunity-stage'
-    | 'update-opportunity'
-    | 'archive-opportunity'
-    | 'restore-opportunity'
-    | 'create-follow-up'
-    | 'complete-follow-up'
-    | 'add-contact'
-    | 'update-contact'
-    | 'add-content-item'
-    | 'update-content-item'
-    | 'duplicate-content-item'
-    | 'archive-content-item'
-    | 'update-publishing-item'
-    | 'configure-workspace'
-    | 'unsupported';
+  action: AgentAction;
 }
 
 export const executeChannelCommand = async (

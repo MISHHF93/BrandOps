@@ -1,4 +1,9 @@
-import { ChannelEventPayload } from './channelCommandExecutor';
+export interface ChannelEventPayload {
+  platform: 'telegram' | 'whatsapp';
+  text: string;
+  actorId?: string;
+  actorName?: string;
+}
 
 interface TelegramWebhookPayload {
   message?: {

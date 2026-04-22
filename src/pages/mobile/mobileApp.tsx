@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { MessageCircle, CalendarCheck2, PlugZap, Settings } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { MessageCircle, CalendarCheck2, PlugZap, History, Settings } from 'lucide-react';
 import { executeAgentWorkspaceCommand } from '../../services/agent/agentWorkspaceEngine';
 import { storageService } from '../../services/storage/storage';
+import type { AgentAuditEntry } from '../../types/domain';
 
 type TabId = 'chat' | 'daily' | 'integrations' | 'settings';
 
@@ -51,6 +52,7 @@ interface WorkspaceSnapshot {
   primaryOffer: string;
   dueTodayTasks: number;
   missedTasks: number;
+  recentAudit: AgentAuditEntry[];
 }
 
 const QUICK_COMMANDS = [
@@ -105,68 +107,177 @@ const OPERATIONAL_PRESETS: Array<{ label: string; command: string }> = [
   }
 ];
 
+const CHAT_THREAD_KEY = 'brandops:agent:chatThread';
+const COMMAND_CHIPS_KEY = 'brandops:agent:commandChips';
+const MAX_PERSISTED_MESSAGES = 50;
+const MAX_COMMAND_CHIPS = 24;
+
+const defaultWelcomeMessage = (): ChatMessage => ({
+  id: uid(),
+  role: 'assistant',
+  text:
+    'BrandOps AI Agent is ready. Try: "add note: ...", "draft outreach: ...", "draft post: ...", "reschedule posts to friday 11am", or "update opportunity to proposal".'
+});
+
+const readChatThread = (): ChatMessage[] | null => {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CHAT_THREAD_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ChatMessage[];
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    return parsed.slice(-MAX_PERSISTED_MESSAGES);
+  } catch {
+    return null;
+  }
+};
+
+const writeChatThread = (rows: ChatMessage[]) => {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(CHAT_THREAD_KEY, JSON.stringify(rows.slice(-MAX_PERSISTED_MESSAGES)));
+  } catch {
+    // ignore quota
+  }
+};
+
+const readCommandChips = (): string[] => {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(COMMAND_CHIPS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as string[];
+    return Array.isArray(parsed) ? parsed.slice(0, MAX_COMMAND_CHIPS) : [];
+  } catch {
+    return [];
+  }
+};
+
+const pushCommandChip = (cmd: string) => {
+  if (typeof localStorage === 'undefined') return;
+  const t = cmd.trim();
+  if (!t) return;
+  const next = [t, ...readCommandChips().filter((c) => c !== t)].slice(0, MAX_COMMAND_CHIPS);
+  try {
+    localStorage.setItem(COMMAND_CHIPS_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+};
+
+const needsDestructiveConfirm = (text: string) => {
+  const lower = text.toLowerCase();
+  return lower.includes('archive opportunity') || lower.includes('archive content');
+};
+
+const clearPersistedCommandChips = () => {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.removeItem(COMMAND_CHIPS_KEY);
+};
+
 export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: MobileAppProps) => {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: uid(),
-      role: 'assistant',
-      text:
-        'BrandOps AI Agent is ready. Try: "add note: ...", "draft outreach: ...", "draft post: ...", "reschedule posts to friday 11am", or "update opportunity to proposal".'
-    }
-  ]);
+  const [commandHistory, setCommandHistory] = useState<string[]>(() => readCommandChips());
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const persisted = readChatThread();
+    if (persisted && persisted.length > 0) return persisted;
+    return [defaultWelcomeMessage()];
+  });
+
+  const refreshWorkspaceSnapshot = useCallback(async () => {
+    const workspace = await storageService.getData();
+    setSnapshot({
+      notes: workspace.notes.length,
+      publishingQueue: workspace.publishingQueue.length,
+      outreachDrafts: workspace.outreachDrafts.length,
+      opportunities: workspace.opportunities.length,
+      integrationSources: workspace.integrationHub.sources.length,
+      syncProvidersConnected: [
+        workspace.settings.syncHub.google,
+        workspace.settings.syncHub.github,
+        workspace.settings.syncHub.linkedin
+      ].filter((provider) => provider.connectionStatus === 'connected').length,
+      cadenceMode: workspace.settings.cadenceFlow.mode,
+      reminderWindow: `${workspace.settings.notificationCenter.workdayStartHour}:00-${workspace.settings.notificationCenter.workdayEndHour}:00`,
+      incompleteFollowUps: workspace.followUps.filter((item) => !item.completed).length,
+      activeOpportunities: workspace.opportunities.filter((item) => !item.archivedAt).length,
+      queuedPublishing: workspace.publishingQueue.filter(
+        (item) => item.status === 'queued' || item.status === 'due-soon'
+      ).length,
+      providerStatuses: [
+        { id: 'google', status: workspace.settings.syncHub.google.connectionStatus },
+        { id: 'github', status: workspace.settings.syncHub.github.connectionStatus },
+        { id: 'linkedin', status: workspace.settings.syncHub.linkedin.connectionStatus }
+      ],
+      recentIntegrationSources: workspace.integrationHub.sources.slice(0, 5).map((source) => source.name),
+      visualMode: workspace.settings.visualMode,
+      motionMode: workspace.settings.motionMode,
+      ambientFxEnabled: workspace.settings.ambientFxEnabled,
+      debugMode: workspace.settings.debugMode,
+      managerialWeight: workspace.settings.notificationCenter.managerialWeight,
+      maxDailyTasks: workspace.settings.notificationCenter.maxDailyTasks,
+      remindBeforeMinutes: workspace.settings.cadenceFlow.remindBeforeMinutes,
+      operatorName: workspace.brand.operatorName,
+      focusMetric: workspace.brand.focusMetric,
+      primaryOffer: workspace.brand.primaryOffer,
+      dueTodayTasks: workspace.scheduler.tasks.filter(
+        (task) => task.status === 'due' || task.status === 'due-soon'
+      ).length,
+      missedTasks: workspace.scheduler.tasks.filter((task) => task.status === 'missed').length,
+      recentAudit: (workspace.agentAudit?.entries ?? []).slice(0, 8)
+    });
+    setCommandHistory(readCommandChips());
+  }, []);
 
   useEffect(() => {
-    void (async () => {
-      const workspace = await storageService.getData();
-      setSnapshot({
-        notes: workspace.notes.length,
-        publishingQueue: workspace.publishingQueue.length,
-        outreachDrafts: workspace.outreachDrafts.length,
-        opportunities: workspace.opportunities.length,
-        integrationSources: workspace.integrationHub.sources.length,
-        syncProvidersConnected: [
-          workspace.settings.syncHub.google,
-          workspace.settings.syncHub.github,
-          workspace.settings.syncHub.linkedin
-        ].filter((provider) => provider.connectionStatus === 'connected').length,
-        cadenceMode: workspace.settings.cadenceFlow.mode,
-        reminderWindow: `${workspace.settings.notificationCenter.workdayStartHour}:00-${workspace.settings.notificationCenter.workdayEndHour}:00`,
-        incompleteFollowUps: workspace.followUps.filter((item) => !item.completed).length,
-        activeOpportunities: workspace.opportunities.filter((item) => !item.archivedAt).length,
-        queuedPublishing: workspace.publishingQueue.filter(
-          (item) => item.status === 'queued' || item.status === 'due-soon'
-        ).length,
-        providerStatuses: [
-          { id: 'google', status: workspace.settings.syncHub.google.connectionStatus },
-          { id: 'github', status: workspace.settings.syncHub.github.connectionStatus },
-          { id: 'linkedin', status: workspace.settings.syncHub.linkedin.connectionStatus }
-        ],
-        recentIntegrationSources: workspace.integrationHub.sources.slice(0, 5).map((source) => source.name),
-        visualMode: workspace.settings.visualMode,
-        motionMode: workspace.settings.motionMode,
-        ambientFxEnabled: workspace.settings.ambientFxEnabled,
-        debugMode: workspace.settings.debugMode,
-        managerialWeight: workspace.settings.notificationCenter.managerialWeight,
-        maxDailyTasks: workspace.settings.notificationCenter.maxDailyTasks,
-        remindBeforeMinutes: workspace.settings.cadenceFlow.remindBeforeMinutes,
-        operatorName: workspace.brand.operatorName,
-        focusMetric: workspace.brand.focusMetric,
-        primaryOffer: workspace.brand.primaryOffer,
-        dueTodayTasks: workspace.scheduler.tasks.filter(
-          (task) => task.status === 'due' || task.status === 'due-soon'
-        ).length,
-        missedTasks: workspace.scheduler.tasks.filter((task) => task.status === 'missed').length
-      });
-    })();
-  }, [messages.length]);
+    void refreshWorkspaceSnapshot();
+  }, [refreshWorkspaceSnapshot]);
+
+  useEffect(() => {
+    writeChatThread(messages);
+  }, [messages]);
 
   const sendQuickCommand = (command: string) => {
     setInput(command);
     setActiveTab('chat');
+  };
+
+  const runCommand = async (command: string) => {
+    const trimmed = command.trim();
+    if (!trimmed || loading) return;
+    if (
+      typeof window !== 'undefined' &&
+      needsDestructiveConfirm(trimmed) &&
+      !window.confirm('This command archives workspace data. Continue?')
+    ) {
+      return;
+    }
+    setMessages((prev) => [...prev, { id: uid(), role: 'user', text: trimmed }]);
+    setLoading(true);
+    try {
+      const result = await executeAgentWorkspaceCommand({
+        text: trimmed,
+        actorName: 'mobile-operator',
+        source: surfaceLabel === 'chatbot-web' ? 'chatbot-web' : 'chatbot-mobile'
+      });
+      setMessages((prev) => [...prev, { id: uid(), role: 'assistant', text: result.summary }]);
+      pushCommandChip(trimmed);
+      await refreshWorkspaceSnapshot();
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: uid(),
+          role: 'assistant',
+          text: error instanceof Error ? error.message : 'Unknown error while processing command.'
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const tabContent = useMemo(() => {
@@ -184,29 +295,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
     const trimmed = input.trim();
     if (!trimmed || loading) return;
 
-    setMessages((prev) => [...prev, { id: uid(), role: 'user', text: trimmed }]);
     setInput('');
-    setLoading(true);
-
-    try {
-      const result = await executeAgentWorkspaceCommand({
-        text: trimmed,
-        actorName: 'mobile-operator',
-        source: surfaceLabel === 'chatbot-web' ? 'chatbot-web' : 'chatbot-mobile'
-      });
-      setMessages((prev) => [...prev, { id: uid(), role: 'assistant', text: result.summary }]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: uid(),
-          role: 'assistant',
-          text: error instanceof Error ? error.message : 'Unknown error while processing command.'
-        }
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    await runCommand(trimmed);
   };
 
   return (
@@ -250,6 +340,40 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
                 ))}
               </div>
             </div>
+
+            {commandHistory.length > 0 ? (
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                    <History size={14} aria-hidden />
+                    Recent commands
+                  </p>
+                  <button
+                    type="button"
+                    className="text-[10px] text-zinc-500 hover:text-zinc-300"
+                    onClick={() => {
+                      clearPersistedCommandChips();
+                      setCommandHistory([]);
+                    }}
+                  >
+                    Clear list
+                  </button>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {commandHistory.map((cmd) => (
+                    <button
+                      key={cmd}
+                      type="button"
+                      onClick={() => sendQuickCommand(cmd)}
+                      className="max-w-full truncate rounded-full border border-zinc-700 px-2 py-1 text-left text-[11px] text-zinc-300"
+                      title={cmd}
+                    >
+                      {cmd.length > 42 ? `${cmd.slice(0, 40)}…` : cmd}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </section>
         ) : (
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-sm text-zinc-300">
@@ -312,21 +436,21 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => sendQuickCommand('create follow up: check warm lead status')}
+                    onClick={() => void runCommand('create follow up: check warm lead status')}
                     className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                   >
                     Create follow-up
                   </button>
                   <button
                     type="button"
-                    onClick={() => sendQuickCommand('reschedule posts to friday 11am')}
+                    onClick={() => void runCommand('reschedule posts to friday 11am')}
                     className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                   >
                     Reschedule publishing
                   </button>
                   <button
                     type="button"
-                    onClick={() => sendQuickCommand('update opportunity to proposal')}
+                    onClick={() => void runCommand('update opportunity to proposal')}
                     className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                   >
                     Advance opportunity
@@ -362,14 +486,14 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => sendQuickCommand('connect notion source: Growth workspace')}
+                    onClick={() => void runCommand('connect notion source: Growth workspace')}
                     className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                   >
                     Add Notion source
                   </button>
                   <button
                     type="button"
-                    onClick={() => sendQuickCommand('add source: webhook pipeline')}
+                    onClick={() => void runCommand('add source: webhook pipeline')}
                     className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                   >
                     Add webhook source
@@ -380,6 +504,47 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
 
             {activeTab === 'settings' && snapshot ? (
               <div className="mt-4 space-y-3">
+                <div className="rounded-xl border border-zinc-800 p-3 text-xs">
+                  <p className="font-semibold text-zinc-100">Session and history</p>
+                  <p className="mt-1 text-zinc-400">
+                    Chat thread is saved in this browser for replay. Destructive commands ask for confirmation.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
+                      onClick={() => {
+                        if (typeof window !== 'undefined' && !window.confirm('Clear the on-device chat transcript?')) {
+                          return;
+                        }
+                        const fresh = [defaultWelcomeMessage()];
+                        setMessages(fresh);
+                        if (typeof localStorage !== 'undefined') {
+                          localStorage.removeItem(CHAT_THREAD_KEY);
+                        }
+                      }}
+                    >
+                      Clear chat transcript
+                    </button>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-zinc-800 p-3 text-xs">
+                  <p className="font-semibold text-zinc-100">Recent command activity</p>
+                  {snapshot.recentAudit.length > 0 ? (
+                    <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-zinc-400">
+                      {snapshot.recentAudit.map((line) => (
+                        <li key={line.id} className="border-b border-zinc-800/80 pb-1">
+                          <span className={line.ok ? 'text-emerald-400' : 'text-amber-400'}>
+                            {line.ok ? 'ok' : 'no'}
+                          </span>{' '}
+                          <span className="text-zinc-300">{line.action}</span> — {line.summary}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-zinc-500">No audit entries yet — run a command in Chat.</p>
+                  )}
+                </div>
                 <div className="rounded-xl border border-zinc-800 p-3 text-xs">
                   <p className="font-semibold text-zinc-100">Configuration controls</p>
                   <p className="mt-1 text-zinc-400">
@@ -404,7 +569,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
                     <button
                       type="button"
                       onClick={() =>
-                        sendQuickCommand(
+                        void runCommand(
                           'configure: operator name is "BrandOps Operator", primary offer is "Growth systems", focus metric is "Qualified conversations per week"'
                         )
                       }
@@ -415,7 +580,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
                     <button
                       type="button"
                       onClick={() =>
-                        sendQuickCommand(
+                        void runCommand(
                           'configure: operator name is "Founder", primary offer is "AI GTM consulting", focus metric is "Revenue pipeline created"'
                         )
                       }
@@ -428,21 +593,21 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => sendQuickCommand('configure: cadence balanced, remind before 20 min')}
+                    onClick={() => void runCommand('configure: cadence balanced, remind before 20 min')}
                     className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                   >
                     Balanced cadence
                   </button>
                   <button
                     type="button"
-                    onClick={() => sendQuickCommand('configure: workday 9 to 18, max tasks per lane 4')}
+                    onClick={() => void runCommand('configure: workday 9 to 18, max tasks per lane 4')}
                     className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                   >
                     Set workday 9-18
                   </button>
                   <button
                     type="button"
-                    onClick={() => sendQuickCommand('configure: enable debug')}
+                    onClick={() => void runCommand('configure: enable debug')}
                     className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                   >
                     Enable debug
@@ -455,7 +620,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
                       <button
                         key={preset.label}
                         type="button"
-                        onClick={() => sendQuickCommand(preset.command)}
+                        onClick={() => void runCommand(preset.command)}
                         className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                       >
                         {preset.label}
@@ -470,7 +635,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'chatbot' }: Mob
                       <button
                         key={preset.label}
                         type="button"
-                        onClick={() => sendQuickCommand(preset.command)}
+                        onClick={() => void runCommand(preset.command)}
                         className="rounded-full border border-zinc-700 px-2 py-1 text-xs"
                       >
                         {preset.label}

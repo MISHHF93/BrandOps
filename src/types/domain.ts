@@ -557,6 +557,21 @@ export interface BrandProfile {
   focusMetric: string;
 }
 
+/** Append-only log for command execution and bridge ingress (capped in storage). */
+export interface AgentAuditEntry {
+  id: string;
+  at: string;
+  source: string;
+  action: string;
+  ok: boolean;
+  summary: string;
+  commandPreview: string;
+}
+
+export interface AgentAuditState {
+  entries: AgentAuditEntry[];
+}
+
 export interface BrandOpsData {
   brand: BrandProfile;
   brandVault: BrandVault;
@@ -577,4 +592,6 @@ export interface BrandOpsData {
   externalSync: ExternalSyncState;
   integrationHub: IntegrationHubState;
   seed: SeedMetadata;
+  /** Command / bridge execution audit (optional; normalized on read). */
+  agentAudit?: AgentAuditState;
 }

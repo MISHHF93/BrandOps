@@ -2,11 +2,14 @@ import { BrandOpsData, IntegrationSourceKind, OpportunityStage, PublishingItem }
 import { scheduler } from '../scheduling/scheduler';
 import { storageService } from '../storage/storage';
 import { applyAiSettingsOperations, buildAiSettingsPlan } from '../ai/aiSettingsMode';
+import { parseCommandRoute } from './intent/commandIntent';
 
 export type AgentAction =
   | 'add-note'
   | 'reschedule-publishing'
   | 'add-integration-source'
+  | 'add-integration-artifact'
+  | 'add-ssh-target'
   | 'add-outreach-draft'
   | 'add-publishing-draft'
   | 'update-opportunity-stage'
@@ -17,6 +20,7 @@ export type AgentAction =
   | 'complete-follow-up'
   | 'add-contact'
   | 'update-contact'
+  | 'update-contact-relationship'
   | 'add-content-item'
   | 'update-content-item'
   | 'duplicate-content-item'
@@ -217,6 +221,111 @@ const addIntegrationSource = async (
   return { ok: true, action: 'add-integration-source', summary: `Integration source "${name}" added.` };
 };
 
+const addIntegrationArtifact = async (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand
+): Promise<AgentWorkspaceResult> => {
+  const bodyAfterPrefix = trimText(
+    command.text.replace(/^add integration artifact:?\s*/i, '').replace(/^add artifact:\s*/i, ''),
+    '',
+    2000
+  );
+  const title =
+    pickLabeledField(command.text, 'title') ??
+    trimText(bodyAfterPrefix.split(/[,]/)[0] ?? '', 'Untitled artifact', 140);
+  const artifactType = pickLabeledField(command.text, 'type') ?? 'capture';
+  const sourceHint = (pickLabeledField(command.text, 'source') ?? '').toLowerCase();
+  let sourceId: string | undefined;
+  if (sourceHint) {
+    const byName = workspace.integrationHub.sources.find(
+      (s) => s.name.toLowerCase() === sourceHint || s.id === sourceHint
+    );
+    sourceId = byName?.id;
+  }
+  if (!sourceId) {
+    sourceId = workspace.integrationHub.sources[0]?.id;
+  }
+  if (!sourceId) {
+    return {
+      ok: false,
+      action: 'add-integration-artifact',
+      summary: 'Add an integration source first, or include source: <name or id> in the command.'
+    };
+  }
+  const summaryText = pickLabeledField(command.text, 'summary') ?? 'Ingested via agent command.';
+  const now = new Date().toISOString();
+  await withScheduler({
+    ...workspace,
+    integrationHub: {
+      ...workspace.integrationHub,
+      artifacts: [
+        {
+          id: uid('artifact'),
+          sourceId,
+          title: title.slice(0, 140),
+          artifactType: artifactType.slice(0, 70),
+          summary: summaryText.slice(0, 640),
+          tags: [command.source, 'agent-artifact'],
+          createdAt: now,
+          updatedAt: now
+        },
+        ...workspace.integrationHub.artifacts
+      ]
+    }
+  });
+  return {
+    ok: true,
+    action: 'add-integration-artifact',
+    summary: `Integration artifact "${title.slice(0, 80)}" added.`
+  };
+};
+
+const parseSshFromCommand = (text: string) => {
+  const name = pickLabeledField(text, 'name') ?? pickLabeledField(text, 'label');
+  const host = pickLabeledField(text, 'host');
+  const portRaw = pickLabeledField(text, 'port');
+  const user = pickLabeledField(text, 'user') ?? pickLabeledField(text, 'username');
+  const port = portRaw ? Math.max(1, Math.min(65535, Number(portRaw) || 22)) : 22;
+  return { name, host, port, user };
+};
+
+const addSshTargetCommand = async (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand
+): Promise<AgentWorkspaceResult> => {
+  const { name, host, port, user } = parseSshFromCommand(command.text);
+  if (!name || !host || !user) {
+    return {
+      ok: false,
+      action: 'add-ssh-target',
+      summary: 'Use: add ssh: name: MyServer host: example.com port: 22 user: deploy'
+    };
+  }
+  const now = new Date().toISOString();
+  await withScheduler({
+    ...workspace,
+    integrationHub: {
+      ...workspace.integrationHub,
+      sshTargets: [
+        {
+          id: uid('ssh'),
+          name: name.slice(0, 90),
+          host: host.slice(0, 120),
+          port,
+          username: user.slice(0, 80),
+          authMode: 'agent',
+          description: 'Created from agent command.',
+          tags: [command.source],
+          commandHints: [],
+          createdAt: now
+        },
+        ...workspace.integrationHub.sshTargets
+      ]
+    }
+  });
+  return { ok: true, action: 'add-ssh-target', summary: `SSH target "${name}" added.` };
+};
+
 const addOutreachDraft = async (workspace: BrandOpsData, command: AgentWorkspaceCommand): Promise<AgentWorkspaceResult> => {
   const body = trimText(command.text.split(':').slice(1).join(':') || '', '', 2000);
   if (!body) {
@@ -295,6 +404,25 @@ const updateOpportunityStage = async (
   return { ok: true, action: 'update-opportunity-stage', summary: `Updated ${first.company} to ${stage}.` };
 };
 
+const pickLabeledField = (text: string, label: string) => {
+  const pattern = new RegExp(
+    `\\b${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:\\s*([^,\\n]+)`,
+    'i'
+  );
+  const m = text.match(pattern);
+  return m ? trimText(m[1] ?? '', '', 500) : undefined;
+};
+
+const opportunityUsesRichUpdate = (text: string) => {
+  const lower = text.toLowerCase();
+  if (lower.includes('value') || lower.includes('confidence')) return true;
+  if (pickLabeledField(text, 'name')) return true;
+  if (pickLabeledField(text, 'company')) return true;
+  if (pickLabeledField(text, 'source')) return true;
+  if (pickLabeledField(text, 'notes')) return true;
+  return false;
+};
+
 const updateOpportunity = async (
   workspace: BrandOpsData,
   command: AgentWorkspaceCommand
@@ -306,6 +434,10 @@ const updateOpportunity = async (
   const stage = parseOpportunityStage(command.text);
   const value = parseNumber(command.text, 'value');
   const confidence = parseNumber(command.text, 'confidence');
+  const name = pickLabeledField(command.text, 'name');
+  const company = pickLabeledField(command.text, 'company');
+  const source = pickLabeledField(command.text, 'source');
+  const notes = pickLabeledField(command.text, 'notes');
 
   await withScheduler({
     ...workspace,
@@ -318,6 +450,10 @@ const updateOpportunity = async (
             ...(typeof confidence === 'number'
               ? { confidence: Math.max(0, Math.min(100, confidence)) }
               : {}),
+            ...(name ? { name: name.slice(0, 200) } : {}),
+            ...(company ? { company: company.slice(0, 200) } : {}),
+            ...(source ? { source: source.slice(0, 200) } : {}),
+            ...(notes !== undefined ? { notes: notes.slice(0, 4000) } : {}),
             updatedAt: new Date().toISOString()
           }
         : item
@@ -328,7 +464,9 @@ const updateOpportunity = async (
     action: 'update-opportunity',
     summary: `Opportunity updated${stage ? ` to ${stage}` : ''}${
       typeof value === 'number' ? `, value ${value}` : ''
-    }${typeof confidence === 'number' ? `, confidence ${confidence}%` : ''}.`
+    }${typeof confidence === 'number' ? `, confidence ${confidence}%` : ''}${
+      name ? `, name set` : ''
+    }${company ? `, company set` : ''}.`
   };
 };
 
@@ -465,6 +603,48 @@ const updateContact = async (
     )
   });
   return { ok: true, action: 'update-contact', summary: `Updated contact ${name}.` };
+};
+
+const parseContactRelationshipStage = (text: string): 'new' | 'building' | 'trusted' | 'partner' | null => {
+  const tail = parseAfterColon(text, text).toLowerCase();
+  const token = tail.split(/[,\n]/)[0]?.trim() ?? '';
+  if (token === 'new' || token === 'building' || token === 'trusted' || token === 'partner') {
+    return token;
+  }
+  if (token.includes('trusted')) return 'trusted';
+  if (token.includes('building')) return 'building';
+  if (token.includes('partner')) return 'partner';
+  if (token.includes('new')) return 'new';
+  return null;
+};
+
+const updateContactRelationship = async (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand
+): Promise<AgentWorkspaceResult> => {
+  const target = workspace.contacts[0];
+  if (!target) {
+    return { ok: false, action: 'update-contact-relationship', summary: 'No contact found to update.' };
+  }
+  const stage = parseContactRelationshipStage(command.text);
+  if (!stage) {
+    return {
+      ok: false,
+      action: 'update-contact-relationship',
+      summary: 'Include a stage: new, building, trusted, or partner.'
+    };
+  }
+  await withScheduler({
+    ...workspace,
+    contacts: workspace.contacts.map((c) =>
+      c.id === target.id ? { ...c, relationshipStage: stage, lastContactAt: new Date().toISOString() } : c
+    )
+  });
+  return {
+    ok: true,
+    action: 'update-contact-relationship',
+    summary: `Contact relationship stage set to ${stage}.`
+  };
 };
 
 const addContentItem = async (
@@ -627,57 +807,100 @@ const configureWorkspace = async (
   return { ok: true, action: 'configure-workspace', summary };
 };
 
+const MAX_AUDIT = 200;
+
+const recordCommandAudit = async (result: AgentWorkspaceResult, command: AgentWorkspaceCommand) => {
+  try {
+    const data = await storageService.getData();
+    const id = `audit-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const nextEntry = {
+      id,
+      at: new Date().toISOString(),
+      source: command.source,
+      action: result.action,
+      ok: result.ok,
+      summary: result.summary.slice(0, 500),
+      commandPreview: command.text.trim().slice(0, 240)
+    };
+    const prior = data.agentAudit?.entries ?? [];
+    await storageService.setData({
+      ...data,
+      agentAudit: { entries: [nextEntry, ...prior].slice(0, MAX_AUDIT) }
+    });
+  } catch {
+    // Audit is best-effort; command side-effects already applied.
+  }
+};
+
+const runParsedRoute = async (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand,
+  route: ReturnType<typeof parseCommandRoute>
+): Promise<AgentWorkspaceResult> => {
+  const lower = command.text.toLowerCase();
+  switch (route) {
+    case 'add-note':
+      return addNote(workspace, command);
+    case 'reschedule-publishing':
+      return reschedulePublishing(workspace, command);
+    case 'add-integration-source':
+      return addIntegrationSource(workspace, command);
+    case 'add-integration-artifact':
+      return addIntegrationArtifact(workspace, command);
+    case 'add-ssh-target':
+      return addSshTargetCommand(workspace, command);
+    case 'add-outreach-draft':
+      return addOutreachDraft(workspace, command);
+    case 'add-publishing-draft':
+      return addPublishingDraft(workspace, command);
+    case 'archive-opportunity':
+      return archiveOpportunity(workspace);
+    case 'restore-opportunity':
+      return restoreOpportunity(workspace);
+    case 'complete-follow-up':
+      return completeFollowUp(workspace);
+    case 'create-follow-up':
+      return createFollowUp(workspace, command);
+    case 'add-contact':
+      return addContact(workspace, command);
+    case 'update-contact-relationship':
+      return updateContactRelationship(workspace, command);
+    case 'update-contact':
+      return updateContact(workspace, command);
+    case 'add-content':
+      return addContentItem(workspace, command);
+    case 'update-content':
+      return updateContentItem(workspace, command);
+    case 'duplicate-content':
+      return duplicateContentItem(workspace);
+    case 'archive-content':
+      return archiveContentItem(workspace);
+    case 'update-publishing':
+      return updatePublishingItem(workspace, command);
+    case 'configure-workspace':
+      return configureWorkspace(workspace, command);
+    case 'update-opportunity':
+      if (opportunityUsesRichUpdate(command.text) || lower.includes('value') || lower.includes('confidence')) {
+        return updateOpportunity(workspace, command);
+      }
+      return updateOpportunityStage(workspace, command);
+    case 'unsupported':
+    default:
+      return {
+        ok: false,
+        action: 'unsupported',
+        summary:
+          'Command not recognized. Try: add note, reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
+      };
+  }
+};
+
 export const executeAgentWorkspaceCommand = async (
   command: AgentWorkspaceCommand
 ): Promise<AgentWorkspaceResult> => {
   const workspace = await storageService.getData();
-  const lower = command.text.toLowerCase();
-
-  if (lower.includes('add note') || lower.startsWith('note:')) return addNote(workspace, command);
-  if (lower.includes('reschedule') && (lower.includes('post') || lower.includes('publishing'))) {
-    return reschedulePublishing(workspace, command);
-  }
-  if (lower.includes('add source') || lower.includes('connect')) return addIntegrationSource(workspace, command);
-  if (lower.includes('draft outreach')) return addOutreachDraft(workspace, command);
-  if (lower.includes('draft post') || lower.includes('create post')) return addPublishingDraft(workspace, command);
-  if (lower.includes('archive opportunity')) return archiveOpportunity(workspace);
-  if (lower.includes('restore opportunity')) return restoreOpportunity(workspace);
-  if (lower.includes('complete follow up') || lower.includes('complete follow-up')) {
-    return completeFollowUp(workspace);
-  }
-  if (
-    lower.includes('create follow up') ||
-    lower.includes('create follow-up') ||
-    lower.includes('add follow up') ||
-    lower.includes('add follow-up')
-  ) {
-    return createFollowUp(workspace, command);
-  }
-  if (lower.includes('add contact')) return addContact(workspace, command);
-  if (lower.includes('update contact')) return updateContact(workspace, command);
-  if (lower.includes('add content') || lower.includes('create content')) {
-    return addContentItem(workspace, command);
-  }
-  if (lower.includes('update content')) return updateContentItem(workspace, command);
-  if (lower.includes('duplicate content')) return duplicateContentItem(workspace);
-  if (lower.includes('archive content')) return archiveContentItem(workspace);
-  if (lower.includes('update publishing') || lower.includes('set publishing')) {
-    return updatePublishingItem(workspace, command);
-  }
-  if (lower.includes('configure workspace') || lower.startsWith('configure:')) {
-    return configureWorkspace(workspace, command);
-  }
-  if (lower.includes('update opportunity') || lower.includes('set opportunity')) {
-    if (lower.includes('value') || lower.includes('confidence')) {
-      return updateOpportunity(workspace, command);
-    }
-    return updateOpportunityStage(workspace, command);
-  }
-
-  return {
-    ok: false,
-    action: 'unsupported',
-    summary:
-      'Command not recognized. Try: add note, reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
-  };
+  const route = parseCommandRoute(command.text);
+  const result = await runParsedRoute(workspace, command, route);
+  await recordCommandAudit(result, command);
+  return result;
 };

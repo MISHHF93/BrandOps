@@ -4,11 +4,12 @@ import { storageService } from '../services/storage/storage';
 import { executeAgentWorkspaceCommand } from '../services/agent/agentWorkspaceEngine';
 import { normalizeChannelWebhookPayload } from '../services/agent/channelPayloadAdapters';
 import { BridgeReplayGuard } from '../services/agent/bridgeReplayGuard';
+import { isBridgeNonceReplayed } from '../services/agent/bridgeNonceStore';
 import { toRuntimeWebhookMessage, verifyWebhookBridgeEnvelope } from '../services/agent/webhookBridge';
 import { hasFederatedSession } from '../shared/identity/sessionAccess';
 
 const ALARM_PREFIX = 'brandops:task:';
-const bridgeReplayGuard = new BridgeReplayGuard();
+const bridgeReplayFallback = new BridgeReplayGuard();
 
 const alarmNameForTask = (taskId: string) => `${ALARM_PREFIX}${taskId}`;
 const taskIdFromAlarm = (alarmName: string) => alarmName.replace(ALARM_PREFIX, '');
@@ -191,9 +192,12 @@ chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResp
       }
 
       if (message.type === 'AGENT_BRIDGE_ENVELOPE') {
-        const replayed = bridgeReplayGuard.registerAndCheckReplay(
-          message.payload.envelope.nonce
-        );
+        let replayed = false;
+        try {
+          replayed = await isBridgeNonceReplayed(message.payload.envelope.nonce);
+        } catch {
+          replayed = bridgeReplayFallback.registerAndCheckReplay(message.payload.envelope.nonce);
+        }
         if (replayed) {
           sendResponse({
             ok: false,

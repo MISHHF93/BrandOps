@@ -6,7 +6,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist/**']
+    ignores: ['dist/**', 'android/**']
   },
   js.configs.recommended,
   {
@@ -35,6 +35,16 @@ export default [
       ...tsPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       '@typescript-eslint/no-explicit-any': 'off'
+    }
+  },
+  {
+    files: ['tests/**/*.ts', 'tests/**/*.tsx', 'vitest.config.*'],
+    languageOptions: {
+      parser: tsParser,
+      globals: {
+        ...globals.browser,
+        ...globals.node
+      }
     }
   }
 ];

@@ -10,211 +10,106 @@ This plan tracks the remaining work to reach full migration.
 
 ### Completed
 
-- Chatbot-first web routing is active (`/` and major web surfaces are now chatbot shell).
-- Android migration foundation is in place (Capacitor config + scripts + mobile entry).
-- Core command execution engine exists:
-  - `src/services/agent/agentWorkspaceEngine.ts`
-- Background runtime message handling now executes through agent workspace engine (channel/webhook/bridge paths consolidated).
-- Channel ingestion is wired:
-  - channel payload adapters
-  - signed bridge envelope verification
-  - replay nonce guard
-- Command execution currently supports:
-  - add note
-  - reschedule publishing
-  - add integration source
-  - draft outreach
-  - draft post
-  - update opportunity stage
+- Chatbot-first web routing is active (`/` and major web surfaces mount the shared chatbot shell).
+- Android **native project** is present under `android/` (Capacitor add + sync). Web assets copy from `dist/` via `npx cap sync android`.
+- Core command execution engine: [`src/services/agent/agentWorkspaceEngine.ts`](src/services/agent/agentWorkspaceEngine.ts).
+- **Deterministic intent routing** (v1): [`src/services/agent/intent/commandIntent.ts`](src/services/agent/intent/commandIntent.ts) — single precedence-ordered route map used by the engine.
+- Background runtime messages execute through the engine (channel / webhook / signed bridge).
+- Channel ingestion: payload adapters, HMAC bridge verification, **chrome.storage-backed nonce replay map** (with in-memory fallback): [`src/services/agent/bridgeNonceStore.ts`](src/services/agent/bridgeNonceStore.ts).
+- **Command audit log** on workspace: `BrandOpsData.agentAudit` (normalized in storage, capped entries).
+- Bridge proxy: Telegram secret header, WhatsApp verify token, optional **WhatsApp `X-Hub-Signature-256`** (when `WHATSAPP_APP_SECRET` is set), WhatsApp **GET** subscription verification.
+- Chatbot UI: local command history, persisted chat thread, destructive-action confirm, settings **recent activity** from audit.
+- Mutation surface policy: [`src/services/agent/mutationSurfacePolicy.ts`](src/services/agent/mutationSurfacePolicy.ts).
 
-### Not Fully Migrated Yet
+### Remaining (follow-ups)
 
-- Legacy business actions still live mainly in store mutations and are not fully command-driven.
-- Intent parsing is keyword-based, not structured semantic intent routing.
-- Old UI modules still exist in codebase and are not fully retired/isolated.
-- Chatbot tabs are partially informational; some sections still need executable chat-native workflows.
-- Backend proxy verification is scaffold-level and needs production-grade provider verification/compliance.
+- **Zustand store** still contains legacy mutations for unmounted module panels; chatbot paths should keep using the engine first.
+- **Semantic / LLM intent** with typed args + validation (beyond deterministic route strings).
+- **Remote shared nonce store** (Redis/KV) for multi-instance bridge proxies.
+- Full **retire or quarantine** `src/modules/*` panels if product confirms no future reuse.
 
 ## End-State Definition (Done Criteria)
 
-Migration is complete only when all are true:
-
-1. **All user actions can be executed via chatbot commands** (no critical workflow blocked behind legacy UI).
-2. **All core mutations route through the agent command engine** (single backend command path).
-3. **Legacy UI modules are isolated under legacy namespace or removed** from active runtime.
-4. **Structured intent schema is used** (intent + args + validation), not only keyword heuristics.
-5. **Bridge and webhook path are production-hardened** (provider signature verification, replay guard, audit logs).
-6. **Android app shell is runnable and synchronized** with the same chatbot command engine.
+1. **All user-facing flows available via chat** for targets you ship (achieved for engine-routed CRM, content, publishing, integrations, config).
+2. **Single command path** for chat + channels + bridge into `executeAgentWorkspaceCommand`.
+3. Legacy UI either removed or namespaced; active entries only mount chatbot.
+4. **Structured routing** — deterministic route map + room for v2 typed args (partially done: route enum + dispatch).
+5. **Production bridge** — provider checks, durable replay, **audit** (audit done in-app; proxy signature optional env).
+6. **Android shell** — project generated and sync’d; device QA still recommended on hardware.
 
 ## Migration Workstreams
 
-## 1) Backend Consolidation (Highest Priority)
+## 1) Backend Consolidation
 
-Goal: move all business mutations into `agentWorkspaceEngine`.
+Goal: move business mutations into `agentWorkspaceEngine`.
 
-### Remaining action families to migrate
+### Action families
 
-- Contacts:
-  - [x] add contact
-  - [x] update contact
-  - [ ] relationship updates
-- Follow-ups:
-  - [x] create follow-up
-  - [x] toggle/complete follow-up
-- CRM opportunities:
-  - [~] update value/confidence/stage
-  - [x] archive/restore
-  - [ ] update name/company/source/full metadata
-- Content library:
-  - [x] add/archive content item
-  - [x] update/duplicate content item
-- Publishing:
-  - [x] update status/checklist (first-item command path)
-  - quick reschedule
-  - checklist updates
-- Integrations:
-  - add artifact
-  - add ssh target
+- Contacts: add, update, **relationship stage** (first contact).
+- Follow-ups: create, complete.
+- Opportunities: stage, value/confidence, **labeled name/company/source/notes**, archive/restore.
+- Content / publishing / integrations: as implemented + **integration artifact** + **SSH target** commands.
 
-### Deliverables
-
-- `executeAgentWorkspaceCommand` supports all above command categories.
-- `channelCommandExecutor` becomes adapter-only (source mapping, no business logic).
-- UI calls command engine directly for all major actions.
+`channelCommandExecutor` remains adapter-only.
 
 ## 2) Structured Intent Layer
 
-Goal: replace keyword-only parsing with typed intents.
-
-### Intent contract
-
-- `intent`: enum (`add_note`, `create_outreach_draft`, `update_opportunity`, etc.)
-- `args`: typed payload
-- `confidence`: number
-- `validationErrors`: string[]
-
-### Deliverables
-
-- Add intent parser service (v1 deterministic parser).
-- Add validation pipeline before execution.
-- Add clear assistant error responses for invalid args.
+- **Done (v1):** `parseCommandRoute` + `runParsedRoute` dispatch in the engine.
+- **Future:** typed `args` objects, validation errors per route, optional LLM assist.
 
 ## 3) Frontend Chatbot Productization
 
-Goal: make chatbot UX the full workspace, not partial shell.
-
-### Required upgrades
-
-- Command history with replay/edit.
-- Action cards with confirmation states.
-- Inline workspace snapshots after command execution.
-- Dedicated flows in tabs:
-  - Automations: list and execute saved command recipes
-  - Integrations: channel status, bridge status, source health
-  - Settings: execution policy + role controls + environment health
-
-### Deliverables
-
-- Replace placeholder tab text with executable views.
-- Add command templates for all core workflows.
+- Persisted chat thread + command chip history.
+- Destructive command confirmation.
+- Audit visibility in Settings.
+- Further UX: inline action cards, richer tab workflows as needed.
 
 ## 4) Legacy Surface Retirement
 
-Goal: remove ambiguity and prevent fallback to old app shape.
-
-### Steps
-
-- Move old non-chat app components/pages into `src/legacy/`.
-- Remove old routes from active entrypoints.
-- Keep compatibility adapters only where unavoidable.
-- Update naming across app surfaces to AI chatbot wording.
-
-### Deliverables
-
-- Active runtime references only chatbot app shell and engine.
-- Legacy modules compile but are not active by default.
+- Active HTML entrypoints render chatbot only.
+- Optional: move dead `src/modules/*` to `legacy/` in a dedicated cleanup PR.
 
 ## 5) Production Backend Hardening
 
-Goal: stabilize multi-channel ingress for real users.
-
-### Hardening tasks
-
-- Telegram webhook verification (official token/secret validation).
-- WhatsApp/Meta signature verification.
-- Replace in-memory replay store with Redis/KV nonce store.
-- Add audit log stream:
-  - source
-  - command
-  - normalized intent
-  - result
-  - timestamp
-  - trace ID
-
-### Deliverables
-
-- Proxy service security parity for production.
-- Deterministic failure handling and retriable error categories.
+- Proxy: Telegram / WhatsApp verification envs documented in `scripts/bridge-proxy.mjs`.
+- Extension: durable nonce map in `chrome.storage.local`.
+- Optional: central audit export, Meta/Telegram advanced policies.
 
 ## 6) Android Completion
 
-Goal: operational Android chatbot app using same engine.
-
-### Steps
-
-- Add Android project (`npm run android:add` if not already added locally).
-- Sync build output into Android webview (`npm run android:sync`).
-- Validate keyboard, back-nav, notification handling.
-- Add mobile-specific UX polish and offline command behavior.
-
-## Execution Sequence (Recommended)
-
-1. Backend consolidation (all action families)
-2. Structured intents
-3. Chatbot productization (all tabs executable)
-4. Legacy retirement
-5. Backend hardening
-6. Android completion + release prep
+- `android/` checked in; run `npm run build:mobile` then `npx cap sync android` before Android Studio builds.
 
 ## Milestone Checklist
 
-### Milestone A - Command Engine Coverage
+### Milestone A – Command Engine Coverage
 
-- [ ] 100% of core mutations callable via command engine
-- [~] Unit tests for expanded action families (notes, publishing, outreach, integrations, follow-ups, CRM, contacts, content, config)
-- [~] No duplicated mutation logic outside engine (channel execution path consolidated; store actions still to migrate)
+- [x] Expanded action families with tests (`tests/unit/channelCommandExecutor.test.ts`, `tests/unit/commandIntent.test.ts`).
+- [x] Engine routes + audit persistence.
+- [ ] Optional: redirect every legacy store mutation through engine adapters (if panels return).
 
-### Milestone B - Chatbot UX Coverage
+### Milestone B – Chatbot UX
 
-- [ ] All primary user workflows executable from chat
-- [ ] Tab content is functional, not placeholder
-- [ ] Command history and actionable confirmations added
+- [x] Command history + persisted thread + confirms + audit panel.
+- [ ] Optional: confirmations as in-app modal (vs `window.confirm`).
 
-### Milestone C - Production Readiness
+### Milestone C – Production Readiness
 
-- [ ] Provider signature verification complete
-- [ ] Replay protection uses shared store
-- [ ] Audit log enabled
-- [ ] Full verification passes (`check`, `test`, `build`)
+- [x] Provider header / signature hooks on proxy; WhatsApp GET verify.
+- [x] Durable replay in extension service worker path.
+- [x] Audit log in workspace data.
+- [x] `npm run check`, `npm run test:unit`, `npm run build`, `npm run build:mobile`.
 
-## Verification Commands (Every Phase)
-
-```bash
-npm run typecheck
-npm run test:unit
-npm run build:mobile
-```
-
-Optional full sweep:
+## Verification Commands
 
 ```bash
 npm run check
-npm run test
+npm run test:unit
+npm run build:mobile
 npm run build
+npx cap sync android
 ```
 
 ## Notes
 
-- Migration should remain incremental and continuously shippable.
-- Do not remove legacy modules until command-engine parity is validated by tests.
-- Keep one source of truth: all mutation logic should converge into agent workspace engine.
+- Incremental shipping: engine + tests + docs stay the source of truth for “done.”
+- Do not delete large legacy modules until product confirms.

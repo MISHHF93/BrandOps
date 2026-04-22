@@ -2,11 +2,12 @@
  * BrandOps extension — URL & page hierarchy (single source of truth)
  *
  * Layer 1 — Shell / HTML surfaces (each is its own document):
- *   index.html          → site root; redirects to dashboard.html (hosted preview entry)
- *   welcome.html        → OAuth gateway (Google / GitHub / LinkedIn); optional sign-in surface
- *   dashboard.html      → main workspace (OAuth required locally unless VITE_PREVIEW_COCKPIT_UNGATED; Vercel builds are ungated automatically)
- *   options.html        → Settings (`options_ui` in manifest + `openExtensionSurface('options')`)
- *   help.html           → Knowledge Center
+ *   index.html          → site root; redirects to mobile.html (chatbot-first hosted preview entry)
+ *   mobile.html         → primary AI chatbot application surface
+ *   welcome.html        → chatbot surface (welcome-oriented entry route)
+ *   dashboard.html      → chatbot surface (legacy route retained for compatibility)
+ *   options.html        → chatbot settings surface (`options_ui` in manifest + `openExtensionSurface('options')`)
+ *   help.html           → chatbot daily-brief surface
  *   privacy-policy.html → static legal (bundled)
  *
  * Layer 2 — Welcome deep link (one optional query param):
@@ -73,7 +74,7 @@ export const EXTENSION_ROUTE_CATALOG: Array<{ page: string; query: string; value
     page: PAGE.index,
     query: '—',
     values: '—',
-    notes: 'Redirects to dashboard.html preserving search/hash.'
+    notes: 'Redirects to mobile.html preserving search/hash.'
   }
 ];
 
