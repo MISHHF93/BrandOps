@@ -6,6 +6,9 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
+import { SHELL_FOUR_SECTIONS_LINE } from './shellSectionCopy';
+import type { MobileShellTabId } from './mobileShellQuery';
+import { ShellSectionCallout } from './ShellSectionCallout';
 
 export interface ChatMessage {
   id: string;
@@ -33,6 +36,14 @@ function copyToClipboard(text: string) {
   });
 }
 
+export interface MobileChatShellDigest {
+  notes: number;
+  publishingQueue: number;
+  activeOpportunities: number;
+  weightedPipelineUsd: number;
+  pipelineOpenDeals: number;
+}
+
 export interface MobileChatViewProps {
   messages: ChatMessage[];
   loading: boolean;
@@ -40,6 +51,8 @@ export interface MobileChatViewProps {
   onQuickCommand: (command: string) => void;
   onClearCommandHistory: () => void;
   btnFocus: string;
+  shellDigest: MobileChatShellDigest;
+  onNavigateTab: (tab: MobileShellTabId) => void;
 }
 
 /**
@@ -51,8 +64,12 @@ export const MobileChatView = ({
   commandHistory,
   onQuickCommand,
   onClearCommandHistory,
-  btnFocus
+  btnFocus,
+  shellDigest,
+  onNavigateTab
 }: MobileChatViewProps) => {
+  const jumpClass = `rounded-lg border border-zinc-600/50 bg-zinc-900/60 px-2 py-1.5 text-[10px] font-medium text-zinc-200 hover:border-indigo-500/40 hover:bg-zinc-900/90 ${btnFocus}`;
+
   return (
     <div className="space-y-5" aria-label="Chat">
       <header className="space-y-1.5">
@@ -62,13 +79,39 @@ export const MobileChatView = ({
           </div>
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Chat</h2>
-            <p className="text-[11px] text-zinc-500">
-              Commands run locally on-device. Starters and history run as soon as you tap them; counts and pulse live on
-              Today; clear transcript in Settings.
+            <p className="text-[11px] text-zinc-500">{SHELL_FOUR_SECTIONS_LINE}</p>
+            <p className="mt-1 text-[11px] text-zinc-500">
+              Commands run on-device. Starters and history run on tap; clear transcript in Settings.
             </p>
           </div>
         </div>
       </header>
+
+      <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-3 text-[11px] text-zinc-400">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Workspace snapshot</p>
+        <p className="mt-1.5 tabular-nums text-zinc-200">
+          {shellDigest.notes} notes · {shellDigest.publishingQueue} queue · {shellDigest.activeOpportunities} active
+          opps ·{' '}
+          <span className="text-emerald-200/90">
+            ${shellDigest.weightedPipelineUsd.toLocaleString()} weighted
+          </span>{' '}
+          ({shellDigest.pipelineOpenDeals} open deals)
+        </p>
+        <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Other sections</p>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <button type="button" className={jumpClass} onClick={() => onNavigateTab('daily')}>
+            Today
+          </button>
+          <button type="button" className={jumpClass} onClick={() => onNavigateTab('integrations')}>
+            Integrations
+          </button>
+          <button type="button" className={jumpClass} onClick={() => onNavigateTab('settings')}>
+            Settings
+          </button>
+        </div>
+      </div>
+
+      <ShellSectionCallout tab="chat" />
 
       <div
         className="space-y-3"

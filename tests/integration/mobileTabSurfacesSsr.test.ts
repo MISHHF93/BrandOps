@@ -9,6 +9,7 @@ import { CockpitDailyView } from '../../src/pages/mobile/CockpitDailyView';
 import { MobileChatView } from '../../src/pages/mobile/MobileChatView';
 import { MobileIntegrationsView } from '../../src/pages/mobile/MobileIntegrationsView';
 import { MobileSettingsView } from '../../src/pages/mobile/MobileSettingsView';
+import type { MobileChatShellDigest } from '../../src/pages/mobile/MobileChatView';
 import { buildWorkspaceSnapshot } from '../../src/pages/mobile/buildWorkspaceSnapshot';
 import type { ChatMessage } from '../../src/pages/mobile/MobileChatView';
 import { cloneDemoSampleData, cloneSeedData } from '../helpers/fixtures';
@@ -16,6 +17,17 @@ import { cloneDemoSampleData, cloneSeedData } from '../helpers/fixtures';
 const snapshot = () => buildWorkspaceSnapshot(cloneSeedData());
 const noop = () => {};
 const asyncNoop = async () => {};
+
+const chatDigest = (): MobileChatShellDigest => {
+  const s = snapshot();
+  return {
+    notes: s.notes,
+    publishingQueue: s.publishingQueue,
+    activeOpportunities: s.activeOpportunities,
+    weightedPipelineUsd: s.pipelineProjection.weightedOpenValueUsd,
+    pipelineOpenDeals: s.pipelineProjection.activeDealCount
+  };
+};
 
 describe('Mobile tab surfaces (SSR integration)', () => {
   it('Chat: header, thread, collapsible starters, optional recent commands', () => {
@@ -29,10 +41,13 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         commandHistory: ['pipeline health'],
         onQuickCommand: noop,
         onClearCommandHistory: noop,
-        btnFocus: ''
+        btnFocus: '',
+        shellDigest: chatDigest(),
+        onNavigateTab: noop
       })
     );
     expect(html).toContain('aria-label="Chat"');
+    expect(html).toContain('Workspace snapshot');
     expect(html).toContain('Command starters');
     expect(html).toContain('Today &amp; capture');
     expect(html).toContain('Pipeline &amp; outreach');
@@ -55,6 +70,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Today"');
+    expect(html).toContain('Today — cockpit');
     expect(html).toContain('Work areas');
     expect(html).toContain('At a glance');
     expect(html).toContain('Queue');
@@ -74,6 +90,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Integrations"');
+    expect(html).toContain('Integrations — hub');
     expect(html).toContain('Sources');
     expect(html).toContain('Connections');
     expect(html).toContain('Registered sources');
@@ -148,6 +165,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Settings"');
+    expect(html).toContain('Settings — trust');
+    expect(html).toContain('Workspace model (read-only)');
     expect(html).toContain('Preferences');
     expect(html).toContain('One-tap configure presets');
     expect(html).toContain('Session');

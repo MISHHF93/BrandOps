@@ -11,6 +11,7 @@ import type { WorkspaceModuleId } from '../../types/domain';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 import { CockpitWorkstreamBar } from './CockpitWorkstreamBar';
 import { MobileTabPageHeader } from './mobileTabPrimitives';
+import { ShellSectionCallout } from './ShellSectionCallout';
 
 const dashboardAreas = cockpitNavigationGroups[0]?.items.filter((item) => item.type === 'section') ?? [];
 
@@ -116,6 +117,8 @@ export const CockpitDailyView = ({
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-950/30"
         iconClassName="text-indigo-300"
       />
+
+      <ShellSectionCallout tab="daily" className="mt-3" />
 
       <CockpitWorkstreamBar
         btnFocus={btnFocus}

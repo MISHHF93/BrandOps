@@ -6,8 +6,10 @@ import { hrefHelpPage } from '../../shared/navigation/navigationIntents';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
+import type { MobileSettingsFullReadout } from './mobileSettingsReadout';
 import { CONFIG_PRESETS, OPERATIONAL_PRESETS } from './mobileSettingsPresets';
 import { MobileTabPageHeader, MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
+import { ShellSectionCallout } from './ShellSectionCallout';
 
 export type { MobileWorkspaceSnapshot as MobileSettingsSnapshot } from './buildWorkspaceSnapshot';
 
@@ -20,6 +22,79 @@ const fieldClass = (btnFocus: string) =>
 
 const primaryBtn = (btnFocus: string) =>
   `mt-2 inline-flex w-full sm:w-auto justify-center rounded-lg border border-indigo-500/40 bg-indigo-950/40 px-3 py-2 text-xs font-medium text-indigo-100 hover:bg-indigo-900/30 disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
+
+function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string]> {
+  return [
+    ['Timezone', r.timezone],
+    ['Week starts on', r.weekStartsOn],
+    ['Default reminder lead (h)', String(r.defaultReminderLeadHours)],
+    ['Theme', r.theme],
+    ['Cockpit layout', r.cockpitLayout],
+    ['Cockpit density', r.cockpitDensity],
+    ['Local model enabled', r.localModelEnabled ? 'yes' : 'no'],
+    ['AI adapter mode', r.aiAdapterMode],
+    ['Primary identity provider', r.primaryIdentityProvider],
+    ['Notifications enabled', r.notificationsEnabled ? 'yes' : 'no'],
+    ['AI guidance mode', r.aiGuidanceMode],
+    ['Preferred model', r.preferredModel],
+    ['Role context', r.roleContextPreview],
+    ['Prompt template', r.promptTemplatePreview],
+    ['Dataset review', r.datasetReviewEnabled ? 'yes' : 'no'],
+    ['Integration review', r.integrationReviewEnabled ? 'yes' : 'no'],
+    ['Deep work blocks', String(r.deepWorkBlockCount)],
+    ['Deep work hours', String(r.deepWorkBlockHours)],
+    ['Include startup block', r.includeStartupBlock ? 'yes' : 'no'],
+    ['Include shutdown block', r.includeShutdownBlock ? 'yes' : 'no'],
+    ['Include artifact review block', r.includeArtifactReviewBlock ? 'yes' : 'no'],
+    ['Calendar sync', r.calendarSyncEnabled ? 'yes' : 'no'],
+    ['Artifact sync', r.artifactSyncEnabled ? 'yes' : 'no'],
+    ['Overlay enabled', r.overlayEnabled ? 'yes' : 'no'],
+    ['Overlay compact', r.overlayCompact ? 'yes' : 'no'],
+    ['Overlay contact insights', r.overlayContactInsights ? 'yes' : 'no'],
+    ['Automation rules', String(r.automationRuleCount)],
+    ['Automation summary', r.automationRulesSummary],
+    ['Brand voice (preview)', r.brandVoiceGuidePreview]
+  ];
+}
+
+function WorkspaceModelReadout({
+  readout,
+  btnFocus
+}: {
+  readout: MobileSettingsFullReadout;
+  btnFocus: string;
+}) {
+  const rows = workspaceModelRows(readout);
+  return (
+    <MobileTabSection
+      id="settings-model-readout"
+      title="Workspace model (read-only)"
+      description="Values from persisted BrandOpsData (domain types in src/types/domain.ts). Collapsed by default to keep the tab scannable."
+    >
+      <details className="group mt-2 rounded-lg border border-white/5 bg-zinc-950/30 p-2 open:border-indigo-500/20">
+        <summary
+          className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-zinc-500 ${btnFocus} [&::-webkit-details-marker]:hidden`}
+        >
+          <span className="inline-flex items-center gap-2">
+            Expand full settings readout
+            <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">({rows.length} fields)</span>
+          </span>
+        </summary>
+        <dl className="mt-3 max-h-[min(24rem,50vh)] space-y-0 overflow-y-auto text-[11px] [scrollbar-width:thin]">
+          {rows.map(([label, value]) => (
+            <div
+              key={label}
+              className="flex justify-between gap-2 border-b border-white/5 py-1.5 last:border-b-0"
+            >
+              <dt className="shrink-0 text-zinc-500">{label}</dt>
+              <dd className="min-w-0 break-words text-right text-zinc-200">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+    </MobileTabSection>
+  );
+}
 
 function SettingsEditablePanel({
   snapshot,
@@ -445,12 +520,16 @@ export const MobileSettingsView = ({
         iconClassName="text-indigo-300"
       />
 
+      <ShellSectionCallout tab="settings" className="mt-3" />
+
       <SettingsEditablePanel
         snapshot={snapshot}
         applySettingsConfigure={applySettingsConfigure}
         applyBusy={applyBusy}
         btnFocus={btnFocus}
       />
+
+      <WorkspaceModelReadout readout={snapshot.settingsFullReadout} btnFocus={btnFocus} />
 
       <MobileTabSection
         id="settings-help"

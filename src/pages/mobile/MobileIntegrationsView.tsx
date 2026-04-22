@@ -3,6 +3,7 @@ import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSu
 import { hrefExtensionIntegrationsPage } from '../../shared/navigation/navigationIntents';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { MobileTabPageHeader, MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
+import { ShellSectionCallout } from './ShellSectionCallout';
 
 /**
  * Integrations-only: provider health and command shortcuts. No Cockpit/Settings duplicates; no “recent” audit list.
@@ -28,6 +29,8 @@ export const MobileIntegrationsView = ({
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-sky-500/30 bg-sky-950/30"
         iconClassName="text-sky-300"
       />
+
+      <ShellSectionCallout tab="integrations" className="mt-3" />
 
       <dl className="grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-xl border border-white/5 bg-zinc-950/30 p-2.5">

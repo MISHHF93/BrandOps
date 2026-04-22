@@ -22,6 +22,7 @@ import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocu
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
+import { SHELL_FOUR_SECTIONS_LINE } from './shellSectionCopy';
 
 const uid = () => `msg-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -43,7 +44,7 @@ const defaultWelcomeMessage = (): ChatMessage => ({
   id: uid(),
   role: 'assistant',
   resultKind: 'plain',
-  text: 'Agent ready — type a command below or expand Command starters.'
+  text: `Agent ready — use the four bottom tabs (Chat, Today, Integrations, Settings) or type a command below. Expand Command starters for grouped examples.`
 });
 
 const normalizeStoredMessage = (raw: unknown): ChatMessage | null => {
@@ -410,7 +411,13 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">BrandOps Mobile</p>
             <h1 className="text-lg font-semibold tracking-tight text-zinc-50">AI Agent</h1>
-            <p className="text-[11px] text-zinc-500">Command-first workspace; local execution</p>
+            <p className="text-[11px] text-zinc-500">
+              <span className="text-zinc-400">
+                {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? activeTab} tab
+              </span>
+              {' · '}
+              {SHELL_FOUR_SECTIONS_LINE}
+            </p>
             {dataOpsHint ? (
               <p className="mt-1 text-[10px] text-indigo-300/90" role="status">
                 {dataOpsHint}
@@ -440,6 +447,14 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 setCommandHistory([]);
               }}
               btnFocus={btnFocus}
+              shellDigest={{
+                notes: snapshot.notes,
+                publishingQueue: snapshot.publishingQueue,
+                activeOpportunities: snapshot.activeOpportunities,
+                weightedPipelineUsd: snapshot.pipelineProjection.weightedOpenValueUsd,
+                pipelineOpenDeals: snapshot.pipelineProjection.activeDealCount
+              }}
+              onNavigateTab={commitTab}
             />
           </section>
         ) : (
