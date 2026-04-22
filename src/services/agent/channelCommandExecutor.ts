@@ -24,8 +24,12 @@ export interface ChannelCommandResult {
     | 'create-follow-up'
     | 'complete-follow-up'
     | 'add-contact'
+    | 'update-contact'
     | 'add-content-item'
+    | 'update-content-item'
+    | 'duplicate-content-item'
     | 'archive-content-item'
+    | 'update-publishing-item'
     | 'configure-workspace'
     | 'unsupported';
 }

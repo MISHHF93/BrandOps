@@ -293,4 +293,113 @@ describe('channelCommandExecutor', () => {
     expect(result.action).toBe('configure-workspace');
     expect(after.settings.cadenceFlow.remindBeforeMinutes).toBe(25);
   });
+
+  it('updates contact from command', async () => {
+    const seeded = await storageService.getData();
+    const now = new Date().toISOString();
+    await storageService.setData({
+      ...seeded,
+      contacts: [
+        {
+          id: 'contact-update-1',
+          name: 'Old Name',
+          company: 'Old Co',
+          role: 'Old Role',
+          source: 'manual',
+          relationshipStage: 'new',
+          status: 'active',
+          nextAction: 'Follow up',
+          followUpDate: now,
+          notes: '',
+          links: [],
+          relatedOutreachDraftIds: [],
+          relatedContentTags: [],
+          lastContactAt: now
+        }
+      ]
+    });
+
+    const result = await executeChannelCommand({
+      platform: 'telegram',
+      text: 'update contact: Jane Roe, New Labs, CTO'
+    });
+    const after = await storageService.getData();
+    expect(result.ok).toBe(true);
+    expect(result.action).toBe('update-contact');
+    expect(after.contacts[0].name).toBe('Jane Roe');
+    expect(after.contacts[0].company).toBe('New Labs');
+    expect(after.contacts[0].role).toBe('CTO');
+  });
+
+  it('updates and duplicates content from commands', async () => {
+    const seeded = await storageService.getData();
+    const now = new Date().toISOString();
+    await storageService.setData({
+      ...seeded,
+      contentLibrary: [
+        {
+          id: 'content-update-1',
+          type: 'post-draft',
+          title: 'Original title',
+          body: 'Original body',
+          tags: [],
+          audience: 'General audience',
+          goal: 'Capture and refine reusable content',
+          status: 'drafting',
+          publishChannel: 'linkedin',
+          notes: '',
+          createdAt: now,
+          updatedAt: now
+        }
+      ]
+    });
+
+    const update = await executeChannelCommand({
+      platform: 'telegram',
+      text: 'update content: New growth memo body'
+    });
+    expect(update.ok).toBe(true);
+    expect(update.action).toBe('update-content-item');
+
+    const duplicate = await executeChannelCommand({
+      platform: 'telegram',
+      text: 'duplicate content'
+    });
+    const after = await storageService.getData();
+    expect(duplicate.ok).toBe(true);
+    expect(duplicate.action).toBe('duplicate-content-item');
+    expect(after.contentLibrary.length).toBeGreaterThan(1);
+  });
+
+  it('updates publishing item status and checklist from command', async () => {
+    const seeded = await storageService.getData();
+    const now = new Date().toISOString();
+    await storageService.setData({
+      ...seeded,
+      publishingQueue: [
+        {
+          id: 'publishing-update-1',
+          title: 'Publishing Item',
+          body: 'Body',
+          platforms: ['linkedin'],
+          tags: [],
+          status: 'queued',
+          scheduledFor: now,
+          reminderAt: now,
+          createdAt: now,
+          updatedAt: now
+        }
+      ]
+    });
+
+    const result = await executeChannelCommand({
+      platform: 'whatsapp',
+      text: 'update publishing ready: checklist finalize creative and publish'
+    });
+    const after = await storageService.getData();
+    expect(result.ok).toBe(true);
+    expect(result.action).toBe('update-publishing-item');
+    expect(after.publishingQueue[0].status).toBe('ready-to-post');
+    expect(after.publishingQueue[0].checklist).toContain('checklist');
+  });
 });

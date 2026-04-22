@@ -16,8 +16,12 @@ export type AgentAction =
   | 'create-follow-up'
   | 'complete-follow-up'
   | 'add-contact'
+  | 'update-contact'
   | 'add-content-item'
+  | 'update-content-item'
+  | 'duplicate-content-item'
   | 'archive-content-item'
+  | 'update-publishing-item'
   | 'configure-workspace'
   | 'unsupported';
 
@@ -113,6 +117,18 @@ const parseNumber = (text: string, label: string): number | null => {
 const parseAfterColon = (text: string, fallback = '') => {
   const raw = text.split(':').slice(1).join(':');
   return trimText(raw || fallback, fallback, 5000);
+};
+
+const parsePublishingStatus = (
+  text: string
+): 'queued' | 'due-soon' | 'ready-to-post' | 'posted' | 'skipped' | null => {
+  const lower = text.toLowerCase();
+  if (lower.includes('ready')) return 'ready-to-post';
+  if (lower.includes('queued') || lower.includes('queue')) return 'queued';
+  if (lower.includes('due-soon') || lower.includes('due soon')) return 'due-soon';
+  if (lower.includes('posted')) return 'posted';
+  if (lower.includes('skipped') || lower.includes('skip')) return 'skipped';
+  return null;
 };
 
 const withScheduler = async (next: BrandOpsData) => {
@@ -427,6 +443,30 @@ const addContact = async (
   return { ok: true, action: 'add-contact', summary: `Contact ${name} added.` };
 };
 
+const updateContact = async (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand
+): Promise<AgentWorkspaceResult> => {
+  const target = workspace.contacts[0];
+  if (!target) return { ok: false, action: 'update-contact', summary: 'No contact found to update.' };
+
+  const detail = parseAfterColon(command.text, '');
+  const parts = detail.split(',').map((segment) => segment.trim()).filter(Boolean);
+  const name = parts[0] ? trimText(parts[0], target.name, 90) : target.name;
+  const company = parts[1] ? trimText(parts[1], target.company, 90) : target.company;
+  const role = parts[2] ? trimText(parts[2], target.role, 90) : target.role;
+
+  await withScheduler({
+    ...workspace,
+    contacts: workspace.contacts.map((contact) =>
+      contact.id === target.id
+        ? { ...contact, name, company, role, lastContactAt: new Date().toISOString() }
+        : contact
+    )
+  });
+  return { ok: true, action: 'update-contact', summary: `Updated contact ${name}.` };
+};
+
 const addContentItem = async (
   workspace: BrandOpsData,
   command: AgentWorkspaceCommand
@@ -464,6 +504,60 @@ const addContentItem = async (
   return { ok: true, action: 'add-content-item', summary: 'Content library item created.' };
 };
 
+const updateContentItem = async (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand
+): Promise<AgentWorkspaceResult> => {
+  const target = workspace.contentLibrary.find((item) => item.status !== 'archived');
+  if (!target) {
+    return { ok: false, action: 'update-content-item', summary: 'No active content item found to update.' };
+  }
+  const body = parseAfterColon(command.text, '');
+  if (!body) {
+    return { ok: false, action: 'update-content-item', summary: 'Use "update content: <text>" to update content.' };
+  }
+  const title = trimText(body.split('\n')[0] ?? target.title, target.title, 140);
+  await withScheduler({
+    ...workspace,
+    contentLibrary: workspace.contentLibrary.map((item) =>
+      item.id === target.id
+        ? {
+            ...item,
+            title,
+            body,
+            updatedAt: new Date().toISOString()
+          }
+        : item
+    )
+  });
+  return { ok: true, action: 'update-content-item', summary: `Updated content item "${title}".` };
+};
+
+const duplicateContentItem = async (
+  workspace: BrandOpsData
+): Promise<AgentWorkspaceResult> => {
+  const target = workspace.contentLibrary.find((item) => item.status !== 'archived');
+  if (!target) {
+    return { ok: false, action: 'duplicate-content-item', summary: 'No active content item found to duplicate.' };
+  }
+  const now = new Date().toISOString();
+  await withScheduler({
+    ...workspace,
+    contentLibrary: [
+      {
+        ...target,
+        id: uid('cli'),
+        title: `${target.title} (Copy)`,
+        status: target.status === 'archived' ? 'idea' : target.status,
+        createdAt: now,
+        updatedAt: now
+      },
+      ...workspace.contentLibrary
+    ]
+  });
+  return { ok: true, action: 'duplicate-content-item', summary: `Duplicated content item "${target.title}".` };
+};
+
 const archiveContentItem = async (workspace: BrandOpsData): Promise<AgentWorkspaceResult> => {
   const item = workspace.contentLibrary.find((entry) => entry.status !== 'archived');
   if (!item) {
@@ -476,6 +570,40 @@ const archiveContentItem = async (workspace: BrandOpsData): Promise<AgentWorkspa
     )
   });
   return { ok: true, action: 'archive-content-item', summary: `Archived content item "${item.title}".` };
+};
+
+const updatePublishingItem = async (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand
+): Promise<AgentWorkspaceResult> => {
+  const target = workspace.publishingQueue[0];
+  if (!target) {
+    return { ok: false, action: 'update-publishing-item', summary: 'No publishing item found to update.' };
+  }
+
+  const status = parsePublishingStatus(command.text);
+  const checklist = parseAfterColon(command.text, '');
+  const next = workspace.publishingQueue.map((item) =>
+    item.id === target.id
+      ? {
+          ...item,
+          ...(status ? { status } : {}),
+          ...(checklist ? { checklist: checklist.slice(0, 1200) } : {}),
+          updatedAt: new Date().toISOString()
+        }
+      : item
+  );
+
+  await withScheduler({
+    ...workspace,
+    publishingQueue: next
+  });
+
+  return {
+    ok: true,
+    action: 'update-publishing-item',
+    summary: `Updated publishing item "${target.title}"${status ? ` to ${status}` : ''}.`
+  };
 };
 
 const configureWorkspace = async (
@@ -526,10 +654,16 @@ export const executeAgentWorkspaceCommand = async (
     return createFollowUp(workspace, command);
   }
   if (lower.includes('add contact')) return addContact(workspace, command);
+  if (lower.includes('update contact')) return updateContact(workspace, command);
   if (lower.includes('add content') || lower.includes('create content')) {
     return addContentItem(workspace, command);
   }
+  if (lower.includes('update content')) return updateContentItem(workspace, command);
+  if (lower.includes('duplicate content')) return duplicateContentItem(workspace);
   if (lower.includes('archive content')) return archiveContentItem(workspace);
+  if (lower.includes('update publishing') || lower.includes('set publishing')) {
+    return updatePublishingItem(workspace, command);
+  }
   if (lower.includes('configure workspace') || lower.startsWith('configure:')) {
     return configureWorkspace(workspace, command);
   }

@@ -55,8 +55,8 @@ Goal: move all business mutations into `agentWorkspaceEngine`.
 ### Remaining action families to migrate
 
 - Contacts:
-  - [~] add contact
-  - [ ] update contact
+  - [x] add contact
+  - [x] update contact
   - [ ] relationship updates
 - Follow-ups:
   - [x] create follow-up
@@ -66,10 +66,10 @@ Goal: move all business mutations into `agentWorkspaceEngine`.
   - [x] archive/restore
   - [ ] update name/company/source/full metadata
 - Content library:
-  - [~] add/archive content item
-  - [ ] update/duplicate content item
+  - [x] add/archive content item
+  - [x] update/duplicate content item
 - Publishing:
-  - [ ] update status
+  - [x] update status/checklist (first-item command path)
   - quick reschedule
   - checklist updates
 - Integrations:
