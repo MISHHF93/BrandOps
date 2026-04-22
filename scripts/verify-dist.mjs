@@ -4,6 +4,9 @@ import { constants } from 'node:fs';
 
 const requiredFiles = [
   'dist/manifest.json',
+  'dist/mobile.html',
+  'dist/mobile.js',
+  'dist/chunks/mobileApp.js',
   'dist/dashboard.html',
   'dist/integrations.html',
   'dist/welcome.html',
