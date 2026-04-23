@@ -20,11 +20,18 @@ export function MobileTabSection({
   id,
   title,
   description,
+  descriptionVisibility = 'visible',
   children
 }: {
   id: string;
   title: string;
   description?: string;
+  /**
+   * `visible` (default) keeps the description under the title. `sr-only` keeps the sentence for
+   * screen readers and SSR assertions but hides it from sighted users so the section lands with
+   * just the title + content (much less noise for shell-meta captions).
+   */
+  descriptionVisibility?: 'visible' | 'sr-only';
   children: ReactNode;
 }) {
   const titleId = `${id}-title`;
@@ -38,7 +45,11 @@ export function MobileTabSection({
         {title}
       </h3>
       {description ? (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-textSoft">{description}</p>
+        descriptionVisibility === 'sr-only' ? (
+          <span className="sr-only">{description}</span>
+        ) : (
+          <p className="mt-1.5 text-[11px] leading-relaxed text-textSoft">{description}</p>
+        )
       ) : null}
       {children}
     </section>

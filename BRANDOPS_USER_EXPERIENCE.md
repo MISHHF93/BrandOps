@@ -56,9 +56,9 @@ Full strings live in `src/pages/mobile/shellSectionCopy.ts` (`SHELL_SECTION_COPY
 
 **Local success metrics (roadmap §2).** Open **Settings → Advanced → Local product metrics** to see on-device aggregates: habit (active days), see→act (navigations to Chat from each tab), command confidence (ok/fail, success rate, timing), and shell-ready / command round-trip latency (rolling medians and ~p95). Storage key `product-usage-v1`; never sent to a server. Details: `docs/PRODUCT_EXPERIENCE_ROADMAP.md`, `src/services/usage/localProductUsage.ts`, `LocalProductUsageReadout.tsx`.
 
-### 2.3 Today = four workstreams (second-level nav)
+### 2.3 Today = four workstreams (second-level nav, single-active tab group)
 
-On the **Today** tab, users switch **work areas** with horizontal pills. URL `?section=` can deep-link to the same blocks.
+On the **Today** tab, users switch **work areas** with horizontal icon pills. Only the **active** work area is visible at a time — this is a real tab group, not a scroll anchor, so the screen never dumps four long sections at once. URL `?section=` still deep-links to the same blocks; inactive panels remain in the DOM (behind `hidden`) so screen readers and routing contracts keep working.
 
 ```mermaid
 flowchart TB

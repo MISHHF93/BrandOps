@@ -37,10 +37,9 @@ export const CockpitBrandContentWorkstreamSection = ({
       {meta.label}
     </h3>
     <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
-    <p className="mt-2 text-[10px] text-textSoft">
-      Brand and publishing rows are <strong className="text-textMuted">read-only digest</strong>.
-      Drafts and updates run in <strong className="text-text">Chat</strong> — not Settings.
-    </p>
+    <span className="sr-only">
+      Brand and publishing rows are read-only digest. Drafts and updates run in Chat — not Settings.
+    </span>
     {onOpenPulse ? (
       <p className="mt-1.5 text-[10px] text-textMuted">
         Full mixed queue:{' '}
@@ -54,8 +53,9 @@ export const CockpitBrandContentWorkstreamSection = ({
       </p>
     ) : null}
     <p className="mt-2 text-textSoft">
-      Publishing queue: <span className="text-text">{snapshot.publishingQueue}</span> items · Queued
-      or due-soon: <span className="text-text">{snapshot.queuedPublishing}</span>
+      Queue: <span className="text-text">{snapshot.publishingQueue}</span> ·{' '}
+      <span className="text-textSoft">Due-soon:</span>{' '}
+      <span className="text-text">{snapshot.queuedPublishing}</span>
     </p>
     {snapshot.nextPublishingHint ? (
       <p className="mt-1 text-[11px] text-textMuted">Next: {snapshot.nextPublishingHint}</p>
@@ -68,11 +68,10 @@ export const CockpitBrandContentWorkstreamSection = ({
       primeChat={primeChat}
       items={BRAND_STRIP_ITEMS}
     />
-    <p className="mt-1 text-[10px] text-textSoft">
-      Duplicate / archive in the strip target the{' '}
-      <strong className="text-textMuted">first active</strong> library item; use row buttons to
+    <span className="sr-only">
+      Duplicate and archive in the strip target the first active library item; use row buttons to
       prime lines that name a specific title.
-    </p>
+    </span>
     {(() => {
       const bv = snapshot.cockpitBrandVaultReadout;
       const hasVaultPeek =
@@ -122,7 +121,6 @@ export const CockpitBrandContentWorkstreamSection = ({
     {snapshot.cockpitContentPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
         <p className="text-[11px] font-medium text-textSoft">Content library (top)</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitContentPeek.map((row) => (
             <li
@@ -169,7 +167,6 @@ export const CockpitBrandContentWorkstreamSection = ({
     {snapshot.cockpitPublishingPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
         <p className="text-[11px] font-medium text-textSoft">Publishing queue (top)</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitPublishingPeek.map((row) => (
             <li

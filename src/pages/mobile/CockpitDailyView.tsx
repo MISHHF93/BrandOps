@@ -9,7 +9,6 @@ import { CockpitConnectionsWorkstreamSection } from './CockpitConnectionsWorkstr
 import { CockpitPipelineWorkstreamSection } from './CockpitPipelineWorkstreamSection';
 import { CockpitTodayWorkstreamSection } from './CockpitTodayWorkstreamSection';
 import { CockpitWorkstreamBar } from './CockpitWorkstreamBar';
-import { CockpitWorkspaceLanesDetails } from './CockpitWorkspaceLanesDetails';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 import { MobileTabPageHeader } from './mobileTabPrimitives';
 
@@ -22,7 +21,6 @@ export interface CockpitDailyViewProps {
   /** True while an agent command round-trip is in flight (disables command chips). */
   commandBusy?: boolean;
   runCommand: (command: string) => void | Promise<void>;
-  goToChat: () => void;
   /** Puts text in the Chat composer (does not send). Use when the agent only targets “first” rows. */
   primeChat: (line: string) => void;
   onOpenInAppSettings: () => void;
@@ -34,7 +32,11 @@ export interface CockpitDailyViewProps {
 
 /**
  * Today tab: focus engine (do / urgent / momentum) + four work areas.
- * {@link CockpitWorkstreamBar} is sticky; sections keep `cockpit-*` ids for deep links.
+ *
+ * Work areas are rendered as a single-active tab group: {@link CockpitWorkstreamBar} picks one, and
+ * the others are DOM-present but visually hidden (so anchor deep-links and SSR assertions still
+ * resolve every `cockpit-*` id). Previously all four sections scrolled in one giant column — that
+ * was the main source of "too much to read" on Today.
  */
 export const CockpitDailyView = ({
   snapshot,
@@ -82,46 +84,64 @@ export const CockpitDailyView = ({
         primeChat={primeChat}
       />
 
-      <CockpitTodayWorkstreamSection
-        snapshot={snapshot}
-        {...actions}
-        onOpenInAppSettings={onOpenInAppSettings}
-        meta={{
-          label: todayMeta?.label ?? 'Today',
-          description: todayMeta?.description ?? ''
-        }}
-      />
+      <div role="tabpanel" aria-labelledby="cockpit-today" hidden={activeWorkstream !== 'today'}>
+        <CockpitTodayWorkstreamSection
+          snapshot={snapshot}
+          {...actions}
+          onOpenInAppSettings={onOpenInAppSettings}
+          meta={{
+            label: todayMeta?.label ?? 'Today',
+            description: todayMeta?.description ?? ''
+          }}
+        />
+      </div>
 
-      <CockpitPipelineWorkstreamSection
-        snapshot={snapshot}
-        {...actions}
-        onOpenPulse={onOpenPulseTab}
-        meta={{
-          label: pipelineMeta?.label ?? 'Pipeline',
-          description: pipelineMeta?.description ?? ''
-        }}
-      />
+      <div
+        role="tabpanel"
+        aria-labelledby="cockpit-pipeline"
+        hidden={activeWorkstream !== 'pipeline'}
+      >
+        <CockpitPipelineWorkstreamSection
+          snapshot={snapshot}
+          {...actions}
+          onOpenPulse={onOpenPulseTab}
+          meta={{
+            label: pipelineMeta?.label ?? 'Pipeline',
+            description: pipelineMeta?.description ?? ''
+          }}
+        />
+      </div>
 
-      <CockpitBrandContentWorkstreamSection
-        snapshot={snapshot}
-        {...actions}
-        onOpenPulse={onOpenPulseTab}
-        meta={{
-          label: brandMeta?.label ?? 'Brand & content',
-          description: brandMeta?.description ?? ''
-        }}
-      />
+      <div
+        role="tabpanel"
+        aria-labelledby="cockpit-brand"
+        hidden={activeWorkstream !== 'brand-content'}
+      >
+        <CockpitBrandContentWorkstreamSection
+          snapshot={snapshot}
+          {...actions}
+          onOpenPulse={onOpenPulseTab}
+          meta={{
+            label: brandMeta?.label ?? 'Brand & content',
+            description: brandMeta?.description ?? ''
+          }}
+        />
+      </div>
 
-      <CockpitConnectionsWorkstreamSection
-        snapshot={snapshot}
-        {...actions}
-        meta={{
-          label: connectionsMeta?.label ?? 'Connections',
-          description: connectionsMeta?.description ?? ''
-        }}
-      />
-
-      <CockpitWorkspaceLanesDetails {...actions} onSelectWorkstream={onSelectWorkstream} />
+      <div
+        role="tabpanel"
+        aria-labelledby="cockpit-connections"
+        hidden={activeWorkstream !== 'connections'}
+      >
+        <CockpitConnectionsWorkstreamSection
+          snapshot={snapshot}
+          {...actions}
+          meta={{
+            label: connectionsMeta?.label ?? 'Connections',
+            description: connectionsMeta?.description ?? ''
+          }}
+        />
+      </div>
     </div>
   );
 };

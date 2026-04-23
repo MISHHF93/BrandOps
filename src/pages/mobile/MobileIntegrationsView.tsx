@@ -31,13 +31,17 @@ export const MobileIntegrationsView = ({
     <div className="mt-2 space-y-5" aria-label="Integrations">
       <MobileTabPageHeader
         title="Integrations"
-        subtitle="Connect tools and data — sources, sync, and provider health. Account and workspace rules live in Settings."
+        subtitle="Sources, sync, provider health."
         icon={PlugZap}
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-secondary/40 bg-secondarySoft/10"
         iconClassName="text-secondary"
       />
+      <span className="sr-only">
+        Connect tools and data — sources, sync, and provider health. Account and workspace rules
+        live in Settings.
+      </span>
 
-      <ShellSectionCallout tab="integrations" className="mt-3" />
+      <ShellSectionCallout tab="integrations" className="mt-1" />
 
       <dl className="grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-xl border border-border/50 bg-bgSubtle/40 p-2.5">
@@ -76,6 +80,7 @@ export const MobileIntegrationsView = ({
         id="integrations-registered-sources"
         title="Registered sources"
         description="Connected sources from your workspace hub."
+        descriptionVisibility="sr-only"
       >
         {snapshot.integrationHubSources.length === 0 ? (
           <p className="mt-2 text-[11px] text-textMuted">
@@ -119,6 +124,7 @@ export const MobileIntegrationsView = ({
         id="integrations-providers"
         title="Provider status"
         description="OAuth and sync health for each provider."
+        descriptionVisibility="sr-only"
       >
         <ul className="mt-2 space-y-1.5 text-textMuted">
           {snapshot.providerStatuses.map((provider) => (
@@ -135,6 +141,7 @@ export const MobileIntegrationsView = ({
           id="integrations-external-sync"
           title="External sync"
           description="Links between workspace entities and external calendars/tasks."
+          descriptionVisibility="sr-only"
         >
           <ul className="mt-2 space-y-2">
             {snapshot.externalSyncLinksPeek.map((row) => (
@@ -167,6 +174,7 @@ export const MobileIntegrationsView = ({
           id="integrations-live-feed"
           title="Hub activity"
           description="Recent events from the integrations hub."
+          descriptionVisibility="sr-only"
         >
           <ul className="mt-2 space-y-2">
             {snapshot.integrationLiveFeedPeek.map((row) => (
@@ -201,6 +209,7 @@ export const MobileIntegrationsView = ({
         id="integrations-artifacts"
         title="Synced artifacts"
         description="Artifacts tracked by connected providers."
+        descriptionVisibility="sr-only"
       >
         {snapshot.integrationArtifactsPeek.length === 0 ? (
           <p className="mt-2 text-[11px] text-textMuted">
@@ -235,6 +244,7 @@ export const MobileIntegrationsView = ({
         id="integrations-ssh"
         title="SSH targets"
         description="Infrastructure targets registered in the workspace."
+        descriptionVisibility="sr-only"
       >
         {snapshot.sshTargetsPeek.length === 0 ? (
           <p className="mt-2 text-[11px] text-textMuted">
@@ -267,6 +277,7 @@ export const MobileIntegrationsView = ({
         id="integrations-quick-add"
         title="Quick add"
         description="Fast setup commands for common integration tasks."
+        descriptionVisibility="sr-only"
       >
         <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <button

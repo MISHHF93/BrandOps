@@ -90,6 +90,7 @@ function AccountMembershipSection({
       id="settings-account-membership"
       title="Account & membership"
       description="Sign-in provider and membership status for this workspace."
+      descriptionVisibility="sr-only"
     >
       <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
         <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
@@ -193,6 +194,7 @@ function WorkspaceModelReadout({
       id="settings-model-readout"
       title="Workspace model (read-only)"
       description="Stored workspace values. Kept collapsed to keep Settings readable."
+      descriptionVisibility="sr-only"
     >
       <details className="group mt-2 rounded-lg border border-border/30 bg-surface/45 p-2 open:border-primary/25">
         <summary
@@ -374,6 +376,7 @@ function SettingsEditablePanel({
       id="settings-editable"
       title="Preferences (edit workspace)"
       description="These fields update what you see in the snapshot above after Apply. Below templates; same configure engine as Chat, without posting to the chat feed."
+      descriptionVisibility="sr-only"
     >
       {applyError ? (
         <p
@@ -759,13 +762,17 @@ export const MobileSettingsView = ({
     <div className="relative z-[1] mt-2 space-y-5 pb-10 pointer-events-auto" aria-label="Settings">
       <MobileTabPageHeader
         title="Settings"
-        subtitle="You and this workspace — account, trust, cadence, export. To wire Notion, OAuth, or sources, use Integrations."
+        subtitle="Account, trust, cadence, export."
         icon={Settings2}
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12"
         iconClassName="text-info"
       />
+      <span className="sr-only">
+        You and this workspace — account, trust, cadence, export. To wire Notion, OAuth, or sources,
+        use Integrations.
+      </span>
 
-      <ShellSectionCallout tab="settings" className="mt-3" />
+      <ShellSectionCallout tab="settings" className="mt-1" />
 
       <SettingsTierAOverview
         snapshot={snapshot}
@@ -839,6 +846,7 @@ export const MobileSettingsView = ({
             id="settings-local-product-metrics"
             title="Local product metrics"
             description="Habit, navigation to Chat, command outcomes, and shell timing — on-device only; maps to the experience roadmap success indicators."
+            descriptionVisibility="sr-only"
           >
             <LocalProductUsageReadout />
           </MobileTabSection>
@@ -847,6 +855,7 @@ export const MobileSettingsView = ({
             id="settings-dataset-lineage"
             title="Dataset lineage"
             description="Seed metadata for this device (demo vs production-empty, version)."
+            descriptionVisibility="sr-only"
           >
             <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
               <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
@@ -980,6 +989,7 @@ export const MobileSettingsView = ({
             id="settings-messaging-vault"
             title="Messaging vault"
             description="Saved snippets (titles only here)."
+            descriptionVisibility="sr-only"
           >
             {snapshot.settingsMessagingVaultPeek.length === 0 ? (
               <p className="mt-2 text-[11px] text-textMuted">
@@ -1020,6 +1030,7 @@ export const MobileSettingsView = ({
             id="settings-audit"
             title="Recent agent activity"
             description="Commands that touched workspace data, newest first. Re-run repeats the same line in Chat."
+            descriptionVisibility="sr-only"
           >
             {snapshot.recentAudit.length === 0 ? (
               <p className="mt-2 text-[11px] text-textMuted">

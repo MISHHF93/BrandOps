@@ -1,5 +1,4 @@
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
-import type { DashboardSectionId } from '../../shared/config/dashboardNavigation';
 
 export interface CockpitWorkstreamActions {
   btnFocus: string;
@@ -36,8 +35,4 @@ export interface CockpitBrandContentSectionProps extends CockpitWorkstreamAction
 export interface CockpitConnectionsSectionProps extends CockpitWorkstreamActions {
   snapshot: CockpitDailySnapshot;
   meta: CockpitWorkstreamMeta;
-}
-
-export interface CockpitWorkspaceLanesDetailsProps extends CockpitWorkstreamActions {
-  onSelectWorkstream: (target: DashboardSectionId) => void;
 }

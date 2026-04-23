@@ -41,25 +41,22 @@ export const CockpitConnectionsWorkstreamSection = ({
       {meta.label}
     </h3>
     <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
-    <p className="mt-2 text-[10px] text-textSoft">
-      Counts and provider status are <strong className="text-textMuted">read-only</strong>. Use
-      Integrations for connection changes.
-    </p>
-    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+    <span className="sr-only">
+      Counts and provider status are read-only. Use Integrations for connection changes.
+    </span>
+    <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
       <a
         href={hrefPrimaryAppIntegrationsTab()}
         className={`font-medium text-info underline underline-offset-2 ${btnFocus}`}
       >
         Integrations tab
       </a>
-      <span className="text-textSoft">·</span>
       <a
         href={hrefExtensionIntegrationsPage()}
-        className={`font-medium text-info/90 underline underline-offset-2 ${btnFocus}`}
+        className={`font-medium text-info/75 underline underline-offset-2 ${btnFocus}`}
       >
         Integrations page
       </a>
-      <span className="text-textMuted">— full options surface.</span>
     </p>
     <CockpitWorkstreamCommandStrip
       ariaLabel="Connections workstream Chat starters"
@@ -91,7 +88,6 @@ export const CockpitConnectionsWorkstreamSection = ({
     {snapshot.integrationArtifactsPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
         <p className="text-[11px] font-medium text-textSoft">Integration artifacts (top)</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
         <ul className="mt-2 space-y-1.5 text-[11px] text-textSoft">
           {snapshot.integrationArtifactsPeek.map((row) => (
             <li key={row.id} className="flex justify-between gap-2">
@@ -105,7 +101,6 @@ export const CockpitConnectionsWorkstreamSection = ({
     {snapshot.sshTargetsPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
         <p className="text-[11px] font-medium text-textSoft">SSH targets (top)</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
         <ul className="mt-2 space-y-1.5 text-[11px] text-textSoft">
           {snapshot.sshTargetsPeek.map((row) => (
             <li key={row.id} className="flex justify-between gap-2">
@@ -119,9 +114,9 @@ export const CockpitConnectionsWorkstreamSection = ({
     {snapshot.cockpitCompanyPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
         <p className="text-[11px] font-medium text-textSoft">Companies (active)</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">
+        <span className="sr-only">
           Read-only peek. No add/update company commands in the agent yet.
-        </p>
+        </span>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitCompanyPeek.map((row) => (
             <li

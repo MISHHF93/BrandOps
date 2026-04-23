@@ -41,13 +41,13 @@ export const CockpitPipelineWorkstreamSection = ({
       {meta.label}
     </h3>
     <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
-    <p className="mt-2 text-[10px] text-textSoft">
-      Pipeline lists are <strong className="text-textMuted">read-only digest</strong>. Stage changes
-      and outreach run in <strong className="text-text">Chat</strong> — not the Settings tab.
-    </p>
+    <span className="sr-only">
+      Pipeline lists are read-only digest. Stage changes and outreach run in Chat — not the Settings
+      tab.
+    </span>
     {onOpenPulse ? (
       <p className="mt-1.5 text-[10px] text-textMuted">
-        Chronological mix (follow-ups, outreach, publishing):{' '}
+        Chronological mix:{' '}
         <button
           type="button"
           onClick={onOpenPulse}
@@ -66,11 +66,10 @@ export const CockpitPipelineWorkstreamSection = ({
       primeChat={primeChat}
       items={PIPELINE_STRIP_ITEMS}
     />
-    <p className="mt-1 text-[10px] text-textSoft">
-      Archive / restore apply to the <strong className="text-textMuted">first active</strong> or{' '}
-      <strong className="text-textMuted">first archived</strong> opportunity in workspace order —
-      refine in Chat if you need a specific deal.
-    </p>
+    <span className="sr-only">
+      Archive and restore apply to the first active or first archived opportunity in workspace order
+      — refine in Chat if you need a specific deal.
+    </span>
 
     <div className="mt-3 space-y-3">
       <div
@@ -174,7 +173,6 @@ export const CockpitPipelineWorkstreamSection = ({
       {snapshot.cockpitOutreachTemplatePeek.length > 0 ? (
         <div className="border-t border-border/25 pt-3">
           <p className="text-[11px] font-medium text-textSoft">Outreach templates</p>
-          <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
           <ul className="mt-2 space-y-2">
             {snapshot.cockpitOutreachTemplatePeek.map((row) => (
               <li
@@ -204,7 +202,6 @@ export const CockpitPipelineWorkstreamSection = ({
       {snapshot.cockpitOutreachHistoryPeek.length > 0 ? (
         <div className="border-t border-border/25 pt-3">
           <p className="text-[11px] font-medium text-textSoft">Outreach history</p>
-          <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
           <ul className="mt-2 space-y-2">
             {snapshot.cockpitOutreachHistoryPeek.map((row) => (
               <li
@@ -242,10 +239,10 @@ export const CockpitPipelineWorkstreamSection = ({
     {snapshot.cockpitOpportunityPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
         <p className="text-[11px] font-medium text-textSoft">Opportunities in workspace</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">
+        <span className="sr-only">
           Read-only peek. Agent stage updates still apply to the first active deal unless you name
           fields in Chat.
-        </p>
+        </span>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitOpportunityPeek.map((row) => (
             <li

@@ -81,10 +81,8 @@ const MAX_COMMAND_CHIPS = 24;
 const defaultWelcomeMessage = (
   surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'
 ): ChatMessage => {
-  const mobileLine =
-    'Type a command (try pipeline health) or press ⌘K / Ctrl+K. Pulse: what is due. Today: full digest.';
-  const welcomeLine =
-    'Use Chat, Pulse, or Today — same five tabs below. Try: pipeline health, or open Guided examples.';
+  const mobileLine = 'Try: pipeline health. Or press ⌘K.';
+  const welcomeLine = 'Try: pipeline health. Or press ⌘K. Pulse reads, Chat acts.';
   return {
     id: uid(),
     role: 'assistant',
@@ -820,7 +818,6 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                 btnFocus={btnFocus}
                 commandBusy={commandLoading}
                 runCommand={runCommand}
-                goToChat={() => commitTab('chat')}
                 primeChat={primeChat}
                 onOpenInAppSettings={() => commitTab('settings')}
                 onOpenPulseTab={() => commitTab('pulse')}
@@ -1052,6 +1049,24 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             </div>
           </div>
         </div>
+      ) : null}
+
+      {activeTab !== 'chat' && !shouldRequireLaunchAuth(launchAccess) ? (
+        <button
+          type="button"
+          onClick={() => setCommandPaletteOpen(true)}
+          aria-label="Open command palette"
+          title="Run a command (⌘K / Ctrl+K)"
+          className={clsx(
+            'fixed bottom-20 right-4 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full',
+            'border border-accent/60 bg-accent/15 text-accent shadow-lg shadow-black/30 backdrop-blur-sm',
+            'hover:border-accent hover:bg-accent/25 hover:text-text',
+            'active:scale-95 transition-[transform,background,border-color] duration-150',
+            btnFocus
+          )}
+        >
+          <CommandPaletteIcon className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+        </button>
       ) : null}
 
       <MobileShellNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />

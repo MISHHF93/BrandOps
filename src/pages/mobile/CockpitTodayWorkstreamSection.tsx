@@ -46,37 +46,33 @@ export const CockpitTodayWorkstreamSection = ({
     aria-labelledby="cockpit-today"
   >
     <div className="flex items-start justify-between gap-2">
-      <div>
+      <div className="min-w-0">
         <h3 id="cockpit-today" className="text-sm font-semibold text-text">
           {meta.label}
         </h3>
         <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
       </div>
-      <Sparkles size={16} className="shrink-0 text-warning/80" aria-hidden />
+      <div className="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={onOpenInAppSettings}
+          className={`rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] text-textMuted hover:text-text ${btnFocus}`}
+          title="Open Settings for workday, task caps, and reminders"
+        >
+          Settings
+        </button>
+        <Sparkles size={16} className="shrink-0 text-warning/80" aria-hidden />
+      </div>
     </div>
-    <p className="mt-2 text-[10px] text-textSoft">
-      Lists below are <strong className="text-textMuted">read-only peeks</strong>. Buttons open{' '}
-      <strong className="text-text">Chat</strong> (composer or send) — not Settings.
-    </p>
+    <span className="sr-only">
+      Lists below are read-only peeks. Buttons open Chat (composer or send) — not Settings.
+    </span>
     <p className="mt-2 text-textSoft">{snapshot.cadenceHeadline}</p>
-    <p className="mt-1 text-textMuted">Cadence: {snapshot.cadenceMode}</p>
-    <p className="mt-2 text-textMuted">
+    <p className="mt-1 text-textMuted">
+      <span className="text-textSoft">Cadence:</span> {snapshot.cadenceMode} ·{' '}
       <span className="text-textSoft">Operator:</span> {snapshot.operatorName || '—'} ·{' '}
-      <span className="text-textSoft">Offer:</span> {snapshot.primaryOffer || '—'}
-    </p>
-    <p className="mt-0.5 text-textMuted">
+      <span className="text-textSoft">Offer:</span> {snapshot.primaryOffer || '—'} ·{' '}
       <span className="text-textSoft">Focus:</span> {snapshot.focusMetric || '—'}
-    </p>
-    <p className="mt-3 text-[11px] text-textMuted">
-      Workday, task caps, and reminders live in{' '}
-      <button
-        type="button"
-        onClick={onOpenInAppSettings}
-        className={`font-medium text-info underline-offset-2 hover:underline ${btnFocus}`}
-      >
-        Settings
-      </button>{' '}
-      (workspace preferences only — not pipeline or brand editing).
     </p>
     <CockpitWorkstreamCommandStrip
       ariaLabel="Today workstream Chat starters"
@@ -90,11 +86,10 @@ export const CockpitTodayWorkstreamSection = ({
     {snapshot.cockpitSchedulerTaskPeek.length > 0 ? (
       <div className="mt-4 border-t border-border/25 pt-4">
         <p className="text-[11px] font-medium text-textSoft">Upcoming scheduler tasks</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">
-          Read-only digest. Snooze and completion flow through Chat commands. “Complete follow-up”
-          in the strip marks the <strong className="text-textMuted">first incomplete</strong>{' '}
-          follow-up in workspace order.
-        </p>
+        <span className="sr-only">
+          Read-only digest. Snooze and completion flow through Chat commands. "Complete follow-up"
+          in the strip marks the first incomplete follow-up in workspace order.
+        </span>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitSchedulerTaskPeek.map((row) => (
             <li
@@ -137,7 +132,6 @@ export const CockpitTodayWorkstreamSection = ({
     {snapshot.cockpitRecentNotesPeek.length > 0 ? (
       <div className="mt-4 border-t border-border/25 pt-4">
         <p className="text-[11px] font-medium text-textSoft">Recent notes</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitRecentNotesPeek.map((row) => (
             <li
@@ -167,7 +161,6 @@ export const CockpitTodayWorkstreamSection = ({
     {snapshot.cockpitContactsPeek.length > 0 ? (
       <div className="mt-4 border-t border-border/25 pt-4">
         <p className="text-[11px] font-medium text-textSoft">Contacts (recent touch)</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitContactsPeek.map((row) => (
             <li

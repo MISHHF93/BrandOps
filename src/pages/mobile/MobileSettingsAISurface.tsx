@@ -55,14 +55,14 @@ export function SettingsTierAOverview({
         {snapshot.visualMode} · {snapshot.reminderWindow} · rules: {rulesSourceLabel}
       </p>
       <p className="mt-1.5 text-[10px] leading-relaxed text-textMuted">
-        Name and profile are edited in{' '}
+        Edit in{' '}
         <a
           href="#settings-editable"
           className={clsx('bo-link bo-link--sm inline !normal-case', btnFocus)}
         >
           Preferences
         </a>
-        <span> below (scroll past Assistant &amp; templates).</span>
+        .
       </p>
 
       <dl className="mt-3 overflow-hidden rounded-lg border border-border/45 text-[11px] text-textMuted">
@@ -168,6 +168,7 @@ export function SettingsAssistantComposer({
       id="settings-assistant"
       title="Assistant"
       description="Starter chips only fill the line below — edit, then Apply. Schedule and operating mode are in Preferences below. On-device configure engine; not a remote model."
+      descriptionVisibility="sr-only"
     >
       <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Fill composer with a starting line">
         {blankStarters.map((s) => (
@@ -239,6 +240,7 @@ export function SettingsQuickConfigureScroller({
       id="settings-quick-tweaks"
       title="Quick tweaks"
       description="Visual, motion, and ambient — runs in Chat. Operating mode is under Advanced → Preferences."
+      descriptionVisibility="sr-only"
     >
       <div className="-mx-1 mt-2 flex gap-2 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]">
         {CONFIG_PRESETS.map((preset) => (
@@ -276,10 +278,10 @@ export function SettingsWorkflowModesHero({
           Workspace templates
         </h2>
       </div>
-      <p className="text-[11px] text-textSoft">
+      <span className="sr-only">
         One tap applies a bundled setup (still runs through Chat). Pick the closest match, then
         refine with Assistant.
-      </p>
+      </span>
       <ul className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {OPERATIONAL_PRESETS.map((preset) => (
           <li key={preset.label}>
@@ -332,6 +334,7 @@ export function SettingsDataSafetyBlock({
       id="settings-data-tier-a"
       title="Data &amp; session"
       description="Backup and restore your workspace JSON. Reset replaces all workspace data with the built-in seed. Clear chat only removes this page’s message history."
+      descriptionVisibility="sr-only"
     >
       <input
         ref={importRef}
