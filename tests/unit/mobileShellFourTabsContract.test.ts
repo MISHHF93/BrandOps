@@ -29,6 +29,12 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toContain('onSelectWorkstream={handleSelectWorkstream}');
   });
 
+  it('threads Pulse → Today workstream navigation and Today → Pulse cross-link', () => {
+    expect(mobileApp).toContain('onOpenCockpitWorkstream={openCockpitWorkstream}');
+    const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
+    expect(cockpitJsx).toContain("onOpenPulseTab={() => commitTab('pulse')}");
+  });
+
   it('threads primeChat into Today and workspace data handlers into Settings', () => {
     const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
     expect(cockpitJsx).toContain('primeChat={primeChat}');

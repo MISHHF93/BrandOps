@@ -230,6 +230,15 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
     }
   }, []);
 
+  /** Pulse jump bar: open Today with a specific Cockpit workstream (URL + scroll). */
+  const openCockpitWorkstream = useCallback((id: DashboardSectionId) => {
+    setActiveTab('daily');
+    setCockpitWorkstream(id);
+    if (isAppShellWithSectionQuery()) {
+      replaceMobileShellQueryInUrl('daily', id);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isAppShellWithSectionQuery()) return;
     const onPopState = () => {
@@ -478,6 +487,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                 runCommand={runCommand}
                 primeChat={primeChat}
                 onNavigateTab={commitTab}
+                onOpenCockpitWorkstream={openCockpitWorkstream}
               />
             ) : null}
 
@@ -490,6 +500,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                 goToChat={() => commitTab('chat')}
                 primeChat={primeChat}
                 onOpenInAppSettings={() => commitTab('settings')}
+                onOpenPulseTab={() => commitTab('pulse')}
                 activeWorkstream={cockpitWorkstream}
                 onSelectWorkstream={handleSelectWorkstream}
               />

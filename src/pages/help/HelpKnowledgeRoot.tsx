@@ -1,8 +1,19 @@
 import { useEffect } from 'react';
 import { KnowledgeCenterBody } from '../../shared/help/KnowledgeCenterBody';
-import { PAGE, QUERY, buildMobileCockpitUrl, buildMobileShellUrl } from '../../shared/navigation/extensionLinks';
-import { resolveExtensionUrl } from '../../shared/navigation/extensionRuntime';
+import { QUERY } from '../../shared/navigation/extensionLinks';
+import {
+  hrefCockpitWorkstream,
+  hrefExtensionIntegrationsPage,
+  hrefPrimaryAppChat,
+  hrefPrimaryAppIntegrationsTab,
+  hrefPrimaryAppPipeline,
+  hrefPrimaryAppPulse,
+  hrefPrimaryAppSettingsTab,
+  hrefPrimaryAppToday
+} from '../../shared/navigation/navigationIntents';
 import { AppErrorBoundary } from '../../shared/ui/AppErrorBoundary';
+
+const navLinkClass = 'bo-link';
 
 export function HelpKnowledgeRoot() {
   useEffect(() => {
@@ -15,9 +26,15 @@ export function HelpKnowledgeRoot() {
     return () => window.clearTimeout(t);
   }, []);
 
-  const chatHref = resolveExtensionUrl(buildMobileShellUrl({ tab: 'chat' }));
-  const todayHref = resolveExtensionUrl(buildMobileCockpitUrl({ section: 'today' }));
-  const integrationsHref = resolveExtensionUrl(PAGE.integrations);
+  const pulseHref = hrefPrimaryAppPulse();
+  const chatHref = hrefPrimaryAppChat();
+  const settingsHref = hrefPrimaryAppSettingsTab();
+  const integrationsTabHref = hrefPrimaryAppIntegrationsTab();
+  const integrationsHubHref = hrefExtensionIntegrationsPage();
+  const todayHref = hrefPrimaryAppToday();
+  const pipelineHref = hrefPrimaryAppPipeline();
+  const brandHref = hrefCockpitWorkstream('brand-content');
+  const connectionsHref = hrefCockpitWorkstream('connections');
 
   return (
     <div className="bo-system-screen min-h-screen min-w-0 text-text">
@@ -26,16 +43,41 @@ export function HelpKnowledgeRoot() {
           <p className="text-sm font-semibold text-text">Knowledge Center</p>
           <nav
             aria-label="Primary app entry points"
-            className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-textMuted"
+            className="flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-medium text-textMuted"
           >
-            <a href={todayHref} className="bo-link">
-              Today (cockpit)
+            <span className="w-full text-[10px] font-semibold uppercase tracking-wide text-textSoft sm:w-auto">
+              Shell tabs
+            </span>
+            <a href={pulseHref} className={navLinkClass}>
+              Pulse
             </a>
-            <a href={chatHref} className="bo-link">
+            <a href={chatHref} className={navLinkClass}>
               Chat
             </a>
-            <a href={integrationsHref} className="bo-link">
-              Integrations
+            <a href={integrationsTabHref} className={navLinkClass} title="mobile.html?section=integrations">
+              Integrations (in app)
+            </a>
+            <a href={settingsHref} className={navLinkClass}>
+              Settings
+            </a>
+            <a href={integrationsHubHref} className={navLinkClass} title="integrations.html — extension hub">
+              Integrations hub
+            </a>
+            <span className="hidden h-3 w-px bg-border sm:block" aria-hidden />
+            <span className="w-full text-[10px] font-semibold uppercase tracking-wide text-textSoft sm:w-auto">
+              Today workstreams
+            </span>
+            <a href={todayHref} className={navLinkClass}>
+              Today
+            </a>
+            <a href={pipelineHref} className={navLinkClass}>
+              Pipeline
+            </a>
+            <a href={brandHref} className={navLinkClass}>
+              Brand &amp; content
+            </a>
+            <a href={connectionsHref} className={navLinkClass}>
+              Connections
             </a>
           </nav>
         </div>

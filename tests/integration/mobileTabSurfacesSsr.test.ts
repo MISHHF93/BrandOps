@@ -40,12 +40,14 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         commandBusy: false,
         runCommand: noop,
         primeChat: noop,
-        onNavigateTab: noop
+        onNavigateTab: noop,
+        onOpenCockpitWorkstream: noop
       })
     );
     expect(html).toContain('aria-label="Pulse"');
     expect(html).toContain('Follow-ups, publishing, scheduler, and outreach');
     expect(html).toContain('Jump');
+    expect(html).toContain('Brand &amp; posts');
     expect(html).toContain('Open in Chat');
     expect(html).toContain('role="list"');
   });
@@ -87,6 +89,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         goToChat: noop,
         primeChat: noop,
         onOpenInAppSettings: noop,
+        onOpenPulseTab: noop,
         activeWorkstream: 'today',
         onSelectWorkstream: noop
       })
@@ -103,6 +106,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('id="cockpit-connections"');
     expect(html).toContain('role="group"');
     expect(html).toContain('Workspace metric counts, read-only');
+    expect(html).toContain('Chronological mix');
+    expect(html).toContain('Full mixed queue');
   });
 
   it('Today (demo): shows scheduler, notes, and contacts peeks when workspace has data', () => {
@@ -114,6 +119,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         goToChat: noop,
         primeChat: noop,
         onOpenInAppSettings: noop,
+        onOpenPulseTab: noop,
         activeWorkstream: 'today',
         onSelectWorkstream: noop
       })

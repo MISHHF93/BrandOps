@@ -44,6 +44,11 @@ export function hrefPrimaryAppSettingsTab(): string {
   return r(buildMobileShellUrl({ tab: 'settings' }));
 }
 
+/** Integrations tab on `mobile.html` (`?section=integrations`) — same shell as Chat/Pulse. */
+export function hrefPrimaryAppIntegrationsTab(): string {
+  return r(buildMobileShellUrl({ tab: 'integrations' }));
+}
+
 export function hrefSignIn(): string {
   return r(buildWelcomeSignInUrl());
 }
@@ -70,8 +75,8 @@ export function hrefExtensionIntegrationsPage(): string {
 }
 
 /**
- * “Connections” nav link — packaged integrations page (register sources, providers). For Cockpit
- * workstream scroller, use {@link hrefCockpitWorkstream} with `connections`.
+ * @deprecated Prefer {@link hrefExtensionIntegrationsPage} — name implied Cockpit “connections” workstream.
+ * Still resolves to `integrations.html` (Chrome options / hub).
  */
 export function hrefCockpitConnections(): string {
   return hrefExtensionIntegrationsPage();

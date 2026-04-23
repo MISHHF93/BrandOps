@@ -2,7 +2,7 @@ import type { MobileShellTabId } from './mobileShellQuery';
 import { SHELL_SECTION_COPY } from './shellSectionCopy';
 
 /**
- * Short in-tab explainer so each of the four sections “owns” its role in the shell.
+ * Short in-tab explainer so each of the five bottom-nav sections “owns” its role in the shell.
  */
 export function ShellSectionCallout({
   tab,

@@ -1,10 +1,12 @@
 # Routing audit — extension surfaces & Settings (2026-04-20)
 
+**Current product (2026):** Chrome **`options_ui.page`** is [`integrations.html`](../integrations.html) (see [`public/manifest.template.json`](../public/manifest.template.json)); there is no separate `options.html` in the repo. The five-tab shell and `?section=` contract live in [`src/pages/mobile/mobileShellQuery.ts`](../src/pages/mobile/mobileShellQuery.ts). Prefer [`APPLICATION_WIRING_STATUS.md`](../APPLICATION_WIRING_STATUS.md) for an up-to-date surface list.
+
 ## Addendum (2026) — deep link matrix (live)
 
 | URL | `MobileApp` initial tab (typical) | `?section` on this host |
 |-----|----------------------------------|---------------------------|
-| `mobile.html` | Chat, unless `?section=` (canonical workstreams) | Opens **Cockpit** + scrolls to workstream id |
+| `mobile.html` | **Pulse** unless `?section=` overrides (`src/pages/mobile/main.tsx`) | Tab tokens (`chat`, `settings`, …) or workstream ids → **Today** tab + scroll |
 | `dashboard.html` | Chat (see `dashboard/main.tsx`) | **Does not** force Cockpit; `section` is legacy / compat |
 | `index.html` | Redirects to `mobile.html` (preserves query) | Inherits `mobile.html` behavior after redirect |
 | `openExtensionSurface('dashboard', section)` | Navigates to `mobile.html?section=…` | N/A (implementation in `openExtensionSurface`) |
@@ -17,7 +19,7 @@ Source: [`src/shared/navigation/extensionLinks.ts`](../src/shared/navigation/ext
 
 **HTML entry surfaces (repo root / `public/`):**
 
-- `index.html`, `dashboard.html`, `welcome.html`, `options.html`, `help.html`
+- `index.html`, `dashboard.html`, `welcome.html`, `integrations.html`, `mobile.html`, `help.html`
 - `public/privacy-policy.html`
 - `public/oauth/*-brandops.html` (OAuth callbacks)
 

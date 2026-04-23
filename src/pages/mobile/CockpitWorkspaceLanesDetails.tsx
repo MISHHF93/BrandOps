@@ -11,7 +11,7 @@ const MODULE_WORKSTREAM: Partial<Record<WorkspaceModuleId, DashboardSectionId>> 
 };
 
 const MODULE_TRY_COMMAND: Partial<Record<WorkspaceModuleId, string>> = {
-  'command-center': 'pipeline health',
+  /** `pipeline-crm` owns the sole `pipeline health` Chat starter; Command center uses “Go to Today” only. */
   'brand-vault': 'add content: brand narrative asset',
   'content-library': 'add content: library seed idea',
   'publishing-queue': 'draft post: weekly insight from the workspace',

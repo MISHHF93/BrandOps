@@ -1,8 +1,9 @@
 import { Activity } from 'lucide-react';
+import type { DashboardSectionId } from '../../shared/config/dashboardNavigation';
 import type { MobileShellTabId } from './mobileShellQuery';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { PulseTimelineRow } from './pulseTimeline';
-import { MobileTabPageHeader, mobileChipClass } from './mobileTabPrimitives';
+import { MobileTabPageHeader } from './mobileTabPrimitives';
 import { ShellSectionCallout } from './ShellSectionCallout';
 
 function startOfLocalDay(d: Date): Date {
@@ -45,6 +46,8 @@ export interface PulseTimelineViewProps {
   runCommand: (command: string) => void | Promise<void>;
   primeChat: (line: string) => void;
   onNavigateTab: (tab: MobileShellTabId) => void;
+  /** Open Today (daily) and scroll to a Cockpit workstream. */
+  onOpenCockpitWorkstream: (workstream: DashboardSectionId) => void;
 }
 
 export const PulseTimelineView = ({
@@ -53,7 +56,8 @@ export const PulseTimelineView = ({
   commandBusy,
   runCommand,
   primeChat,
-  onNavigateTab
+  onNavigateTab,
+  onOpenCockpitWorkstream
 }: PulseTimelineViewProps) => {
   const now = new Date();
   const rows = snapshot.pulseTimelineRows;
@@ -67,7 +71,6 @@ export const PulseTimelineView = ({
   }
 
   const jumpBtn = `rounded-lg border border-zinc-600/50 bg-zinc-900/60 px-2 py-1.5 text-[10px] font-medium text-zinc-200 hover:border-indigo-500/40 hover:bg-zinc-900/90 ${btnFocus}`;
-  const runChip = `${mobileChipClass(btnFocus)} disabled:cursor-not-allowed disabled:opacity-50`;
 
   const renderBucket = (key: 'today' | 'thisWeek' | 'later', title: string) => {
     const list = grouped[key];
@@ -128,15 +131,25 @@ export const PulseTimelineView = ({
           <button type="button" onClick={() => onNavigateTab('daily')} className={jumpBtn}>
             Today
           </button>
+          <button type="button" onClick={() => onOpenCockpitWorkstream('pipeline')} className={jumpBtn}>
+            Pipeline
+          </button>
+          <button type="button" onClick={() => onOpenCockpitWorkstream('brand-content')} className={jumpBtn}>
+            Brand &amp; posts
+          </button>
+        </div>
+        <p className="mt-2 text-[10px] leading-snug text-zinc-500">
+          Full deal ranking and stage changes: open{' '}
           <button
             type="button"
             disabled={commandBusy}
             onClick={() => void runCommand('pipeline health')}
-            className={runChip}
+            className={`font-medium text-emerald-300/90 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`}
           >
-            Pipeline health
-          </button>
-        </div>
+            pipeline health
+          </button>{' '}
+          in Chat (same control as Today → Pipeline).
+        </p>
       </div>
 
       {rows.length === 0 ? (

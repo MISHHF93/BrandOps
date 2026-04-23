@@ -3,9 +3,11 @@ import { PAGE, QUERY, buildMobileCockpitUrl, buildMobileShellUrl } from '../../s
 import {
   hrefCockpitConnections,
   hrefDashboardKnowledgeOverlay,
+  hrefExtensionIntegrationsPage,
   hrefHelpPage,
   hrefPrimaryAppChat,
   hrefPrimaryAppDefault,
+  hrefPrimaryAppIntegrationsTab,
   hrefPrimaryAppPipeline,
   hrefPrimaryAppPulse,
   hrefPrimaryAppSettingsTab,
@@ -24,6 +26,7 @@ describe('navigationIntents', () => {
     expect(hrefPrimaryAppToday()).toBe(r(buildMobileCockpitUrl({ section: 'today' })));
     expect(hrefPrimaryAppPipeline()).toBe(r(buildMobileCockpitUrl({ section: 'pipeline' })));
     expect(hrefPrimaryAppPulse()).toBe(r(buildMobileShellUrl({ tab: 'pulse' })));
+    expect(hrefPrimaryAppIntegrationsTab()).toBe(r(buildMobileShellUrl({ tab: 'integrations' })));
   });
 
   it('resolves Help page and topic query', () => {
@@ -33,9 +36,10 @@ describe('navigationIntents', () => {
     expect(withTopic).toContain('surfaces');
   });
 
-  it('resolves dashboard knowledge overlay and integrations (connections nav)', () => {
+  it('resolves dashboard knowledge overlay and integrations hub vs in-app tab', () => {
     expect(hrefDashboardKnowledgeOverlay()).toContain(PAGE.dashboard);
     expect(hrefDashboardKnowledgeOverlay()).toContain(QUERY.cockpitOverlay);
-    expect(hrefCockpitConnections()).toBe(r(PAGE.integrations));
+    expect(hrefExtensionIntegrationsPage()).toBe(r(PAGE.integrations));
+    expect(hrefCockpitConnections()).toBe(hrefExtensionIntegrationsPage());
   });
 });

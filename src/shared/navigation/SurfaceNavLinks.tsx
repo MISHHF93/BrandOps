@@ -1,9 +1,11 @@
 import { getPrivacyPolicyHref } from '../config/privacyPolicyUrl';
 import {
-  hrefCockpitConnections,
+  hrefCockpitWorkstream,
   hrefDashboardKnowledgeOverlay,
+  hrefExtensionIntegrationsPage,
   hrefHelpPage,
   hrefPrimaryAppChat,
+  hrefPrimaryAppIntegrationsTab,
   hrefPrimaryAppPipeline,
   hrefPrimaryAppPulse,
   hrefPrimaryAppSettingsTab,
@@ -33,9 +35,12 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
   const pulseHref = hrefPrimaryAppPulse();
   const todayHref = hrefPrimaryAppToday();
   const pipelineHref = hrefPrimaryAppPipeline();
+  const brandContentHref = hrefCockpitWorkstream('brand-content');
+  const connectionsWorkstreamHref = hrefCockpitWorkstream('connections');
+  const integrationsTabHref = hrefPrimaryAppIntegrationsTab();
+  const integrationsHubHref = hrefExtensionIntegrationsPage();
   const knowledgeOverlayHref = hrefDashboardKnowledgeOverlay();
   const helpPageHref = hrefHelpPage();
-  const connectionsHref = hrefCockpitConnections();
 
   return (
     <div
@@ -62,6 +67,18 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       <a className={linkClass} href={pipelineHref} title="mobile.html?section=pipeline">
         Pipeline
       </a>
+      <a className={linkClass} href={brandContentHref} title="mobile.html?section=brand-content">
+        Brand &amp; content
+      </a>
+      <a className={linkClass} href={connectionsWorkstreamHref} title="mobile.html?section=connections">
+        Connections (cockpit)
+      </a>
+      <a className={linkClass} href={integrationsTabHref} title="mobile.html?section=integrations">
+        Integrations (in app)
+      </a>
+      <a className={linkClass} href={integrationsHubHref} title="integrations.html — extension hub / options">
+        Integrations hub
+      </a>
       <a className={linkClass} href={settingsHref}>
         Settings
       </a>
@@ -74,9 +91,6 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       </a>
       <a className={linkClass} href={helpPageHref}>
         Help (full page)
-      </a>
-      <a className={linkClass} href={connectionsHref}>
-        Integrations
       </a>
       <a
         className={linkClass}

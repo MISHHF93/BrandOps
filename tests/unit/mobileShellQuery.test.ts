@@ -76,4 +76,34 @@ describe('mobileShellQuery', () => {
     expect(sectionParamValueForShellState('daily', 'pipeline')).toBe('pipeline');
     expect(sectionParamValueForShellState('daily', 'today')).toBe('today');
   });
+
+  /** Round-trip: URL param emitted by the shell encoder parses back to the same tab/workstream. */
+  it('round-trips section param for every shell tab and cockpit workstream', () => {
+    const defaultTab = 'chat' as const;
+    const tabCases: Array<{ tab: 'pulse' | 'chat' | 'integrations' | 'settings'; ws: 'today' }> = [
+      { tab: 'pulse', ws: 'today' },
+      { tab: 'chat', ws: 'today' },
+      { tab: 'integrations', ws: 'today' },
+      { tab: 'settings', ws: 'today' }
+    ];
+    for (const { tab, ws } of tabCases) {
+      const encoded = sectionParamValueForShellState(tab, ws);
+      const parsed = parseMobileShellFromSearchParams(new URLSearchParams(`section=${encoded}`), defaultTab);
+      expect(parsed.tab).toBe(tab);
+      expect(parsed.workstream).toBeNull();
+    }
+    const workstreams = ['today', 'pipeline', 'brand-content', 'connections'] as const;
+    for (const ws of workstreams) {
+      const encoded = sectionParamValueForShellState('daily', ws);
+      const parsed = parseMobileShellFromSearchParams(new URLSearchParams(`section=${encoded}`), defaultTab);
+      expect(parsed.tab).toBe('daily');
+      expect(parsed.workstream).toBe(ws);
+    }
+    const dailyTokens = ['daily', 'cockpit'] as const;
+    for (const token of dailyTokens) {
+      const parsed = parseMobileShellFromSearchParams(new URLSearchParams(`section=${token}`), defaultTab);
+      expect(parsed).toEqual({ tab: 'daily', workstream: 'today' });
+    }
+    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=timeline'), defaultTab).tab).toBe('pulse');
+  });
 });

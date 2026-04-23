@@ -13,6 +13,7 @@ export const CockpitBrandContentWorkstreamSection = ({
   commandBusy,
   runCommand,
   primeChat,
+  onOpenPulse,
   meta
 }: CockpitBrandContentSectionProps) => (
   <section
@@ -27,6 +28,18 @@ export const CockpitBrandContentWorkstreamSection = ({
       Brand and publishing rows are <strong className="text-zinc-500">read-only digest</strong>. Drafts and updates run
       in <strong className="text-zinc-400">Chat</strong> — not Settings.
     </p>
+    {onOpenPulse ? (
+      <p className="mt-1.5 text-[10px] text-zinc-500">
+        Full mixed queue:{' '}
+        <button
+          type="button"
+          onClick={onOpenPulse}
+          className={`font-medium text-indigo-300/90 underline-offset-2 hover:underline ${btnFocus}`}
+        >
+          Pulse
+        </button>
+      </p>
+    ) : null}
     <p className="mt-2 text-zinc-400">
       Publishing queue: <span className="text-zinc-100">{snapshot.publishingQueue}</span> items · Queued or due-soon:{' '}
       <span className="text-zinc-100">{snapshot.queuedPublishing}</span>

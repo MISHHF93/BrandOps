@@ -9,14 +9,32 @@ Track what is fully connected between the chatbot frontend and backend command/r
 - `index.html` -> redirects to `mobile.html` (preserves query/hash; default shell tab is set by `MobileApp` when `?section` is absent)
 - `mobile.html` -> `src/pages/mobile/main.tsx` -> `MobileApp` with **`initialTab: 'pulse'`** (document: `data-app-surface="mobile"`, `surfaceLabel="mobile"`)
 - `dashboard.html` -> `src/pages/dashboard/main.tsx` -> `renderChatbotSurface` -> `MobileApp` (`data-app-surface="dashboard"`)
-- `options.html` -> `src/pages/options/main.tsx` -> `renderChatbotSurface` -> `MobileApp` (`data-app-surface="options"`) — required for Chrome MV3 `options_ui`
+- `integrations.html` -> `src/pages/integrations/main.tsx` -> `MobileApp` (`initialTab: 'integrations'`, `data-app-surface="integrations"`) — Chrome MV3 **`options_ui.page`** in [`public/manifest.template.json`](public/manifest.template.json) points here (same shell as `mobile.html`, different default tab)
 - `help.html` -> `src/pages/help/main.tsx` -> `HelpKnowledgeRoot` (Knowledge Center; not the `MobileApp` shell) (`data-app-surface="help"`)
 - `welcome.html` -> `src/pages/welcome/main.tsx` -> `renderChatbotSurface` -> `MobileApp` (`data-app-surface="welcome"`)
 - Peripheral (not the main shell): `public/oauth/*-brandops.html` (OAuth callback UIs), `public/privacy-policy.html` (legal)
 
-**Agent source mapping:** `mapDocumentSurfaceToAgentSource` in [`src/shared/navigation/appDocumentSurface.ts`](src/shared/navigation/appDocumentSurface.ts) maps `mobile` to `executeAgentWorkspaceCommand` source `chatbot-mobile`; `welcome` | `dashboard` | `options` | `help` map to `chatbot-web`. This aligns `data-app-surface` with the command pipeline.
+**Agent source mapping:** `mapDocumentSurfaceToAgentSource` in [`src/shared/navigation/appDocumentSurface.ts`](src/shared/navigation/appDocumentSurface.ts) maps `mobile` (and empty/undefined) to `executeAgentWorkspaceCommand` source `chatbot-mobile`; `welcome` | `dashboard` | `integrations` | `help` map to `chatbot-web`. This aligns **hosting HTML document** with the command pipeline — it is **not** the same axis as the five bottom-nav **tabs** inside `MobileApp`.
 
-**Knowledge / help IA:** in-dashboard Knowledge is opened via `dashboard.html?overlay=help` (Chat tab + overlay). A separate `help.html` is the dedicated Help / daily-brief document (initial Cockpit tab). See the “Knowledge Center” and **Settings** dual-entry notes in [`src/shared/navigation/extensionLinks.ts`](src/shared/navigation/extensionLinks.ts).
+**Knowledge / help IA:** in-dashboard Knowledge is opened via `dashboard.html?overlay=help` (Chat tab + overlay). A separate `help.html` is the full-page manual (`HelpKnowledgeRoot`). See [`src/shared/navigation/extensionLinks.ts`](src/shared/navigation/extensionLinks.ts).
+
+### Five-tab shell vs Cockpit workstreams vs peripheral pages
+
+| Destination | `?section=` / URL | Typical goal |
+|-------------|-------------------|----------------|
+| **Pulse** tab | `pulse` or `timeline` | Mixed “what’s next” timeline |
+| **Chat** tab | `chat` | Commands and agent thread |
+| **Today** tab (cockpit) | `daily`, `cockpit`, or any **workstream** id | Deep digest; workstream scrolls a block |
+| Workstream **Today** | `today` | Cockpit “Today” block |
+| Workstream **Pipeline** | `pipeline` | Deals / pipeline digest |
+| Workstream **Brand & content** | `brand-content` | Brand / publishing digest |
+| Workstream **Connections** | `connections` | Connections digest (not the packaged hub) |
+| **Integrations** tab (in shell) | `integrations` | Same hub UI as tab on `mobile.html` |
+| **Integrations hub** document | `integrations.html` (no query or with `?section=`) | Chrome **options** entry; same `MobileApp`, often opens Integrations tab first |
+| **Settings** tab | `settings` | Prefs, export, audit |
+| **Peripheral** | `welcome.html`, `help.html`, `privacy-policy.html`, `public/oauth/*` | Auth, manual, legal, OAuth callbacks |
+
+Canonical parsing: [`src/pages/mobile/mobileShellQuery.ts`](src/pages/mobile/mobileShellQuery.ts). Link helpers: [`src/shared/navigation/navigationIntents.ts`](src/shared/navigation/navigationIntents.ts) (`hrefPrimaryAppIntegrationsTab` vs `hrefExtensionIntegrationsPage`).
 
 The **Pulse** tab (id `pulse`) is a read-only mixed timeline (follow-ups, publishing, scheduler, outreach drafts) from `buildPulseTimeline` / `MobileWorkspaceSnapshot.pulseTimelineRows`; actions are primed or run from **Chat** as elsewhere in the shell.
 
@@ -24,7 +42,7 @@ The **Cockpit** tab in `MobileApp` (tab id `daily`) is the platform **overview**
 
 **Deep links:** `mobile.html?section=pulse` (alias `timeline`) opens the Pulse tab. `mobile.html?section=today|pipeline|brand-content|connections` opens the Cockpit tab and scrolls to the block (`extensionLinks` + `getCockpitMobileSectionHeadingId`). A bare `?section=` on `dashboard.html` (without `?overlay=`) is redirected to the same `?section` on `mobile.html` (see `shouldRedirectDashboardSectionToMobile`). Workstream links from `openExtensionSurface` / `buildMobileCockpitUrl` target `mobile.html`.
 
-**Settings:** the same Settings tab is reachable as `options.html` (required for extension options) and `mobile.html?section=settings`.
+**Settings:** reachable as `mobile.html?section=settings` (primary shell) and from any document that mounts `MobileApp` with the Settings tab selected.
 
 **Deferred UI:** `ExtensionSurfaceLayout` in `src/shared/ui/components/layout/ExtensionSurfaceLayout.tsx` is not mounted by a page entry; reserved for a future compact popup / options shell.
 

@@ -13,6 +13,7 @@ export const CockpitPipelineWorkstreamSection = ({
   commandBusy,
   runCommand,
   primeChat,
+  onOpenPulse,
   meta
 }: CockpitPipelineSectionProps) => (
   <section
@@ -27,6 +28,18 @@ export const CockpitPipelineWorkstreamSection = ({
       Pipeline lists are <strong className="text-zinc-500">read-only digest</strong>. Stage changes and outreach run in{' '}
       <strong className="text-zinc-400">Chat</strong> — not the Settings tab.
     </p>
+    {onOpenPulse ? (
+      <p className="mt-1.5 text-[10px] text-zinc-500">
+        Chronological mix (follow-ups, outreach, publishing):{' '}
+        <button
+          type="button"
+          onClick={onOpenPulse}
+          className={`font-medium text-indigo-300/90 underline-offset-2 hover:underline ${btnFocus}`}
+        >
+          Pulse
+        </button>
+      </p>
+    ) : null}
 
     <div className="mt-3 space-y-3">
       <div
