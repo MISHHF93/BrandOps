@@ -20,13 +20,3 @@ export function resolveExtensionUrl(spec: string): string {
   const base = pathOnly.startsWith('/') ? pathOnly : `/${pathOnly}`;
   return `${base}${rest}`;
 }
-
-/** Extension semver from manifest, or empty string when unavailable (e.g. plain Vite dev). */
-export function getExtensionManifestVersion(): string {
-  try {
-    const v = typeof chrome !== 'undefined' ? chrome.runtime?.getManifest?.()?.version : undefined;
-    return typeof v === 'string' ? v : '';
-  } catch {
-    return '';
-  }
-}

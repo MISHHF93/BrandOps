@@ -9,9 +9,12 @@
     "src/pages/dashboard/main.tsx",
     "src/pages/welcome/main.tsx",
     "src/pages/help/main.tsx",
-    "src/pages/integrations/main.tsx"
+    "src/pages/integrations/main.tsx",
+    "tests/**/*.test.ts",
+    "tests/**/*.test.tsx",
+    "tests/helpers/**/*.ts"
   ],
   "project": ["src/**/*.ts", "src/**/*.tsx"],
-  "ignore": ["android/**", "dist/**", ".cursor/**", "scripts/**", "tests/**", "node_modules/**"],
+  "ignore": ["android/**", "dist/**", ".cursor/**", "scripts/**", "node_modules/**"],
   "ignoreDependencies": ["@capacitor/android", "@capacitor/core", "@capacitor/ios", "knip"]
 }

@@ -55,13 +55,6 @@ export const PAGE = {
   index: 'index.html'
 } as const;
 
-/** OAuth callback HTML under `public/`; not the main `MobileApp` shell. */
-export const PERIPHERAL_OAUTH_CALLBACK_PAGES = [
-  'public/oauth/google-brandops.html',
-  'public/oauth/github-brandops.html',
-  'public/oauth/linkedin-brandops.html'
-] as const;
-
 export const QUERY = {
   /** `signup` only. Omitted URL = sign-in flow (canonical: bare welcome.html). */
   welcomeFlow: 'flow',
@@ -72,61 +65,6 @@ export const QUERY = {
   cockpitOverlay: 'overlay',
   helpTopic: 'topic'
 } as const;
-
-export type WelcomeFlowQueryValue = 'signup';
-
-export const EXTENSION_ROUTE_CATALOG: Array<{
-  page: string;
-  query: string;
-  values: string;
-  notes: string;
-}> = [
-  {
-    page: PAGE.welcome,
-    query: `${QUERY.welcomeFlow} (optional)`,
-    values: 'signup',
-    notes:
-      'Omit param = sign in at welcome.html; ?flow=signup = create account. Legacy ?auth= normalized on load.'
-  },
-  {
-    page: PAGE.mobile,
-    query: `${QUERY.dashboardSection} (optional)`,
-    values:
-      'Tab: pulse | timeline | chat | settings | integrations | daily | cockpit — Workstream: today | pipeline | brand-content | connections (+ legacy)',
-    notes:
-      'One param: tab tokens for bottom nav; workstream ids open Cockpit and scroll. See `mobileShellQuery.ts`.'
-  },
-  {
-    page: PAGE.dashboard,
-    query: `${QUERY.dashboardSection} | ${QUERY.cockpitOverlay} (optional legacy)`,
-    values: 'legacy section param; overlay is retired and redirected',
-    notes: 'Compatibility entry only. Canonical routing is mobile/help surfaces.'
-  },
-  {
-    page: PAGE.integrations,
-    query: `${QUERY.dashboardSection} (optional)`,
-    values: 'Same tab + Cockpit workstream tokens as mobile.html; default UI tab is Integrations',
-    notes: 'Chrome `options_ui` page; `data-app-surface=integrations`.'
-  },
-  {
-    page: PAGE.help,
-    query: QUERY.helpTopic,
-    values: 'topic ids (e.g. surfaces)',
-    notes: 'Scroll target in Knowledge Center.'
-  },
-  {
-    page: PAGE.privacyPolicy,
-    query: '—',
-    values: '—',
-    notes: 'Bundled legal; hosted URL optional via VITE_PRIVACY_POLICY_URL.'
-  },
-  {
-    page: PAGE.index,
-    query: '—',
-    values: '—',
-    notes: 'Redirects to mobile.html preserving search/hash.'
-  }
-];
 
 function withQuery(file: string, params: Record<string, string | undefined>): string {
   const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== '') as [
@@ -146,20 +84,6 @@ export function buildWelcomeSignInUrl(): string {
 /** Create-account funnel only (`?flow=signup`). */
 export function buildWelcomeSignUpUrl(): string {
   return withQuery(PAGE.welcome, { [QUERY.welcomeFlow]: 'signup' });
-}
-
-/**
- * @deprecated Use `buildWelcomeSignInUrl` or `buildWelcomeSignUpUrl`.
- * Kept for gradual migration of call sites.
- */
-export function buildWelcomeUrl(opts?: { flow?: 'signup'; auth?: 'signup' | 'signin' }): string {
-  if (opts?.flow === 'signup' || opts?.auth === 'signup') {
-    return buildWelcomeSignUpUrl();
-  }
-  if (opts?.auth === 'signin') {
-    return buildWelcomeSignInUrl();
-  }
-  return buildWelcomeSignInUrl();
 }
 
 export function buildDashboardUrl(opts?: { section?: DashboardSectionId }): string {

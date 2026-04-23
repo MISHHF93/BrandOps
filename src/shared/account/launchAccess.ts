@@ -22,7 +22,7 @@ export interface LaunchAccessState {
   membership: LaunchMembershipState;
 }
 
-export const LAUNCH_ACCESS_STORAGE_KEY = 'launch:access';
+const LAUNCH_ACCESS_STORAGE_KEY = 'launch:access';
 const LEGACY_KEY = 'brandops:launch:access';
 
 const DEFAULT_STATE: LaunchAccessState = {
@@ -113,7 +113,7 @@ export async function readLaunchAccessStateForRuntime(): Promise<LaunchAccessSta
   }
 }
 
-export async function writeLaunchAccessStateForRuntime(state: LaunchAccessState): Promise<void> {
+async function writeLaunchAccessStateForRuntime(state: LaunchAccessState): Promise<void> {
   try {
     const browserLocalStorage = getBrowserStorage('local');
     await browserLocalStorage.set(LAUNCH_ACCESS_STORAGE_KEY, state);

@@ -2,7 +2,6 @@
  * User-facing navigation built from {@link extensionLinks} + {@link resolveExtensionUrl}.
  * Use this for link `href`s so "where am I going" maps to one place (primary app = `mobile.html`).
  */
-import type { DashboardSectionId } from '../config/dashboardNavigation';
 import {
   buildHelpUrl,
   buildMobileCockpitUrl,
@@ -79,8 +78,4 @@ export function hrefExtensionIntegrationsPage(): string {
  */
 export function hrefCockpitConnections(): string {
   return hrefExtensionIntegrationsPage();
-}
-
-export function hrefCockpitWorkstream(section: DashboardSectionId): string {
-  return r(buildMobileCockpitUrl({ section }));
 }

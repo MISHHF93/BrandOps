@@ -160,10 +160,10 @@ function stripRow(i: IntentRow): BrandOpsChatIntent {
   return rest;
 }
 
-export const BRANDOPS_CHAT_INTENTS: BrandOpsChatIntent[] = CHAT_INTENT_RAW;
+const BRANDOPS_CHAT_INTENTS: BrandOpsChatIntent[] = CHAT_INTENT_RAW;
 
 /** Curated example groups (same source as the composer). */
-export const CHAT_EXAMPLE_GROUPS: { id: string; label: string; commandIds: string[] }[] = [
+const CHAT_EXAMPLE_GROUPS: { id: string; label: string; commandIds: string[] }[] = [
   {
     id: 'essentials',
     label: 'Start fast',

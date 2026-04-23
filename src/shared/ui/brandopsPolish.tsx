@@ -2,10 +2,10 @@ import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import { AlertCircle, CheckCircle2, Info, Loader2, Shield, Sparkles } from 'lucide-react';
 
-export type DataOpsFeedbackTone = 'info' | 'success' | 'caution';
+type DataOpsFeedbackTone = 'info' | 'success' | 'caution';
 
 /** Map free-form copy to tone for icon and color (keeps setState as string in callers). */
-export function parseDataOpsTone(message: string): DataOpsFeedbackTone {
+function parseDataOpsTone(message: string): DataOpsFeedbackTone {
   const m = message.toLowerCase();
   if (
     m.includes('fail') ||

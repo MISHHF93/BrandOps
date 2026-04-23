@@ -5,7 +5,7 @@ export type DashboardSectionId = 'today' | 'pipeline' | 'brand-content' | 'conne
 
 export const DEFAULT_DASHBOARD_SECTION: DashboardSectionId = 'today';
 
-export const LEGACY_TO_CANONICAL_DASHBOARD_SECTIONS: Record<string, DashboardSectionId> = {
+const LEGACY_TO_CANONICAL_DASHBOARD_SECTIONS: Record<string, DashboardSectionId> = {
   overview: 'today',
   growth: 'pipeline',
   content: 'brand-content',
@@ -129,8 +129,6 @@ export function getCockpitMobileSectionHeadingId(section: DashboardSectionId): s
   return COCKPIT_MOBILE_HEADING_IDS[section];
 }
 
-export const flattenedNavigationItems = cockpitNavigationGroups.flatMap((group) => group.items);
-
 export function isDashboardSectionId(value: string): value is DashboardSectionId {
   return (observedSectionIds as string[]).includes(value);
 }
@@ -143,25 +141,4 @@ export function canonicalizeDashboardSectionId(
   if (!candidate) return null;
   if (isDashboardSectionId(candidate)) return candidate;
   return LEGACY_TO_CANONICAL_DASHBOARD_SECTIONS[candidate] ?? null;
-}
-
-/**
- * Resolve initial section from `?section=`, then legacy #hash (migrated on load), then default.
- */
-export function resolveInitialDashboardSection(): DashboardSectionId {
-  if (typeof window === 'undefined') return DEFAULT_DASHBOARD_SECTION;
-
-  const sectionParam = new URLSearchParams(window.location.search).get('section');
-  const fromQuery = canonicalizeDashboardSectionId(sectionParam);
-  if (fromQuery) {
-    return fromQuery;
-  }
-
-  const rawHash = window.location.hash.replace(/^#/, '');
-  const fromHash = canonicalizeDashboardSectionId(rawHash);
-  if (fromHash) {
-    return fromHash;
-  }
-
-  return DEFAULT_DASHBOARD_SECTION;
 }

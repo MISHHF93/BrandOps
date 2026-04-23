@@ -5,7 +5,7 @@ import { resolveExtensionUrl } from '../navigation/extensionRuntime';
  * Public HTTPS URL for the privacy policy, set at build time for store compliance and in-app links.
  * @see docs/chrome-web-store-listing.md
  */
-export function getResolvedPrivacyPolicyUrl(): string | undefined {
+function getResolvedPrivacyPolicyUrl(): string | undefined {
   const raw = import.meta.env.VITE_PRIVACY_POLICY_URL;
   if (typeof raw !== 'string') return undefined;
   const trimmed = raw.trim();

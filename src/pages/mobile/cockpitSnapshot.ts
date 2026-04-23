@@ -1,7 +1,7 @@
 import { localIntelligence } from '../../services/intelligence/localIntelligence';
 import type { BrandOpsData } from '../../types/domain';
 
-export function buildNextPublishingHint(workspace: BrandOpsData): string | null {
+function buildNextPublishingHint(workspace: BrandOpsData): string | null {
   const queue = workspace.publishingQueue.filter(
     (item) => item.status !== 'posted' && item.status !== 'skipped'
   );

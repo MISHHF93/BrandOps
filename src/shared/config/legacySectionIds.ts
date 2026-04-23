@@ -5,7 +5,7 @@ import { isDashboardSectionId } from './dashboardNavigation';
  * Pre-merge dashboard section IDs → current `DashboardSectionId` values.
  * Keep in sync with product navigation; used for externalSync links and legacy payloads.
  */
-export const LEGACY_SECTION_ID_MAP: Record<string, string> = {
+const LEGACY_SECTION_ID_MAP: Record<string, string> = {
   'command-center': 'today',
   'mission-map': 'today',
   'scheduler-engine': 'today',
@@ -23,7 +23,7 @@ export const LEGACY_SECTION_ID_MAP: Record<string, string> = {
   systems: 'connections'
 };
 
-export function normalizeMergedSectionId(value: string): string {
+function normalizeMergedSectionId(value: string): string {
   const candidate = value.trim();
   if (!candidate) return candidate;
   if (isDashboardSectionId(candidate)) return candidate;

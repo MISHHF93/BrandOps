@@ -57,7 +57,7 @@ export const applyDocumentThemeFromAppSettings = (settings: AppSettings): void =
   });
 };
 
-export const applyDocumentTheme = (
+const applyDocumentTheme = (
   theme: UiTheme,
   visual?: Pick<BrandOpsData['settings'], 'visualMode' | 'motionMode' | 'ambientFxEnabled'>
 ) => {

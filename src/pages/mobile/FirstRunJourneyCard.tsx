@@ -9,7 +9,7 @@ export function readFirstRunJourneyDismissed(): boolean {
   return localStorage.getItem(STORAGE_KEY) === '1';
 }
 
-export function writeFirstRunJourneyDismissed() {
+function writeFirstRunJourneyDismissed() {
   if (typeof localStorage === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, '1');

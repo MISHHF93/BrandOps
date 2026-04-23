@@ -21,20 +21,6 @@ export function cadenceModeTitle(mode: string): string {
   }
 }
 
-/** One-line hint for tooltips and dense summaries. */
-export function cadenceModeSummary(mode: string): string {
-  switch (mode as CadenceFlowMode) {
-    case 'maker-heavy':
-      return 'Bias toward build time and deep work blocks.';
-    case 'client-heavy':
-      return 'Bias toward meetings, follow-ups, and delivery.';
-    case 'launch-day':
-      return 'High-throughput push windows for ship weeks.';
-    default:
-      return 'Even mix of maker and client work.';
-  }
-}
-
 /** Natural-language fragment for `applySettingsConfigure` / `configure:` (no prefix). */
 export function cadenceConfigureFragment(mode: CadenceFlowMode): string {
   switch (mode) {
