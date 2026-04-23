@@ -70,35 +70,35 @@ export const PulseTimelineView = ({
     grouped[bucketForRow(row.sortKey, now)].push(row);
   }
 
-  const jumpBtn = `rounded-lg border border-zinc-600/50 bg-zinc-900/60 px-2 py-1.5 text-[10px] font-medium text-zinc-200 hover:border-indigo-500/40 hover:bg-zinc-900/90 ${btnFocus}`;
+  const jumpBtn = `rounded-lg border border-border/60 bg-surface/60 px-2 py-1.5 text-[10px] font-medium text-text hover:border-borderStrong hover:bg-surfaceActive/80 ${btnFocus}`;
 
   const renderBucket = (key: 'today' | 'thisWeek' | 'later', title: string) => {
     const list = grouped[key];
     if (list.length === 0) return null;
     return (
       <div className="mt-4">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{title}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-textSoft">{title}</p>
         <ol className="mt-2 space-y-2" role="list">
           {list.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-white/5 bg-zinc-950/35 px-2.5 py-2 text-[11px] text-zinc-300"
+              className="rounded-lg border border-border/40 bg-bgSubtle/35 px-2.5 py-2 text-[11px] text-textMuted"
             >
               <div className="flex flex-wrap items-center gap-2">
                 {row.badge ? (
-                  <span className="rounded bg-zinc-800/80 px-1.5 py-0.5 text-[9px] font-medium uppercase text-zinc-400">
+                  <span className="rounded border border-border/50 bg-surface/60 px-1.5 py-0.5 text-[9px] font-medium uppercase text-textSoft">
                     {row.badge}
                   </span>
                 ) : null}
-                <span className="font-medium text-zinc-100">{row.title}</span>
+                <span className="font-medium text-text">{row.title}</span>
               </div>
-              <p className="mt-0.5 text-[10px] text-zinc-500">{row.subtitle}</p>
+              <p className="mt-0.5 text-[10px] text-textSoft">{row.subtitle}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <button
                   type="button"
                   disabled={commandBusy}
                   onClick={() => primeChat(primeLineForRow(row))}
-                  className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`rounded-full border border-border/55 bg-surface/50 px-2 py-0.5 text-[10px] text-textMuted ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   Open in Chat
                 </button>
@@ -116,14 +116,14 @@ export const PulseTimelineView = ({
         title="Pulse"
         subtitle="Follow-ups, publishing, scheduler, and outreach — soonest first. Read-only; actions run in Chat."
         icon={Activity}
-        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-950/30"
-        iconClassName="text-rose-300"
+        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/35 bg-primarySoft/12"
+        iconClassName="text-primary"
       />
 
       <ShellSectionCallout tab="pulse" className="mt-1" />
 
-      <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-3 text-[11px] text-zinc-400">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Jump</p>
+      <div className="bo-glass-panel--muted rounded-xl border border-border/55 p-3 text-[11px] text-textMuted">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-textSoft">Jump</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           <button type="button" onClick={() => onNavigateTab('chat')} className={jumpBtn}>
             Chat
@@ -138,13 +138,13 @@ export const PulseTimelineView = ({
             Brand &amp; posts
           </button>
         </div>
-        <p className="mt-2 text-[10px] leading-snug text-zinc-500">
+        <p className="mt-2 text-[10px] leading-snug text-textSoft">
           Full deal ranking and stage changes: open{' '}
           <button
             type="button"
             disabled={commandBusy}
             onClick={() => void runCommand('pipeline health')}
-            className={`font-medium text-emerald-300/90 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`}
+            className={`font-medium text-success underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`}
           >
             pipeline health
           </button>{' '}
@@ -153,9 +153,9 @@ export const PulseTimelineView = ({
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-[11px] text-zinc-500">
+        <p className="text-[11px] text-textSoft">
           Nothing in the queue yet. Add follow-ups, publishing items, scheduler tasks, or outreach drafts — or open{' '}
-          <button type="button" onClick={() => onNavigateTab('chat')} className={`font-medium text-indigo-300 ${btnFocus}`}>
+          <button type="button" onClick={() => onNavigateTab('chat')} className={`font-medium text-info ${btnFocus}`}>
             Chat
           </button>{' '}
           to run commands.

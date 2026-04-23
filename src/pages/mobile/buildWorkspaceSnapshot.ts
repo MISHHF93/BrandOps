@@ -307,6 +307,8 @@ export type CockpitDailySnapshot = Pick<
   | 'cockpitOutreachHistoryPeek'
   | 'cockpitCompanyPeek'
   | 'cockpitBrandVaultReadout'
+  | 'integrationArtifactsPeek'
+  | 'sshTargetsPeek'
 >;
 
 export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspaceSnapshot {

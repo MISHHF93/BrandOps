@@ -33,28 +33,28 @@ export const MobileIntegrationsView = ({
         title="Integrations"
         subtitle="Sources, OAuth, artifacts, and SSH — pipeline metrics live on Today"
         icon={PlugZap}
-        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-sky-500/30 bg-sky-950/30"
-        iconClassName="text-sky-300"
+        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-secondary/40 bg-secondarySoft/10"
+        iconClassName="text-secondary"
       />
 
       <ShellSectionCallout tab="integrations" className="mt-3" />
 
       <dl className="grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-xl border border-white/5 bg-zinc-950/30 p-2.5">
-          <dt className="text-zinc-500">Sources</dt>
-          <dd className="text-sm font-medium text-zinc-100">{snapshot.integrationSources}</dd>
+        <div className="rounded-xl border border-border/50 bg-bgSubtle/40 p-2.5">
+          <dt className="text-textSoft">Sources</dt>
+          <dd className="text-sm font-medium text-text">{snapshot.integrationSources}</dd>
         </div>
-        <div className="rounded-xl border border-white/5 bg-zinc-950/30 p-2.5">
-          <dt className="text-zinc-500">Connections</dt>
-          <dd className="text-sm font-medium text-zinc-100">{snapshot.syncProvidersConnected}</dd>
+        <div className="rounded-xl border border-border/50 bg-bgSubtle/40 p-2.5">
+          <dt className="text-textSoft">Connections</dt>
+          <dd className="text-sm font-medium text-text">{snapshot.syncProvidersConnected}</dd>
         </div>
       </dl>
 
       {documentSurface !== 'integrations' ? (
-        <p className="text-[11px] text-zinc-500">
+        <p className="text-[11px] text-textSoft">
           <a
             href={hrefExtensionIntegrationsPage()}
-            className={`font-medium text-sky-400/90 underline underline-offset-2 ${btnFocus}`}
+            className={`font-medium text-info underline underline-offset-2 ${btnFocus}`}
           >
             Open packaged integrations page
           </a>{' '}

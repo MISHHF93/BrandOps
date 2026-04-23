@@ -1,5 +1,14 @@
+import { CockpitWorkstreamCommandStrip } from './CockpitWorkstreamCommandStrip';
 import { pulseTile, signalList, formatPeekDue } from './cockpitDailyPrimitives';
 import type { CockpitPipelineSectionProps } from './cockpitSectionTypes';
+
+const PIPELINE_STRIP_ITEMS = [
+  { kind: 'run' as const, label: 'Archive opportunity', phrase: 'archive opportunity' },
+  { kind: 'run' as const, label: 'Restore opportunity', phrase: 'restore opportunity' },
+  { kind: 'prime' as const, label: 'Add contact', phrase: 'add contact: Alex Rivera, Northwind Labs, Founder' },
+  { kind: 'run' as const, label: 'Draft outreach', phrase: 'draft outreach: follow up on warm lead' },
+  { kind: 'run' as const, label: 'Advance deal', phrase: 'update opportunity to proposal' }
+] as const;
 
 const rowChip = (btnFocus: string) =>
   `rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
@@ -40,6 +49,20 @@ export const CockpitPipelineWorkstreamSection = ({
         </button>
       </p>
     ) : null}
+
+    <CockpitWorkstreamCommandStrip
+      ariaLabel="Pipeline workstream Chat starters"
+      btnFocus={btnFocus}
+      commandBusy={commandBusy}
+      runCommand={runCommand}
+      primeChat={primeChat}
+      items={PIPELINE_STRIP_ITEMS}
+    />
+    <p className="mt-1 text-[10px] text-zinc-600">
+      Archive / restore apply to the <strong className="text-zinc-500">first active</strong> or{' '}
+      <strong className="text-zinc-500">first archived</strong> opportunity in workspace order — refine in Chat if you
+      need a specific deal.
+    </p>
 
     <div className="mt-3 space-y-3">
       <div
@@ -236,29 +259,23 @@ export const CockpitPipelineWorkstreamSection = ({
                 >
                   Open in Chat (outreach draft)
                 </button>
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() =>
+                    primeChat(
+                      `update opportunity: ${row.name} at ${row.company} — set stage proposal, value and confidence in Chat`
+                    )
+                  }
+                  className={rowChip(btnFocus)}
+                >
+                  Prime stage update
+                </button>
               </div>
             </li>
           ))}
         </ul>
       </div>
     ) : null}
-    <div className="mt-2 flex flex-wrap gap-1.5">
-      <button
-        type="button"
-        disabled={commandBusy}
-        onClick={() => void runCommand('draft outreach: follow up on warm lead')}
-        className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-[11px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
-      >
-        Draft outreach
-      </button>
-      <button
-        type="button"
-        disabled={commandBusy}
-        onClick={() => void runCommand('update opportunity to proposal')}
-        className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-[11px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
-      >
-        Advance opportunity
-      </button>
-    </div>
   </section>
 );

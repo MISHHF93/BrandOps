@@ -19,6 +19,7 @@ import { MobileChatView, type ChatMessage } from './MobileChatView';
 import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
 import { buildWorkspaceSnapshot, type MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
+import { MOBILE_BTN_FOCUS, MobileShellNav } from './mobileTabPrimitives';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
@@ -29,8 +30,7 @@ import { applyDocumentThemeFromAppSettings } from '../../shared/ui/theme';
 
 const uid = () => `msg-${Math.random().toString(36).slice(2, 9)}`;
 
-const btnFocus =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950';
+const btnFocus = MOBILE_BTN_FOCUS;
 
 interface MobileAppProps {
   initialTab?: MobileShellTabId;
@@ -422,21 +422,24 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900/80 to-zinc-950 text-zinc-100">
-      <header className="sticky top-0 z-10 border-b border-white/5 bg-gradient-to-r from-indigo-950/40 via-zinc-950/90 to-zinc-950/95 px-4 py-3 shadow-lg shadow-black/20 backdrop-blur-md">
-        <div className="flex items-start justify-between gap-3">
+    <div className="bo-mobile-app relative isolate min-h-[100dvh] min-h-screen">
+      <a href="#bo-mobile-main" className="bo-mobile-skip">
+        Skip to main content
+      </a>
+      <header className="bo-mobile-header sticky top-0 z-20">
+        <div className="mx-auto flex max-w-md items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">BrandOps Mobile</p>
-            <h1 className="text-lg font-semibold tracking-tight text-zinc-50">AI Agent</h1>
-            <p className="text-[11px] text-zinc-500">
-              <span className="text-zinc-400">
-                {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? activeTab} tab
+            <p className="text-micro uppercase tracking-[0.18em] text-textSoft">BrandOps</p>
+            <h1 className="text-h1 text-text">Workspace</h1>
+            <p className="text-[11px] text-textSoft">
+              <span className="text-textMuted">
+                {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? activeTab}
               </span>
-              {' · '}
+              <span className="text-textSoft"> · </span>
               {SHELL_SECTIONS_LINE}
             </p>
             {dataOpsHint ? (
-              <p className="mt-1 text-[10px] text-indigo-300/90" role="status">
+              <p className="mt-1 text-[10px] text-info" role="status">
                 {dataOpsHint}
               </p>
             ) : null}
@@ -444,14 +447,22 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
           <button
             type="button"
             onClick={() => openExtensionSurface('help')}
-            className={`shrink-0 rounded-lg border border-white/10 bg-zinc-900/60 px-2.5 py-1.5 text-[11px] font-medium text-zinc-200 hover:border-white/20 hover:bg-zinc-900/80 ${btnFocus}`}
+            className={`bo-link bo-link--sm shrink-0 !normal-case ${btnFocus}`}
           >
             Help
           </button>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-md px-4 pb-32 pt-4">
+      <main
+        id="bo-mobile-main"
+        tabIndex={-1}
+        className={`bo-mobile-main mx-auto w-full max-w-md pt-4 outline-none ${
+          activeTab === 'chat'
+            ? 'pb-[max(10.5rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
+            : 'pb-[max(7.5rem,calc(6.25rem+env(safe-area-inset-bottom,0px)))]'
+        }`}
+      >
         {activeTab === 'chat' ? (
           <section className="space-y-3" aria-label="Chat conversation">
             <MobileChatView
@@ -476,7 +487,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
           </section>
         ) : (
           <section
-            className="rounded-2xl border border-white/10 bg-zinc-900/40 p-4 text-sm text-zinc-300 shadow-xl shadow-black/20 backdrop-blur-sm"
+            className="bo-glass-panel rounded-2xl border border-border/60 p-4 text-sm text-textMuted shadow-panel"
             aria-label={`${activeTab} tab`}
           >
             {activeTab === 'pulse' ? (
@@ -529,6 +540,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                 onImportWorkspace={importWorkspace}
                 onRequestResetWorkspace={() => setPendingResetWorkspace(true)}
                 documentSurface={surfaceLabel}
+                onOpenTodayTab={() => commitTab('daily')}
               />
             ) : null}
           </section>
@@ -536,8 +548,8 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
       </main>
 
       {activeTab === 'chat' ? (
-        <div className="fixed inset-x-0 bottom-16 z-20 mx-auto w-full max-w-md px-4">
-          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/90 p-2 shadow-2xl shadow-black/30 backdrop-blur-md">
+        <div className="bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full max-w-md px-0 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
+          <div className="flex items-center gap-2 rounded-2xl border border-border/70 bg-bgElevated/95 p-2 shadow-panel backdrop-blur-md">
             <input
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -546,15 +558,15 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                   void submitMessage();
                 }
               }}
-              className="flex-1 bg-transparent px-2 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
-              placeholder="Message BrandOps Agent…"
+              className="flex-1 bg-transparent px-2 py-2 text-sm text-text outline-none placeholder:text-textSoft"
+              placeholder="Message the agent…"
               aria-label="Chat command input"
             />
             <button
               type="button"
               disabled={commandLoading}
               onClick={() => void submitMessage()}
-              className={`rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-md disabled:opacity-50 ${btnFocus}`}
+              className={`rounded-xl border border-borderStrong/60 bg-surfaceActive px-3 py-2 text-xs font-semibold text-text shadow-sm disabled:opacity-50 ${btnFocus}`}
             >
               Send
             </button>
@@ -564,7 +576,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
 
       {pendingDestructive ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          className="bo-system-overlay fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
           role="presentation"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setPendingDestructive(null);
@@ -574,19 +586,21 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             role="dialog"
             aria-modal="true"
             aria-labelledby={dialogDestrId}
-            className="w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-900 p-4 shadow-2xl"
+            className="bo-system-sheet w-full max-w-sm rounded-2xl border border-border/70 p-4 shadow-panel"
           >
-            <h2 id={dialogDestrId} className="text-base font-semibold text-zinc-100">
+            <h2 id={dialogDestrId} className="text-base font-semibold text-text">
               Archive workspace data?
             </h2>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-sm text-textMuted">
               This command can archive an opportunity or content. It cannot be undone from the chat UI.
             </p>
-            <p className="mt-2 rounded-lg bg-zinc-950/80 p-2 font-mono text-xs text-zinc-300">{pendingDestructive}</p>
+            <p className="mt-2 rounded-lg border border-border/50 bg-bgSubtle/80 p-2 font-mono text-xs text-textMuted">
+              {pendingDestructive}
+            </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                className={`rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-300 ${btnFocus}`}
+                className={`rounded-lg border border-border px-3 py-2 text-sm text-textMuted ${btnFocus}`}
                 onClick={() => setPendingDestructive(null)}
               >
                 Cancel
@@ -594,7 +608,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               <button
                 ref={confirmBtnRef}
                 type="button"
-                className={`rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white ${btnFocus}`}
+                className={`rounded-lg bg-warning px-3 py-2 text-sm font-semibold text-zinc-950 ${btnFocus}`}
                 onClick={() => {
                   const cmd = pendingDestructive;
                   setPendingDestructive(null);
@@ -610,7 +624,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
 
       {pendingClearChat ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          className="bo-system-overlay fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
           role="presentation"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setPendingClearChat(false);
@@ -620,16 +634,16 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             role="dialog"
             aria-modal="true"
             aria-labelledby={dialogClearId}
-            className="w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-900 p-4 shadow-2xl"
+            className="bo-system-sheet w-full max-w-sm rounded-2xl border border-border/70 p-4 shadow-panel"
           >
-            <h2 id={dialogClearId} className="text-base font-semibold text-zinc-100">
+            <h2 id={dialogClearId} className="text-base font-semibold text-text">
               Clear chat transcript?
             </h2>
-            <p className="mt-2 text-sm text-zinc-400">This removes the on-device message history. Command chips are unchanged.</p>
+            <p className="mt-2 text-sm text-textMuted">This removes the on-device message history. Command chips are unchanged.</p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                className={`rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-300 ${btnFocus}`}
+                className={`rounded-lg border border-border px-3 py-2 text-sm text-textMuted ${btnFocus}`}
                 onClick={() => setPendingClearChat(false)}
               >
                 Cancel
@@ -637,7 +651,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               <button
                 ref={clearConfirmRef}
                 type="button"
-                className={`rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white ${btnFocus}`}
+                className={`rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-sm font-medium text-text ${btnFocus}`}
                 onClick={() => {
                   setPendingClearChat(false);
                   setMessages([defaultWelcomeMessage(surfaceLabel)]);
@@ -655,7 +669,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
 
       {pendingResetWorkspace ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          className="bo-system-overlay fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
           role="presentation"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setPendingResetWorkspace(false);
@@ -665,19 +679,19 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             role="dialog"
             aria-modal="true"
             aria-labelledby={dialogResetId}
-            className="w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-900 p-4 shadow-2xl"
+            className="bo-system-sheet w-full max-w-sm rounded-2xl border border-border/70 p-4 shadow-panel"
           >
-            <h2 id={dialogResetId} className="text-base font-semibold text-zinc-100">
+            <h2 id={dialogResetId} className="text-base font-semibold text-text">
               Reset workspace to seed data?
             </h2>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-sm text-textMuted">
               Replaces all BrandOps workspace data on this device with the default seed. Chat transcript and command chips
               are not cleared — use Settings session actions if you want those gone.
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                className={`rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-300 ${btnFocus}`}
+                className={`rounded-lg border border-border px-3 py-2 text-sm text-textMuted ${btnFocus}`}
                 onClick={() => setPendingResetWorkspace(false)}
               >
                 Cancel
@@ -685,7 +699,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               <button
                 ref={resetConfirmRef}
                 type="button"
-                className={`rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white ${btnFocus}`}
+                className={`rounded-lg bg-warning px-3 py-2 text-sm font-semibold text-zinc-950 ${btnFocus}`}
                 onClick={() => {
                   setPendingResetWorkspace(false);
                   void (async () => {
@@ -706,31 +720,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         </div>
       ) : null}
 
-      <nav
-        className="fixed inset-x-0 bottom-0 z-10 border-t border-white/5 bg-zinc-950/95 backdrop-blur-md"
-        aria-label="Primary"
-      >
-        <ul className="mx-auto flex w-full max-w-md items-center justify-between gap-0.5 px-1 py-2">
-          {MOBILE_SHELL_NAV_TABS.map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <li key={tab.id}>
-                <button
-                  type="button"
-                  onClick={() => commitTab(tab.id)}
-                  className={`flex min-w-[3.25rem] flex-col items-center gap-1 rounded-lg px-1 py-1 text-[10px] sm:min-w-14 sm:text-[11px] ${btnFocus} ${
-                    active ? 'text-indigo-400' : 'text-zinc-500'
-                  }`}
-                >
-                  <Icon size={16} aria-hidden />
-                  <span>{tab.label}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <MobileShellNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />
     </div>
   );
 };

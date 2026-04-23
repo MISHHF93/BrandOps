@@ -116,6 +116,8 @@ There is no global React state store; product UI is `MobileApp` + `storageServic
 
 Dedicated full-page **pipeline grid** or **WYSIWYG post** editors are **deferred**. The v1 contract is **Today (digest) + Chat (commands)** on `mobile.html`; adding separate HTML surfaces would duplicate the cockpit unless they ship distinct non-chat affordances (e.g. calendar, drag-drop stages, rich text). Revisit only after wayfinding and starters prove insufficient for growth/sales workflows.
 
+**Cockpit vs agent routes:** see [`docs/cockpit-command-surface-map.md`](docs/cockpit-command-surface-map.md) for which `CommandRoute`s are surfaced on each Today workstream (strips and row chips).
+
 ## Remaining Gaps (Non-blocking)
 
 - Optional LLM-assisted intent with typed args and validation (v2).

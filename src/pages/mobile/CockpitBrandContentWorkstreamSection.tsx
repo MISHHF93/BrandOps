@@ -1,5 +1,14 @@
+import { CockpitWorkstreamCommandStrip } from './CockpitWorkstreamCommandStrip';
 import { signalList } from './cockpitDailyPrimitives';
 import type { CockpitBrandContentSectionProps } from './cockpitSectionTypes';
+
+const BRAND_STRIP_ITEMS = [
+  { kind: 'prime' as const, label: 'Add content', phrase: 'add content: weekly insight memo' },
+  { kind: 'run' as const, label: 'Duplicate first item', phrase: 'duplicate content' },
+  { kind: 'run' as const, label: 'Archive first item', phrase: 'archive content' },
+  { kind: 'run' as const, label: 'Draft post', phrase: 'draft post: weekly insight from the workspace' },
+  { kind: 'run' as const, label: 'Reschedule posts', phrase: 'reschedule posts to friday 11am' }
+] as const;
 
 const rowChip = (btnFocus: string) =>
   `rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
@@ -47,6 +56,18 @@ export const CockpitBrandContentWorkstreamSection = ({
     {snapshot.nextPublishingHint ? (
       <p className="mt-1 text-[11px] text-violet-200/80">Next: {snapshot.nextPublishingHint}</p>
     ) : null}
+    <CockpitWorkstreamCommandStrip
+      ariaLabel="Brand and content Chat starters"
+      btnFocus={btnFocus}
+      commandBusy={commandBusy}
+      runCommand={runCommand}
+      primeChat={primeChat}
+      items={BRAND_STRIP_ITEMS}
+    />
+    <p className="mt-1 text-[10px] text-zinc-600">
+      Duplicate / archive in the strip target the <strong className="text-zinc-500">first active</strong> library item;
+      use row buttons to prime lines that name a specific title.
+    </p>
     {(() => {
       const bv = snapshot.cockpitBrandVaultReadout;
       const hasVaultPeek =
@@ -104,14 +125,34 @@ export const CockpitBrandContentWorkstreamSection = ({
             >
               <p className="font-medium text-zinc-100">{row.title}</p>
               <p className="text-[10px] text-zinc-500">{row.status}</p>
-              <button
-                type="button"
-                disabled={commandBusy}
-                onClick={() => primeChat(`add note: refine content "${row.title.replace(/"/g, "'")}"`)}
-                className={`mt-2 ${rowChip(btnFocus)}`}
-              >
-                Open in Chat (content note)
-              </button>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() => primeChat(`add note: refine content "${row.title.replace(/"/g, "'")}"`)}
+                  className={rowChip(btnFocus)}
+                >
+                  Open in Chat (content note)
+                </button>
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() => primeChat(`duplicate content: ${row.title.replace(/"/g, "'")}`)}
+                  className={rowChip(btnFocus)}
+                  title="Primes Chat; engine duplicates first active item unless you reorder or refine."
+                >
+                  Prime duplicate
+                </button>
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() => primeChat(`archive content: ${row.title.replace(/"/g, "'")}`)}
+                  className={rowChip(btnFocus)}
+                  title="Primes Chat; engine archives first active item unless you refine."
+                >
+                  Prime archive
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -142,23 +183,5 @@ export const CockpitBrandContentWorkstreamSection = ({
         </ul>
       </div>
     ) : null}
-    <div className="mt-2 flex flex-wrap gap-1.5">
-      <button
-        type="button"
-        disabled={commandBusy}
-        onClick={() => void runCommand('draft post: weekly insight from the workspace')}
-        className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-[11px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
-      >
-        Draft post
-      </button>
-      <button
-        type="button"
-        disabled={commandBusy}
-        onClick={() => void runCommand('reschedule posts to friday 11am')}
-        className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-[11px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
-      >
-        Reschedule posts
-      </button>
-    </div>
   </section>
 );

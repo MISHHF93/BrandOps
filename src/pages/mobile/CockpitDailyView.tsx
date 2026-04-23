@@ -39,7 +39,6 @@ export const CockpitDailyView = ({
   btnFocus,
   commandBusy = false,
   runCommand,
-  goToChat: _goToChat,
   primeChat,
   onOpenInAppSettings,
   onOpenPulseTab,
@@ -61,8 +60,8 @@ export const CockpitDailyView = ({
         title="Today"
         subtitle='Cockpit — execution pulse and work areas. Same tab as bottom nav "Today"; deep edits in Chat.'
         icon={CalendarCheck2}
-        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-950/30"
-        iconClassName="text-indigo-300"
+        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12"
+        iconClassName="text-info"
       />
 
       <ShellSectionCallout tab="daily" className="mt-3" />

@@ -108,6 +108,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Workspace metric counts, read-only');
     expect(html).toContain('Chronological mix');
     expect(html).toContain('Full mixed queue');
+    expect(html).toContain('Today workstream Chat starters');
+    expect(html).toContain('Pipeline workstream Chat starters');
+    expect(html).toContain('Brand and content Chat starters');
+    expect(html).toContain('Connections workstream Chat starters');
   });
 
   it('Today (demo): shows scheduler, notes, and contacts peeks when workspace has data', () => {
@@ -134,6 +138,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Companies (active)');
     expect(html).toContain('Northstar Robotics');
     expect(html).toContain('Brand vault (read-only)');
+    expect(html).toContain('Connections workstream Chat starters');
+    expect(html).toContain('Integrations (in app)');
+    expect(html).toContain('Prime duplicate');
   });
 
   it('Integrations: sources, registered list, provider status, quick add', () => {
@@ -232,7 +239,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(demo.settingsMessagingVaultPeek.length).toBeGreaterThan(0);
   });
 
-  it('Settings: preferences panel, presets, session, extension block (mobile host shows new-tab CTA)', () => {
+  it('Settings: assistant surface, workflow modes, data/session, advanced block (mobile host shows new-tab CTA)', () => {
     const html = renderToString(
       React.createElement(MobileSettingsView, {
         snapshot: snapshot(),
@@ -252,12 +259,14 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Settings — trust');
     expect(html).toContain('Workspace model (read-only)');
     expect(html).toContain('Preferences');
-    expect(html).toContain('One-tap configure presets');
-    expect(html).toContain('Workspace modes');
-    expect(html).toContain('Deep focus');
-    expect(html).toContain('Session');
-    expect(html).toContain('Workspace data');
+    expect(html).toContain('Quick tweaks');
+    expect(html).toContain('Workspace templates');
+    expect(html).toContain('Focus');
+    expect(html).toContain('Cadence');
+    expect(html).toContain('settings-data-tier-a');
     expect(html).toContain('Export workspace JSON');
+    expect(html).toContain('Assistant');
+    expect(html).toContain('Advanced');
     expect(html).toContain('Extension shell');
     expect(html).toContain('Open integrations page in a new tab');
     expect(html).toContain('Dataset lineage');

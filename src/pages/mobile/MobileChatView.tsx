@@ -5,6 +5,7 @@ import {
   History,
   MessageCircle
 } from 'lucide-react';
+import clsx from 'clsx';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
 import { SHELL_SECTIONS_LINE } from './shellSectionCopy';
 import type { MobileShellTabId } from './mobileShellQuery';
@@ -26,7 +27,10 @@ export interface ChatMessage {
 }
 
 function chipClass(btnFocus: string) {
-  return `rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-left text-xs text-zinc-300 ${btnFocus}`;
+  return clsx(
+    'rounded-full border border-border/55 bg-surface/50 px-2 py-1 text-left text-xs text-textMuted',
+    btnFocus
+  );
 }
 
 function copyToClipboard(text: string) {
@@ -68,36 +72,37 @@ export const MobileChatView = ({
   shellDigest,
   onNavigateTab
 }: MobileChatViewProps) => {
-  const jumpClass = `rounded-lg border border-zinc-600/50 bg-zinc-900/60 px-2 py-1.5 text-[10px] font-medium text-zinc-200 hover:border-indigo-500/40 hover:bg-zinc-900/90 ${btnFocus}`;
+  const jumpClass = clsx(
+    'rounded-lg border border-border/60 bg-surface/60 px-2 py-1.5 text-[10px] font-medium text-text hover:border-borderStrong hover:bg-surfaceActive/80',
+    btnFocus
+  );
 
   return (
     <div className="space-y-5" aria-label="Chat">
       <header className="space-y-1.5">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-500/30 bg-blue-950/30">
-            <MessageCircle className="h-5 w-5 text-blue-300" aria-hidden />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/15">
+            <MessageCircle className="h-5 w-5 text-info" aria-hidden />
           </div>
           <div>
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Chat</h2>
-            <p className="text-[11px] text-zinc-500">{SHELL_SECTIONS_LINE}</p>
-            <p className="mt-1 text-[11px] text-zinc-500">
+            <h2 className="text-h2 text-text">Chat</h2>
+            <p className="text-[11px] text-textSoft">{SHELL_SECTIONS_LINE}</p>
+            <p className="mt-1 text-[11px] text-textSoft">
               Commands run on-device. Starters and history run on tap; clear transcript in Settings.
             </p>
           </div>
         </div>
       </header>
 
-      <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-3 text-[11px] text-zinc-400">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Workspace snapshot</p>
-        <p className="mt-1.5 tabular-nums text-zinc-200">
+      <div className="bo-glass-panel--muted rounded-xl border border-border/55 p-3 text-[11px] text-textMuted">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-textSoft">Workspace snapshot</p>
+        <p className="mt-1.5 tabular-nums text-text">
           {shellDigest.notes} notes · {shellDigest.publishingQueue} queue · {shellDigest.activeOpportunities} active
           opps ·{' '}
-          <span className="text-emerald-200/90">
-            ${shellDigest.weightedPipelineUsd.toLocaleString()} weighted
-          </span>{' '}
+          <span className="text-success">${shellDigest.weightedPipelineUsd.toLocaleString()} weighted</span>{' '}
           ({shellDigest.pipelineOpenDeals} open deals)
         </p>
-        <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Other sections</p>
+        <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-textSoft">Other sections</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           <button type="button" className={jumpClass} onClick={() => onNavigateTab('pulse')}>
             Pulse
@@ -117,7 +122,7 @@ export const MobileChatView = ({
       <ShellSectionCallout tab="chat" />
 
       <div
-        className="space-y-3"
+        className="flex flex-col gap-3"
         role="log"
         aria-relevant="additions"
         aria-live="polite"
@@ -126,34 +131,34 @@ export const MobileChatView = ({
         {messages.map((message) => (
           <article
             key={message.id}
-            className={
-              message.role === 'user'
-                ? 'ml-6 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 px-3 py-2.5 text-sm leading-relaxed text-white shadow-md shadow-blue-900/30'
-                : 'mr-6'
-            }
+            className={clsx(
+              message.role === 'user' &&
+                'ml-auto mr-0 max-w-[min(100%,22rem)] rounded-2xl border border-borderStrong/50 bg-surfaceActive px-3 py-2.5 text-sm leading-relaxed text-text shadow-panel sm:mr-1',
+              message.role === 'assistant' && 'mr-auto max-w-[min(100%,26rem)]'
+            )}
           >
             {message.role === 'user' ? (
               message.text
             ) : message.resultKind === 'command-result' && message.action ? (
-              <div className="space-y-2 rounded-2xl border border-white/10 bg-zinc-900/80 px-3 py-2.5 text-sm shadow-inner shadow-black/20 backdrop-blur-sm">
+              <div className="space-y-2 rounded-2xl border border-border/60 bg-bgElevated/90 px-3 py-2.5 text-sm shadow-inner backdrop-blur-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   {message.ok ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-successSoft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-success">
                       <CheckCircle2 size={12} aria-hidden />
                       Ok
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-warningSoft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-warning">
                       <AlertCircle size={12} aria-hidden />
                       Issue
                     </span>
                   )}
-                  <code className="rounded bg-zinc-950/80 px-1.5 py-0.5 text-[11px] text-indigo-200">
+                  <code className="rounded border border-border/50 bg-bgSubtle/80 px-1.5 py-0.5 text-[11px] text-info">
                     {message.action}
                   </code>
                   <button
                     type="button"
-                    className={`ml-auto inline-flex items-center gap-1 rounded-md border border-zinc-600/60 px-2 py-0.5 text-[10px] text-zinc-400 ${btnFocus}`}
+                    className={`ml-auto inline-flex items-center gap-1 rounded-md border border-border/60 px-2 py-0.5 text-[10px] text-textSoft ${btnFocus}`}
                     onClick={() =>
                       copyToClipboard(
                         `${message.action}\n${message.text}${message.strip ? `\n${JSON.stringify(message.strip)}` : ''}`
@@ -164,10 +169,10 @@ export const MobileChatView = ({
                     Copy
                   </button>
                 </div>
-                <p className="text-zinc-200 leading-relaxed">{message.text}</p>
+                <p className="text-text leading-relaxed">{message.text}</p>
               </div>
             ) : (
-              <div className="rounded-2xl border border-zinc-700/60 bg-zinc-900/90 px-3 py-2.5 text-sm leading-relaxed text-zinc-100">
+              <div className="rounded-2xl border border-border/55 bg-bgElevated/95 px-3 py-2.5 text-sm leading-relaxed text-text">
                 {message.text}
               </div>
             )}
@@ -177,24 +182,25 @@ export const MobileChatView = ({
 
       {loading ? (
         <div
-          className="mx-6 space-y-2 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-3 motion-reduce:animate-none animate-pulse"
+          className="mx-5 space-y-2 rounded-2xl border border-border/55 bg-surface/50 p-3 motion-safe:animate-pulse sm:mx-8"
           role="status"
           aria-live="polite"
+          aria-busy="true"
         >
-          <div className="h-2 w-1/3 rounded bg-zinc-700/80" />
-          <div className="h-2 w-5/6 rounded bg-zinc-800/80" />
-          <div className="h-2 w-2/3 rounded bg-zinc-800/60" />
-          <p className="text-xs text-zinc-500">Running command…</p>
+          <div className="h-2 w-1/3 rounded bg-border/90" />
+          <div className="h-2 w-5/6 rounded bg-border/70" />
+          <div className="h-2 w-2/3 rounded bg-border/60" />
+          <p className="text-xs text-textSoft">Running command…</p>
         </div>
       ) : null}
 
-      <details className="group rounded-xl border border-white/10 bg-zinc-900/40 p-3 backdrop-blur-sm open:shadow-inner">
+      <details className="group rounded-xl border border-border/55 bg-bgSubtle/40 p-3 backdrop-blur-sm open:shadow-inner">
         <summary
-          className={`cursor-pointer list-none text-xs font-semibold uppercase tracking-wide text-zinc-500 ${btnFocus} [&::-webkit-details-marker]:hidden`}
+          className={`cursor-pointer list-none text-xs font-semibold uppercase tracking-wide text-textSoft ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >
           <span className="inline-flex items-center gap-2">
             Command starters
-            <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">
+            <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">
               (tap to expand — chips run immediately)
             </span>
           </span>
@@ -202,7 +208,7 @@ export const MobileChatView = ({
         <div className="mt-3 space-y-4">
           {CHAT_QUICK_STARTER_GROUPS.map((group) => (
             <div key={group.id}>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{group.label}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-textSoft">{group.label}</p>
               <div className="mt-1.5 flex flex-wrap gap-2">
                 {group.commands.map((command) => (
                   <button
@@ -221,15 +227,15 @@ export const MobileChatView = ({
       </details>
 
       {commandHistory.length > 0 ? (
-        <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-3 backdrop-blur-sm">
+        <div className="rounded-xl border border-border/55 bg-bgSubtle/40 p-3 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-2">
-            <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-textSoft">
               <History size={14} aria-hidden />
               Recent commands
             </p>
             <button
               type="button"
-              className={`text-[10px] text-zinc-500 hover:text-zinc-300 ${btnFocus}`}
+              className={`text-[10px] text-textSoft hover:text-textMuted ${btnFocus}`}
               onClick={onClearCommandHistory}
             >
               Clear list
@@ -241,7 +247,7 @@ export const MobileChatView = ({
                 key={cmd}
                 type="button"
                 onClick={() => onQuickCommand(cmd)}
-                className={`max-w-full truncate rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-left text-[11px] text-zinc-300 ${btnFocus}`}
+                className={`max-w-full truncate rounded-full border border-border/55 bg-surface/50 px-2 py-1 text-left text-[11px] text-textMuted ${btnFocus}`}
                 title={cmd}
               >
                 {cmd.length > 42 ? `${cmd.slice(0, 40)}…` : cmd}

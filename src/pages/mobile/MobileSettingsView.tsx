@@ -1,15 +1,24 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Settings2 } from 'lucide-react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
-import type { CadenceFlowMode, VisualMode, MotionMode } from '../../types/domain';
+import type { CadenceFlowMode, MotionMode, VisualMode } from '../../types/domain';
 import { hrefHelpPage } from '../../shared/navigation/navigationIntents';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import type { IntelligenceRulesLoadMode } from '../../rules/intelligenceRulesRuntime';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { MobileSettingsFullReadout } from './mobileSettingsReadout';
-import { CONFIG_PRESETS, OPERATIONAL_PRESETS } from './mobileSettingsPresets';
+import { cadenceConfigureFragment, cadenceModeTitle } from './cadencePresentation';
+import { buildComposerBlankStarters } from './configurationStarters';
+import {
+  SettingsAssistantComposer,
+  SettingsDataSafetyBlock,
+  SettingsQuickConfigureScroller,
+  settingsActiveCadence,
+  SettingsTierAOverview,
+  SettingsWorkflowModesHero
+} from './MobileSettingsAISurface';
 import { MobileTabPageHeader, MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { ShellSectionCallout } from './ShellSectionCallout';
 import { SettingsCockpitCapabilityDisclosure } from './SettingsCockpitCapabilityDisclosure';
@@ -35,10 +44,10 @@ const settingsRunChipClass = (btnFocus: string) =>
   `${mobileChipClass(btnFocus)} disabled:cursor-not-allowed disabled:opacity-50`;
 
 const fieldClass = (btnFocus: string) =>
-  `w-full rounded-lg border border-zinc-600/60 bg-zinc-900/80 px-2.5 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-indigo-500/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
+  `w-full rounded-lg border border-border/70 bg-bgElevated/90 px-2.5 py-2 text-sm text-text placeholder:text-textSoft focus:border-borderStrong focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
 
 const primaryBtn = (btnFocus: string) =>
-  `mt-2 inline-flex w-full sm:w-auto justify-center rounded-lg border border-indigo-500/40 bg-indigo-950/40 px-3 py-2 text-xs font-medium text-indigo-100 hover:bg-indigo-900/30 disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
+  `mt-2 inline-flex w-full sm:w-auto justify-center rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-xs font-medium text-text hover:bg-surfaceHover disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
 
 function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string]> {
   return [
@@ -371,10 +380,10 @@ function SettingsEditablePanel({
             className={f}
             disabled={applyBusy}
           >
-            <option value="balanced">Balanced</option>
-            <option value="maker-heavy">Maker-heavy</option>
-            <option value="client-heavy">Client-heavy</option>
-            <option value="launch-day">Launch day</option>
+            <option value="balanced">{cadenceModeTitle('balanced')}</option>
+            <option value="maker-heavy">{cadenceModeTitle('maker-heavy')}</option>
+            <option value="client-heavy">{cadenceModeTitle('client-heavy')}</option>
+            <option value="launch-day">{cadenceModeTitle('launch-day')}</option>
           </select>
         </div>
         <button type="button" onClick={() => void onApplyCadence()} disabled={applyBusy} className={pBtn}>
@@ -508,6 +517,8 @@ export interface MobileSettingsViewProps {
   onRequestResetWorkspace: () => void;
   /** Host document; avoids offering a duplicate `integrations.html` tab when already there. */
   documentSurface: AppDocumentSurfaceId | 'chatbot';
+  /** Optional: jump to Today after changing workspace behavior (see `docs/ai-powered-settings-revamp.md`). */
+  onOpenTodayTab?: () => void;
 }
 
 /**
@@ -524,9 +535,9 @@ export const MobileSettingsView = ({
   runCommand,
   applySettingsConfigure,
   applyBusy,
-  commandBusy
+  commandBusy,
+  onOpenTodayTab
 }: MobileSettingsViewProps) => {
-  const importRef = useRef<HTMLInputElement>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
   /** Any agent route (settings apply or chat quick command) — avoid parallel `executeAgentWorkspaceCommand`. */
   const agentRouteBusy = commandBusy || applyBusy;
@@ -549,349 +560,293 @@ export const MobileSettingsView = ({
     }
   };
 
-  const dataBtn = `w-full rounded-lg border border-zinc-600/50 bg-zinc-900/50 px-2.5 py-2 text-left text-[12px] text-zinc-200 hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
-
   return (
     <div className="mt-2 space-y-5" aria-label="Settings">
       <MobileTabPageHeader
         title="Settings"
-        subtitle="Configure this workspace: preferences, presets, and session"
+        subtitle="Assistant-first workspace controls, bundled modes, and backup — classic forms live under Advanced."
         icon={Settings2}
-        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-950/30"
-        iconClassName="text-indigo-300"
+        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12"
+        iconClassName="text-info"
       />
 
       <ShellSectionCallout tab="settings" className="mt-3" />
 
-      <MobileTabSection
-        id="settings-dataset-lineage"
-        title="Dataset lineage"
-        description="Seed metadata for this device (demo vs production-empty, version)."
-      >
-        <dl className="mt-2 space-y-1.5 text-[11px] text-zinc-300">
-          <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-            <dt className="shrink-0 text-zinc-500">Source</dt>
-            <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.source}</dd>
-          </div>
-          <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-            <dt className="shrink-0 text-zinc-500">Version</dt>
-            <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.version}</dd>
-          </div>
-          <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-            <dt className="shrink-0 text-zinc-500">Seeded at</dt>
-            <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.seededAt}</dd>
-          </div>
-          {snapshot.seedReadout.welcomeCompletedAt ? (
-            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-              <dt className="shrink-0 text-zinc-500">Welcome completed</dt>
-              <dd className="min-w-0 break-words text-right text-zinc-200">
-                {snapshot.seedReadout.welcomeCompletedAt}
-              </dd>
-            </div>
-          ) : null}
-          {snapshot.seedReadout.onboardingVersion ? (
-            <div className="flex justify-between gap-2 py-1.5">
-              <dt className="shrink-0 text-zinc-500">Onboarding copy</dt>
-              <dd className="min-w-0 break-words text-right text-zinc-200">
-                v{snapshot.seedReadout.onboardingVersion}
-              </dd>
-            </div>
-          ) : null}
-        </dl>
-      </MobileTabSection>
-
-      <MobileTabSection
-        id="settings-intelligence-rules"
-        title="Intelligence rules (effective)"
-        description="Coefficients for cockpit ranking and digest slices. Resolved at extension startup and when this page loads."
-      >
-        {!snapshot.intelligenceRulesReadout.initRan ? (
-          <p className="mt-2 text-[10px] text-zinc-500">
-            Load status will refresh after the first rules init (extension background on install/startup, or this
-            document load).
-          </p>
-        ) : null}
-        <dl className="mt-2 space-y-1.5 text-[11px] text-zinc-300">
-          <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-            <dt className="shrink-0 text-zinc-500">Source</dt>
-            <dd className="min-w-0 break-words text-right text-zinc-200">
-              {intelligenceRulesSourceLabel(snapshot.intelligenceRulesReadout.mode)}
-            </dd>
-          </div>
-          {snapshot.intelligenceRulesReadout.detail ? (
-            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-              <dt className="shrink-0 text-zinc-500">Resolved from</dt>
-              <dd className="min-w-0 break-words text-right text-zinc-200">
-                {snapshot.intelligenceRulesReadout.detail}
-              </dd>
-            </div>
-          ) : null}
-          {snapshot.intelligenceRulesReadout.error ? (
-            <div className="rounded border border-amber-500/25 bg-amber-950/20 px-2 py-1.5 text-[10px] text-amber-200/95">
-              {snapshot.intelligenceRulesReadout.error}
-            </div>
-          ) : null}
-        </dl>
-        <details className="group mt-3 rounded-lg border border-white/5 bg-zinc-950/30 p-2 open:border-indigo-500/20">
-          <summary
-            className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-zinc-500 ${btnFocus} [&::-webkit-details-marker]:hidden`}
-          >
-            <span className="inline-flex items-center gap-2">
-              Sample coefficients
-              <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">(expand)</span>
-            </span>
-          </summary>
-          <dl className="mt-3 space-y-1.5 text-[11px] text-zinc-300">
-            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-              <dt className="shrink-0 text-zinc-500">Schema version</dt>
-              <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.schemaVersion}</dd>
-            </div>
-            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-              <dt className="shrink-0 text-zinc-500">Content priority base</dt>
-              <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.contentPriorityBaseScore}</dd>
-            </div>
-            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-              <dt className="shrink-0 text-zinc-500">Outreach stale after (h)</dt>
-              <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.outreachStaleAfterHours}</dd>
-            </div>
-            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-              <dt className="shrink-0 text-zinc-500">Publishing urgent within (h)</dt>
-              <dd className="text-right text-zinc-200">
-                {snapshot.intelligenceRulesReadout.publishingUrgentWithinHours}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-              <dt className="shrink-0 text-zinc-500">Digest content-priority top N</dt>
-              <dd className="text-right text-zinc-200">
-                {snapshot.intelligenceRulesReadout.digestTechnicalContentPriorityTop}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-2 py-1.5">
-              <dt className="shrink-0 text-zinc-500">Publishing preview slice</dt>
-              <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.previewQueueSlice}</dd>
-            </div>
-          </dl>
-        </details>
-        <p className="mt-2 text-[10px] text-zinc-600">
-          Template:{' '}
-          <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-400">
-            public/brandops-intelligence-rules.example.json
-          </code>
-        </p>
-      </MobileTabSection>
-
-      <MobileTabSection
-        id="settings-messaging-vault"
-        title="Messaging vault"
-        description="Reusable snippets by category (titles only; full text stays in workspace data)."
-      >
-        {snapshot.settingsMessagingVaultPeek.length === 0 ? (
-          <p className="mt-2 text-[11px] text-zinc-500">No messaging vault entries in this workspace.</p>
-        ) : (
-          <ul className="mt-2 space-y-2">
-            {snapshot.settingsMessagingVaultPeek.map((row) => (
-              <li
-                key={row.id}
-                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
-              >
-                <p className="font-medium text-zinc-100">{row.title}</p>
-                <p className="text-[10px] text-zinc-500">{row.category}</p>
-                <button
-                  type="button"
-                  disabled={agentRouteBusy}
-                  onClick={() =>
-                    void runCommand(`add note: review messaging vault entry "${row.title.replace(/"/g, "'")}"`)
-                  }
-                  className={`mt-2 ${settingsRunChipClass(btnFocus)}`}
-                >
-                  Log note in Chat
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </MobileTabSection>
-
-      <SettingsCockpitCapabilityDisclosure btnFocus={btnFocus} />
-
-      <SettingsEditablePanel
+      <SettingsTierAOverview
         snapshot={snapshot}
+        rulesSourceLabel={intelligenceRulesSourceLabel(snapshot.intelligenceRulesReadout.mode)}
+        btnFocus={btnFocus}
+        onOpenToday={onOpenTodayTab}
+        helpHref={hrefHelpPage()}
+        activeCadence={settingsActiveCadence(snapshot)}
+        cadenceDisabled={agentRouteBusy}
+        onCadenceSelect={(mode) => void applySettingsConfigure(cadenceConfigureFragment(mode))}
+      />
+
+      <SettingsAssistantComposer
         applySettingsConfigure={applySettingsConfigure}
         applyBusy={applyBusy}
         btnFocus={btnFocus}
+        blankStarters={buildComposerBlankStarters(snapshot)}
       />
 
-      <WorkspaceModelReadout readout={snapshot.settingsFullReadout} btnFocus={btnFocus} />
+      <SettingsQuickConfigureScroller agentRouteBusy={agentRouteBusy} runCommand={runCommand} btnFocus={btnFocus} />
 
-      <MobileTabSection
-        id="settings-help"
-        title="Help"
-        description="Command reference, onboarding, and troubleshooting — opens the packaged Help page (same extension)."
-      >
-        <a
-          href={hrefHelpPage()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`mt-2 flex w-full items-center justify-center rounded-lg border border-indigo-500/40 bg-indigo-950/40 px-2.5 py-2 text-center text-[12px] font-medium text-indigo-100 hover:bg-indigo-900/30 ${btnFocus}`}
+      <SettingsWorkflowModesHero agentRouteBusy={agentRouteBusy} runCommand={runCommand} btnFocus={btnFocus} />
+
+      <SettingsDataSafetyBlock
+        btnFocus={btnFocus}
+        onExportWorkspace={onExportWorkspace}
+        onImportPick={onImportPick}
+        onRequestResetWorkspace={onRequestResetWorkspace}
+        onRequestClearChat={onRequestClearChat}
+        importMessage={importMessage}
+      />
+
+      <details className="group rounded-xl border border-border/50 bg-bgSubtle/25">
+        <summary
+          className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >
-          Open Help (new tab)
-        </a>
-      </MobileTabSection>
+          <span className="inline-flex items-center gap-2">
+            Advanced
+            <span className="text-[11px] font-normal text-textSoft">
+              — classic preferences, lineage, intelligence detail, vault, audit
+            </span>
+          </span>
+        </summary>
+        <div className="space-y-5 border-t border-border/40 px-3 pb-4 pt-4">
+          <SettingsEditablePanel
+            snapshot={snapshot}
+            applySettingsConfigure={applySettingsConfigure}
+            applyBusy={applyBusy}
+            btnFocus={btnFocus}
+          />
 
-      <MobileTabSection
-        id="settings-presets"
-        title="One-tap configure presets"
-        description='Sends a configure: line like Chat. Chips below adjust UI and cadence. Workspace modes package settings for pipeline work, publishing, deep focus, and launch pushes (Pulse / Today–aligned, still on-device agent routes).'
-      >
-        <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">UI &amp; cadence</p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {CONFIG_PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              disabled={agentRouteBusy}
-              onClick={() => void runCommand(preset.command)}
-              className={settingsRunChipClass(btnFocus)}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
-        <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Workspace modes</p>
-        <div className="mt-1.5 flex flex-col gap-3">
-          {OPERATIONAL_PRESETS.map((preset) => (
-            <div key={preset.label} className="rounded-lg border border-white/5 bg-zinc-950/20 px-2 py-2">
-              <button
-                type="button"
-                disabled={agentRouteBusy}
-                title={preset.description}
-                onClick={() => void runCommand(preset.command)}
-                className={`w-full text-left ${settingsRunChipClass(btnFocus)}`}
-              >
-                {preset.label}
-              </button>
-              <p className="mt-1.5 pl-0.5 text-[10px] leading-snug text-zinc-500">{preset.description}</p>
-            </div>
-          ))}
-        </div>
-      </MobileTabSection>
-
-      <MobileTabSection
-        id="settings-audit"
-        title="Recent agent activity"
-        description="Commands that touched workspace data, newest first. Re-run repeats the same line in Chat."
-      >
-        {snapshot.recentAudit.length === 0 ? (
-          <p className="mt-2 text-[11px] text-zinc-500">
-            No commands recorded yet. Run a command in Chat to populate this list.
-          </p>
-        ) : (
-          <ul className="mt-2 space-y-2">
-            {snapshot.recentAudit.map((entry) => (
-              <li
-                key={entry.id}
-                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2.5 py-2 text-[11px] text-zinc-300"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <code className="break-all text-left text-[10px] text-indigo-200/95">{entry.commandPreview}</code>
-                  <span
-                    className={`shrink-0 text-[10px] font-medium uppercase ${
-                      entry.ok ? 'text-emerald-400/90' : 'text-amber-300/90'
-                    }`}
-                  >
-                    {entry.ok ? 'ok' : 'issue'}
-                  </span>
+          <MobileTabSection
+            id="settings-dataset-lineage"
+            title="Dataset lineage"
+            description="Seed metadata for this device (demo vs production-empty, version)."
+          >
+            <dl className="mt-2 space-y-1.5 text-[11px] text-zinc-300">
+              <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                <dt className="shrink-0 text-zinc-500">Source</dt>
+                <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.source}</dd>
+              </div>
+              <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                <dt className="shrink-0 text-zinc-500">Version</dt>
+                <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.version}</dd>
+              </div>
+              <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                <dt className="shrink-0 text-zinc-500">Seeded at</dt>
+                <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.seededAt}</dd>
+              </div>
+              {snapshot.seedReadout.welcomeCompletedAt ? (
+                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                  <dt className="shrink-0 text-zinc-500">Welcome completed</dt>
+                  <dd className="min-w-0 break-words text-right text-zinc-200">
+                    {snapshot.seedReadout.welcomeCompletedAt}
+                  </dd>
                 </div>
-                <p className="mt-1 text-[10px] leading-snug text-zinc-500">{entry.summary}</p>
+              ) : null}
+              {snapshot.seedReadout.onboardingVersion ? (
+                <div className="flex justify-between gap-2 py-1.5">
+                  <dt className="shrink-0 text-zinc-500">Onboarding copy</dt>
+                  <dd className="min-w-0 break-words text-right text-zinc-200">
+                    v{snapshot.seedReadout.onboardingVersion}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          </MobileTabSection>
+
+          <MobileTabSection
+            id="settings-intelligence-rules"
+            title="Intelligence rules (effective)"
+            description="Coefficients for cockpit ranking and digest slices. Resolved at extension startup and when this page loads."
+          >
+            {!snapshot.intelligenceRulesReadout.initRan ? (
+              <p className="mt-2 text-[10px] text-zinc-500">
+                Load status will refresh after the first rules init (extension background on install/startup, or this
+                document load).
+              </p>
+            ) : null}
+            <dl className="mt-2 space-y-1.5 text-[11px] text-zinc-300">
+              <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                <dt className="shrink-0 text-zinc-500">Source</dt>
+                <dd className="min-w-0 break-words text-right text-zinc-200">
+                  {intelligenceRulesSourceLabel(snapshot.intelligenceRulesReadout.mode)}
+                </dd>
+              </div>
+              {snapshot.intelligenceRulesReadout.detail ? (
+                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                  <dt className="shrink-0 text-zinc-500">Resolved from</dt>
+                  <dd className="min-w-0 break-words text-right text-zinc-200">
+                    {snapshot.intelligenceRulesReadout.detail}
+                  </dd>
+                </div>
+              ) : null}
+              {snapshot.intelligenceRulesReadout.error ? (
+                <div className="rounded border border-amber-500/25 bg-amber-950/20 px-2 py-1.5 text-[10px] text-amber-200/95">
+                  {snapshot.intelligenceRulesReadout.error}
+                </div>
+              ) : null}
+            </dl>
+            <details className="group mt-3 rounded-lg border border-white/5 bg-zinc-950/30 p-2 open:border-indigo-500/20">
+              <summary
+                className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-zinc-500 ${btnFocus} [&::-webkit-details-marker]:hidden`}
+              >
+                <span className="inline-flex items-center gap-2">
+                  Sample coefficients
+                  <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">(expand)</span>
+                </span>
+              </summary>
+              <dl className="mt-3 space-y-1.5 text-[11px] text-zinc-300">
+                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                  <dt className="shrink-0 text-zinc-500">Schema version</dt>
+                  <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.schemaVersion}</dd>
+                </div>
+                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                  <dt className="shrink-0 text-zinc-500">Content priority base</dt>
+                  <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.contentPriorityBaseScore}</dd>
+                </div>
+                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                  <dt className="shrink-0 text-zinc-500">Outreach stale after (h)</dt>
+                  <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.outreachStaleAfterHours}</dd>
+                </div>
+                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                  <dt className="shrink-0 text-zinc-500">Publishing urgent within (h)</dt>
+                  <dd className="text-right text-zinc-200">
+                    {snapshot.intelligenceRulesReadout.publishingUrgentWithinHours}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+                  <dt className="shrink-0 text-zinc-500">Digest content-priority top N</dt>
+                  <dd className="text-right text-zinc-200">
+                    {snapshot.intelligenceRulesReadout.digestTechnicalContentPriorityTop}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-2 py-1.5">
+                  <dt className="shrink-0 text-zinc-500">Publishing preview slice</dt>
+                  <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.previewQueueSlice}</dd>
+                </div>
+              </dl>
+            </details>
+            <p className="mt-2 text-[10px] text-zinc-600">
+              Template:{' '}
+              <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-400">
+                public/brandops-intelligence-rules.example.json
+              </code>
+            </p>
+          </MobileTabSection>
+
+          <MobileTabSection
+            id="settings-messaging-vault"
+            title="Messaging vault"
+            description="Reusable snippets by category (titles only; full text stays in workspace data)."
+          >
+            {snapshot.settingsMessagingVaultPeek.length === 0 ? (
+              <p className="mt-2 text-[11px] text-zinc-500">No messaging vault entries in this workspace.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {snapshot.settingsMessagingVaultPeek.map((row) => (
+                  <li
+                    key={row.id}
+                    className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+                  >
+                    <p className="font-medium text-zinc-100">{row.title}</p>
+                    <p className="text-[10px] text-zinc-500">{row.category}</p>
+                    <button
+                      type="button"
+                      disabled={agentRouteBusy}
+                      onClick={() =>
+                        void runCommand(`add note: review messaging vault entry "${row.title.replace(/"/g, "'")}"`)
+                      }
+                      className={`mt-2 ${settingsRunChipClass(btnFocus)}`}
+                    >
+                      Log note in Chat
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </MobileTabSection>
+
+          <SettingsCockpitCapabilityDisclosure btnFocus={btnFocus} />
+
+          <WorkspaceModelReadout readout={snapshot.settingsFullReadout} btnFocus={btnFocus} />
+
+          <MobileTabSection
+            id="settings-audit"
+            title="Recent agent activity"
+            description="Commands that touched workspace data, newest first. Re-run repeats the same line in Chat."
+          >
+            {snapshot.recentAudit.length === 0 ? (
+              <p className="mt-2 text-[11px] text-zinc-500">
+                No commands recorded yet. Run a command in Chat to populate this list.
+              </p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {snapshot.recentAudit.map((entry) => (
+                  <li
+                    key={entry.id}
+                    className="rounded-lg border border-white/5 bg-zinc-950/30 px-2.5 py-2 text-[11px] text-zinc-300"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <code className="break-all text-left text-[10px] text-indigo-200/95">{entry.commandPreview}</code>
+                      <span
+                        className={`shrink-0 text-[10px] font-medium uppercase ${
+                          entry.ok ? 'text-emerald-400/90' : 'text-amber-300/90'
+                        }`}
+                      >
+                        {entry.ok ? 'ok' : 'issue'}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[10px] leading-snug text-zinc-500">{entry.summary}</p>
+                    <button
+                      type="button"
+                      disabled={agentRouteBusy}
+                      onClick={() => void runCommand(entry.commandPreview)}
+                      className={`mt-2 ${settingsRunChipClass(btnFocus)}`}
+                    >
+                      Run again
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </MobileTabSection>
+
+          <section
+            className="rounded-xl border border-zinc-600/25 bg-zinc-950/50 p-3 text-xs"
+            aria-labelledby="settings-extension-escape"
+          >
+            <h3 id="settings-extension-escape" className="text-sm font-semibold text-zinc-100">
+              Extension shell
+            </h3>
+            {documentSurface === 'integrations' ? (
+              <p className="mt-1 text-[11px] text-zinc-500">
+                This is the MV3 <strong className="text-zinc-400">extension</strong> page (manifest <code>options_ui</code>
+                ): same <strong className="text-zinc-400">BrandOps Mobile</strong> shell as <code>mobile.html</code>. Use
+                the bottom bar for Integrations vs Settings; preferences above match the main app tab.
+              </p>
+            ) : (
+              <>
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Opens <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-300">integrations.html</code>{' '}
+                  in a new tab—the same UI as Chrome extension options, aligned with the Integrations tab link there.
+                </p>
                 <button
                   type="button"
-                  disabled={agentRouteBusy}
-                  onClick={() => void runCommand(entry.commandPreview)}
-                  className={`mt-2 ${settingsRunChipClass(btnFocus)}`}
+                  onClick={() => openExtensionSurface('integrations')}
+                  className={`mt-2 w-full rounded-lg border border-zinc-600/50 bg-zinc-900/40 px-2.5 py-2 text-left text-[12px] text-zinc-300 ${btnFocus}`}
                 >
-                  Run again
+                  Open integrations page in a new tab
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </MobileTabSection>
-
-      <MobileTabSection
-        id="settings-data"
-        title="Workspace data"
-        description="Export a JSON backup, import a prior export, or reset to the built-in seed (destructive)."
-      >
-        <input
-          ref={importRef}
-          type="file"
-          accept="application/json,.json"
-          className="hidden"
-          onChange={(e) => void onImportPick(e)}
-        />
-        {importMessage ? (
-          <p className="mb-2 rounded border border-zinc-600/40 bg-zinc-950/50 px-2 py-1.5 text-[11px] text-zinc-300">
-            {importMessage}
-          </p>
-        ) : null}
-        <div className="mt-2 flex flex-col gap-2">
-          <button type="button" onClick={() => void onExportWorkspace()} className={dataBtn}>
-            Export workspace JSON
-          </button>
-          <button type="button" onClick={() => importRef.current?.click()} className={dataBtn}>
-            Import workspace JSON…
-          </button>
-          <button
-            type="button"
-            onClick={onRequestResetWorkspace}
-            className={`${dataBtn} border-amber-600/40 text-amber-100/95`}
-          >
-            Reset workspace to seed…
-          </button>
+              </>
+            )}
+          </section>
         </div>
-      </MobileTabSection>
-
-      <MobileTabSection
-        id="settings-session"
-        title="Session"
-        description="Local chat history for this page only. Clearing does not change workspace data."
-      >
-        <div className="mt-2">
-          <button type="button" onClick={onRequestClearChat} className={mobileChipClass(btnFocus)}>
-            Clear chat transcript
-          </button>
-        </div>
-      </MobileTabSection>
-
-      <section
-        className="rounded-xl border border-zinc-600/25 bg-zinc-950/50 p-3 text-xs"
-        aria-labelledby="settings-extension-escape"
-      >
-        <h3 id="settings-extension-escape" className="text-sm font-semibold text-zinc-100">
-          Extension shell
-        </h3>
-        {documentSurface === 'integrations' ? (
-          <p className="mt-1 text-[11px] text-zinc-500">
-            This is the MV3 <strong className="text-zinc-400">extension</strong> page (manifest <code>options_ui</code>
-            ): same <strong className="text-zinc-400">BrandOps Mobile</strong> shell as <code>mobile.html</code>. Use the
-            bottom bar for Integrations vs Settings; preferences above match the main app tab.
-          </p>
-        ) : (
-          <>
-            <p className="mt-1 text-[11px] text-zinc-500">
-              Opens <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-300">integrations.html</code> in
-              a new tab—the same UI as Chrome extension options, aligned with the Integrations tab link there.
-            </p>
-            <button
-              type="button"
-              onClick={() => openExtensionSurface('integrations')}
-              className={`mt-2 w-full rounded-lg border border-zinc-600/50 bg-zinc-900/40 px-2.5 py-2 text-left text-[12px] text-zinc-300 ${btnFocus}`}
-            >
-              Open integrations page in a new tab
-            </button>
-          </>
-        )}
-      </section>
+      </details>
     </div>
   );
 };

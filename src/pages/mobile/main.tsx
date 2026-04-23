@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { MobileApp } from './mobileApp';
 import '../../styles/index.css';
+import { AppErrorBoundary } from '../../shared/ui/AppErrorBoundary';
 import { bootstrapDocumentThemeFromWebStorage } from '../../shared/ui/theme';
 import { initIntelligenceRulesFromRemote } from '../../rules/intelligenceRulesRuntime';
 
@@ -10,9 +11,12 @@ void initIntelligenceRulesFromRemote().catch(() => {
 });
 
 bootstrapDocumentThemeFromWebStorage();
+document.documentElement.setAttribute('data-app-surface', 'mobile');
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <MobileApp surfaceLabel="mobile" initialTab="pulse" />
+    <AppErrorBoundary surfaceLabel="BrandOps Mobile">
+      <MobileApp surfaceLabel="mobile" initialTab="pulse" />
+    </AppErrorBoundary>
   </React.StrictMode>
 );

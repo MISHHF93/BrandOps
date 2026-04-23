@@ -1,6 +1,18 @@
 import { Sparkles } from 'lucide-react';
+import { CockpitWorkstreamCommandStrip } from './CockpitWorkstreamCommandStrip';
 import { formatPeekDue } from './cockpitDailyPrimitives';
 import type { CockpitTodaySectionProps } from './cockpitSectionTypes';
+
+const TODAY_STRIP_ITEMS = [
+  { kind: 'run' as const, label: 'Create follow-up', phrase: 'create follow up: check warm lead status' },
+  { kind: 'run' as const, label: 'Balanced cadence', phrase: 'configure: cadence balanced, remind before 20 min' },
+  {
+    kind: 'run' as const,
+    label: 'Complete follow-up',
+    phrase: 'complete follow up: done with intro call follow-up'
+  },
+  { kind: 'prime' as const, label: 'Add contact', phrase: 'add contact: Alex Rivera, Northwind Labs, Founder' }
+] as const;
 
 const rowChip = (btnFocus: string) =>
   `rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
@@ -54,30 +66,21 @@ export const CockpitTodayWorkstreamSection = ({
       </button>{' '}
       (workspace preferences only — not pipeline or brand editing).
     </p>
-    <div className="mt-2 flex flex-wrap gap-1.5">
-      <button
-        type="button"
-        disabled={commandBusy}
-        onClick={() => void runCommand('create follow up: check warm lead status')}
-        className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-[11px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
-      >
-        Create follow-up
-      </button>
-      <button
-        type="button"
-        disabled={commandBusy}
-        onClick={() => void runCommand('configure: cadence balanced, remind before 20 min')}
-        className={`rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-1 text-[11px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
-      >
-        Balanced cadence
-      </button>
-    </div>
+    <CockpitWorkstreamCommandStrip
+      ariaLabel="Today workstream Chat starters"
+      btnFocus={btnFocus}
+      commandBusy={commandBusy}
+      runCommand={runCommand}
+      primeChat={primeChat}
+      items={TODAY_STRIP_ITEMS}
+    />
 
     {snapshot.cockpitSchedulerTaskPeek.length > 0 ? (
       <div className="mt-4 border-t border-white/5 pt-4">
         <p className="text-[11px] font-medium text-zinc-400">Upcoming scheduler tasks</p>
         <p className="mt-0.5 text-[10px] text-zinc-600">
-          Read-only digest. Snooze and completion flow through Chat commands.
+          Read-only digest. Snooze and completion flow through Chat commands. “Complete follow-up” in the strip marks
+          the <strong className="text-zinc-500">first incomplete</strong> follow-up in workspace order.
         </p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitSchedulerTaskPeek.map((row) => (
@@ -89,14 +92,27 @@ export const CockpitTodayWorkstreamSection = ({
               <p className="mt-0.5 text-[10px] text-zinc-500">
                 {row.status} · {row.sourceType} · due {formatPeekDue(row.dueAt)}
               </p>
-              <button
-                type="button"
-                disabled={commandBusy}
-                onClick={() => primeChat(`add note: scheduler task — ${row.title}`)}
-                className={`mt-2 ${rowChip(btnFocus)}`}
-              >
-                Open in Chat (draft note)
-              </button>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() => primeChat(`add note: scheduler task — ${row.title}`)}
+                  className={rowChip(btnFocus)}
+                >
+                  Open in Chat (draft note)
+                </button>
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() =>
+                    primeChat(`complete follow up: done — related scheduler task "${row.title.replace(/"/g, "'")}"`)
+                  }
+                  className={rowChip(btnFocus)}
+                  title="Completes the first incomplete follow-up in the workspace; line ties context in Chat."
+                >
+                  Prime complete follow-up
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -146,14 +162,26 @@ export const CockpitTodayWorkstreamSection = ({
                 <span className="font-normal text-zinc-500"> · {row.company}</span>
               </p>
               <p className="mt-0.5 text-[10px] text-zinc-500">{row.role}</p>
-              <button
-                type="button"
-                disabled={commandBusy}
-                onClick={() => primeChat(`update contact: ${row.name}, ${row.company}`)}
-                className={`mt-2 ${rowChip(btnFocus)}`}
-              >
-                Open in Chat (contact update)
-              </button>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() => primeChat(`update contact: ${row.name}, ${row.company}`)}
+                  className={rowChip(btnFocus)}
+                >
+                  Open in Chat (contact update)
+                </button>
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() =>
+                    primeChat(`add contact: ${row.name}, ${row.company}, ${row.role || 'Role'}`)
+                  }
+                  className={rowChip(btnFocus)}
+                >
+                  Prime add contact
+                </button>
+              </div>
             </li>
           ))}
         </ul>

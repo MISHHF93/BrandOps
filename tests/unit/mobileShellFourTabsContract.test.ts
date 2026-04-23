@@ -59,6 +59,7 @@ describe('MobileApp shell tab wiring (contract)', () => {
     const settingsJsx = mobileApp.match(/<MobileSettingsView[\s\S]*?\/>/)?.[0] ?? '';
     expect(settingsJsx).toContain('applyBusy={settingsApplyLoading}');
     expect(settingsJsx).toContain('commandBusy={commandLoading}');
+    expect(settingsJsx).toContain("onOpenTodayTab={() => commitTab('daily')}");
   });
 
   it('exposes bottom nav labels aligned with URL tokens (pulse, chat, today, integrations, settings)', () => {
@@ -72,7 +73,7 @@ describe('MobileApp shell tab wiring (contract)', () => {
   });
 
   it('keeps Chat composer outside MobileChatView so input stays fixed to viewport', () => {
-    expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*placeholder="Message BrandOps Agent/);
+    expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*placeholder="Message the agent/);
   });
 });
 
