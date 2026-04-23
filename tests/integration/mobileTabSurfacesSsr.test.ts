@@ -10,7 +10,6 @@ import { MobileChatView } from '../../src/pages/mobile/MobileChatView';
 import { MobileIntegrationsView } from '../../src/pages/mobile/MobileIntegrationsView';
 import { MobileSettingsView } from '../../src/pages/mobile/MobileSettingsView';
 import { PulseTimelineView } from '../../src/pages/mobile/PulseTimelineView';
-import type { MobileChatShellDigest } from '../../src/pages/mobile/MobileChatView';
 import { buildWorkspaceSnapshot } from '../../src/pages/mobile/buildWorkspaceSnapshot';
 import { initIntelligenceRulesFromRemote, resetIntelligenceRulesForTests } from '../../src/rules/intelligenceRulesRuntime';
 import type { ChatMessage } from '../../src/pages/mobile/MobileChatView';
@@ -19,17 +18,6 @@ import { cloneDemoSampleData, cloneSeedData } from '../helpers/fixtures';
 const snapshot = () => buildWorkspaceSnapshot(cloneSeedData());
 const noop = () => {};
 const asyncNoop = async () => {};
-
-const chatDigest = (): MobileChatShellDigest => {
-  const s = snapshot();
-  return {
-    notes: s.notes,
-    publishingQueue: s.publishingQueue,
-    activeOpportunities: s.activeOpportunities,
-    weightedPipelineUsd: s.pipelineProjection.weightedOpenValueUsd,
-    pipelineOpenDeals: s.pipelineProjection.activeDealCount
-  };
-};
 
 describe('Mobile tab surfaces (SSR integration)', () => {
   it('Pulse: header, jump row, buckets, and list landmark', () => {
@@ -52,9 +40,14 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('role="list"');
   });
 
-  it('Chat: header, thread, collapsible starters, optional recent commands', () => {
+  it('Chat: header, thread, example commands, optional recent commands', () => {
     const messages: ChatMessage[] = [
-      { id: 'w', role: 'assistant', resultKind: 'plain', text: 'Agent ready — type a command below or expand Command starters.' }
+      {
+        id: 'w',
+        role: 'assistant',
+        resultKind: 'plain',
+        text: 'Agent ready. Type a command in the field below, or open Example commands.'
+      }
     ];
     const html = renderToString(
       React.createElement(MobileChatView, {
@@ -64,19 +57,16 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onQuickCommand: noop,
         onClearCommandHistory: noop,
         btnFocus: '',
-        shellDigest: chatDigest(),
-        onNavigateTab: noop
+        onOpenToday: noop
       })
     );
     expect(html).toContain('aria-label="Chat"');
-    expect(html).toContain('Pulse');
-    expect(html).toContain('Workspace snapshot');
-    expect(html).toContain('Command starters');
-    expect(html).toContain('Today &amp; capture');
-    expect(html).toContain('Pipeline &amp; outreach');
+    expect(html).toContain('Example commands');
+    expect(html).toContain('Today');
+    expect(html).toContain('Quick checks');
     expect(html).toContain('Recent commands');
     expect(html).toContain('pipeline health');
-    expect(html).toContain('archive opportunity');
+    expect(html).toContain('connect notion');
     expect(html).toContain('details');
   });
 

@@ -6,7 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    /** Same-origin rules as Android; set when `ios` platform is added (`npm run ios:add` on macOS). */
+    iosScheme: 'https'
   }
 };
 

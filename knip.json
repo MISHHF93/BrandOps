@@ -13,5 +13,5 @@
   ],
   "project": ["src/**/*.ts", "src/**/*.tsx"],
   "ignore": ["android/**", "dist/**", ".cursor/**", "scripts/**", "tests/**", "node_modules/**"],
-  "ignoreDependencies": ["@capacitor/android", "@capacitor/core", "knip"]
+  "ignoreDependencies": ["@capacitor/android", "@capacitor/core", "@capacitor/ios", "knip"]
 }

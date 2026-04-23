@@ -17,7 +17,7 @@ export const SHELL_SECTION_COPY: Record<
   },
   chat: {
     headline: 'Chat — command surface',
-    body: 'The local agent runs deterministic routes (no cloud LLM required). Workspace totals below stay in sync; use Today for pipeline projection and deal lists, Integrations for the hub, Settings for export and full settings readout.'
+    body: 'Type commands in the bottom field or use Example commands. Today holds cockpit digests; Integrations and Settings keep hub and data controls out of the thread.'
   },
   daily: {
     headline: 'Today — cockpit',

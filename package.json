@@ -14,6 +14,10 @@
     "android:sync": "cap sync android",
     "android:open": "cap open android",
     "android:run": "cap run android",
+    "ios:add": "cap add ios",
+    "ios:sync": "cap sync ios",
+    "ios:open": "cap open ios",
+    "ios:run": "cap run ios",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
@@ -31,6 +35,7 @@
   "dependencies": {
     "@capacitor/android": "^8.3.1",
     "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
     "clsx": "^2.1.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.543.0",

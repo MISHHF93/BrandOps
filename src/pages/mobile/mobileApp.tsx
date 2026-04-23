@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { type ChangeEvent, useCallback, useEffect, useId, useRef, useState } from 'react';
+import clsx from 'clsx';
+import { Paperclip, X } from 'lucide-react';
 import { executeAgentWorkspaceCommand, type AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import type { BrandOpsData } from '../../types/domain';
@@ -45,17 +47,14 @@ const MAX_COMMAND_CHIPS = 24;
 
 const defaultWelcomeMessage = (surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'): ChatMessage => {
   const base =
-    'Use the bottom tabs: Chat (commands), Today (cockpit digest), Integrations (sources), Settings (workspace prefs). Expand Command starters for one-tap examples.';
+    'Type a command in the field below, or open Example commands. Use the Today tab for full workspace digests.';
   const welcomeFirstRun =
-    'You opened on Today first — scan pipeline, brand, and connections. Switch to Chat to run commands (try pipeline health) or expand Command starters. Help in the header opens the full manual.';
+    'You started on Today — switch here anytime to run commands (try pipeline health).';
   return {
     id: uid(),
     role: 'assistant',
     resultKind: 'plain',
-    text:
-      surface === 'welcome'
-        ? `Welcome — ${welcomeFirstRun} ${base}`
-        : `Agent ready — ${base}`
+    text: surface === 'welcome' ? `Welcome. ${welcomeFirstRun} ${base}` : `Agent ready. ${base}`
   };
 };
 
@@ -153,6 +152,33 @@ const buildStripFromWorkspace = (data: BrandOpsData) => ({
   opportunities: data.opportunities.filter((o) => !o.archivedAt).length
 });
 
+/** Max size for inlining text file contents into the command string (agent is text-only). */
+const MAX_CHAT_TEXT_ATTACHMENT = 32_000;
+
+type ChatComposerAttachment = {
+  name: string;
+  size: number;
+  kind: 'text' | 'binary';
+  text?: string;
+};
+
+function buildOutgoingCommandLine(
+  inputTrimmed: string,
+  attachment: ChatComposerAttachment | null
+): string | null {
+  if (!attachment) {
+    return inputTrimmed.length > 0 ? inputTrimmed : null;
+  }
+  if (attachment.kind === 'text' && attachment.text) {
+    const block = `--- ${attachment.name} ---\n${attachment.text}`;
+    if (inputTrimmed) return `${inputTrimmed}\n\n${block}`;
+    return `add note:\n\n${block}`;
+  }
+  const bin = `(Attached: ${attachment.name}, ${attachment.size} bytes — not text; add what the agent should do.)`;
+  if (inputTrimmed) return `${inputTrimmed}\n\n${bin}`;
+  return `add note: ${bin}`;
+}
+
 function readInitialShellState(initialTab: MobileShellTabId): {
   tab: MobileShellTabId;
   workstream: DashboardSectionId;
@@ -192,6 +218,8 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   const [pendingClearChat, setPendingClearChat] = useState(false);
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
+  const chatFileInputRef = useRef<HTMLInputElement>(null);
+  const [chatAttachment, setChatAttachment] = useState<ChatComposerAttachment | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
@@ -293,6 +321,10 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
     return () => window.clearTimeout(t);
   }, [dataOpsHint]);
 
+  useEffect(() => {
+    if (activeTab !== 'chat') setChatAttachment(null);
+  }, [activeTab]);
+
   const executeCommandFlow = async (trimmed: string) => {
     if (!trimmed || commandLoading) return;
     setMessages((prev) => [...prev, { id: uid(), role: 'user', text: trimmed }]);
@@ -349,11 +381,39 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   const sendQuickCommand = (command: string) => {
     const trimmed = command.trim();
     if (!trimmed || commandLoading) return;
+    setChatAttachment(null);
     commitTab('chat');
     setInput('');
     queueMicrotask(() => {
       startSend(trimmed);
     });
+  };
+
+  const onChatFileSelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const extText = /\.(txt|md|json|csv|log|yml|yaml|xml)$/i.test(file.name);
+    const asText = file.type.startsWith('text/') || file.type === 'application/json' || extText;
+    if (asText && file.size > MAX_CHAT_TEXT_ATTACHMENT) {
+      setDataOpsHint('Text attachment too large (max 32KB).');
+      return;
+    }
+    if (asText && file.size <= MAX_CHAT_TEXT_ATTACHMENT) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setChatAttachment({
+          name: file.name,
+          size: file.size,
+          kind: 'text',
+          text: String(reader.result ?? '')
+        });
+      };
+      reader.onerror = () => setDataOpsHint('Could not read file.');
+      reader.readAsText(file);
+    } else {
+      setChatAttachment({ name: file.name, size: file.size, kind: 'binary' });
+    }
   };
 
   /** Same as {@link sendQuickCommand}: Today / Integrations / Settings chips must show Chat + thread results. */
@@ -415,10 +475,11 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   );
 
   const submitMessage = async () => {
-    const trimmed = input.trim();
-    if (!trimmed || commandLoading) return;
+    const line = buildOutgoingCommandLine(input.trim(), chatAttachment);
+    if (!line?.trim() || commandLoading) return;
     setInput('');
-    startSend(trimmed);
+    setChatAttachment(null);
+    startSend(line.trim());
   };
 
   return (
@@ -475,14 +536,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                 setCommandHistory([]);
               }}
               btnFocus={btnFocus}
-              shellDigest={{
-                notes: snapshot.notes,
-                publishingQueue: snapshot.publishingQueue,
-                activeOpportunities: snapshot.activeOpportunities,
-                weightedPipelineUsd: snapshot.pipelineProjection.weightedOpenValueUsd,
-                pipelineOpenDeals: snapshot.pipelineProjection.activeDealCount
-              }}
-              onNavigateTab={commitTab}
+              onOpenToday={() => commitTab('daily')}
             />
           </section>
         ) : (
@@ -548,17 +602,56 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
       </main>
 
       {activeTab === 'chat' ? (
-        <div className="bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full max-w-md px-0 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
-          <div className="flex items-center gap-2 rounded-2xl border border-border/70 bg-bgElevated/95 p-2 shadow-panel backdrop-blur-md">
+        <div className="bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full max-w-md px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
+          {chatAttachment ? (
+            <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-bgSubtle/80 px-2 py-1.5">
+              <p className="min-w-0 flex-1 truncate text-[11px] text-textMuted">
+                <span className="font-medium text-text">Attached</span> · {chatAttachment.name} (
+                {chatAttachment.kind === 'text' ? 'text' : 'file'})
+              </p>
+              <button
+                type="button"
+                onClick={() => setChatAttachment(null)}
+                className={clsx('shrink-0 rounded-md p-1 text-textSoft hover:text-text', btnFocus)}
+                aria-label="Remove attachment"
+              >
+                <X size={16} strokeWidth={2} aria-hidden />
+              </button>
+            </div>
+          ) : null}
+          <div className="flex items-center gap-1.5 rounded-2xl border border-border/70 bg-bgElevated/95 p-1.5 shadow-panel backdrop-blur-md sm:gap-2 sm:p-2">
+            <input
+              ref={chatFileInputRef}
+              type="file"
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden
+              onChange={onChatFileSelected}
+              accept="text/*,.txt,.md,.json,.csv,.yml,.yaml,.xml,.log,image/*,application/pdf"
+            />
+            <button
+              type="button"
+              disabled={commandLoading}
+              onClick={() => chatFileInputRef.current?.click()}
+              className={clsx(
+                'shrink-0 rounded-xl border border-border/60 p-2.5 text-textMuted hover:border-borderStrong hover:text-text',
+                'disabled:opacity-50',
+                btnFocus
+              )}
+              aria-label="Attach file"
+              title="Attach file (text files are inlined; other types add a short note to your command)"
+            >
+              <Paperclip size={18} strokeWidth={2} aria-hidden />
+            </button>
             <input
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') {
+                if (event.key === 'Enter' && !event.shiftKey) {
                   void submitMessage();
                 }
               }}
-              className="flex-1 bg-transparent px-2 py-2 text-sm text-text outline-none placeholder:text-textSoft"
+              className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-text outline-none placeholder:text-textSoft"
               placeholder="Message the agent…"
               aria-label="Chat command input"
             />
@@ -566,7 +659,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               type="button"
               disabled={commandLoading}
               onClick={() => void submitMessage()}
-              className={`rounded-xl border border-borderStrong/60 bg-surfaceActive px-3 py-2 text-xs font-semibold text-text shadow-sm disabled:opacity-50 ${btnFocus}`}
+              className={`shrink-0 rounded-xl border border-borderStrong/60 bg-surfaceActive px-3 py-2 text-xs font-semibold text-text shadow-sm disabled:opacity-50 ${btnFocus}`}
             >
               Send
             </button>
