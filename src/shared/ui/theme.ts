@@ -4,6 +4,30 @@ import type { AppSettings, BrandOpsData, UiTheme } from '../../types/domain';
 const WEB_LOCAL_DATA_KEY = 'brandops:local:brandops:data';
 
 /**
+ * Hex values for `meta name="theme-color"` — must stay aligned with `--color-bg` in `src/styles/index.css`
+ * (`:root` dark and `:root[data-theme="light"]`).
+ */
+export const THEME_COLOR_HEX: Record<'dark' | 'light', string> = {
+  dark: '#08090b',
+  light: '#f8f9fb'
+};
+
+/** Keep browser / PWA chrome in sync with `data-theme` (static HTML defaults are dark). */
+function syncMetaThemeColor(resolved: 'dark' | 'light'): void {
+  if (typeof document === 'undefined' || !document.head) return;
+  const content = THEME_COLOR_HEX[resolved];
+  let meta = document.head.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('name', 'theme-color');
+    document.head.appendChild(meta);
+  }
+  if (meta.getAttribute('content') !== content) {
+    meta.setAttribute('content', content);
+  }
+}
+
+/**
  * Apply theme from persisted web LocalStorage before React paints (dev / `vite`).
  * Extension builds use `chrome.storage` async paths; this is a no-op there.
  */
@@ -41,6 +65,7 @@ export const applyDocumentTheme = (
   const root = document.documentElement;
   root.setAttribute('data-theme', resolved);
   root.style.colorScheme = resolved;
+  syncMetaThemeColor(resolved);
   root.setAttribute('data-visual-mode', visual?.visualMode ?? 'classic');
   const prefersReducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

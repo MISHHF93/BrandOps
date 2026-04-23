@@ -49,9 +49,10 @@ module.exports = {
         '2xl': '24px'
       },
       boxShadow: {
-        panel: '0 8px 24px rgba(0, 0, 0, 0.28)',
-        hover: '0 12px 30px rgba(0, 0, 0, 0.34)',
-        glow: '0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 20px rgba(0, 0, 0, 0.06)'
+        /* Uses --color-shadow from index.css (black in dark, ink tone in light). */
+        panel: '0 8px 24px rgb(var(--color-shadow) / 0.28)',
+        hover: '0 12px 30px rgb(var(--color-shadow) / 0.34)',
+        glow: '0 0 0 1px rgb(var(--color-shadow) / 0.08), 0 0 20px rgb(var(--color-shadow) / 0.06)'
       },
       transitionDuration: {
         fast: '120ms',
