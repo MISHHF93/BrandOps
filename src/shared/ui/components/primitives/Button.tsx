@@ -2,13 +2,7 @@ import { ButtonHTMLAttributes, forwardRef } from 'react';
 import { cn } from '../utils/cn';
 import { disabledClass, focusRingClass, interactiveTransitionClass } from '../utils/styles';
 
-export type ButtonVariant =
-  | 'primary'
-  | 'secondary'
-  | 'ghost'
-  | 'outline'
-  | 'success'
-  | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'success' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -59,4 +53,3 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     />
   );
 });
-

@@ -63,7 +63,12 @@ export const ChatCommandBar = ({
   const empty = !trimmed;
 
   const { list: typeahead, chips: smartChips } = useMemo(
-    () => suggestIntents(value, { recentLines: recentCommandLines, limit: SUGGEST_LIMIT, chipCap: CHIP_CAP }),
+    () =>
+      suggestIntents(value, {
+        recentLines: recentCommandLines,
+        limit: SUGGEST_LIMIT,
+        chipCap: CHIP_CAP
+      }),
     [value, recentCommandLines]
   );
 
@@ -195,7 +200,9 @@ export const ChatCommandBar = ({
                 type="button"
                 className={clsx(
                   'flex w-full flex-col items-start gap-0.5 px-2.5 py-2 text-left text-sm transition',
-                  i === highlight ? 'bg-surfaceActive text-text' : 'text-textMuted hover:bg-surface/60',
+                  i === highlight
+                    ? 'bg-surfaceActive text-text'
+                    : 'text-textMuted hover:bg-surface/60',
                   btn
                 )}
                 onClick={() => applyInsert(intent)}
@@ -203,7 +210,9 @@ export const ChatCommandBar = ({
               >
                 <span className="flex w-full min-w-0 items-center justify-between gap-2">
                   <span className="min-w-0 font-medium text-text">{intent.title}</span>
-                  <span className="shrink-0 text-[9px] uppercase text-textSoft">{intent.groupId}</span>
+                  <span className="shrink-0 text-[9px] uppercase text-textSoft">
+                    {intent.groupId}
+                  </span>
                 </span>
                 <span className="line-clamp-1 text-xs text-textSoft">{intent.subtitle}</span>
                 <code className="line-clamp-2 w-full text-left text-[10px] font-mono text-textSoft/90">

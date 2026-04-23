@@ -37,7 +37,9 @@ export function MobileTabSection({
       <h3 id={titleId} className="text-sm font-semibold text-text">
         {title}
       </h3>
-      {description ? <p className="mt-1.5 text-[11px] leading-relaxed text-textSoft">{description}</p> : null}
+      {description ? (
+        <p className="mt-1.5 text-[11px] leading-relaxed text-textSoft">{description}</p>
+      ) : null}
       {children}
     </section>
   );
@@ -122,7 +124,9 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
                 >
                   <Icon size={18} strokeWidth={active ? 2.25 : 2} />
                 </span>
-                <span className="max-w-full truncate px-0.5 text-[11px] font-semibold leading-none">{tab.label}</span>
+                <span className="max-w-full truncate px-0.5 text-[11px] font-semibold leading-none">
+                  {tab.label}
+                </span>
               </button>
             </li>
           );

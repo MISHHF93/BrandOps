@@ -25,11 +25,15 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
 
     return (
       <main className="bo-mobile-app bo-system-screen min-h-[100dvh] min-w-0 p-4">
-        <section className="bo-card mx-auto mt-8 max-w-md space-y-3" role="alert" aria-live="assertive">
+        <section
+          className="bo-card mx-auto mt-8 max-w-md space-y-3"
+          role="alert"
+          aria-live="assertive"
+        >
           <h2 className="text-h3 text-danger">Something went wrong</h2>
           <p className="text-sm text-textMuted">
-            {this.props.surfaceLabel} hit an unexpected error. Try reloading this page. If it keeps happening, open
-            Settings (when available) and export a workspace backup.
+            {this.props.surfaceLabel} hit an unexpected error. Try reloading this page. If it keeps
+            happening, open Settings (when available) and export a workspace backup.
           </p>
           <button
             type="button"

@@ -16,7 +16,8 @@ export const cockpitCapabilities: CockpitCapability[] = [
   {
     id: 'brand-vault',
     label: 'Brand narrative',
-    summary: 'Today · Brand & content — positioning, offers, voice, and reusable story assets. Refine in Chat.',
+    summary:
+      'Today · Brand & content — positioning, offers, voice, and reusable story assets. Refine in Chat.',
     primaryTab: 'daily',
     secondaryTabs: ['chat']
   },
@@ -44,7 +45,8 @@ export const cockpitCapabilities: CockpitCapability[] = [
   {
     id: 'integrations-manual',
     label: 'Manual integrations hub',
-    summary: 'Integrations tab — sources, artifacts, SSH nodes. Register and refine via Chat when needed.',
+    summary:
+      'Integrations tab — sources, artifacts, SSH nodes. Register and refine via Chat when needed.',
     primaryTab: 'integrations',
     secondaryTabs: ['chat', 'daily']
   },

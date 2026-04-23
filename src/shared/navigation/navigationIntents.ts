@@ -84,4 +84,3 @@ export function hrefCockpitConnections(): string {
 export function hrefCockpitWorkstream(section: DashboardSectionId): string {
   return r(buildMobileCockpitUrl({ section }));
 }
-

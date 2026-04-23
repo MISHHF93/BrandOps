@@ -1,4 +1,7 @@
-import { getIntelligenceRules, getIntelligenceRulesLoadProvenance } from '../../rules/intelligenceRulesRuntime';
+import {
+  getIntelligenceRules,
+  getIntelligenceRulesLoadProvenance
+} from '../../rules/intelligenceRulesRuntime';
 import type { IntelligenceRulesLoadProvenance } from '../../rules/intelligenceRulesRuntime';
 
 export type MobileIntelligenceRulesReadout = IntelligenceRulesLoadProvenance & {

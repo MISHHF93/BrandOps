@@ -16,17 +16,17 @@
 
 ## 1. Current HTML surfaces (who owns what)
 
-| Surface | File | Primary job | Must stay separate? |
-|--------|------|-------------|---------------------|
-| **Index** | `index.html` | Redirect → `mobile.html` (current product) | Yes (thin redirect only) |
-| **Welcome** | `welcome.html` | Auth gateway, legal entry, “continue to app” | **Yes** — OAuth and first-run contract |
-| **Dashboard / Cockpit** | `dashboard.html` | Execution: pipeline, content, CRM modules, mission map, scheduler context | **Target: canonical “one pager” shell** |
-| **Settings** | `options.html` | Manifest `options_page`: OAuth, import/export, integrations, diagnostics, AI tools | **Yes for Chrome** — deep config + `chrome.identity` flows |
-| **Knowledge Center** | `help.html` | Full-page manual, deep links `?topic=` | **Optional long-term** — overlaps dashboard overlay |
-| **Privacy** | `privacy-policy.html` | Static legal (and optional hosted URL) | **Yes** |
-| **OAuth callbacks** | `public/oauth/*.html` | Provider redirect handling | **Yes** |
+| Surface                 | File                  | Primary job                                                                        | Must stay separate?                                        |
+| ----------------------- | --------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **Index**               | `index.html`          | Redirect → `mobile.html` (current product)                                         | Yes (thin redirect only)                                   |
+| **Welcome**             | `welcome.html`        | Auth gateway, legal entry, “continue to app”                                       | **Yes** — OAuth and first-run contract                     |
+| **Dashboard / Cockpit** | `dashboard.html`      | Execution: pipeline, content, CRM modules, mission map, scheduler context          | **Target: canonical “one pager” shell**                    |
+| **Settings**            | `options.html`        | Manifest `options_page`: OAuth, import/export, integrations, diagnostics, AI tools | **Yes for Chrome** — deep config + `chrome.identity` flows |
+| **Knowledge Center**    | `help.html`           | Full-page manual, deep links `?topic=`                                             | **Optional long-term** — overlaps dashboard overlay        |
+| **Privacy**             | `privacy-policy.html` | Static legal (and optional hosted URL)                                             | **Yes**                                                    |
+| **OAuth callbacks**     | `public/oauth/*.html` | Provider redirect handling                                                         | **Yes**                                                    |
 
-**Conclusion:** You cannot literally merge *everything* into one browser document (Welcome and Options have different platform contracts). The realistic “one pager” is: **one primary work document (`dashboard.html`)** with **unified scroll**, **one KPI strip**, and **compass-driven panels** for help/settings previews; **Welcome** and **full Options** remain specialized entry points with **fewer duplicate paths** into the same content.
+**Conclusion:** You cannot literally merge _everything_ into one browser document (Welcome and Options have different platform contracts). The realistic “one pager” is: **one primary work document (`dashboard.html`)** with **unified scroll**, **one KPI strip**, and **compass-driven panels** for help/settings previews; **Welcome** and **full Options** remain specialized entry points with **fewer duplicate paths** into the same content.
 
 ---
 
@@ -48,7 +48,7 @@
 - **Overlays:** Knowledge Center body (embedded), Quick settings (subset of Options).
 - **Compass:** `RightPillNavDock` — sections + surfaces.
 
-**Target:** This is the **single scroll of record** for *work + health at a glance*.
+**Target:** This is the **single scroll of record** for _work + health at a glance_.
 
 ### Settings (`optionsApp.tsx`)
 
@@ -121,12 +121,12 @@
 
 ### 4.3 Compass responsibilities (justice / clarity)
 
-| Compass target | Behavior on one-pager |
-|----------------|----------------------|
-| Today / Pipeline / Brand & content / Connections | Scroll + `?section=` (already) |
-| Knowledge Center | Overlay (dashboard); optional “Open full manual” → `help.html` only if needed |
-| Settings | Quick overlay → full `options.html` for deep work |
-| Full Dashboard | Hidden on dashboard (already) |
+| Compass target                                   | Behavior on one-pager                                                         |
+| ------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Today / Pipeline / Brand & content / Connections | Scroll + `?section=` (already)                                                |
+| Knowledge Center                                 | Overlay (dashboard); optional “Open full manual” → `help.html` only if needed |
+| Settings                                         | Quick overlay → full `options.html` for deep work                             |
+| Full Dashboard                                   | Hidden on dashboard (already)                                                 |
 
 ---
 
@@ -145,19 +145,23 @@ Use this when reviewing each surface:
 
 ## 6. Phased implementation (squeeze toward one pager)
 
-**Phase A — IA clarity (low risk)**  
-- [x] Document alignment: this file + README pointer.  
+**Phase A — IA clarity (low risk)**
+
+- [x] Document alignment: this file + README pointer.
 - [ ] Product copy: recommend **unified scroll** in welcome/dashboard onboarding (optional copy change).
 
-**Phase B — Dedupe metrics**  
+**Phase B — Dedupe metrics**
+
 - [x] **`CockpitPulseStrip`** + **`cockpitPulse`** memo; removed **`MissionMapMetrics`**; cockpit metrics collapsible keeps health strip + note pointing at pulse as single odometer source.
 
-**Phase C — Navigation cleanup**  
-- [x] **`SurfaceNavLinks`:** `buildDashboardUrl()` / `buildDashboardUrl({ overlay: 'help' })` / `section: 'connections'` as `<a href>`.  
-- [x] **`QUERY.cockpitOverlay`** + dashboard `useEffect` opens overlay once, then strips param.  
+**Phase C — Navigation cleanup**
+
+- [x] **`SurfaceNavLinks`:** `buildDashboardUrl()` / `buildDashboardUrl({ overlay: 'help' })` / `section: 'connections'` as `<a href>`.
+- [x] **`QUERY.cockpitOverlay`** + dashboard `useEffect` opens overlay once, then strips param.
 - [x] Compass/palette Knowledge → overlay (unchanged).
 
-**Phase D — Options slimming**  
+**Phase D — Options slimming**
+
 - [x] Shared **[`CockpitAppearanceFields.tsx`](../src/shared/ui/components/CockpitAppearanceFields.tsx)** used by **`CockpitSettingsQuickPanel`** and **`CoreSetupSection`** (theme / visual-motion-ambient / layout-density). Options page still contains integrations, cadence, notifications, etc.
 
 ---

@@ -31,7 +31,9 @@ export function BrandHeader({
               </span>
             ) : null}
           </div>
-          <h1 className={`${compact ? 'mt-2 text-base' : 'mt-3 text-lg'} font-semibold`}>{title}</h1>
+          <h1 className={`${compact ? 'mt-2 text-base' : 'mt-3 text-lg'} font-semibold`}>
+            {title}
+          </h1>
           <p
             className={`mt-1 text-textMuted ${compact ? 'line-clamp-2 text-[11px] leading-snug' : 'text-xs'}`}
           >
@@ -40,11 +42,7 @@ export function BrandHeader({
         </div>
         {showCrown ? (
           <div className="bo-header-crown rounded-xl border p-2">
-            <img
-              src="/brandops-crown.svg"
-              alt="BrandOps crown"
-              className="bo-header-crown__logo"
-            />
+            <img src="/brandops-crown.svg" alt="BrandOps crown" className="bo-header-crown__logo" />
           </div>
         ) : null}
       </div>

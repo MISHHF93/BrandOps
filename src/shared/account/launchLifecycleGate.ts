@@ -18,4 +18,3 @@ export function shouldRequireLaunchMembership(access: LaunchAccessState): boolea
 export function canOpenLaunchWorkspace(access: LaunchAccessState): boolean {
   return !shouldRequireLaunchAuth(access) && !shouldRequireLaunchMembership(access);
 }
-

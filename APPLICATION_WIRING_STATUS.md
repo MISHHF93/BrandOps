@@ -10,14 +10,14 @@ Track what is fully connected between the chatbot frontend and backend command/r
 
 Vite MPA inputs are defined in [`vite.config.ts`](vite.config.ts) (`build.rollupOptions.input`). Every `MobileApp` document boots through [`src/pages/chatbotWeb/renderChatbotSurface.tsx`](src/pages/chatbotWeb/renderChatbotSurface.tsx) (theme, intelligence init, `data-app-surface`, error boundary) except `help.html`, which mounts the Knowledge Center only.
 
-| HTML | Script entry | Root component | Notes |
-|------|----------------|----------------|--------|
-| `index.html` | n/a (inline redirect) | — | Client redirect to `mobile.html` (preserves query/hash). |
-| `mobile.html` | [`src/pages/mobile/main.tsx`](src/pages/mobile/main.tsx) | `MobileApp` via `renderChatbotSurface` | `surfaceLabel: 'mobile'`, `initialTab: 'pulse'`; primary in-app entry. |
-| `welcome.html` | [`src/pages/welcome/main.tsx`](src/pages/welcome/main.tsx) | `MobileApp` via `renderChatbotSurface` | `initialTab: 'daily'`. |
-| `dashboard.html` | [`src/pages/dashboard/main.tsx`](src/pages/dashboard/main.tsx) | `MobileApp` via `renderChatbotSurface` or redirect | See [`src/pages/dashboard/dashboardRedirect.ts`](src/pages/dashboard/dashboardRedirect.ts); `initialTab: 'chat'` when mounted. |
-| `integrations.html` | [`src/pages/integrations/main.tsx`](src/pages/integrations/main.tsx) | `MobileApp` via `renderChatbotSurface` | `initialTab: 'integrations'`; MV3 `options_ui` in [`public/manifest.template.json`](public/manifest.template.json). |
-| `help.html` | [`src/pages/help/main.tsx`](src/pages/help/main.tsx) | `HelpKnowledgeRoot` | Not the five-tab shell; no `renderChatbotSurface`. |
+| HTML                | Script entry                                                         | Root component                                     | Notes                                                                                                                          |
+| ------------------- | -------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `index.html`        | n/a (inline redirect)                                                | —                                                  | Client redirect to `mobile.html` (preserves query/hash).                                                                       |
+| `mobile.html`       | [`src/pages/mobile/main.tsx`](src/pages/mobile/main.tsx)             | `MobileApp` via `renderChatbotSurface`             | `surfaceLabel: 'mobile'`, `initialTab: 'pulse'`; primary in-app entry.                                                         |
+| `welcome.html`      | [`src/pages/welcome/main.tsx`](src/pages/welcome/main.tsx)           | `MobileApp` via `renderChatbotSurface`             | `initialTab: 'daily'`.                                                                                                         |
+| `dashboard.html`    | [`src/pages/dashboard/main.tsx`](src/pages/dashboard/main.tsx)       | `MobileApp` via `renderChatbotSurface` or redirect | See [`src/pages/dashboard/dashboardRedirect.ts`](src/pages/dashboard/dashboardRedirect.ts); `initialTab: 'chat'` when mounted. |
+| `integrations.html` | [`src/pages/integrations/main.tsx`](src/pages/integrations/main.tsx) | `MobileApp` via `renderChatbotSurface`             | `initialTab: 'integrations'`; MV3 `options_ui` in [`public/manifest.template.json`](public/manifest.template.json).            |
+| `help.html`         | [`src/pages/help/main.tsx`](src/pages/help/main.tsx)                 | `HelpKnowledgeRoot`                                | Not the five-tab shell; no `renderChatbotSurface`.                                                                             |
 
 ## Active Frontend Entry Surfaces
 
@@ -35,19 +35,19 @@ Vite MPA inputs are defined in [`vite.config.ts`](vite.config.ts) (`build.rollup
 
 ### Five-tab shell vs Cockpit workstreams vs peripheral pages
 
-| Destination | `?section=` / URL | Typical goal |
-|-------------|-------------------|----------------|
-| **Pulse** tab | `pulse` or `timeline` | Mixed “what’s next” timeline |
-| **Chat** tab | `chat` | Commands and agent thread |
-| **Today** tab (cockpit) | `daily`, `cockpit`, or any **workstream** id | Deep digest; workstream scrolls a block |
-| Workstream **Today** | `today` | Cockpit “Today” block |
-| Workstream **Pipeline** | `pipeline` | Deals / pipeline digest |
-| Workstream **Brand & content** | `brand-content` | Brand / publishing digest |
-| Workstream **Connections** | `connections` | Connections digest (not the packaged hub) |
-| **Integrations** tab (in shell) | `integrations` | Same hub UI as tab on `mobile.html` |
-| **Integrations hub** document | `integrations.html` (no query or with `?section=`) | Chrome **options** entry; same `MobileApp`, often opens Integrations tab first |
-| **Settings** tab | `settings` | Prefs, export, audit |
-| **Peripheral** | `welcome.html`, `help.html`, `privacy-policy.html`, `public/oauth/*` | Auth, manual, legal, OAuth callbacks |
+| Destination                     | `?section=` / URL                                                    | Typical goal                                                                   |
+| ------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Pulse** tab                   | `pulse` or `timeline`                                                | Mixed “what’s next” timeline                                                   |
+| **Chat** tab                    | `chat`                                                               | Commands and agent thread                                                      |
+| **Today** tab (cockpit)         | `daily`, `cockpit`, or any **workstream** id                         | Deep digest; workstream scrolls a block                                        |
+| Workstream **Today**            | `today`                                                              | Cockpit “Today” block                                                          |
+| Workstream **Pipeline**         | `pipeline`                                                           | Deals / pipeline digest                                                        |
+| Workstream **Brand & content**  | `brand-content`                                                      | Brand / publishing digest                                                      |
+| Workstream **Connections**      | `connections`                                                        | Connections digest (not the packaged hub)                                      |
+| **Integrations** tab (in shell) | `integrations`                                                       | Same hub UI as tab on `mobile.html`                                            |
+| **Integrations hub** document   | `integrations.html` (no query or with `?section=`)                   | Chrome **options** entry; same `MobileApp`, often opens Integrations tab first |
+| **Settings** tab                | `settings`                                                           | Prefs, export, audit                                                           |
+| **Peripheral**                  | `welcome.html`, `help.html`, `privacy-policy.html`, `public/oauth/*` | Auth, manual, legal, OAuth callbacks                                           |
 
 Canonical parsing: [`src/pages/mobile/mobileShellQuery.ts`](src/pages/mobile/mobileShellQuery.ts). Link helpers: [`src/shared/navigation/navigationIntents.ts`](src/shared/navigation/navigationIntents.ts) (`hrefPrimaryAppIntegrationsTab` vs `hrefExtensionIntegrationsPage`).
 
@@ -118,12 +118,12 @@ Status: **Connected**
 
 ## Mutation surfaces (authoritative)
 
-| Surface | Path | Role |
-|--------|------|------|
+| Surface                              | Path                                         | Role                                                                               |
+| ------------------------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------- |
 | Command engine (chat, quick actions) | `src/services/agent/agentWorkspaceEngine.ts` | Parses commands, mutates `BrandOpsData` via `storageService`, appends `agentAudit` |
-| Background / channels / bridge | `src/background/index.ts` + agent helpers | Channel events, webhooks, sync; writes through `storageService` |
-| LinkedIn content script | `src/content/linkedinOverlay.ts` | Optional capture / companion flows; may write storage directly |
-| Normalization + seed | `src/services/storage/storage.ts` | Load, merge, schema defaults; uses `brandMemory/seed` |
+| Background / channels / bridge       | `src/background/index.ts` + agent helpers    | Channel events, webhooks, sync; writes through `storageService`                    |
+| LinkedIn content script              | `src/content/linkedinOverlay.ts`             | Optional capture / companion flows; may write storage directly                     |
+| Normalization + seed                 | `src/services/storage/storage.ts`            | Load, merge, schema defaults; uses `brandMemory/seed`                              |
 
 There is no global React state store; product UI is `MobileApp` + `storageService` reads.
 

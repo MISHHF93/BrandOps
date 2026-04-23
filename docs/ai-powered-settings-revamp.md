@@ -35,12 +35,12 @@ Many of those **overlap with Chat** (same `configure:` strings and `runCommand`)
 
 ## 3. What stays visible (Tier A — minimal configuration)
 
-| Area | Rationale | Notes |
-|------|-----------|--------|
-| **Operator / workspace identity** | User-owned, not inferable from one line | Short fields: name, primary offer, focus metric — or a **single “Profile” summary** edited via composer |
-| **Workspace data safety** | Destructive / legal-adjacent | **Export**, **Import**, **Reset to seed** — keep, with **strong hierarchy** (primary = export; destructive grouped) |
-| **Session (local)** | Distinct from workspace | **Clear chat transcript** — one control; copy explains it does not touch `BrandOpsData` |
-| **Effective snapshot** | Orientation without dumping the model | **One card**: theme, cadence mode, workday window, rules source **label only** (no coefficient grid) |
+| Area                              | Rationale                               | Notes                                                                                                               |
+| --------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Operator / workspace identity** | User-owned, not inferable from one line | Short fields: name, primary offer, focus metric — or a **single “Profile” summary** edited via composer             |
+| **Workspace data safety**         | Destructive / legal-adjacent            | **Export**, **Import**, **Reset to seed** — keep, with **strong hierarchy** (primary = export; destructive grouped) |
+| **Session (local)**               | Distinct from workspace                 | **Clear chat transcript** — one control; copy explains it does not touch `BrandOpsData`                             |
+| **Effective snapshot**            | Orientation without dumping the model   | **One card**: theme, cadence mode, workday window, rules source **label only** (no coefficient grid)                |
 
 Tier A should fit **above the fold on a small phone** without scrolling, or with **one short scroll**.
 
@@ -48,17 +48,17 @@ Tier A should fit **above the fold on a small phone** without scrolling, or with
 
 ## 4. What moves behind AI / advanced (Tier B)
 
-| Current block | Direction |
-|-----------------|----------|
+| Current block                                                | Direction                                                                                                                                                                                 |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Preferences** multi-section form (`SettingsEditablePanel`) | **Default:** hide behind **“Adjust preferences with the assistant”** — composer + **3–4 suggested prompts** derived from today’s snapshot. **Optional:** “Show classic form” in Advanced. |
-| **`CONFIG_PRESETS` grid** | Merge into **composer chips** or **one “Quick tweaks” horizontal scroller** — fewer duplicated labels vs `OPERATIONAL_PRESETS`. |
-| **Intelligence rules — sample coefficients** | Move to **Help** or **Advanced** only; Settings shows **source + OK/error** one line. |
-| **Workspace model readout** (`WorkspaceModelReadout`) | **Advanced only** or **Help appendix** — power users, support. |
-| **Dataset lineage** | **Single line** in status card (“Seed v… · source …”) or Advanced. |
-| **Messaging vault peek + log note** | **Today / Brand workstream** or Chat — not Settings unless you want a single “Vault” link. |
-| **Recent agent activity + Run again** | **Chat sidebar** or **Pulse** — duplicate of Chat history pattern. |
-| **Settings cockpit capability disclosure** | Shorten to **one sentence + link to Help** or fold into Help. |
-| **Extension shell** | **Footer link** when not on `integrations.html`; keep one line. |
+| **`CONFIG_PRESETS` grid**                                    | Merge into **composer chips** or **one “Quick tweaks” horizontal scroller** — fewer duplicated labels vs `OPERATIONAL_PRESETS`.                                                           |
+| **Intelligence rules — sample coefficients**                 | Move to **Help** or **Advanced** only; Settings shows **source + OK/error** one line.                                                                                                     |
+| **Workspace model readout** (`WorkspaceModelReadout`)        | **Advanced only** or **Help appendix** — power users, support.                                                                                                                            |
+| **Dataset lineage**                                          | **Single line** in status card (“Seed v… · source …”) or Advanced.                                                                                                                        |
+| **Messaging vault peek + log note**                          | **Today / Brand workstream** or Chat — not Settings unless you want a single “Vault” link.                                                                                                |
+| **Recent agent activity + Run again**                        | **Chat sidebar** or **Pulse** — duplicate of Chat history pattern.                                                                                                                        |
+| **Settings cockpit capability disclosure**                   | Shorten to **one sentence + link to Help** or fold into Help.                                                                                                                             |
+| **Extension shell**                                          | **Footer link** when not on `integrations.html`; keep one line.                                                                                                                           |
 
 ---
 
@@ -66,7 +66,7 @@ Tier A should fit **above the fold on a small phone** without scrolling, or with
 
 You called out liking **“one tab resets”** — map that to UX:
 
-- **Entering Settings** = **context switch**: composer placeholder like *“What should we change about how this workspace runs?”* and **no** full readout until user expands Advanced.
+- **Entering Settings** = **context switch**: composer placeholder like _“What should we change about how this workspace runs?”_ and **no** full readout until user expands Advanced.
 - **Leaving Settings** after a successful `configure:` = **toast / inline success** + optional **“View in Today”** deep link (already have workstream URLs).
 - **Destructive resets** (seed reset, clear chat) stay **rare, labeled, confirm-modal** — never buried inside AI copy; **AI suggests, user confirms** for data wipes.
 
@@ -74,13 +74,13 @@ You called out liking **“one tab resets”** — map that to UX:
 
 ## 6. Engineering map (no new backend required for v1)
 
-| Capability | Already exists |
-|--------------|----------------|
-| Apply settings without chat noise | `applySettingsConfigure` in `mobileApp.tsx` |
-| Bundled “modes” | `OPERATIONAL_PRESETS` in `mobileSettingsPresets.ts` |
-| Fine-grained chips | `CONFIG_PRESETS` |
-| Parser / planner | `buildAiSettingsPlan` / `applyAiSettingsOperations` in `services/ai/aiSettingsMode.ts` |
-| Persistence | `storageService`, `BrandOpsData` |
+| Capability                        | Already exists                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------------- |
+| Apply settings without chat noise | `applySettingsConfigure` in `mobileApp.tsx`                                            |
+| Bundled “modes”                   | `OPERATIONAL_PRESETS` in `mobileSettingsPresets.ts`                                    |
+| Fine-grained chips                | `CONFIG_PRESETS`                                                                       |
+| Parser / planner                  | `buildAiSettingsPlan` / `applyAiSettingsOperations` in `services/ai/aiSettingsMode.ts` |
+| Persistence                       | `storageService`, `BrandOpsData`                                                       |
 
 **New work is mostly UI composition** + copy + optional **intent hints** (regex or small classifier client-side) to suggest which preset to run — **not** a new persistence schema.
 
@@ -97,12 +97,12 @@ You called out liking **“one tab resets”** — map that to UX:
 
 ## 8. Phased delivery
 
-| Phase | Outcome |
-|-------|---------|
+| Phase  | Outcome                                                                                                                                                                                                                     |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **S1** | New layout skeleton: Tier A card + composer + hero workflow presets; collapse rest under **Advanced**. **Implemented** in `MobileSettingsAISurface.tsx` + `MobileSettingsView.tsx` (`onOpenTodayTab` from `mobileApp.tsx`). |
-| **S2** | Remove duplicate lists (audit, vault) from Settings or replace with links. |
-| **S3** | Optional NL preview (confirm) before `applySettingsConfigure`. |
-| **S4** | Telemetry hooks (if product wants): which preset fires, composer success rate. |
+| **S2** | Remove duplicate lists (audit, vault) from Settings or replace with links.                                                                                                                                                  |
+| **S3** | Optional NL preview (confirm) before `applySettingsConfigure`.                                                                                                                                                              |
+| **S4** | Telemetry hooks (if product wants): which preset fires, composer success rate.                                                                                                                                              |
 
 ---
 

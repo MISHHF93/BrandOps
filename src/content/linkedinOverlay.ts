@@ -24,10 +24,7 @@ interface CompanionElementState {
   opportunitySelect: HTMLSelectElement | null;
 }
 
-type FieldElement =
-  | HTMLInputElement
-  | HTMLTextAreaElement
-  | HTMLSelectElement;
+type FieldElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 
 const companionState = {
   bootstrapped: false,
@@ -68,11 +65,7 @@ const setStatus = (message: string, tone: StatusTone = 'info') => {
 
 const getFieldValue = (name: keyof CompanionFormState) => companionState.form[name];
 
-const setFieldValue = (
-  name: keyof CompanionFormState,
-  value: string,
-  syncElement = true
-) => {
+const setFieldValue = (name: keyof CompanionFormState, value: string, syncElement = true) => {
   companionState.form[name] = value;
   if (syncElement) {
     const element = companionState.fieldRefs[name];
@@ -88,10 +81,7 @@ const resetFormFromProfile = () => {
   setFieldValue('role', companionState.linkedInCache.role);
   setFieldValue('company', companionState.linkedInCache.company);
   if (companionState.linkedInCache.name) {
-    setFieldValue(
-      'pipelineName',
-      `${companionState.linkedInCache.name} - LinkedIn opportunity`
-    );
+    setFieldValue('pipelineName', `${companionState.linkedInCache.name} - LinkedIn opportunity`);
   }
 };
 
@@ -100,7 +90,8 @@ const safeParseProfile = (): Omit<LinkedInProfileContext, 'url'> => {
   const titleElement = document.querySelector('.text-body-medium.break-words');
   const companyLink = document.querySelector('a[href*="/company/"] span[aria-hidden="true"]');
 
-  const ogTitle = document.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.content ?? '';
+  const ogTitle =
+    document.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.content ?? '';
   const derivedNameFromOg = ogTitle.includes('|') ? ogTitle.split('|')[0] : ogTitle;
 
   return {
@@ -414,7 +405,8 @@ const updateSelectOptions = (data: BrandOpsData) => {
 
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
-    defaultOption.textContent = items.length === 0 ? `${placeholder} (none available)` : placeholder;
+    defaultOption.textContent =
+      items.length === 0 ? `${placeholder} (none available)` : placeholder;
     select.append(defaultOption);
 
     items.forEach((item) => {
@@ -439,7 +431,12 @@ const handleSaveCapture = async () => {
   if (saveButton) saveButton.disabled = true;
 
   try {
-    const outcome = applyCompanionCapture(workspace, buildProfileContext(), companionState.form, new Date());
+    const outcome = applyCompanionCapture(
+      workspace,
+      buildProfileContext(),
+      companionState.form,
+      new Date()
+    );
     if ('error' in outcome) {
       setStatus(outcome.error, 'error');
       return;
@@ -512,10 +509,7 @@ const createInputField = (
   return wrapper;
 };
 
-const createSelectField = (
-  label: string,
-  name: keyof CompanionFormState
-) => {
+const createSelectField = (label: string, name: keyof CompanionFormState) => {
   const wrapper = document.createElement('div');
   wrapper.className = 'brandops-row';
 
@@ -571,7 +565,8 @@ const createPanel = async () => {
 
   const copy = document.createElement('p');
   copy.className = 'brandops-copy';
-  copy.textContent = 'Manual-assist only. Capture context, copy drafts, and keep pipeline updates safe.';
+  copy.textContent =
+    'Manual-assist only. Capture context, copy drafts, and keep pipeline updates safe.';
 
   const compliance = document.createElement('div');
   compliance.className = 'brandops-compliance';
@@ -595,7 +590,10 @@ const createPanel = async () => {
   topGrid.append(createInputField('Name', 'name'), createInputField('Role', 'role'));
 
   const linkedCompanyField = createSelectField('Link existing company', 'linkedCompanyId');
-  const linkedOpportunityField = createSelectField('Link existing opportunity', 'linkedOpportunityId');
+  const linkedOpportunityField = createSelectField(
+    'Link existing opportunity',
+    'linkedOpportunityId'
+  );
   companionState.elements.companySelect = linkedCompanyField.select;
   companionState.elements.opportunitySelect = linkedOpportunityField.select;
 

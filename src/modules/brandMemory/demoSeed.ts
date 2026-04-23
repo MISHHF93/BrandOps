@@ -55,7 +55,12 @@ export const demoSampleData: BrandOpsData = {
       'Human-in-the-loop quality controls',
       'AI delivery operations and governance'
     ],
-    industries: ['B2B SaaS', 'Fintech infrastructure', 'Healthtech operations', 'Developer tooling'],
+    industries: [
+      'B2B SaaS',
+      'Fintech infrastructure',
+      'Healthtech operations',
+      'Developer tooling'
+    ],
     proofPoints: [
       'Reduced proposal prep cycle from 5 days to 36 hours via AI-assisted workflow redesign',
       'Decreased support triage backlog by 41% with structured AI classification pipeline',
@@ -169,7 +174,7 @@ Discipline compounds authority faster than clever phrasing.`,
       body: `Thesis notes:
 - Workflow debt accumulates when teams add AI steps without redefining handoffs.
 - Quality issues appear as “model problems” but originate in ambiguous review ownership.
-- Fast fix: define explicit draft->review->publish state transitions in every team.` ,
+- Fast fix: define explicit draft->review->publish state transitions in every team.`,
       tags: ['newsletter', 'research', 'workflow-debt'],
       audience: 'Ops and product leaders building internal AI systems',
       goal: 'Prepare long-form newsletter edition',
@@ -310,7 +315,8 @@ Slide 7: CTA to request audit checklist`,
       entityType: 'opportunity',
       entityId: 'opp-001',
       title: 'Daily intent',
-      detail: 'Prioritize one authority post, three outreach touches, and proposal follow-up before noon.',
+      detail:
+        'Prioritize one authority post, three outreach touches, and proposal follow-up before noon.',
       nextAction: 'Review pipeline board before outreach block',
       createdAt: minusHours(2)
     },
@@ -319,7 +325,8 @@ Slide 7: CTA to request audit checklist`,
       entityType: 'opportunity',
       entityId: 'opp-001',
       title: 'Pipeline insight',
-      detail: 'Northstar asked for lean phase-1 scope; include optional governance add-on in proposal.',
+      detail:
+        'Northstar asked for lean phase-1 scope; include optional governance add-on in proposal.',
       status: 'proposal',
       createdAt: minusHours(9)
     },
@@ -328,7 +335,8 @@ Slide 7: CTA to request audit checklist`,
       entityType: 'contact',
       entityId: 'contact-002',
       title: 'Content angle',
-      detail: 'Next post: show how sprint retros become sales assets with a 3-step conversion framework.',
+      detail:
+        'Next post: show how sprint retros become sales assets with a 3-step conversion framework.',
       createdAt: minusHours(20)
     }
   ],
@@ -552,7 +560,8 @@ Slide 7: CTA to request audit checklist`,
         id: 'feed-001',
         source: 'BrandOps',
         title: 'Cockpit initialized',
-        detail: 'Seeded workspace loaded with local-first data, daily rhythm, and operator systems.',
+        detail:
+          'Seeded workspace loaded with local-first data, daily rhythm, and operator systems.',
         level: 'success',
         happenedAt: minusHours(1)
       },

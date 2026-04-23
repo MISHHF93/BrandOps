@@ -6,7 +6,12 @@ const requiredFiles = [
   'dist/manifest.json',
   'dist/mobile.html',
   'dist/mobile.js',
-  'dist/chunks/mobileApp.js',
+  /**
+   * Mobile shell is code-split into `renderChatbotSurface` (shared with dashboard/help);
+   * verifying that chunk is what actually proves the mobile bundle exists.
+   */
+  'dist/chunks/renderChatbotSurface.js',
+  'dist/chunks/navigationIntents.js',
   'dist/dashboard.html',
   'dist/integrations.html',
   'dist/welcome.html',
@@ -30,7 +35,14 @@ const assertManifest = async () => {
   const raw = await readFile('dist/manifest.json', 'utf8');
   const manifest = JSON.parse(raw);
 
-  const requiredKeys = ['manifest_version', 'name', 'version', 'permissions', 'background', 'action'];
+  const requiredKeys = [
+    'manifest_version',
+    'name',
+    'version',
+    'permissions',
+    'background',
+    'action'
+  ];
   for (const key of requiredKeys) {
     if (!(key in manifest)) {
       throw new Error(`manifest.json is missing required key: ${key}`);

@@ -66,4 +66,3 @@ export function InlineAlert({
     </aside>
   );
 }
-

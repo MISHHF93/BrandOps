@@ -10,18 +10,24 @@ describe('mobileShellQuery', () => {
       tab: 'pulse',
       workstream: null
     });
-    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=timeline'), 'chat')).toEqual({
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=timeline'), 'chat')
+    ).toEqual({
       tab: 'pulse',
       workstream: null
     });
   });
 
   it('parses tab tokens (case-insensitive)', () => {
-    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=settings'), 'chat')).toEqual({
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=settings'), 'chat')
+    ).toEqual({
       tab: 'settings',
       workstream: null
     });
-    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=SETTINGS'), 'chat')).toEqual({
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=SETTINGS'), 'chat')
+    ).toEqual({
       tab: 'settings',
       workstream: null
     });
@@ -29,7 +35,9 @@ describe('mobileShellQuery', () => {
       tab: 'chat',
       workstream: null
     });
-    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=integrations'), 'chat')).toEqual({
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=integrations'), 'chat')
+    ).toEqual({
       tab: 'integrations',
       workstream: null
     });
@@ -40,14 +48,18 @@ describe('mobileShellQuery', () => {
       tab: 'daily',
       workstream: 'today'
     });
-    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=cockpit'), 'chat')).toEqual({
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=cockpit'), 'chat')
+    ).toEqual({
       tab: 'daily',
       workstream: 'today'
     });
   });
 
   it('parses workstream ids to Cockpit', () => {
-    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=pipeline'), 'chat')).toEqual({
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=pipeline'), 'chat')
+    ).toEqual({
       tab: 'daily',
       workstream: 'pipeline'
     });
@@ -58,11 +70,15 @@ describe('mobileShellQuery', () => {
   });
 
   it('falls back to default tab on invalid section', () => {
-    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=not-a-real-token'), 'chat')).toEqual({
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=not-a-real-token'), 'chat')
+    ).toEqual({
       tab: 'chat',
       workstream: null
     });
-    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=not-a-real-token'), 'pulse')).toEqual({
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=not-a-real-token'), 'pulse')
+    ).toEqual({
       tab: 'pulse',
       workstream: null
     });
@@ -88,22 +104,33 @@ describe('mobileShellQuery', () => {
     ];
     for (const { tab, ws } of tabCases) {
       const encoded = sectionParamValueForShellState(tab, ws);
-      const parsed = parseMobileShellFromSearchParams(new URLSearchParams(`section=${encoded}`), defaultTab);
+      const parsed = parseMobileShellFromSearchParams(
+        new URLSearchParams(`section=${encoded}`),
+        defaultTab
+      );
       expect(parsed.tab).toBe(tab);
       expect(parsed.workstream).toBeNull();
     }
     const workstreams = ['today', 'pipeline', 'brand-content', 'connections'] as const;
     for (const ws of workstreams) {
       const encoded = sectionParamValueForShellState('daily', ws);
-      const parsed = parseMobileShellFromSearchParams(new URLSearchParams(`section=${encoded}`), defaultTab);
+      const parsed = parseMobileShellFromSearchParams(
+        new URLSearchParams(`section=${encoded}`),
+        defaultTab
+      );
       expect(parsed.tab).toBe('daily');
       expect(parsed.workstream).toBe(ws);
     }
     const dailyTokens = ['daily', 'cockpit'] as const;
     for (const token of dailyTokens) {
-      const parsed = parseMobileShellFromSearchParams(new URLSearchParams(`section=${token}`), defaultTab);
+      const parsed = parseMobileShellFromSearchParams(
+        new URLSearchParams(`section=${token}`),
+        defaultTab
+      );
       expect(parsed).toEqual({ tab: 'daily', workstream: 'today' });
     }
-    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=timeline'), defaultTab).tab).toBe('pulse');
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=timeline'), defaultTab).tab
+    ).toBe('pulse');
   });
 });

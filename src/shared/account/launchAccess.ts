@@ -2,12 +2,7 @@ import { getBrowserStorage } from '../storage/browserStorage';
 
 export type AuthProviderId = 'google' | 'apple' | 'email' | 'github' | 'linkedin';
 
-export type MembershipStatus =
-  | 'none'
-  | 'trialing'
-  | 'active'
-  | 'past_due'
-  | 'canceled';
+export type MembershipStatus = 'none' | 'trialing' | 'active' | 'past_due' | 'canceled';
 
 export interface LaunchAuthState {
   isAuthenticated: boolean;
@@ -41,7 +36,9 @@ const DEFAULT_STATE: LaunchAccessState = {
   }
 };
 
-function parseLaunchAccessState(input: Partial<LaunchAccessState> | null | undefined): LaunchAccessState {
+function parseLaunchAccessState(
+  input: Partial<LaunchAccessState> | null | undefined
+): LaunchAccessState {
   const parsed = input ?? {};
   return {
     auth: {
@@ -66,8 +63,11 @@ function parseLaunchAccessState(input: Partial<LaunchAccessState> | null | undef
           ? parsed.membership.status
           : 'none',
       renewalDate:
-        typeof parsed.membership?.renewalDate === 'string' ? parsed.membership.renewalDate : undefined,
-      customerId: typeof parsed.membership?.customerId === 'string' ? parsed.membership.customerId : undefined
+        typeof parsed.membership?.renewalDate === 'string'
+          ? parsed.membership.renewalDate
+          : undefined,
+      customerId:
+        typeof parsed.membership?.customerId === 'string' ? parsed.membership.customerId : undefined
     }
   };
 }
@@ -105,7 +105,8 @@ export function writeLaunchAccessState(state: LaunchAccessState): void {
 export async function readLaunchAccessStateForRuntime(): Promise<LaunchAccessState> {
   try {
     const browserLocalStorage = getBrowserStorage('local');
-    const raw = await browserLocalStorage.get<Partial<LaunchAccessState>>(LAUNCH_ACCESS_STORAGE_KEY);
+    const raw =
+      await browserLocalStorage.get<Partial<LaunchAccessState>>(LAUNCH_ACCESS_STORAGE_KEY);
     return parseLaunchAccessState(raw);
   } catch {
     return DEFAULT_STATE;

@@ -390,11 +390,7 @@ export interface NotificationCenterSettings {
   integrationReviewEnabled: boolean;
 }
 
-export type CadenceFlowMode =
-  | 'balanced'
-  | 'maker-heavy'
-  | 'client-heavy'
-  | 'launch-day';
+export type CadenceFlowMode = 'balanced' | 'maker-heavy' | 'client-heavy' | 'launch-day';
 
 export interface CadenceFlowSettings {
   mode: CadenceFlowMode;

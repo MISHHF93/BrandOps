@@ -38,7 +38,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         {...props}
       />
       {footer ? (
-        <footer className="border-t border-border/75 px-3 py-2 text-meta text-textSoft">{footer}</footer>
+        <footer className="border-t border-border/75 px-3 py-2 text-meta text-textSoft">
+          {footer}
+        </footer>
       ) : null}
     </div>
   );

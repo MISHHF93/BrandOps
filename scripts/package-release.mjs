@@ -49,7 +49,9 @@ const main = async () => {
   await run('tar', ['-czf', artifactPath, '-C', DIST_DIR, '.']);
 
   console.log(`Release artifact created: ${artifactPath}`);
-  console.log('Upload this archive or extract it and load the dist/ bundle as an unpacked extension.');
+  console.log(
+    'Upload this archive or extract it and load the dist/ bundle as an unpacked extension.'
+  );
 };
 
 await main();

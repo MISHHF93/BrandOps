@@ -6,12 +6,15 @@ import {
 
 describe('dashboardRedirect', () => {
   it('redirects when section is present (overlay ignored as retired)', () => {
-    expect(shouldRedirectDashboardSectionToMobile('/dashboard.html', 'section=pipeline')).toBe(true);
-    expect(shouldRedirectDashboardSectionToMobile('/app/dashboard.html', 'section=today&foo=1')).toBe(
+    expect(shouldRedirectDashboardSectionToMobile('/dashboard.html', 'section=pipeline')).toBe(
       true
     );
-    expect(shouldRedirectDashboardSectionToMobile('/dashboard.html', 'section=pipeline&overlay=help'))
-      .toBe(true);
+    expect(
+      shouldRedirectDashboardSectionToMobile('/app/dashboard.html', 'section=today&foo=1')
+    ).toBe(true);
+    expect(
+      shouldRedirectDashboardSectionToMobile('/dashboard.html', 'section=pipeline&overlay=help')
+    ).toBe(true);
     expect(
       shouldRedirectDashboardSectionToMobile('/dashboard.html', 'overlay=help&section=pipeline')
     ).toBe(true);
@@ -28,7 +31,9 @@ describe('dashboardRedirect', () => {
 
   it('maps retired overlay tokens to deterministic canonical pages', () => {
     expect(getRetiredDashboardOverlayTarget('overlay=help')).toBe('help.html');
-    expect(getRetiredDashboardOverlayTarget('overlay=settings')).toBe('mobile.html?section=settings');
+    expect(getRetiredDashboardOverlayTarget('overlay=settings')).toBe(
+      'mobile.html?section=settings'
+    );
     expect(getRetiredDashboardOverlayTarget('overlay=other')).toBe('mobile.html?section=settings');
     expect(getRetiredDashboardOverlayTarget('section=today')).toBeNull();
   });

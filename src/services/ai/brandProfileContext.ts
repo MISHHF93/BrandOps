@@ -65,7 +65,9 @@ export type LlmBrandTemplateToken = (typeof LLM_BRAND_TEMPLATE_TOKENS)[number];
  * Map of template token → replacement string. Use with `String.prototype.replaceAll` in prompt assembly.
  * Values are human-readable, fixed-prefix lines so models cannot confuse operator name with offer, etc.
  */
-export function getBrandTemplateReplacements(brand: BrandProfile): Record<LlmBrandTemplateToken, string> {
+export function getBrandTemplateReplacements(
+  brand: BrandProfile
+): Record<LlmBrandTemplateToken, string> {
   return {
     '{{brand_context}}': formatBrandProfileForAi(brand),
     '{{brand_operator_name}}': notSet(escBrandField(brand.operatorName)),

@@ -52,10 +52,19 @@ export function OpportunityCard({
       </p>
 
       <footer className="flex items-center justify-end gap-1 border-t border-border/80 pt-2">
-        <IconButton icon={<Link2 size={14} />} label="Open linked outreach" tooltip="Linked" onClick={onOpenLinked} />
-        <IconButton icon={<ArrowUpRight size={14} />} label="Open opportunity" tooltip="Open" onClick={onOpen} />
+        <IconButton
+          icon={<Link2 size={14} />}
+          label="Open linked outreach"
+          tooltip="Linked"
+          onClick={onOpenLinked}
+        />
+        <IconButton
+          icon={<ArrowUpRight size={14} />}
+          label="Open opportunity"
+          tooltip="Open"
+          onClick={onOpen}
+        />
       </footer>
     </Card>
   );
 }
-

@@ -11,7 +11,10 @@ export function getWebOAuthRedirectUrl(pathSuffix: string): string | null {
  * Opens provider auth in a popup; the static callback page posts the final redirect URL back.
  * Resolves with the full callback URL (including ?code=…), or null if the user closed the window early.
  */
-export function launchBrowserOAuthWebAuthFlow(authUrl: string, redirectUri: string): Promise<string | null> {
+export function launchBrowserOAuthWebAuthFlow(
+  authUrl: string,
+  redirectUri: string
+): Promise<string | null> {
   return new Promise((resolve, reject) => {
     const origin = window.location.origin;
     let settled = false;

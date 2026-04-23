@@ -1,5 +1,8 @@
 import { CalendarCheck2 } from 'lucide-react';
-import { cockpitNavigationGroups, type DashboardSectionId } from '../../shared/config/dashboardNavigation';
+import {
+  cockpitNavigationGroups,
+  type DashboardSectionId
+} from '../../shared/config/dashboardNavigation';
 import { CockpitBrandContentWorkstreamSection } from './CockpitBrandContentWorkstreamSection';
 import { CockpitFocusEngine } from './CockpitFocusEngine';
 import { CockpitConnectionsWorkstreamSection } from './CockpitConnectionsWorkstreamSection';
@@ -10,7 +13,8 @@ import { CockpitWorkspaceLanesDetails } from './CockpitWorkspaceLanesDetails';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 import { MobileTabPageHeader } from './mobileTabPrimitives';
 
-const dashboardAreas = cockpitNavigationGroups[0]?.items.filter((item) => item.type === 'section') ?? [];
+const dashboardAreas =
+  cockpitNavigationGroups[0]?.items.filter((item) => item.type === 'section') ?? [];
 
 export interface CockpitDailyViewProps {
   snapshot: CockpitDailySnapshot;

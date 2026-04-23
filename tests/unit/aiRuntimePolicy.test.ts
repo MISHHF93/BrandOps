@@ -19,4 +19,3 @@ describe('aiRuntimePolicy', () => {
     expect(aiRuntimePolicy.allowUnsafeSiteAutomation).toBe(false);
   });
 });
-

@@ -13,7 +13,11 @@ const hasChromeStorage = () =>
  * `chrome.storage.local` when available; otherwise falls back to the in-memory guard
  * (dev builds and unit tests).
  */
-export const isBridgeNonceReplayed = async (nonce: string, ttlMs = 10 * 60 * 1000, now = Date.now()) => {
+export const isBridgeNonceReplayed = async (
+  nonce: string,
+  ttlMs = 10 * 60 * 1000,
+  now = Date.now()
+) => {
   const normalized = nonce.trim();
   if (!normalized) return true;
   if (!hasChromeStorage()) {

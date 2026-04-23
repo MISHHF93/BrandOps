@@ -45,8 +45,9 @@ export function FirstRunJourneyCard({
           <div>
             <p className="text-h3 text-text">Start here (30 seconds)</p>
             <p className="mt-1 leading-snug text-textMuted">
-              Read in <strong className="text-text">Pulse</strong> or <strong className="text-text">Today</strong>.
-              Execute in <strong className="text-text">Chat</strong>.
+              Read in <strong className="text-text">Pulse</strong> or{' '}
+              <strong className="text-text">Today</strong>. Execute in{' '}
+              <strong className="text-text">Chat</strong>.
             </p>
             <div className="mt-2.5 flex flex-wrap gap-1.5">
               <button

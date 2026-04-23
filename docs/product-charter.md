@@ -87,4 +87,3 @@ A technical AI systems architect, consultant, builder, or founder who wants to:
 - Do not build fragile site automation that depends on unsafe auto-click behavior.
 - Prioritize reminders, workflow management, local organization, and execution support.
 - Keep architecture ready for optional local intelligence scoring/prioritization/recommendations.
-

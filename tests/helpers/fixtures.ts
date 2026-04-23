@@ -3,9 +3,7 @@ import { seedData } from '../../src/modules/brandMemory/seed';
 import { BrandOpsData, IntegrationSource, SshTarget } from '../../src/types/domain';
 
 const shiftIso = (iso: string | undefined, minutes: number) =>
-  iso
-    ? new Date(new Date(iso).getTime() + minutes * 60 * 1000).toISOString()
-    : undefined;
+  iso ? new Date(new Date(iso).getTime() + minutes * 60 * 1000).toISOString() : undefined;
 
 const appendSuffix = (value: string, copy: number, index: number) =>
   `${value}-${copy + 1}-${index + 1}`;

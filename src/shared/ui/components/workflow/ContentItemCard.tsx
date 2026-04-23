@@ -56,7 +56,12 @@ export function ContentItemCard({
       <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border/80 pt-2">
         <span className="text-meta text-textSoft">Updated {updatedAt}</span>
         <div className="flex items-center gap-1">
-          <IconButton icon={<Copy size={14} />} label="Copy content" tooltip="Copy" onClick={onCopy} />
+          <IconButton
+            icon={<Copy size={14} />}
+            label="Copy content"
+            tooltip="Copy"
+            onClick={onCopy}
+          />
           <IconButton
             icon={<Layers2 size={14} />}
             label="Duplicate content"
@@ -81,4 +86,3 @@ export function ContentItemCard({
     </Card>
   );
 }
-

@@ -69,7 +69,10 @@ export function Tabs({
       role="tablist"
       aria-label={tabListLabel}
       onKeyDown={onKeyDown}
-      className={cn('inline-flex flex-wrap items-center gap-2 rounded-md bg-bgSubtle p-1', className)}
+      className={cn(
+        'inline-flex flex-wrap items-center gap-2 rounded-md bg-bgSubtle p-1',
+        className
+      )}
     >
       {items.map((item) => {
         const isActive = item.key === activeKey;

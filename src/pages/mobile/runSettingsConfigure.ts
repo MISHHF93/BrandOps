@@ -1,4 +1,7 @@
-import { executeAgentWorkspaceCommand, type AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
+import {
+  executeAgentWorkspaceCommand,
+  type AgentWorkspaceResult
+} from '../../services/agent/agentWorkspaceEngine';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 

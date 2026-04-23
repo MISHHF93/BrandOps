@@ -27,10 +27,7 @@ export function SettingsCockpitCapabilityDisclosure({ btnFocus }: { btnFocus: st
               <p className="mt-1.5 text-[10px] text-textSoft">
                 Primary: <span className="text-text">{appShellTabLabel(c.primaryTab)}</span>
                 {c.secondaryTabs.length > 0 ? (
-                  <>
-                    {' '}
-                    · Secondary: {c.secondaryTabs.map((t) => appShellTabLabel(t)).join(', ')}
-                  </>
+                  <> · Secondary: {c.secondaryTabs.map((t) => appShellTabLabel(t)).join(', ')}</>
                 ) : null}
               </p>
             </li>

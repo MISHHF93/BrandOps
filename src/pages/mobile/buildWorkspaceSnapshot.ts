@@ -12,8 +12,14 @@ import type {
 import type { MobileSettingsFullReadout } from './mobileSettingsReadout';
 import { buildMobileSettingsFullReadout } from './mobileSettingsReadout';
 import { buildCockpitIntelligenceExtras } from './cockpitSnapshot';
-import { buildIntelligenceRulesReadout, type MobileIntelligenceRulesReadout } from './intelligenceRulesReadout';
-import type { IntelligenceSignal, PipelineProjectionReadout } from '../../services/intelligence/localIntelligence';
+import {
+  buildIntelligenceRulesReadout,
+  type MobileIntelligenceRulesReadout
+} from './intelligenceRulesReadout';
+import type {
+  IntelligenceSignal,
+  PipelineProjectionReadout
+} from '../../services/intelligence/localIntelligence';
 import type { PulseTimelineRow } from './pulseTimeline';
 import { buildPulseTimeline } from './pulseTimeline';
 
@@ -352,7 +358,9 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
       { id: 'github', status: workspace.settings.syncHub.github.connectionStatus },
       { id: 'linkedin', status: workspace.settings.syncHub.linkedin.connectionStatus }
     ],
-    recentIntegrationSources: workspace.integrationHub.sources.slice(0, 5).map((source) => source.name),
+    recentIntegrationSources: workspace.integrationHub.sources
+      .slice(0, 5)
+      .map((source) => source.name),
     visualMode: workspace.settings.visualMode,
     motionMode: workspace.settings.motionMode,
     ambientFxEnabled: workspace.settings.ambientFxEnabled,

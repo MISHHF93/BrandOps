@@ -5,8 +5,16 @@ import type { CockpitPipelineSectionProps } from './cockpitSectionTypes';
 const PIPELINE_STRIP_ITEMS = [
   { kind: 'run' as const, label: 'Archive opportunity', phrase: 'archive opportunity' },
   { kind: 'run' as const, label: 'Restore opportunity', phrase: 'restore opportunity' },
-  { kind: 'prime' as const, label: 'Add contact', phrase: 'add contact: Alex Rivera, Northwind Labs, Founder' },
-  { kind: 'run' as const, label: 'Draft outreach', phrase: 'draft outreach: follow up on warm lead' },
+  {
+    kind: 'prime' as const,
+    label: 'Add contact',
+    phrase: 'add contact: Alex Rivera, Northwind Labs, Founder'
+  },
+  {
+    kind: 'run' as const,
+    label: 'Draft outreach',
+    phrase: 'draft outreach: follow up on warm lead'
+  },
   { kind: 'run' as const, label: 'Advance deal', phrase: 'update opportunity to proposal' }
 ] as const;
 
@@ -34,8 +42,8 @@ export const CockpitPipelineWorkstreamSection = ({
     </h3>
     <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
     <p className="mt-2 text-[10px] text-textSoft">
-      Pipeline lists are <strong className="text-textMuted">read-only digest</strong>. Stage changes and outreach run in{' '}
-      <strong className="text-text">Chat</strong> — not the Settings tab.
+      Pipeline lists are <strong className="text-textMuted">read-only digest</strong>. Stage changes
+      and outreach run in <strong className="text-text">Chat</strong> — not the Settings tab.
     </p>
     {onOpenPulse ? (
       <p className="mt-1.5 text-[10px] text-textMuted">
@@ -60,8 +68,8 @@ export const CockpitPipelineWorkstreamSection = ({
     />
     <p className="mt-1 text-[10px] text-textSoft">
       Archive / restore apply to the <strong className="text-textMuted">first active</strong> or{' '}
-      <strong className="text-textMuted">first archived</strong> opportunity in workspace order — refine in Chat if you
-      need a specific deal.
+      <strong className="text-textMuted">first archived</strong> opportunity in workspace order —
+      refine in Chat if you need a specific deal.
     </p>
 
     <div className="mt-3 space-y-3">
@@ -76,8 +84,9 @@ export const CockpitPipelineWorkstreamSection = ({
           Weighted projection
         </p>
         <p className="mt-1 text-[10px] leading-snug text-textMuted">
-          Open deals only (excludes won, lost, archived). <span className="text-textSoft">Weighted</span> is Σ value ×
-          confidence% — a sizing lens from the same rules as deal health, not a forecast.
+          Open deals only (excludes won, lost, archived).{' '}
+          <span className="text-textSoft">Weighted</span> is Σ value × confidence% — a sizing lens
+          from the same rules as deal health, not a forecast.
         </p>
         <div
           role="group"
@@ -122,11 +131,15 @@ export const CockpitPipelineWorkstreamSection = ({
         </div>
         {snapshot.pipelineSignals.length === 0 ? (
           <div className="mt-1 space-y-1">
-            <p className="text-[11px] text-textMuted">No active opportunities in the workspace yet.</p>
+            <p className="text-[11px] text-textMuted">
+              No active opportunities in the workspace yet.
+            </p>
             <p className="text-[11px] text-textMuted">
               In <strong className="text-text">Chat</strong>, add opportunities or run{' '}
-              <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">pipeline health</code> after you
-              have deals in motion.
+              <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">
+                pipeline health
+              </code>{' '}
+              after you have deals in motion.
             </p>
           </div>
         ) : (
@@ -175,7 +188,9 @@ export const CockpitPipelineWorkstreamSection = ({
                 <button
                   type="button"
                   disabled={commandBusy}
-                  onClick={() => primeChat(`add note: review outreach template "${row.name.replace(/"/g, "'")}"`)}
+                  onClick={() =>
+                    primeChat(`add note: review outreach template "${row.name.replace(/"/g, "'")}"`)
+                  }
                   className={`mt-2 ${rowChip(btnFocus)}`}
                 >
                   Open in Chat (draft note)
@@ -204,12 +219,16 @@ export const CockpitPipelineWorkstreamSection = ({
                   {row.status} · {formatPeekDue(row.loggedAt)}
                 </p>
                 {row.summaryPreview ? (
-                  <p className="mt-1 text-[10px] leading-snug text-textMuted">{row.summaryPreview}</p>
+                  <p className="mt-1 text-[10px] leading-snug text-textMuted">
+                    {row.summaryPreview}
+                  </p>
                 ) : null}
                 <button
                   type="button"
                   disabled={commandBusy}
-                  onClick={() => primeChat(`add note: outreach log — ${row.targetName} (${row.company})`)}
+                  onClick={() =>
+                    primeChat(`add note: outreach log — ${row.targetName} (${row.company})`)
+                  }
                   className={`mt-2 ${rowChip(btnFocus)}`}
                 >
                   Open in Chat (draft note)
@@ -224,7 +243,8 @@ export const CockpitPipelineWorkstreamSection = ({
       <div className="mt-3 border-t border-border/25 pt-3">
         <p className="text-[11px] font-medium text-textSoft">Opportunities in workspace</p>
         <p className="mt-0.5 text-[10px] text-textSoft">
-          Read-only peek. Agent stage updates still apply to the first active deal unless you name fields in Chat.
+          Read-only peek. Agent stage updates still apply to the first active deal unless you name
+          fields in Chat.
         </p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitOpportunityPeek.map((row) => (
@@ -254,7 +274,9 @@ export const CockpitPipelineWorkstreamSection = ({
                 <button
                   type="button"
                   disabled={commandBusy}
-                  onClick={() => primeChat(`draft outreach: follow up on ${row.company} re: ${row.name}`)}
+                  onClick={() =>
+                    primeChat(`draft outreach: follow up on ${row.company} re: ${row.name}`)
+                  }
                   className={rowChip(btnFocus)}
                 >
                   Open in Chat (outreach draft)

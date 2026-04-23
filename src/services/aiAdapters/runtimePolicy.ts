@@ -24,4 +24,3 @@ export const aiRuntimePolicy: AiRuntimePolicy = {
 
 export const isAiProviderEnabled = (providerId: AiProviderId): boolean =>
   aiRuntimePolicy.enabledProviders.includes(providerId);
-

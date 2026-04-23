@@ -24,11 +24,11 @@ BrandOps keeps your **workspace** (for example tasks, pipeline, content drafts, 
 
 BrandOps can use **OAuth 2.0 with PKCE** so you can sign in or sign up through:
 
-| Provider | What we call | Typical purposes in BrandOps |
-|----------|--------------|------------------------------|
-| Google | Authorization, token, OpenID userinfo endpoints | Sign-in; display name, email, avatar where granted by scopes |
-| GitHub | Authorization, token, user and email APIs | Sign-in; display name, email, avatar where granted by scopes |
-| LinkedIn | Authorization, token, userinfo API | Sign-in; display name, email, avatar where granted by scopes |
+| Provider | What we call                                    | Typical purposes in BrandOps                                 |
+| -------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| Google   | Authorization, token, OpenID userinfo endpoints | Sign-in; display name, email, avatar where granted by scopes |
+| GitHub   | Authorization, token, user and email APIs       | Sign-in; display name, email, avatar where granted by scopes |
+| LinkedIn | Authorization, token, userinfo API              | Sign-in; display name, email, avatar where granted by scopes |
 
 **Tokens** (access token, and refresh token if the provider returns one) and **minimal profile fields** used for “Signed in as …” are stored **locally** in extension storage. We do **not** send those tokens to a BrandOps backend in the default build.
 

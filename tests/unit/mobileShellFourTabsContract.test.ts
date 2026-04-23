@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const read = (relativePath: string) =>
-  readFileSync(resolve(process.cwd(), relativePath), 'utf8');
+const read = (relativePath: string) => readFileSync(resolve(process.cwd(), relativePath), 'utf8');
 
 describe('MobileApp shell tab wiring (contract)', () => {
   const mobileApp = read('src/pages/mobile/mobileApp.tsx');
@@ -92,7 +91,7 @@ describe('MobileApp shell tab wiring (contract)', () => {
   });
 
   it('threads getAgentCommandLock into the command palette for accurate agent lock copy', () => {
-    expect(mobileApp).toContain("getAgentCommandLock(launchAccess, activeTab)");
+    expect(mobileApp).toContain('getAgentCommandLock(launchAccess, activeTab)');
     expect(mobileApp).toContain('agentLockReason={agentCommandLock}');
   });
 });

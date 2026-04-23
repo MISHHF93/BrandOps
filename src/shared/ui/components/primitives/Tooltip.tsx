@@ -33,4 +33,3 @@ export function Tooltip({ content, children, side = 'top' }: TooltipProps) {
     </span>
   );
 }
-

@@ -238,7 +238,8 @@ const buildDraftBlocks = (data: BrandOpsData): DraftBlock[] => {
     minUnits: 0,
     flexible: true,
     sectionId: 'today',
-    objective: 'Absorb interruptions, breaks, overruns, and recovery without destroying the whole day.',
+    objective:
+      'Absorb interruptions, breaks, overruns, and recovery without destroying the whole day.',
     syncTargets: ['local-reminder']
   });
 
@@ -290,7 +291,9 @@ const compressBlocks = (blocks: DraftBlock[], totalUnits: number) => {
 
     availableFlexibleUnits = Math.max(
       totalUnits -
-        nextBlocks.filter((block) => !block.flexible).reduce((total, block) => total + block.units, 0),
+        nextBlocks
+          .filter((block) => !block.flexible)
+          .reduce((total, block) => total + block.units, 0),
       0
     );
   }

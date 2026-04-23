@@ -7,7 +7,7 @@ This document maps **common chatbot building blocks** to how BrandOps implements
 A chatbot, in the product sense, is:
 
 1. **Conversational surface** — a thread where the user and the system take turns.
-2. **Intent handling** — the system infers *what* the user wants from text (rules, model, or both).
+2. **Intent handling** — the system infers _what_ the user wants from text (rules, model, or both).
 3. **Execution** — something happens in the product (read/write state, call APIs, return an answer).
 4. **Memory** — short-term (the thread) and longer-term (profile, workspace data).
 5. **Feedback** — the user sees outcomes, errors, and progress clearly.
@@ -16,16 +16,16 @@ A product can be a strong “agent” without a large language model (LLM) on ev
 
 ## How BrandOps maps to those fundamentals
 
-| Building block | BrandOps implementation |
-|----------------|-------------------------|
-| Conversational surface | [`MobileApp`](../src/pages/mobile/mobileApp.tsx) (Chat tab), persisted thread in `localStorage` |
-| Intent handling (v1) | **Deterministic** route map: [`src/services/agent/intent/commandIntent.ts`](../src/services/agent/intent/commandIntent.ts) |
-| Execution | **Single command engine**: [`executeAgentWorkspaceCommand`](../src/services/agent/agentWorkspaceEngine.ts) (notes, publishing, CRM, content, config, channels, etc.) |
-| Long-term memory | Workspace: [`src/services/storage/storage.ts`](../src/services/storage/storage.ts) (`BrandOpsData`) |
-| Thread memory | Client-side chat history + “recent command” chips in `MobileApp` |
-| Feedback | Structured `AgentWorkspaceResult` (`ok`, `action`, `summary`); **audit** on `BrandOpsData.agentAudit` |
-| Multi-channel input | Service worker: [`src/background/index.ts`](../src/background/index.ts); proxy: [`scripts/bridge-proxy.mjs`](../scripts/bridge-proxy.mjs) |
-| Optional LLM | [`src/services/llm/providerAdapter.ts`](../src/services/llm/providerAdapter.ts) — **not** the primary path for workspace mutations; command execution is authoritative for state changes. |
+| Building block         | BrandOps implementation                                                                                                                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Conversational surface | [`MobileApp`](../src/pages/mobile/mobileApp.tsx) (Chat tab), persisted thread in `localStorage`                                                                                           |
+| Intent handling (v1)   | **Deterministic** route map: [`src/services/agent/intent/commandIntent.ts`](../src/services/agent/intent/commandIntent.ts)                                                                |
+| Execution              | **Single command engine**: [`executeAgentWorkspaceCommand`](../src/services/agent/agentWorkspaceEngine.ts) (notes, publishing, CRM, content, config, channels, etc.)                      |
+| Long-term memory       | Workspace: [`src/services/storage/storage.ts`](../src/services/storage/storage.ts) (`BrandOpsData`)                                                                                       |
+| Thread memory          | Client-side chat history + “recent command” chips in `MobileApp`                                                                                                                          |
+| Feedback               | Structured `AgentWorkspaceResult` (`ok`, `action`, `summary`); **audit** on `BrandOpsData.agentAudit`                                                                                     |
+| Multi-channel input    | Service worker: [`src/background/index.ts`](../src/background/index.ts); proxy: [`scripts/bridge-proxy.mjs`](../scripts/bridge-proxy.mjs)                                                 |
+| Optional LLM           | [`src/services/llm/providerAdapter.ts`](../src/services/llm/providerAdapter.ts) — **not** the primary path for workspace mutations; command execution is authoritative for state changes. |
 
 ## Command-first “agent” vs free-form LLM chat
 
@@ -38,6 +38,6 @@ See [../AI_CHATBOT_FULL_MIGRATION_PLAN.md](../AI_CHATBOT_FULL_MIGRATION_PLAN.md)
 
 ## Reading order for engineers
 
-1. [AI_CHATBOT_FUNDAMENTALS.md](./AI_CHATBOT_FUNDAMENTALS.md) (this file)  
-2. [APPLICATION_WIRING_STATUS.md](../APPLICATION_WIRING_STATUS.md)  
-3. [AI_CHATBOT_FULL_MIGRATION_PLAN.md](../AI_CHATBOT_FULL_MIGRATION_PLAN.md)  
+1. [AI_CHATBOT_FUNDAMENTALS.md](./AI_CHATBOT_FUNDAMENTALS.md) (this file)
+2. [APPLICATION_WIRING_STATUS.md](../APPLICATION_WIRING_STATUS.md)
+3. [AI_CHATBOT_FULL_MIGRATION_PLAN.md](../AI_CHATBOT_FULL_MIGRATION_PLAN.md)

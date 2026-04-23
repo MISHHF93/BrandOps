@@ -1,6 +1,8 @@
 import type { BrandOpsData } from '../../types/domain';
 
-function envString(key: 'VITE_GOOGLE_CLIENT_ID' | 'VITE_GITHUB_CLIENT_ID' | 'VITE_LINKEDIN_CLIENT_ID'): string {
+function envString(
+  key: 'VITE_GOOGLE_CLIENT_ID' | 'VITE_GITHUB_CLIENT_ID' | 'VITE_LINKEDIN_CLIENT_ID'
+): string {
   const v = import.meta.env[key];
   return typeof v === 'string' ? v.trim() : '';
 }
@@ -8,7 +10,9 @@ function envString(key: 'VITE_GOOGLE_CLIENT_ID' | 'VITE_GITHUB_CLIENT_ID' | 'VIT
 /** Optional IDs from `public/brandops-oauth-public.json` (no rebuild; set after deploy). */
 let runtimePublicOverrides: { google?: string; github?: string; linkedin?: string } = {};
 
-export function setOAuthClientIdRuntimeOverrides(next: Partial<typeof runtimePublicOverrides>): void {
+export function setOAuthClientIdRuntimeOverrides(
+  next: Partial<typeof runtimePublicOverrides>
+): void {
   runtimePublicOverrides = { ...runtimePublicOverrides, ...next };
 }
 

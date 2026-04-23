@@ -13,7 +13,9 @@ export const LEGACY_TO_CANONICAL_DASHBOARD_SECTIONS: Record<string, DashboardSec
 };
 
 /** Optional link from workspace modules (modules.ts) to consolidated dashboard sections. */
-export const workspaceModuleToDashboardSection: Partial<Record<WorkspaceModuleId, DashboardSectionId>> = {
+export const workspaceModuleToDashboardSection: Partial<
+  Record<WorkspaceModuleId, DashboardSectionId>
+> = {
   'brand-vault': 'brand-content',
   'content-library': 'brand-content',
   'publishing-queue': 'brand-content',
@@ -79,12 +81,14 @@ export const cockpitNavigationGroups: Array<{
   },
   {
     title: 'Other windows',
-    description: 'Same five-tab shell in another HTML entry (extension packaging): Integrations options page, Help, or primary mobile with Chat selected.',
+    description:
+      'Same five-tab shell in another HTML entry (extension packaging): Integrations options page, Help, or primary mobile with Chat selected.',
     items: [
       {
         id: 'nav-integrations',
         label: 'Integrations page',
-        description: 'Packaged page (MV3 options_ui): sources, providers, and Settings in the same shell.',
+        description:
+          'Packaged page (MV3 options_ui): sources, providers, and Settings in the same shell.',
         type: 'surface',
         target: 'integrations'
       },

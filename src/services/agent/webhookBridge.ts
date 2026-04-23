@@ -32,7 +32,10 @@ const canonicalizeEnvelope = (envelope: UnsignedWebhookBridgeEnvelope) =>
     payload: envelope.payload
   });
 
-const toHex = (bytes: Uint8Array) => Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+const toHex = (bytes: Uint8Array) =>
+  Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 
 const fromHex = (value: string) => {
   const normalized = value.trim().toLowerCase();
@@ -61,13 +64,10 @@ const toUnsignedEnvelope = (envelope: WebhookBridgeEnvelope): UnsignedWebhookBri
 
 const importHmacKey = async (secret: string) => {
   const keyBytes = encoder.encode(secret);
-  return crypto.subtle.importKey(
-    'raw',
-    keyBytes,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify']
-  );
+  return crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, [
+    'sign',
+    'verify'
+  ]);
 };
 
 export const signWebhookBridgeEnvelope = async (

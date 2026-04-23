@@ -36,7 +36,10 @@ export const getOAuthRedirectUrl = (pathSuffix: string): string | null => {
 };
 
 /** Extension: chrome.identity flow. Browser: popup + /oauth/*.html callback + postMessage. */
-export async function launchOAuthWebAuthFlow(authUrl: string, redirectUri: string): Promise<string | null> {
+export async function launchOAuthWebAuthFlow(
+  authUrl: string,
+  redirectUri: string
+): Promise<string | null> {
   assertLegacyOAuthSyncEnabled('OAuth PKCE flow');
   if (isExtensionIdentityAvailable()) {
     const url = await chrome.identity.launchWebAuthFlow({

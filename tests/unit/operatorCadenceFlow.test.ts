@@ -35,8 +35,7 @@ describe('operatorCadenceFlow', () => {
     ).toBe(true);
     expect(
       digest.reminderCoverage.some(
-        (reminder) =>
-          reminder.id.startsWith('cadence-') && reminder.channel === 'browser'
+        (reminder) => reminder.id.startsWith('cadence-') && reminder.channel === 'browser'
       )
     ).toBe(true);
   });
@@ -64,15 +63,13 @@ describe('operatorCadenceFlow', () => {
     const digest = operatorCadenceFlow.build(data, new Date('2026-04-11T12:00:00.000Z'));
 
     expect(digest.artifactSummary).toContain('Artifact logging is off');
-    expect(
-      digest.reminderCoverage.some((reminder) => reminder.id.startsWith('cadence-'))
-    ).toBe(false);
+    expect(digest.reminderCoverage.some((reminder) => reminder.id.startsWith('cadence-'))).toBe(
+      false
+    );
     expect(digest.reminderCoverage.some((reminder) => reminder.channel === 'browser')).toBe(true);
   });
 
   it('builds stable source ids for synced cadence blocks', () => {
-    expect(buildCadenceSourceId('2026-04-11', 'Deep work 1')).toBe(
-      '2026-04-11::Deep work 1'
-    );
+    expect(buildCadenceSourceId('2026-04-11', 'Deep work 1')).toBe('2026-04-11::Deep work 1');
   });
 });

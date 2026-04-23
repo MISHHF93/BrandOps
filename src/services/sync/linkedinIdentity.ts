@@ -1,9 +1,5 @@
 /** Quarantined non-launch OAuth sync connector. Guarded by `VITE_ENABLE_LEGACY_OAUTH_SYNC`. */
-import type {
-  BrandOpsData,
-  LinkedInIdentityProfile,
-  LinkedInOAuthState
-} from '../../types/domain';
+import type { BrandOpsData, LinkedInIdentityProfile, LinkedInOAuthState } from '../../types/domain';
 import {
   createCodeChallenge,
   getOAuthRedirectUrl,
@@ -182,9 +178,7 @@ export const linkedinIdentitySync = {
 
     if (returnedError) {
       const desc = result.searchParams.get('error_description');
-      throw new Error(
-        `LinkedIn authorization failed: ${returnedError}${desc ? ` — ${desc}` : ''}`
-      );
+      throw new Error(`LinkedIn authorization failed: ${returnedError}${desc ? ` — ${desc}` : ''}`);
     }
 
     if (!code || returnedState !== state) {

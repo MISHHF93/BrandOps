@@ -7,8 +7,15 @@ import {
 
 const SECTION_ITEMS =
   cockpitNavigationGroups[0]?.items.filter(
-    (item): item is { id: string; label: string; description: string; type: 'section'; target: DashboardSectionId } =>
-      item.type === 'section'
+    (
+      item
+    ): item is {
+      id: string;
+      label: string;
+      description: string;
+      type: 'section';
+      target: DashboardSectionId;
+    } => item.type === 'section'
   ) ?? [];
 
 export interface CockpitWorkstreamBarProps {

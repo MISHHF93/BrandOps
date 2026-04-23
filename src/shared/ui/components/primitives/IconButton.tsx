@@ -36,4 +36,3 @@ export function IconButton({
   if (!tooltip) return button;
   return <Tooltip content={tooltip}>{button}</Tooltip>;
 }
-

@@ -43,7 +43,9 @@ const normalizeAuth = (
   tokenType: token.token_type ?? previousAuth.tokenType ?? 'Bearer'
 });
 
-const fetchGoogleUserinfo = async (accessToken: string): Promise<LinkedInIdentityProfile | undefined> => {
+const fetchGoogleUserinfo = async (
+  accessToken: string
+): Promise<LinkedInIdentityProfile | undefined> => {
   const response = await fetch(GOOGLE_USERINFO, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });

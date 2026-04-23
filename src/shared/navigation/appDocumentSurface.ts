@@ -19,12 +19,7 @@ export type AppDocumentSurfaceId = 'mobile' | 'welcome' | 'dashboard' | 'integra
 export function mapDocumentSurfaceToAgentSource(
   surface: string | undefined
 ): 'chatbot-web' | 'chatbot-mobile' {
-  if (
-    surface === 'mobile' ||
-    surface === 'chatbot' ||
-    surface === undefined ||
-    surface === ''
-  ) {
+  if (surface === 'mobile' || surface === 'chatbot' || surface === undefined || surface === '') {
     return 'chatbot-mobile';
   }
   return 'chatbot-web';

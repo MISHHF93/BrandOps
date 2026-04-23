@@ -47,7 +47,11 @@ describe('buildPulseTimeline', () => {
       ...base,
       followUps: base.followUps.map((f, i) => (i === 0 ? { ...f, completed: true } : f))
     };
-    const ids = new Set(buildPulseTimeline(w).filter((r) => r.kind === 'follow-up').map((r) => r.id));
+    const ids = new Set(
+      buildPulseTimeline(w)
+        .filter((r) => r.kind === 'follow-up')
+        .map((r) => r.id)
+    );
     expect(ids.has(`fu-${first!.id}`)).toBe(false);
   });
 });

@@ -80,7 +80,9 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
     overlayContactInsights: ov.showContactInsights,
     automationRuleCount: rules.length,
     automationRulesSummary:
-      rules.length === 0 ? '—' : rules.map((r) => (r.enabled ? r.name : `${r.name} (off)`)).join(', '),
+      rules.length === 0
+        ? '—'
+        : rules.map((r) => (r.enabled ? r.name : `${r.name} (off)`)).join(', '),
     brandVoiceGuidePreview: clip(workspace.brand.voiceGuide, 100)
   };
 }

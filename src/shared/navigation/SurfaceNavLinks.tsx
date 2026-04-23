@@ -11,8 +11,7 @@ import {
   hrefSignUp
 } from './navigationIntents';
 
-const linkClass =
-  'font-medium text-textMuted hover:text-text underline-offset-2 hover:underline';
+const linkClass = 'font-medium text-textMuted hover:text-text underline-offset-2 hover:underline';
 
 export interface SurfaceNavLinksProps {
   className?: string;
@@ -60,7 +59,11 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       <a className={linkClass} href={integrationsTabHref} title="mobile.html?section=integrations">
         Integrations tab
       </a>
-      <a className={linkClass} href={integrationsHubHref} title="integrations.html — extension hub / options">
+      <a
+        className={linkClass}
+        href={integrationsHubHref}
+        title="integrations.html — extension hub / options"
+      >
         Integrations page
       </a>
       <a className={linkClass} href={settingsHref}>

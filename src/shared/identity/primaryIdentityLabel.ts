@@ -7,10 +7,7 @@ export function getPrimaryIdentityLabel(data: BrandOpsData): string | null {
 
   const pickRow = () => {
     const explicit = data.settings.primaryIdentityProvider;
-    if (
-      explicit &&
-      hub[explicit].connectionStatus === 'connected'
-    ) {
+    if (explicit && hub[explicit].connectionStatus === 'connected') {
       return hub[explicit];
     }
     const connected = order

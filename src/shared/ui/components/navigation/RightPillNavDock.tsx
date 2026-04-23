@@ -138,8 +138,8 @@ export function RightPillNavDock({
 
   const closedLabel =
     closedFocusLabel ??
-    flatItems.find((entry) => entry.item.type === 'section' && entry.item.target === 'today')
-      ?.item.label ??
+    flatItems.find((entry) => entry.item.type === 'section' && entry.item.target === 'today')?.item
+      .label ??
     'Navigation';
 
   let visualIndex = -1;
@@ -147,11 +147,7 @@ export function RightPillNavDock({
   return (
     <>
       {menuOpen ? (
-        <div
-          className="bo-navdock-backdrop"
-          aria-hidden
-          onClick={() => setMenuOpen(false)}
-        />
+        <div className="bo-navdock-backdrop" aria-hidden onClick={() => setMenuOpen(false)} />
       ) : null}
       <aside
         className={`bo-navdock-anchor ${menuOpen ? 'bo-navdock-anchor--open' : ''}`}

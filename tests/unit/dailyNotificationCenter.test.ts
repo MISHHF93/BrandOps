@@ -32,7 +32,8 @@ describe('dailyNotificationCenter', () => {
     data.settings.notificationCenter.maxDailyTasks = 2;
     data.settings.notificationCenter.workdayStartHour = 8;
     data.settings.notificationCenter.workdayEndHour = 18;
-    data.settings.notificationCenter.roleContext = 'AI operator covering technical and managerial execution.';
+    data.settings.notificationCenter.roleContext =
+      'AI operator covering technical and managerial execution.';
     data.settings.notificationCenter.promptTemplate = [
       'Role={{role_context}}',
       'Model={{preferred_model}}',
@@ -76,7 +77,9 @@ describe('dailyNotificationCenter', () => {
     expect(digest.technicalActions.length).toBeLessThanOrEqual(2);
     expect(digest.datasetActions.length).toBeGreaterThan(0);
     expect(scheduledHours).toBe(10);
-    expect(digest.promptPreview).toContain('AI operator covering technical and managerial execution.');
+    expect(digest.promptPreview).toContain(
+      'AI operator covering technical and managerial execution.'
+    );
     expect(digest.promptPreview).toContain('Managerial=65');
     expect(digest.promptPreview).toContain('Technical=35');
     expect(digest.promptPreview).not.toContain('{{');

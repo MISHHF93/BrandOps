@@ -3,7 +3,12 @@ import type { IntelligenceSignal } from '../../services/intelligence/localIntell
 export const formatPeekDue = (iso: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  return d.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
 };
 
 export const pulseTile = (label: string, value: string | number, sub?: string) => (
@@ -14,7 +19,12 @@ export const pulseTile = (label: string, value: string | number, sub?: string) =
   </div>
 );
 
-export const signalList = (title: string, items: IntelligenceSignal[], empty: string, emptyHint?: string) => (
+export const signalList = (
+  title: string,
+  items: IntelligenceSignal[],
+  empty: string,
+  emptyHint?: string
+) => (
   <div>
     <p className="text-label font-semibold text-text">{title}</p>
     {items.length === 0 ? (

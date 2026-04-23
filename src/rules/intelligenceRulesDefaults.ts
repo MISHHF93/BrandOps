@@ -1,4 +1,7 @@
-import { INTELLIGENCE_RULES_SCHEMA_VERSION, type IntelligenceRulesPack } from './intelligenceRulesTypes';
+import {
+  INTELLIGENCE_RULES_SCHEMA_VERSION,
+  type IntelligenceRulesPack
+} from './intelligenceRulesTypes';
 
 /** L1 baseline — matches pre–rule-pack heuristics in `localIntelligence.ts`. */
 export const INTELLIGENCE_RULES_DEFAULTS: IntelligenceRulesPack = {

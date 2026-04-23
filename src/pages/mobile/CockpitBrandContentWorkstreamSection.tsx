@@ -6,7 +6,11 @@ const BRAND_STRIP_ITEMS = [
   { kind: 'prime' as const, label: 'Add content', phrase: 'add content: weekly insight memo' },
   { kind: 'run' as const, label: 'Duplicate first item', phrase: 'duplicate content' },
   { kind: 'run' as const, label: 'Archive first item', phrase: 'archive content' },
-  { kind: 'run' as const, label: 'Draft post', phrase: 'draft post: weekly insight from the workspace' },
+  {
+    kind: 'run' as const,
+    label: 'Draft post',
+    phrase: 'draft post: weekly insight from the workspace'
+  },
   { kind: 'run' as const, label: 'Reschedule posts', phrase: 'reschedule posts to friday 11am' }
 ] as const;
 
@@ -34,8 +38,8 @@ export const CockpitBrandContentWorkstreamSection = ({
     </h3>
     <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
     <p className="mt-2 text-[10px] text-textSoft">
-      Brand and publishing rows are <strong className="text-textMuted">read-only digest</strong>. Drafts and updates run
-      in <strong className="text-text">Chat</strong> — not Settings.
+      Brand and publishing rows are <strong className="text-textMuted">read-only digest</strong>.
+      Drafts and updates run in <strong className="text-text">Chat</strong> — not Settings.
     </p>
     {onOpenPulse ? (
       <p className="mt-1.5 text-[10px] text-textMuted">
@@ -50,8 +54,8 @@ export const CockpitBrandContentWorkstreamSection = ({
       </p>
     ) : null}
     <p className="mt-2 text-textSoft">
-      Publishing queue: <span className="text-text">{snapshot.publishingQueue}</span> items · Queued or due-soon:{' '}
-      <span className="text-text">{snapshot.queuedPublishing}</span>
+      Publishing queue: <span className="text-text">{snapshot.publishingQueue}</span> items · Queued
+      or due-soon: <span className="text-text">{snapshot.queuedPublishing}</span>
     </p>
     {snapshot.nextPublishingHint ? (
       <p className="mt-1 text-[11px] text-textMuted">Next: {snapshot.nextPublishingHint}</p>
@@ -65,8 +69,9 @@ export const CockpitBrandContentWorkstreamSection = ({
       items={BRAND_STRIP_ITEMS}
     />
     <p className="mt-1 text-[10px] text-textSoft">
-      Duplicate / archive in the strip target the <strong className="text-textMuted">first active</strong> library item;
-      use row buttons to prime lines that name a specific title.
+      Duplicate / archive in the strip target the{' '}
+      <strong className="text-textMuted">first active</strong> library item; use row buttons to
+      prime lines that name a specific title.
     </p>
     {(() => {
       const bv = snapshot.cockpitBrandVaultReadout;
@@ -78,9 +83,12 @@ export const CockpitBrandContentWorkstreamSection = ({
       if (!hasVaultPeek) return null;
       return (
         <div className="mt-3 rounded-lg border border-primary/25 bg-primary/5 p-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">Brand vault (read-only)</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+            Brand vault (read-only)
+          </p>
           <p className="mt-1 text-[10px] text-textMuted">
-            {bv.filledListFieldsCount} list section{bv.filledListFieldsCount === 1 ? '' : 's'} with content
+            {bv.filledListFieldsCount} list section{bv.filledListFieldsCount === 1 ? '' : 's'} with
+            content
           </p>
           {bv.positioningPreview ? (
             <p className="mt-2 text-[11px] leading-snug text-textMuted">{bv.positioningPreview}</p>
@@ -127,7 +135,9 @@ export const CockpitBrandContentWorkstreamSection = ({
                 <button
                   type="button"
                   disabled={commandBusy}
-                  onClick={() => primeChat(`add note: refine content "${row.title.replace(/"/g, "'")}"`)}
+                  onClick={() =>
+                    primeChat(`add note: refine content "${row.title.replace(/"/g, "'")}"`)
+                  }
                   className={rowChip(btnFocus)}
                 >
                   Open in Chat (content note)
@@ -171,7 +181,9 @@ export const CockpitBrandContentWorkstreamSection = ({
               <button
                 type="button"
                 disabled={commandBusy}
-                onClick={() => primeChat(`update publishing: ${row.title.replace(/"/g, "'")} checklist ready`)}
+                onClick={() =>
+                  primeChat(`update publishing: ${row.title.replace(/"/g, "'")} checklist ready`)
+                }
                 className={`mt-2 ${rowChip(btnFocus)}`}
               >
                 Open in Chat (publishing command)

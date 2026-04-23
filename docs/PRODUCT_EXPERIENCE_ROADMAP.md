@@ -1,6 +1,6 @@
 # BrandOps — $100M product experience roadmap
 
-**Purpose.** This document is the experience strategy layer: what “great” means, how we phase investment, and how we measure whether BrandOps *earns* daily use and word-of-mouth. It is not a feature laundry list. Pair with [`BRANDOPS_USER_EXPERIENCE.md`](../BRANDOPS_USER_EXPERIENCE.md) (IA and flows) and [`product-charter.md`](./product-charter.md) (product intent).
+**Purpose.** This document is the experience strategy layer: what “great” means, how we phase investment, and how we measure whether BrandOps _earns_ daily use and word-of-mouth. It is not a feature laundry list. Pair with [`BRANDOPS_USER_EXPERIENCE.md`](../BRANDOPS_USER_EXPERIENCE.md) (IA and flows) and [`product-charter.md`](./product-charter.md) (product intent).
 
 **What “$100M” means here.** A bar for **clarity, trust, and repeat value** you would bet a serious business on: operators trust the system, the core loop is obvious, surfaces feel fast and coherent, and every major action has a clear story (why, what changes, what’s next). Scale follows retention and confidence—not vanity metrics.
 
@@ -14,19 +14,19 @@
 - **Act** from Chat and affordances that route into the same command engine.
 - **Trust** that the workspace, sensitive copy, and controls behave predictably (local-first contract, no surprise).
 
-**Strategic bet.** BrandOps wins as the **default command-and-state surface** for a serious LinkedIn and pipeline practice—*without* making users depend on cloud models for the core.
+**Strategic bet.** BrandOps wins as the **default command-and-state surface** for a serious LinkedIn and pipeline practice—_without_ making users depend on cloud models for the core.
 
 ---
 
 ## 2. Success metrics (how we know it’s working)
 
-| Layer | Indicators (examples) |
-|--------|------------------------|
-| **Habit** | WAU/MAU, days active per week, sessions that cross Pulse → Chat or Today → Chat |
+| Layer                  | Indicators (examples)                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| **Habit**              | WAU/MAU, days active per week, sessions that cross Pulse → Chat or Today → Chat         |
 | **Command confidence** | Successful send → “done” outcome rate; time-to-next-command; repeat use of same intents |
-| **Trust** | Support themes around data loss, confusion, “what happened?” (should fall over time) |
-| **Perceived quality** | Task completion without backtracking; NPS/PMF survey after stable cohorts (optional) |
-| **Performance** | P95 time to interactive on shell surfaces; command feedback latency (perceived) |
+| **Trust**              | Support themes around data loss, confusion, “what happened?” (should fall over time)    |
+| **Perceived quality**  | Task completion without backtracking; NPS/PMF survey after stable cohorts (optional)    |
+| **Performance**        | P95 time to interactive on shell surfaces; command feedback latency (perceived)         |
 
 **Implemented locally (on-device, no network).** The shell records privacy-preserving aggregates in extension storage (key `product-usage-v1`) and shows them under **Settings → Advanced → Local product metrics**: active calendar days in rolling 7/30, navigations to **Chat** from Pulse/Today/Integrations/Settings, command ok/fail counts and success rate, rolling median time between command completions, ~p95 command round-trip and first shell-ready time. This maps the table above to numbers you can inspect without a third-party analytics stack. Cohort NPS, support-ticket theming, and true WAU/MAU across users still need external or manual processes. Tie every major initiative in §4 to at least one row above.
 
@@ -50,7 +50,7 @@ Phases are **sequenced by leverage**: earlier items unlock retention and clarity
 
 ### Phase A — Foundation of trust and loop closure (0–1 quarter)
 
-**Outcome:** A new user can orient, act once, and see the workspace *reflect* that act without doubt.
+**Outcome:** A new user can orient, act once, and see the workspace _reflect_ that act without doubt.
 
 - **Command loop** — Consistent post-send feedback, failure recovery, and “what you can do next” in Chat (and palette where relevant).
 - **Truth in the shell** — Pulse/Today data reflects the same rules as the engine; no contradictory labels between tabs.
@@ -62,7 +62,7 @@ Phases are **sequenced by leverage**: earlier items unlock retention and clarity
 
 ### Phase B — Core habit and “premium” feel (1–2 quarters)
 
-**Outcome:** The product *feels* like a product—speed perception, microcopy, motion, and empty states reinforce habit, not ornament.
+**Outcome:** The product _feels_ like a product—speed perception, microcopy, motion, and empty states reinforce habit, not ornament.
 
 - **Habit nudges** — Thoughtful first-run and return journeys without nagging; optional digest of “what changed” (Pulse/Today) tied to real data.
 - **Speed perception** — Optimistic UI only where truth allows; indeterminate and explicit progress for work that takes time; keep Chat responsive while work runs.
@@ -78,7 +78,7 @@ Phases are **sequenced by leverage**: earlier items unlock retention and clarity
 - **Intelligence with boundaries** — Optional layers (e.g. rules, local or remote) with explicit toggles, audit copy, and fallbacks in [`intelligence-rules-remote-layers.md`](./intelligence-rules-remote-layers.md) direction.
 - **Role-ready workflows** — Saved command packs, recommended sequences for publishing vs pipeline vs outreach (still one engine).
 - **Platform surfaces** — Where the charter allows, companion flows (e.g. LinkedIn context) that return value to the same workspace, not a parallel product.
-- **Distribution** — Store listing, onboarding, and help that teach the *model* in under two minutes (orient → act → see result).
+- **Distribution** — Store listing, onboarding, and help that teach the _model_ in under two minutes (orient → act → see result).
 
 **Exit criteria (examples).** Referral and organic growth signals; feature retention on optional intelligence; support volume stable or down per user.
 
@@ -105,12 +105,12 @@ Phases are **sequenced by leverage**: earlier items unlock retention and clarity
 
 ## 6. Dependencies and risks
 
-| Risk | Mitigation |
-|------|------------|
-| **Trust erosion** (data surprise) | One command engine, one storage story, confirm destructive paths, test export round-trips |
-| **Cognitive load** (too many surfaces) | IA discipline per `one-pager-ia-and-surface-map.md` and `BRANDOPS_USER_EXPERIENCE.md` |
-| **Performance** | Budgets for shell; avoid blocking UI on long work; document heavy paths |
-| **Scope creep** | Every initiative names pillar(s) in §3 and metrics in §2 |
+| Risk                                   | Mitigation                                                                                |
+| -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Trust erosion** (data surprise)      | One command engine, one storage story, confirm destructive paths, test export round-trips |
+| **Cognitive load** (too many surfaces) | IA discipline per `one-pager-ia-and-surface-map.md` and `BRANDOPS_USER_EXPERIENCE.md`     |
+| **Performance**                        | Budgets for shell; avoid blocking UI on long work; document heavy paths                   |
+| **Scope creep**                        | Every initiative names pillar(s) in §3 and metrics in §2                                  |
 
 ---
 

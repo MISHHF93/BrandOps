@@ -11,7 +11,10 @@ import { MobileIntegrationsView } from '../../src/pages/mobile/MobileIntegration
 import { MobileSettingsView } from '../../src/pages/mobile/MobileSettingsView';
 import { PulseTimelineView } from '../../src/pages/mobile/PulseTimelineView';
 import { buildWorkspaceSnapshot } from '../../src/pages/mobile/buildWorkspaceSnapshot';
-import { initIntelligenceRulesFromRemote, resetIntelligenceRulesForTests } from '../../src/rules/intelligenceRulesRuntime';
+import {
+  initIntelligenceRulesFromRemote,
+  resetIntelligenceRulesForTests
+} from '../../src/rules/intelligenceRulesRuntime';
 import type { ChatMessage } from '../../src/pages/mobile/MobileChatView';
 import { cloneDemoSampleData, cloneSeedData } from '../helpers/fixtures';
 
@@ -253,7 +256,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     );
     expect(html).toContain('aria-label="Settings"');
     expect(html).toContain('Settings — you and your workspace');
-    expect(html).toContain('You and this workspace — account, trust, cadence, export. To wire Notion, OAuth, or sources, use Integrations.');
+    expect(html).toContain(
+      'You and this workspace — account, trust, cadence, export. To wire Notion, OAuth, or sources, use Integrations.'
+    );
     expect(html).toContain('Workspace snapshot');
     expect(html).toContain('Read-only');
     expect(html).toContain('Profile (saved)');

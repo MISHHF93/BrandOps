@@ -64,10 +64,7 @@ export const defaultCompanionFormState = (): CompanionFormState => ({
   linkedOpportunityId: ''
 });
 
-export const normalizeCompanionForm = (
-  form: CompanionFormState,
-  now = new Date()
-) => ({
+export const normalizeCompanionForm = (form: CompanionFormState, now = new Date()) => ({
   ...form,
   note: trimValue(form.note, MAX_FIELD_LENGTH.long),
   name: trimValue(form.name, MAX_FIELD_LENGTH.short),
@@ -80,7 +77,9 @@ export const normalizeCompanionForm = (
   linkedOpportunityId: trimValue(form.linkedOpportunityId, MAX_FIELD_LENGTH.short)
 });
 
-export const normalizeLinkedInContext = (context: LinkedInProfileContext): LinkedInProfileContext => ({
+export const normalizeLinkedInContext = (
+  context: LinkedInProfileContext
+): LinkedInProfileContext => ({
   url: context.url.trim(),
   name: trimValue(context.name, MAX_FIELD_LENGTH.short),
   role: trimValue(context.role, MAX_FIELD_LENGTH.short),
@@ -96,7 +95,9 @@ export const validateCompanionCapture = (
   }
 
   const hasContactContext = Boolean(context.name || context.role || context.company);
-  const hasActionPayload = Boolean(form.note || form.outreachDraft || form.pipelineName || form.followUpDate);
+  const hasActionPayload = Boolean(
+    form.note || form.outreachDraft || form.pipelineName || form.followUpDate
+  );
   if (!hasContactContext && !hasActionPayload) {
     return 'Nothing to save yet. Add at least one field or capture profile context first.';
   }

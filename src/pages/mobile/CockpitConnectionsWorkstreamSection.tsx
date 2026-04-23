@@ -6,9 +6,17 @@ import {
 import type { CockpitConnectionsSectionProps } from './cockpitSectionTypes';
 
 const CONNECTIONS_STRIP_ITEMS = [
-  { kind: 'prime' as const, label: 'Connect Notion', phrase: 'connect notion source: Growth workspace' },
+  {
+    kind: 'prime' as const,
+    label: 'Connect Notion',
+    phrase: 'connect notion source: Growth workspace'
+  },
   { kind: 'prime' as const, label: 'Add source', phrase: 'add source: webhook pipeline' },
-  { kind: 'prime' as const, label: 'Add SSH target', phrase: 'add ssh target: staging deploy host example.com' }
+  {
+    kind: 'prime' as const,
+    label: 'Add SSH target',
+    phrase: 'add ssh target: staging deploy host example.com'
+  }
 ] as const;
 
 const rowChip = (btnFocus: string) =>
@@ -34,7 +42,8 @@ export const CockpitConnectionsWorkstreamSection = ({
     </h3>
     <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
     <p className="mt-2 text-[10px] text-textSoft">
-      Counts and provider status are <strong className="text-textMuted">read-only</strong>. Use Integrations for connection changes.
+      Counts and provider status are <strong className="text-textMuted">read-only</strong>. Use
+      Integrations for connection changes.
     </p>
     <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
       <a
@@ -68,7 +77,9 @@ export const CockpitConnectionsWorkstreamSection = ({
         SSH targets: <span className="text-text">{snapshot.sshTargetsCount}</span>
       </li>
     </ul>
-    <p className="mt-2 text-[10px] font-medium uppercase tracking-wide text-textMuted">Sync providers</p>
+    <p className="mt-2 text-[10px] font-medium uppercase tracking-wide text-textMuted">
+      Sync providers
+    </p>
     <ul className="mt-1 space-y-1 text-[11px] text-textSoft">
       {snapshot.providerStatuses.map((p) => (
         <li key={p.id} className="flex justify-between gap-2">
@@ -108,7 +119,9 @@ export const CockpitConnectionsWorkstreamSection = ({
     {snapshot.cockpitCompanyPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
         <p className="text-[11px] font-medium text-textSoft">Companies (active)</p>
-        <p className="mt-0.5 text-[10px] text-textSoft">Read-only peek. No add/update company commands in the agent yet.</p>
+        <p className="mt-0.5 text-[10px] text-textSoft">
+          Read-only peek. No add/update company commands in the agent yet.
+        </p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitCompanyPeek.map((row) => (
             <li

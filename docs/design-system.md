@@ -47,4 +47,3 @@ Prefer these reusable classes before composing long utility strings:
 - Build new feature screens from `src/shared/ui/components` first.
 - If a new visual pattern appears more than once, extract it into a reusable primitive/layout/workflow component.
 - Keep presentation concerns inside the component library and keep domain logic in modules/state/services.
-

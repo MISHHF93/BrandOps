@@ -15,12 +15,10 @@ describe('aiSettingsMode planner', () => {
     expect(plan.operations.length).toBeGreaterThan(0);
     expect(plan.operations.some((operation) => operation.kind === 'set-cadence-mode')).toBe(true);
     expect(plan.operations.some((operation) => operation.kind === 'set-motion-mode')).toBe(true);
-    expect(
-      plan.operations.some((operation) => operation.kind === 'set-managerial-weight')
-    ).toBe(true);
-    expect(
-      plan.operations.some((operation) => operation.kind === 'set-debug-mode')
-    ).toBe(true);
+    expect(plan.operations.some((operation) => operation.kind === 'set-managerial-weight')).toBe(
+      true
+    );
+    expect(plan.operations.some((operation) => operation.kind === 'set-debug-mode')).toBe(true);
   });
 
   it('marks unsupported prompt when no operation can be inferred', () => {

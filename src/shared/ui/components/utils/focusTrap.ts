@@ -95,4 +95,3 @@ export const useFocusTrap = ({
     };
   }, [enabled, containerRef, lockScroll, onEscape]);
 };
-

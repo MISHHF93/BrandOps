@@ -42,12 +42,19 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         {...props}
       >
         {options.map((option) => (
-          <option key={`${option.value}-${option.label}`} value={option.value} disabled={option.disabled}>
+          <option
+            key={`${option.value}-${option.label}`}
+            value={option.value}
+            disabled={option.disabled}
+          >
             {option.label}
           </option>
         ))}
       </select>
-      <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 inline-flex items-center text-textSoft">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-3 inline-flex items-center text-textSoft"
+      >
         <ChevronDown size={14} />
       </span>
     </div>

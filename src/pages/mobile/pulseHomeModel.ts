@@ -51,7 +51,10 @@ function countBuckets(rows: PulseTimelineRow[], now: Date) {
  * Assembles the Pulse “homepage” story from the same {@link MobileWorkspaceSnapshot} the shell already
  * builds (local intelligence heuristics — not a network LLM).
  */
-export function buildPulseHomeBoard(snapshot: MobileWorkspaceSnapshot, now: Date = new Date()): PulseHomeBoard {
+export function buildPulseHomeBoard(
+  snapshot: MobileWorkspaceSnapshot,
+  now: Date = new Date()
+): PulseHomeBoard {
   const rows = snapshot.pulseTimelineRows;
   const { today: todayRowCount, thisWeek: thisWeekRowCount } = countBuckets(rows, now);
 
@@ -127,7 +130,9 @@ export function buildPulseHomeBoard(snapshot: MobileWorkspaceSnapshot, now: Date
     });
   }
 
-  const disconnected = snapshot.providerStatuses.filter((p) => p.status === 'disconnected' || p.status === 'error');
+  const disconnected = snapshot.providerStatuses.filter(
+    (p) => p.status === 'disconnected' || p.status === 'error'
+  );
   if (disconnected.length > 0) {
     needsAttention.push({
       id: 'sync',
@@ -170,7 +175,11 @@ export function buildPulseHomeBoard(snapshot: MobileWorkspaceSnapshot, now: Date
     });
   }
 
-  if (snapshot.integrationHubSources.filter((s) => s.status === 'connected' || s.status === 'monitoring').length > 0) {
+  if (
+    snapshot.integrationHubSources.filter(
+      (s) => s.status === 'connected' || s.status === 'monitoring'
+    ).length > 0
+  ) {
     const n = snapshot.integrationHubSources.length;
     momentum.push({
       id: 'sources',
@@ -183,7 +192,8 @@ export function buildPulseHomeBoard(snapshot: MobileWorkspaceSnapshot, now: Date
     momentum.push({
       id: 'seed',
       line: 'Add motion',
-      detail: 'Create a follow-up, schedule a post, or log outreach — momentum shows up as you work.'
+      detail:
+        'Create a follow-up, schedule a post, or log outreach — momentum shows up as you work.'
     });
   }
 

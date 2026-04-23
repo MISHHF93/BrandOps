@@ -3,10 +3,7 @@ import type { ChangeEvent } from 'react';
 import { Settings2 } from 'lucide-react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import type { CadenceFlowMode, MotionMode, VisualMode } from '../../types/domain';
-import type {
-  AuthProviderId,
-  LaunchMembershipState
-} from '../../shared/account/launchAccess';
+import type { AuthProviderId, LaunchMembershipState } from '../../shared/account/launchAccess';
 import { authProviderLabel } from '../../shared/account/launchAccess';
 import { GoogleSignInButton } from '../../shared/ui/oauth/GoogleSignInButton';
 import { AppleSignInButton } from '../../shared/ui/oauth/AppleSignInButton';
@@ -118,7 +115,10 @@ function AccountMembershipSection({
             <GoogleSignInButton onClick={() => onSignInProvider('google')} className={btnFocus} />
             <AppleSignInButton onClick={() => onSignInProvider('apple')} className={btnFocus} />
             <EmailMagicLinkButton onClick={() => onSignInProvider('email')} className={btnFocus} />
-            <LinkedInSignInButton onClick={() => onSignInProvider('linkedin')} className={btnFocus} />
+            <LinkedInSignInButton
+              onClick={() => onSignInProvider('linkedin')}
+              className={btnFocus}
+            />
             <GitHubSignInButton onClick={() => onSignInProvider('github')} className={btnFocus} />
           </div>
         ) : (
@@ -126,7 +126,11 @@ function AccountMembershipSection({
             <button type="button" onClick={onStartCheckout} className={mobileChipClass(btnFocus)}>
               Start checkout
             </button>
-            <button type="button" onClick={onOpenBillingPortal} className={mobileChipClass(btnFocus)}>
+            <button
+              type="button"
+              onClick={onOpenBillingPortal}
+              className={mobileChipClass(btnFocus)}
+            >
               Manage billing
             </button>
             <button type="button" onClick={onSignOut} className={mobileChipClass(btnFocus)}>
@@ -196,7 +200,9 @@ function WorkspaceModelReadout({
         >
           <span className="inline-flex items-center gap-2">
             Expand full settings readout
-            <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">({rows.length} fields)</span>
+            <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">
+              ({rows.length} fields)
+            </span>
           </span>
         </summary>
         <dl className="mt-3 max-h-[min(24rem,50vh)] space-y-0 overflow-y-auto text-[11px] [scrollbar-width:thin]">
@@ -370,7 +376,10 @@ function SettingsEditablePanel({
       description="These fields update what you see in the snapshot above after Apply. Below templates; same configure engine as Chat, without posting to the chat feed."
     >
       {applyError ? (
-        <p className="mb-2 rounded border border-rose-500/30 bg-rose-950/20 px-2 py-1.5 text-[11px] text-rose-200/95" role="alert">
+        <p
+          className="mb-2 rounded border border-rose-500/30 bg-rose-950/20 px-2 py-1.5 text-[11px] text-rose-200/95"
+          role="alert"
+        >
           {applyError}
         </p>
       ) : null}
@@ -380,7 +389,9 @@ function SettingsEditablePanel({
         </p>
       ) : null}
 
-      <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">Workday, tasks, weights</p>
+      <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">
+        Workday, tasks, weights
+      </p>
       <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div>
           <label className="text-[11px] text-textMuted" htmlFor="bo-wd-start">
@@ -453,11 +464,18 @@ function SettingsEditablePanel({
           className={f}
         />
       </div>
-      <button type="button" onClick={() => void onApplySchedule()} disabled={applyBusy} className={pBtn}>
+      <button
+        type="button"
+        onClick={() => void onApplySchedule()}
+        disabled={applyBusy}
+        className={pBtn}
+      >
         Apply workday, tasks, remind &amp; weight
       </button>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">Operating mode</p>
+      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">
+        Operating mode
+      </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="min-w-0 flex-1">
           <label className="text-[11px] text-textMuted" htmlFor="bo-cadence">
@@ -475,18 +493,28 @@ function SettingsEditablePanel({
             <option value="launch-day">{cadenceModeTitle('launch-day')}</option>
           </select>
         </div>
-        <button type="button" onClick={() => void onApplyCadence()} disabled={applyBusy} className={pBtn}>
+        <button
+          type="button"
+          onClick={() => void onApplyCadence()}
+          disabled={applyBusy}
+          className={pBtn}
+        >
           Apply operating mode
         </button>
       </div>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">Profile</p>
+      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">
+        Profile
+      </p>
       <details className="mb-2 rounded-lg border border-border/30 bg-surface/40 p-2 text-[10px] text-textMuted">
-        <summary className={`cursor-pointer font-medium text-textMuted ${btnFocus}`}>Profile field details</summary>
+        <summary className={`cursor-pointer font-medium text-textMuted ${btnFocus}`}>
+          Profile field details
+        </summary>
         <p className="mt-1.5 leading-snug">
-          Each value is sent to the operating plan / external models with clear labels to prevent ambiguity. In Notification Center prompt template, use{' '}
-          <code className="text-[9px] text-textSoft">{'{{brand_context}}'}</code> for the full block, or{' '}
-          <code className="text-[9px] text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
+          Each value is sent to the operating plan / external models with clear labels to prevent
+          ambiguity. In Notification Center prompt template, use{' '}
+          <code className="text-[9px] text-textSoft">{'{{brand_context}}'}</code> for the full
+          block, or <code className="text-[9px] text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
           <code className="text-[9px] text-textSoft">{'{{brand_positioning}}'}</code>, etc.
         </p>
       </details>
@@ -566,12 +594,19 @@ function SettingsEditablePanel({
             placeholder="One number or phrase you check weekly."
           />
         </div>
-        <button type="button" onClick={() => void onApplyProfile()} disabled={applyBusy} className={pBtn}>
+        <button
+          type="button"
+          onClick={() => void onApplyProfile()}
+          disabled={applyBusy}
+          className={pBtn}
+        >
           Apply profile
         </button>
       </div>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">Visual &amp; motion</p>
+      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">
+        Visual &amp; motion
+      </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="text-[11px] text-textMuted" htmlFor="bo-vis">
@@ -586,7 +621,12 @@ function SettingsEditablePanel({
             <option value="classic">Classic</option>
             <option value="retroMagic">Retro</option>
           </select>
-          <button type="button" onClick={() => void onApplyVisual()} disabled={applyBusy} className={pBtn}>
+          <button
+            type="button"
+            onClick={() => void onApplyVisual()}
+            disabled={applyBusy}
+            className={pBtn}
+          >
             Apply visual
           </button>
         </div>
@@ -604,13 +644,20 @@ function SettingsEditablePanel({
             <option value="balanced">Balanced</option>
             <option value="wild">Wild</option>
           </select>
-          <button type="button" onClick={() => void onApplyMotion()} disabled={applyBusy} className={pBtn}>
+          <button
+            type="button"
+            onClick={() => void onApplyMotion()}
+            disabled={applyBusy}
+            className={pBtn}
+          >
             Apply motion
           </button>
         </div>
       </div>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">Toggles</p>
+      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">
+        Toggles
+      </p>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -747,9 +794,17 @@ export const MobileSettingsView = ({
         blankStarters={buildComposerBlankStarters(snapshot)}
       />
 
-      <SettingsQuickConfigureScroller agentRouteBusy={agentRouteBusy} runCommand={runCommand} btnFocus={btnFocus} />
+      <SettingsQuickConfigureScroller
+        agentRouteBusy={agentRouteBusy}
+        runCommand={runCommand}
+        btnFocus={btnFocus}
+      />
 
-      <SettingsWorkflowModesHero agentRouteBusy={agentRouteBusy} runCommand={runCommand} btnFocus={btnFocus} />
+      <SettingsWorkflowModesHero
+        agentRouteBusy={agentRouteBusy}
+        runCommand={runCommand}
+        btnFocus={btnFocus}
+      />
 
       <SettingsEditablePanel
         snapshot={snapshot}
@@ -774,7 +829,8 @@ export const MobileSettingsView = ({
           <span className="inline-flex items-center gap-2">
             Advanced
             <span className="text-[11px] font-normal text-textSoft">
-              — local product metrics, dataset lineage, intelligence detail, vault, full model readout, audit
+              — local product metrics, dataset lineage, intelligence detail, vault, full model
+              readout, audit
             </span>
           </span>
         </summary>
@@ -795,15 +851,21 @@ export const MobileSettingsView = ({
             <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
               <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                 <dt className="shrink-0 text-textMuted">Source</dt>
-                <dd className="min-w-0 break-words text-right text-text">{snapshot.seedReadout.source}</dd>
+                <dd className="min-w-0 break-words text-right text-text">
+                  {snapshot.seedReadout.source}
+                </dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                 <dt className="shrink-0 text-textMuted">Version</dt>
-                <dd className="min-w-0 break-words text-right text-text">{snapshot.seedReadout.version}</dd>
+                <dd className="min-w-0 break-words text-right text-text">
+                  {snapshot.seedReadout.version}
+                </dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                 <dt className="shrink-0 text-textMuted">Seeded at</dt>
-                <dd className="min-w-0 break-words text-right text-text">{snapshot.seedReadout.seededAt}</dd>
+                <dd className="min-w-0 break-words text-right text-text">
+                  {snapshot.seedReadout.seededAt}
+                </dd>
               </div>
               {snapshot.seedReadout.welcomeCompletedAt ? (
                 <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
@@ -831,8 +893,8 @@ export const MobileSettingsView = ({
           >
             {!snapshot.intelligenceRulesReadout.initRan ? (
               <p className="mt-2 text-[10px] text-textMuted">
-                Load status will refresh after the first rules init (extension background on install/startup, or this
-                document load).
+                Load status will refresh after the first rules init (extension background on
+                install/startup, or this document load).
               </p>
             ) : null}
             <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
@@ -862,21 +924,29 @@ export const MobileSettingsView = ({
               >
                 <span className="inline-flex items-center gap-2">
                   Sample coefficients
-                  <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">(expand)</span>
+                  <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">
+                    (expand)
+                  </span>
                 </span>
               </summary>
               <dl className="mt-3 space-y-1.5 text-[11px] text-textMuted">
                 <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                   <dt className="shrink-0 text-textMuted">Schema version</dt>
-                  <dd className="text-right text-text">{snapshot.intelligenceRulesReadout.schemaVersion}</dd>
+                  <dd className="text-right text-text">
+                    {snapshot.intelligenceRulesReadout.schemaVersion}
+                  </dd>
                 </div>
                 <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                   <dt className="shrink-0 text-textMuted">Content priority base</dt>
-                  <dd className="text-right text-text">{snapshot.intelligenceRulesReadout.contentPriorityBaseScore}</dd>
+                  <dd className="text-right text-text">
+                    {snapshot.intelligenceRulesReadout.contentPriorityBaseScore}
+                  </dd>
                 </div>
                 <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                   <dt className="shrink-0 text-textMuted">Outreach stale after (h)</dt>
-                  <dd className="text-right text-text">{snapshot.intelligenceRulesReadout.outreachStaleAfterHours}</dd>
+                  <dd className="text-right text-text">
+                    {snapshot.intelligenceRulesReadout.outreachStaleAfterHours}
+                  </dd>
                 </div>
                 <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                   <dt className="shrink-0 text-textMuted">Publishing urgent within (h)</dt>
@@ -892,7 +962,9 @@ export const MobileSettingsView = ({
                 </div>
                 <div className="flex justify-between gap-2 py-1.5">
                   <dt className="shrink-0 text-textMuted">Publishing preview slice</dt>
-                  <dd className="text-right text-text">{snapshot.intelligenceRulesReadout.previewQueueSlice}</dd>
+                  <dd className="text-right text-text">
+                    {snapshot.intelligenceRulesReadout.previewQueueSlice}
+                  </dd>
                 </div>
               </dl>
             </details>
@@ -910,7 +982,9 @@ export const MobileSettingsView = ({
             description="Saved snippets (titles only here)."
           >
             {snapshot.settingsMessagingVaultPeek.length === 0 ? (
-              <p className="mt-2 text-[11px] text-textMuted">No messaging vault entries in this workspace.</p>
+              <p className="mt-2 text-[11px] text-textMuted">
+                No messaging vault entries in this workspace.
+              </p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {snapshot.settingsMessagingVaultPeek.map((row) => (
@@ -924,7 +998,9 @@ export const MobileSettingsView = ({
                       type="button"
                       disabled={agentRouteBusy}
                       onClick={() =>
-                        void runCommand(`add note: review messaging vault entry "${row.title.replace(/"/g, "'")}"`)
+                        void runCommand(
+                          `add note: review messaging vault entry "${row.title.replace(/"/g, "'")}"`
+                        )
                       }
                       className={`mt-2 ${settingsRunChipClass(btnFocus)}`}
                     >
@@ -957,7 +1033,9 @@ export const MobileSettingsView = ({
                     className="rounded-lg border border-border/30 bg-surface/45 px-2.5 py-2 text-[11px] text-textMuted"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <code className="break-all text-left text-[10px] text-info">{entry.commandPreview}</code>
+                      <code className="break-all text-left text-[10px] text-info">
+                        {entry.commandPreview}
+                      </code>
                       <span
                         className={`shrink-0 text-[10px] font-medium uppercase ${
                           entry.ok ? 'text-success' : 'text-warning'
@@ -990,15 +1068,21 @@ export const MobileSettingsView = ({
             </h3>
             {documentSurface === 'integrations' ? (
               <p className="mt-1 text-[11px] text-textMuted">
-                This is the MV3 <strong className="text-textSoft">extension</strong> page (manifest <code>options_ui</code>
-                ): same <strong className="text-textSoft">BrandOps Mobile</strong> shell as <code>mobile.html</code>. Use
-                the bottom bar for Integrations vs Settings; preferences above match the main app tab.
+                This is the MV3 <strong className="text-textSoft">extension</strong> page (manifest{' '}
+                <code>options_ui</code>
+                ): same <strong className="text-textSoft">BrandOps Mobile</strong> shell as{' '}
+                <code>mobile.html</code>. Use the bottom bar for Integrations vs Settings;
+                preferences above match the main app tab.
               </p>
             ) : (
               <>
                 <p className="mt-1 text-[11px] text-textMuted">
-                  Opens <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">integrations.html</code>{' '}
-                  in a new tab—the same UI as Chrome extension options, aligned with the Integrations tab link there.
+                  Opens{' '}
+                  <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">
+                    integrations.html
+                  </code>{' '}
+                  in a new tab—the same UI as Chrome extension options, aligned with the
+                  Integrations tab link there.
                 </p>
                 <button
                   type="button"

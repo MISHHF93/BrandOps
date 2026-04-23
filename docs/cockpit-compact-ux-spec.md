@@ -16,14 +16,14 @@
 
 ## 1. Scan: where density comes from today
 
-| Source | What adds vertical / cognitive weight | Notes |
-|--------|----------------------------------------|--------|
-| **Pulse strip** | **Five** tiles; **compact** hides helper lines and tightens cells | **Comfortable** still shows full hints. Wired via `cockpitDensity === 'compact'`. |
-| **Command deck** | Title + **long objective sentence** + pulse + **three jump links** | Duplicates wayfinding the compass already provides. |
-| **`BrandHeader` + `CurrentSectionBar`** | Eyebrow, badge, **subtitle**, section label + description | Multiple lines of meta before content. |
-| **Unified scroll** | All sections in one page | Maximum content visible; correct for power users, heavy for “minimal” mode. |
-| **Today Queue + execution** | Lists, pills, **CollapsibleSection** “More execution context,” advanced diagnostics | Collapsibles help; still many blocks when expanded. |
-| **Defaults** (`seed.ts`) | `cockpitLayout: 'sections'`, `cockpitDensity: 'compact'` | New seeded workspaces start **compact**; existing storage unchanged. |
+| Source                                  | What adds vertical / cognitive weight                                               | Notes                                                                             |
+| --------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Pulse strip**                         | **Five** tiles; **compact** hides helper lines and tightens cells                   | **Comfortable** still shows full hints. Wired via `cockpitDensity === 'compact'`. |
+| **Command deck**                        | Title + **long objective sentence** + pulse + **three jump links**                  | Duplicates wayfinding the compass already provides.                               |
+| **`BrandHeader` + `CurrentSectionBar`** | Eyebrow, badge, **subtitle**, section label + description                           | Multiple lines of meta before content.                                            |
+| **Unified scroll**                      | All sections in one page                                                            | Maximum content visible; correct for power users, heavy for “minimal” mode.       |
+| **Today Queue + execution**             | Lists, pills, **CollapsibleSection** “More execution context,” advanced diagnostics | Collapsibles help; still many blocks when expanded.                               |
+| **Defaults** (`seed.ts`)                | `cockpitLayout: 'sections'`, `cockpitDensity: 'compact'`                            | New seeded workspaces start **compact**; existing storage unchanged.              |
 
 **Conclusion:** Compression is not one component — it is **defaults**, **pulse cardinality**, **copy length**, **spacing tokens**, and **what stays above the fold**.
 
@@ -43,10 +43,10 @@
 
 ### 3.1 Density modes (evolution)
 
-| Mode | Intent |
-|------|--------|
-| **Comfortable** | Current default; full helper text under pulse tiles. |
-| **Compact** | Today: collapsibles + some modules respect `isCompact`; **next:** wire `compact` → `CockpitPulseStrip`, reduce shell `space-y`, shorter command deck. |
+| Mode                        | Intent                                                                                                                                                                                                         |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Comfortable**             | Current default; full helper text under pulse tiles.                                                                                                                                                           |
+| **Compact**                 | Today: collapsibles + some modules respect `isCompact`; **next:** wire `compact` → `CockpitPulseStrip`, reduce shell `space-y`, shorter command deck.                                                          |
 | **Minimal** (new, optional) | **3 KPIs** only (e.g. follow-ups, queue due, weighted pipeline); hide publishing + outreach in a “More metrics” disclosure **or** single line of text. Ultra-short header; section-focused layout recommended. |
 
 Implement **Minimal** only if product confirms; otherwise ship improvements under **Compact** first.
@@ -56,7 +56,7 @@ Implement **Minimal** only if product confirms; otherwise ship improvements unde
 - **Portfolio / growth glance:** consider defaulting new workspaces to **`cockpitDensity: 'compact'`** and/or **`cockpitLayout: 'sections'`** (one section at a time reduces scroll depth).
 - **Unified scroll:** keep opt-in for users who want the full “one pager” after they understand the compass.
 
-*(Changing defaults touches `seed.ts` + migration story — decide in release notes.)*
+_(Changing defaults touches `seed.ts` + migration story — decide in release notes.)_
 
 ---
 
@@ -83,7 +83,7 @@ Implement **Minimal** only if product confirms; otherwise ship improvements unde
 
 ---
 
-## 5. What we are *not* doing in this doc
+## 5. What we are _not_ doing in this doc
 
 - Removing modules (CRM, vault, etc.) — scope is **presentation density**, not product cut.
 - Replacing the compass — it stays the primary navigation for growth/portfolio users who refuse to read long pages.

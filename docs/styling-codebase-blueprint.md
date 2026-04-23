@@ -64,7 +64,8 @@ This blueprint is based on the codebase structure and styling reality. It is mea
    - `text-textMuted`/`text-textSoft` on low-opacity backgrounds needs validation/tuning.
 
 10. **Design-system intent vs implementation drift**
-   - Current docs discourage ad-hoc values, but one-off shadows/visual values remain.
+
+- Current docs discourage ad-hoc values, but one-off shadows/visual values remain.
 
 ## Token strategy (aligned to current naming)
 
@@ -103,21 +104,25 @@ Keep current tokens, add a lightweight semantic/component layer:
 ### Phase 1 - Foundation and guardrails
 
 **Files**
+
 - `src/styles/index.css`
 - `docs/design-system.md`
 
 **Actions**
+
 - Split stylesheet sections clearly (tokens vs component contracts).
 - Add token comments and naming rules.
 - No visual behavior changes in this phase.
 
 **Done when**
+
 - Token intent is documented and discoverable.
 - No regressions.
 
 ### Phase 2 - Low-risk shared class extraction
 
 **Files**
+
 - `src/styles/index.css`
 - `src/shared/ui/components/utils/styles.ts`
 - `src/pages/options/sections/GettingStartedSection.tsx`
@@ -125,21 +130,25 @@ Keep current tokens, add a lightweight semantic/component layer:
 - `src/pages/options/sections/CoreSetupSection.tsx`
 
 **Actions**
+
 - Introduce reusable class contracts for common panel/card blocks.
 - Replace duplicated utility strings in options sections first.
 
 **Done when**
+
 - Repeated panel strings are reduced in options pages.
 - Visual parity holds.
 
 ### Phase 3 - Focus and accessibility normalization
 
 **Files**
+
 - `src/styles/index.css`
 - `src/shared/ui/components/navigation/RightPillNavDock.tsx`
 - `src/pages/dashboard/dashboardApp.tsx`
 
 **Actions**
+
 - Add explicit `:focus-visible` styles for:
   - `.bo-link`
   - nav dock controls
@@ -147,44 +156,54 @@ Keep current tokens, add a lightweight semantic/component layer:
 - Ensure focus indicators are shape + ring, not color-only.
 
 **Done when**
+
 - Keyboard navigation has obvious, consistent focus across major controls.
 
 ### Phase 4 - Overlay and palette harmonization
 
 **Files**
+
 - `src/pages/dashboard/components/CockpitSurfaceOverlay.tsx`
 - `src/pages/dashboard/dashboardApp.tsx`
 
 **Actions**
+
 - Replace one-off overlay shadows/backgrounds with token-driven classes.
 - Align palette/sheet spacing, border, and visual hierarchy.
 
 **Done when**
+
 - Overlay/palette look and behavior are consistent with the system.
 
 ### Phase 5 - Welcome surface alignment
 
 **Files**
+
 - `src/pages/welcome/WelcomeAuthPanel.tsx`
 - `src/pages/welcome/WelcomeBackdrop.tsx`
 
 **Actions**
+
 - Remove hardcoded light/dark shadow values.
 - Align welcome visual treatment to shared token contracts.
 
 **Done when**
+
 - Welcome no longer visually diverges from dashboard/settings style language.
 
 ### Phase 6 - Dashboard consolidation (last)
 
 **Files**
+
 - `src/pages/dashboard/dashboardApp.tsx`
 
 **Actions**
+
 - Extract repeated wrappers into shared classes/components after previous phases stabilize.
 - Keep behavior unchanged; style-only cleanup.
 
 **Done when**
+
 - Dashboard has reduced class duplication and clearer style composition.
 
 ## Quality gates for each phase

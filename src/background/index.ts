@@ -5,7 +5,10 @@ import { executeAgentWorkspaceCommand } from '../services/agent/agentWorkspaceEn
 import { normalizeChannelWebhookPayload } from '../services/agent/channelPayloadAdapters';
 import { BridgeReplayGuard } from '../services/agent/bridgeReplayGuard';
 import { isBridgeNonceReplayed } from '../services/agent/bridgeNonceStore';
-import { toRuntimeWebhookMessage, verifyWebhookBridgeEnvelope } from '../services/agent/webhookBridge';
+import {
+  toRuntimeWebhookMessage,
+  verifyWebhookBridgeEnvelope
+} from '../services/agent/webhookBridge';
 import { hasFederatedSession } from '../shared/identity/sessionAccess';
 import { readLaunchAccessStateForRuntime } from '../shared/account/launchAccess';
 import { canOpenLaunchWorkspace } from '../shared/account/launchLifecycleGate';
@@ -59,7 +62,8 @@ const sendReminderNotification = async (taskId: string) => {
   const task = reconciled.scheduler.tasks.find((item) => item.id === taskId);
   if (!task) return;
 
-  const shouldNotify = task.status === 'due-soon' || task.status === 'due' || task.status === 'missed';
+  const shouldNotify =
+    task.status === 'due-soon' || task.status === 'due' || task.status === 'missed';
   if (!shouldNotify) {
     await storageService.setData(reconciled);
     return;

@@ -118,7 +118,10 @@ export async function recordShellNavigation(from: ShellTabId, to: ShellTabId): P
   await write(u);
 }
 
-export async function recordCommandOutcome(result: { ok: boolean; durationMs: number }): Promise<void> {
+export async function recordCommandOutcome(result: {
+  ok: boolean;
+  durationMs: number;
+}): Promise<void> {
   const u = await read();
   if (result.ok) u.commandOk += 1;
   else u.commandFail += 1;

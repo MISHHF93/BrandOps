@@ -68,8 +68,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
   {
     id: 'first-run',
     title: 'First run and profile',
-    summary:
-      'Welcome uses the mobile shell; sign-in and sign-up share welcome.html.',
+    summary: 'Welcome uses the mobile shell; sign-in and sign-up share welcome.html.',
     paragraphs: [
       'After install, **welcome.html** opens the app on **Today** first so you see pipeline and publishing signal before Chat.',
       'Sign-in and account creation share welcome.html: default is sign in (no query). Create account: welcome.html?flow=signup. Legacy ?auth= is still accepted where implemented.',
@@ -90,8 +89,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
   {
     id: 'today-execution',
     title: 'Today: cockpit digest (not a second CRM UI)',
-    summary:
-      'Today combines metrics, intelligence signals, and peeks from the workspace snapshot.',
+    summary: 'Today combines metrics, intelligence signals, and peeks from the workspace snapshot.',
     paragraphs: [
       'Today shows scheduler tasks, notes, contacts, pipeline projection, outreach templates/history, opportunities, brand vault preview, content library slice, publishing queue slice, and companies.',
       'Row actions that say “Open in Chat” prime the composer; chips that run commands switch to Chat and execute so you always see the thread.',
@@ -121,8 +119,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
   {
     id: 'visual-wayfinding',
     title: 'Visual wayfinding (icons)',
-    summary:
-      'Icons repeat the same meaning as labels on tabs and section headers.',
+    summary: 'Icons repeat the same meaning as labels on tabs and section headers.',
     paragraphs: [
       'Each bottom tab has a consistent icon. Today workstreams use color-tinted cards so Pipeline, Brand & content, and Connections are easy to scan.',
       'Icons are decorative complements: labels and headings remain the source of truth for screen readers.'

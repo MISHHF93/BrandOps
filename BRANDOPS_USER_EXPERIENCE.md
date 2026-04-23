@@ -44,13 +44,13 @@ Order is fixed: **Pulse → Chat → Today → Integrations → Settings**.
 
 ### 2.2 Tab purpose (in-product copy contract)
 
-| Tab | Role in one line |
-|-----|------------------|
-| **Pulse** | What is due next — mixed timeline; open a row in **Chat** to act. |
-| **Chat** | Command surface — run commands, read replies, use **Example commands**. |
-| **Today** | Cockpit — digest by **workstream** (Today, Pipeline, Brand & content, **Connections**). |
-| **Integrations** | What is connected — sources, provider status, **Quick add**; custom work in **Chat**. |
-| **Settings** | Account & workspace; **Advanced** for readouts, audit, export, **local product metrics**. |
+| Tab              | Role in one line                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| **Pulse**        | What is due next — mixed timeline; open a row in **Chat** to act.                         |
+| **Chat**         | Command surface — run commands, read replies, use **Example commands**.                   |
+| **Today**        | Cockpit — digest by **workstream** (Today, Pipeline, Brand & content, **Connections**).   |
+| **Integrations** | What is connected — sources, provider status, **Quick add**; custom work in **Chat**.     |
+| **Settings**     | Account & workspace; **Advanced** for readouts, audit, export, **local product metrics**. |
 
 Full strings live in `src/pages/mobile/shellSectionCopy.ts` (`SHELL_SECTION_COPY`).
 
@@ -69,25 +69,25 @@ flowchart TB
   TodayTab --> W4[Connections]
 ```
 
-| Workstream | User goal |
-|------------|-----------|
-| **Today** | Mission map, scheduler pulse, peeks. |
-| **Pipeline** | Deals, outreach, follow-ups, pipeline health. |
-| **Brand & content** | Library, publishing queue, brand vault preview. |
-| **Connections** | Integrations summary, links to full Integrations; command starters. |
+| Workstream          | User goal                                                           |
+| ------------------- | ------------------------------------------------------------------- |
+| **Today**           | Mission map, scheduler pulse, peeks.                                |
+| **Pipeline**        | Deals, outreach, follow-ups, pipeline health.                       |
+| **Brand & content** | Library, publishing queue, brand vault preview.                     |
+| **Connections**     | Integrations summary, links to full Integrations; command starters. |
 
 ---
 
 ## 3. Other pages (not the five-tab shell)
 
-| Page | What it is |
-|------|------------|
-| **`index.html`** | Redirects to `mobile.html`. |
-| **`welcome.html`** | Same `MobileApp` shell; often lands on **Today** first. |
-| **`dashboard.html`** | Same shell; may **redirect** to `mobile.html` for section parity. |
+| Page                    | What it is                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| **`index.html`**        | Redirects to `mobile.html`.                                                         |
+| **`welcome.html`**      | Same `MobileApp` shell; often lands on **Today** first.                             |
+| **`dashboard.html`**    | Same shell; may **redirect** to `mobile.html` for section parity.                   |
 | **`integrations.html`** | Same shell; Chrome extension **options** entry; default tab often **Integrations**. |
-| **`help.html`** | **Knowledge Center** — manual and topics, **not** the five-tab app. |
-| **OAuth / privacy** | Callbacks and legal — peripheral. |
+| **`help.html`**         | **Knowledge Center** — manual and topics, **not** the five-tab app.                 |
+| **OAuth / privacy**     | Callbacks and legal — peripheral.                                                   |
 
 ```mermaid
 flowchart TB
@@ -148,14 +148,14 @@ flowchart TD
 
 ## 6. URL and deep links (`?section=`)
 
-| `section` (examples) | Effect |
-|----------------------|--------|
-| `pulse`, `timeline` | Pulse tab |
-| `chat` | Chat tab |
-| `daily`, `cockpit` | Today tab, workstream defaults toward **Today** block |
-| `today`, `pipeline`, `brand-content`, `connections` | **Today** tab + scroll/highlight that workstream |
-| `integrations` | Integrations tab |
-| `settings` | Settings tab |
+| `section` (examples)                                | Effect                                                |
+| --------------------------------------------------- | ----------------------------------------------------- |
+| `pulse`, `timeline`                                 | Pulse tab                                             |
+| `chat`                                              | Chat tab                                              |
+| `daily`, `cockpit`                                  | Today tab, workstream defaults toward **Today** block |
+| `today`, `pipeline`, `brand-content`, `connections` | **Today** tab + scroll/highlight that workstream      |
+| `integrations`                                      | Integrations tab                                      |
+| `settings`                                          | Settings tab                                          |
 
 Parsing: `src/pages/mobile/mobileShellQuery.ts`.
 
@@ -182,13 +182,13 @@ flowchart TD
 
 The cockpit doc maps every **CommandRoute** to the **workstream** and **UI** (strip / chip / Chat). Mutations go through the **same** executor whether the user types in Chat or taps a control that calls `runCommand` / `sendQuickCommand`.
 
-| Area | Example intent | Example phrase patterns |
-|------|----------------|-------------------------|
-| Time & tasks | follow-ups, notes | `create follow up`, `complete follow up`, `add note:` |
-| Pipeline | deals, outreach | `pipeline health`, `update opportunity`, `draft outreach:` |
-| Brand | content, publishing | `add content`, `draft post:`, `reschedule` + publishing |
-| Connections | sources, infra | `connect` / `add source`, `add artifact`, `add ssh` |
-| Workspace | cadence, prefs | `configure:` … (also Settings) |
+| Area         | Example intent      | Example phrase patterns                                    |
+| ------------ | ------------------- | ---------------------------------------------------------- |
+| Time & tasks | follow-ups, notes   | `create follow up`, `complete follow up`, `add note:`      |
+| Pipeline     | deals, outreach     | `pipeline health`, `update opportunity`, `draft outreach:` |
+| Brand        | content, publishing | `add content`, `draft post:`, `reschedule` + publishing    |
+| Connections  | sources, infra      | `connect` / `add source`, `add artifact`, `add ssh`        |
+| Workspace    | cadence, prefs      | `configure:` … (also Settings)                             |
 
 **Authoritative tables:** `docs/cockpit-command-surface-map.md`.
 

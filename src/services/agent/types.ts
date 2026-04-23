@@ -1,12 +1,6 @@
 export type AgentMode = 'chatbot' | 'agent';
 
-export type ChannelPlatform =
-  | 'whatsapp'
-  | 'telegram'
-  | 'linkedin'
-  | 'x'
-  | 'email'
-  | 'webchat';
+export type ChannelPlatform = 'whatsapp' | 'telegram' | 'linkedin' | 'x' | 'email' | 'webchat';
 
 export type ConnectorStatus = 'planned' | 'ready' | 'blocked';
 

@@ -38,7 +38,11 @@ export function ConfirmDialog({
           <Button variant="ghost" onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button variant={tone === 'primary' ? 'primary' : tone === 'secondary' ? 'secondary' : 'danger'} onClick={onConfirm} disabled={loading}>
+          <Button
+            variant={tone === 'primary' ? 'primary' : tone === 'secondary' ? 'secondary' : 'danger'}
+            onClick={onConfirm}
+            disabled={loading}
+          >
             {loading ? 'Working…' : confirmLabel}
           </Button>
         </div>
@@ -48,4 +52,3 @@ export function ConfirmDialog({
     </Modal>
   );
 }
-

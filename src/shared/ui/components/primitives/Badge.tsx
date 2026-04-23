@@ -45,4 +45,3 @@ export function StatusPill({ tone = 'neutral', className, ...props }: StatusPill
     />
   );
 }
-

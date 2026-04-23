@@ -52,14 +52,20 @@ const fetchGithubEmails = async (accessToken: string): Promise<string | undefine
     }
   });
   if (!response.ok) return undefined;
-  const data = (await response.json()) as Array<{ email: string; primary?: boolean; verified?: boolean }>;
+  const data = (await response.json()) as Array<{
+    email: string;
+    primary?: boolean;
+    verified?: boolean;
+  }>;
   if (!Array.isArray(data)) return undefined;
   const primary = data.find((e) => e.primary && e.verified);
   const first = data.find((e) => e.verified);
   return primary?.email ?? first?.email ?? data[0]?.email;
 };
 
-const fetchGithubProfile = async (accessToken: string): Promise<LinkedInIdentityProfile | undefined> => {
+const fetchGithubProfile = async (
+  accessToken: string
+): Promise<LinkedInIdentityProfile | undefined> => {
   const response = await fetch('https://api.github.com/user', {
     headers: {
       Authorization: `Bearer ${accessToken}`,

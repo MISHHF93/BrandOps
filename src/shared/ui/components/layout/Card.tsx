@@ -52,7 +52,9 @@ export function Card({
           {subtitle ? <p className="text-meta text-textMuted">{subtitle}</p> : null}
         </header>
       ) : null}
-      {children ? <div className={cn(title || subtitle ? 'mt-3' : undefined)}>{children}</div> : null}
+      {children ? (
+        <div className={cn(title || subtitle ? 'mt-3' : undefined)}>{children}</div>
+      ) : null}
       {footer ? <footer className="mt-3">{footer}</footer> : null}
     </Element>
   );

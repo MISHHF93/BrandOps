@@ -20,7 +20,12 @@ describe('applyDocumentThemeFromAppSettings', () => {
 
   const themeMeta: { name?: string; content?: string } = {};
   const themeMetaElement = {
-    getAttribute: (k: string) => (k === 'content' ? themeMeta.content ?? null : k === 'name' ? themeMeta.name ?? null : null),
+    getAttribute: (k: string) =>
+      k === 'content'
+        ? (themeMeta.content ?? null)
+        : k === 'name'
+          ? (themeMeta.name ?? null)
+          : null,
     setAttribute: (k: string, v: string) => {
       if (k === 'name') themeMeta.name = v;
       if (k === 'content') themeMeta.content = v;
@@ -51,7 +56,11 @@ describe('applyDocumentThemeFromAppSettings', () => {
       }
     } as unknown as Document;
     (globalThis as unknown as { window: typeof window }).window = {
-      matchMedia: () => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
+      matchMedia: () => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
+      }),
       sessionStorage: { getItem: () => null, removeItem: vi.fn(), setItem: vi.fn() },
       setTimeout: (fn: () => void) => {
         fn();

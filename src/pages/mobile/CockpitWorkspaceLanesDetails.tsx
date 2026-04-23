@@ -1,4 +1,7 @@
-import { workspaceModuleToDashboardSection, type DashboardSectionId } from '../../shared/config/dashboardNavigation';
+import {
+  workspaceModuleToDashboardSection,
+  type DashboardSectionId
+} from '../../shared/config/dashboardNavigation';
 import { workspaceModules } from '../../shared/config/modules';
 import type { WorkspaceModuleId } from '../../types/domain';
 import type { CockpitWorkspaceLanesDetailsProps } from './cockpitSectionTypes';
@@ -41,12 +44,14 @@ export const CockpitWorkspaceLanesDetails = ({
     >
       <span className="inline-flex items-center gap-2">
         Workspace lanes (from product modules)
-        <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">(tap)</span>
+        <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">
+          (tap)
+        </span>
       </span>
     </summary>
     <p className="mt-2 text-[10px] leading-snug text-textSoft">
-      Maps your migrated web-era modules to Today work areas and Chat commands — deep panels were folded into the agent;
-      this is your compass.
+      Maps your migrated web-era modules to Today work areas and Chat commands — deep panels were
+      folded into the agent; this is your compass.
     </p>
     <ul className="mt-3 space-y-3">
       {workspaceModules

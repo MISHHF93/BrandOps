@@ -4,14 +4,26 @@ import { formatPeekDue } from './cockpitDailyPrimitives';
 import type { CockpitTodaySectionProps } from './cockpitSectionTypes';
 
 const TODAY_STRIP_ITEMS = [
-  { kind: 'run' as const, label: 'Create follow-up', phrase: 'create follow up: check warm lead status' },
-  { kind: 'run' as const, label: 'Balanced cadence', phrase: 'configure: cadence balanced, remind before 20 min' },
+  {
+    kind: 'run' as const,
+    label: 'Create follow-up',
+    phrase: 'create follow up: check warm lead status'
+  },
+  {
+    kind: 'run' as const,
+    label: 'Balanced cadence',
+    phrase: 'configure: cadence balanced, remind before 20 min'
+  },
   {
     kind: 'run' as const,
     label: 'Complete follow-up',
     phrase: 'complete follow up: done with intro call follow-up'
   },
-  { kind: 'prime' as const, label: 'Add contact', phrase: 'add contact: Alex Rivera, Northwind Labs, Founder' }
+  {
+    kind: 'prime' as const,
+    label: 'Add contact',
+    phrase: 'add contact: Alex Rivera, Northwind Labs, Founder'
+  }
 ] as const;
 
 const rowChip = (btnFocus: string) =>
@@ -79,8 +91,9 @@ export const CockpitTodayWorkstreamSection = ({
       <div className="mt-4 border-t border-border/25 pt-4">
         <p className="text-[11px] font-medium text-textSoft">Upcoming scheduler tasks</p>
         <p className="mt-0.5 text-[10px] text-textSoft">
-          Read-only digest. Snooze and completion flow through Chat commands. “Complete follow-up” in the strip marks
-          the <strong className="text-textMuted">first incomplete</strong> follow-up in workspace order.
+          Read-only digest. Snooze and completion flow through Chat commands. “Complete follow-up”
+          in the strip marks the <strong className="text-textMuted">first incomplete</strong>{' '}
+          follow-up in workspace order.
         </p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitSchedulerTaskPeek.map((row) => (
@@ -105,7 +118,9 @@ export const CockpitTodayWorkstreamSection = ({
                   type="button"
                   disabled={commandBusy}
                   onClick={() =>
-                    primeChat(`complete follow up: done — related scheduler task "${row.title.replace(/"/g, "'")}"`)
+                    primeChat(
+                      `complete follow up: done — related scheduler task "${row.title.replace(/"/g, "'")}"`
+                    )
                   }
                   className={rowChip(btnFocus)}
                   title="Completes the first incomplete follow-up in the workspace; line ties context in Chat."
@@ -136,7 +151,9 @@ export const CockpitTodayWorkstreamSection = ({
               <button
                 type="button"
                 disabled={commandBusy}
-                onClick={() => primeChat(`add note: follow up on "${row.title.replace(/"/g, "'")}"`)}
+                onClick={() =>
+                  primeChat(`add note: follow up on "${row.title.replace(/"/g, "'")}"`)
+                }
                 className={`mt-2 ${rowChip(btnFocus)}`}
               >
                 Open in Chat (extend note)

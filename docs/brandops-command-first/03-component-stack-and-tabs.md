@@ -2,13 +2,13 @@
 
 ## Library ranking (highest first)
 
-| Library | Role | Bundle / fit | When to add |
-|---------|------|--------------|-------------|
-| **cmdk** | Global command menu (Search + list + groups) | Small; brings **@radix-ui/react-dialog** transitively. | **Shipped** in [`WorkspaceCommandPalette.tsx`](../../src/pages/mobile/WorkspaceCommandPalette.tsx). |
-| **@tanstack/react-table** | Sortable, filterable **data grids** in Pulse / Today / Integrations | Moderate; headless — cells stay Tailwind. | When a tab exposes **enough row density** to justify column headers and sorting; not for 3–5 row summaries. |
-| **motion** | Layout and shared-element transitions | Already a dependency. | After motion spec in `02-visual-language-and-motion.md`; always gate on `data-motion-mode`. |
-| **react-aria** (optional) | Menus, overlays, listbox a11y primitives | Heavier; use if custom keyboard in complex filters exceeds maintenance budget. | Prefer native + cmdk for palette first. |
-| **visx** (optional) | Custom charts (Pulse / Today) | D3 + React; add only for **concrete** metrics. | Defer until metrics and data contracts are defined. |
+| Library                   | Role                                                                | Bundle / fit                                                                   | When to add                                                                                                 |
+| ------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| **cmdk**                  | Global command menu (Search + list + groups)                        | Small; brings **@radix-ui/react-dialog** transitively.                         | **Shipped** in [`WorkspaceCommandPalette.tsx`](../../src/pages/mobile/WorkspaceCommandPalette.tsx).         |
+| **@tanstack/react-table** | Sortable, filterable **data grids** in Pulse / Today / Integrations | Moderate; headless — cells stay Tailwind.                                      | When a tab exposes **enough row density** to justify column headers and sorting; not for 3–5 row summaries. |
+| **motion**                | Layout and shared-element transitions                               | Already a dependency.                                                          | After motion spec in `02-visual-language-and-motion.md`; always gate on `data-motion-mode`.                 |
+| **react-aria** (optional) | Menus, overlays, listbox a11y primitives                            | Heavier; use if custom keyboard in complex filters exceeds maintenance budget. | Prefer native + cmdk for palette first.                                                                     |
+| **visx** (optional)       | Custom charts (Pulse / Today)                                       | D3 + React; add only for **concrete** metrics.                                 | Defer until metrics and data contracts are defined.                                                         |
 
 **Not adopted here:** a full **shadcn/ui** install — patterns can be copied, but the repo stays Tailwind + app tokens.
 

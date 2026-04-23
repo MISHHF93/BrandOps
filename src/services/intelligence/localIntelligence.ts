@@ -1,5 +1,11 @@
 import { getIntelligenceRules } from '../../rules/intelligenceRulesRuntime';
-import { BrandOpsData, ContentLibraryItem, Opportunity, OutreachDraft, PublishingItem } from '../../types/domain';
+import {
+  BrandOpsData,
+  ContentLibraryItem,
+  Opportunity,
+  OutreachDraft,
+  PublishingItem
+} from '../../types/domain';
 
 export interface IntelligenceSignal {
   id: string;
@@ -13,7 +19,8 @@ export interface Recommendation {
   rationale: string;
 }
 
-const clamp = (value: number, min = 0, max = 100) => Math.max(min, Math.min(max, Math.round(value)));
+const clamp = (value: number, min = 0, max = 100) =>
+  Math.max(min, Math.min(max, Math.round(value)));
 const hoursUntil = (iso?: string) => {
   if (!iso) return Number.POSITIVE_INFINITY;
   return (new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60);
@@ -88,7 +95,8 @@ const publishingRecommendation = (item: PublishingItem): Recommendation => {
   if (!item.scheduledFor) {
     return {
       title: 'No schedule set',
-      rationale: 'This draft has no target date. Add a publish window to avoid silent backlog growth.'
+      rationale:
+        'This draft has no target date. Add a publish window to avoid silent backlog growth.'
     };
   }
 
@@ -144,12 +152,14 @@ export const localIntelligence = {
   overdueRisk(data: BrandOpsData): IntelligenceSignal[] {
     return this.rankSignals(
       [
-        ...data.followUps.filter((item) => !item.completed).map((item) => ({
-          id: item.id,
-          label: `Follow-up: ${item.reason}`,
-          score: overdueRiskScore(item.dueAt),
-          reason: `Due ${new Date(item.dueAt).toLocaleString()}.`
-        })),
+        ...data.followUps
+          .filter((item) => !item.completed)
+          .map((item) => ({
+            id: item.id,
+            label: `Follow-up: ${item.reason}`,
+            score: overdueRiskScore(item.dueAt),
+            reason: `Due ${new Date(item.dueAt).toLocaleString()}.`
+          })),
         ...data.opportunities.map((item) => ({
           id: item.id,
           label: `Opportunity: ${item.name}`,
@@ -181,9 +191,7 @@ export const localIntelligence = {
    */
   pipelineProjection(opportunities: Opportunity[]): PipelineProjectionReadout {
     const open = opportunities.filter((o) => !isTerminalOpportunity(o));
-    const rawOpenValueUsd = Math.round(
-      open.reduce((sum, o) => sum + Math.max(0, o.valueUsd), 0)
-    );
+    const rawOpenValueUsd = Math.round(open.reduce((sum, o) => sum + Math.max(0, o.valueUsd), 0));
     const weightedOpenValueUsd = Math.round(
       open.reduce(
         (sum, o) => sum + Math.max(0, o.valueUsd) * (clamp(o.confidence, 0, 100) / 100),
@@ -235,7 +243,8 @@ export const localIntelligence = {
         overlap: snippet
           .toLowerCase()
           .split(/\s+/)
-          .filter((token) => token.length > t.minTokenLength && normalizedDraft.includes(token)).length
+          .filter((token) => token.length > t.minTokenLength && normalizedDraft.includes(token))
+          .length
       }))
       .sort((a, b) => b.overlap - a.overlap)
       .slice(0, t.maxResults)

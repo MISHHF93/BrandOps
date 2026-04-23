@@ -7,12 +7,13 @@ import {
   type DashboardSectionId
 } from '../../src/shared/config/dashboardNavigation';
 
-const read = (relativePath: string) =>
-  readFileSync(resolve(process.cwd(), relativePath), 'utf8');
+const read = (relativePath: string) => readFileSync(resolve(process.cwd(), relativePath), 'utf8');
 
 describe('Cockpit deep link anchors (URL contract)', () => {
   it('maps each workstream to a unique heading id for scrollIntoView', () => {
-    const ids = observedSectionIds.map((s: DashboardSectionId) => getCockpitMobileSectionHeadingId(s));
+    const ids = observedSectionIds.map((s: DashboardSectionId) =>
+      getCockpitMobileSectionHeadingId(s)
+    );
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) {
       expect(id).toMatch(/^cockpit-/);

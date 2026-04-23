@@ -39,10 +39,17 @@ export const parseCommandRoute = (text: string): CommandRoute => {
   if (lower.startsWith('add artifact:') || lower.includes('add integration artifact')) {
     return 'add-integration-artifact';
   }
-  if (lower.includes('add ssh') || lower.includes('ssh target:') || lower.includes('add ssh target')) {
+  if (
+    lower.includes('add ssh') ||
+    lower.includes('ssh target:') ||
+    lower.includes('add ssh target')
+  ) {
     return 'add-ssh-target';
   }
-  if (lower.includes('add source') || (lower.includes('connect') && !lower.includes('add artifact'))) {
+  if (
+    lower.includes('add source') ||
+    (lower.includes('connect') && !lower.includes('add artifact'))
+  ) {
     return 'add-integration-source';
   }
   if (lower.includes('draft outreach')) {
@@ -71,7 +78,10 @@ export const parseCommandRoute = (text: string): CommandRoute => {
   if (lower.includes('add contact')) {
     return 'add-contact';
   }
-  if (lower.includes('update contact relationship') || lower.includes('set contact relationship stage')) {
+  if (
+    lower.includes('update contact relationship') ||
+    lower.includes('set contact relationship stage')
+  ) {
     return 'update-contact-relationship';
   }
   if (lower.includes('update contact')) {

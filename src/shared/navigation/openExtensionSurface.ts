@@ -26,7 +26,10 @@ const transitionDurationMs = () => {
  * `dashboard` + `section` → **mobile.html?section=…** (Cockpit workstream).
  * Bare `dashboard` → **mobile.html?section=chat** (primary app, Chat tab) — not `dashboard.html`.
  */
-export function openExtensionSurface(surface: ExtensionSurfaceTarget, section?: DashboardSectionId) {
+export function openExtensionSurface(
+  surface: ExtensionSurfaceTarget,
+  section?: DashboardSectionId
+) {
   if (surface === 'integrations' || surface === 'integration-hub') {
     openPackagedPageInNewTab(PAGE.integrations);
     return;

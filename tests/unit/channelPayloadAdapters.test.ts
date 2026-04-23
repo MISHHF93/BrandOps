@@ -34,7 +34,9 @@ describe('normalizeChannelWebhookPayload', () => {
               {
                 value: {
                   contacts: [{ wa_id: '15551234567', profile: { name: 'Amina' } }],
-                  messages: [{ from: '15551234567', text: { body: 'reschedule posts to friday 11am' } }]
+                  messages: [
+                    { from: '15551234567', text: { body: 'reschedule posts to friday 11am' } }
+                  ]
                 }
               }
             ]

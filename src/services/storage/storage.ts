@@ -58,7 +58,10 @@ const normalizeContentLibrary = (items: unknown): ContentLibraryItem[] => {
       if (!item || typeof item !== 'object') return null;
       const candidate = item as Record<string, unknown>;
 
-      const id = typeof candidate.id === 'string' ? candidate.id : `cli-${Math.random().toString(36).slice(2, 9)}`;
+      const id =
+        typeof candidate.id === 'string'
+          ? candidate.id
+          : `cli-${Math.random().toString(36).slice(2, 9)}`;
       const title =
         typeof candidate.title === 'string'
           ? candidate.title
@@ -79,7 +82,10 @@ const normalizeContentLibrary = (items: unknown): ContentLibraryItem[] => {
         body,
         tags: asStringArray(candidate.tags),
         audience: typeof candidate.audience === 'string' ? candidate.audience : 'General audience',
-        goal: typeof candidate.goal === 'string' ? candidate.goal : 'Capture and refine reusable content',
+        goal:
+          typeof candidate.goal === 'string'
+            ? candidate.goal
+            : 'Capture and refine reusable content',
         status: (candidate.status as ContentItemStatus) ?? CONTENT_STATUS_FALLBACK,
         publishChannel: (candidate.publishChannel as PublishChannel) ?? PUBLISH_CHANNEL_FALLBACK,
         notes: typeof candidate.notes === 'string' ? candidate.notes : '',
@@ -107,7 +113,8 @@ const normalizePublishingQueue = (items: unknown): PublishingItem[] => {
     .map((item): PublishingItem | null => {
       if (!item || typeof item !== 'object') return null;
       const candidate = item as Record<string, unknown>;
-      const createdAt = typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString();
+      const createdAt =
+        typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString();
       const scheduledFor =
         typeof candidate.scheduledFor === 'string'
           ? candidate.scheduledFor
@@ -132,18 +139,24 @@ const normalizePublishingQueue = (items: unknown): PublishingItem[] => {
 
       return {
         id:
-          typeof candidate.id === 'string' ? candidate.id : `pub-${Math.random().toString(36).slice(2, 9)}`,
+          typeof candidate.id === 'string'
+            ? candidate.id
+            : `pub-${Math.random().toString(36).slice(2, 9)}`,
         title: typeof candidate.title === 'string' ? candidate.title : 'Untitled publishing item',
         body: typeof candidate.body === 'string' ? candidate.body : '',
         platforms: ['linkedin'],
         tags: asStringArray(candidate.tags),
         status: normalizedStatus,
         contentLibraryItemId:
-          typeof candidate.contentLibraryItemId === 'string' ? candidate.contentLibraryItemId : undefined,
+          typeof candidate.contentLibraryItemId === 'string'
+            ? candidate.contentLibraryItemId
+            : undefined,
         scheduledFor,
         reminderAt: typeof candidate.reminderAt === 'string' ? candidate.reminderAt : undefined,
         reminderLeadMinutes:
-          typeof candidate.reminderLeadMinutes === 'number' ? candidate.reminderLeadMinutes : undefined,
+          typeof candidate.reminderLeadMinutes === 'number'
+            ? candidate.reminderLeadMinutes
+            : undefined,
         checklist: typeof candidate.checklist === 'string' ? candidate.checklist : undefined,
         postedAt: typeof candidate.postedAt === 'string' ? candidate.postedAt : undefined,
         skippedAt: typeof candidate.skippedAt === 'string' ? candidate.skippedAt : undefined,
@@ -164,7 +177,8 @@ const normalizeOutreachDrafts = (items: unknown): OutreachDraft[] => {
     .map((item): OutreachDraft | null => {
       if (!item || typeof item !== 'object') return null;
       const candidate = item as Record<string, unknown>;
-      const createdAt = typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString();
+      const createdAt =
+        typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString();
       const targetName =
         typeof candidate.targetName === 'string'
           ? candidate.targetName
@@ -180,13 +194,18 @@ const normalizeOutreachDrafts = (items: unknown): OutreachDraft[] => {
 
       return {
         id:
-          typeof candidate.id === 'string' ? candidate.id : `out-${Math.random().toString(36).slice(2, 9)}`,
+          typeof candidate.id === 'string'
+            ? candidate.id
+            : `out-${Math.random().toString(36).slice(2, 9)}`,
         category: (candidate.category as OutreachCategory) ?? OUTREACH_CATEGORY_FALLBACK,
         targetName,
         company: typeof candidate.company === 'string' ? candidate.company : '',
         role: typeof candidate.role === 'string' ? candidate.role : '',
         messageBody,
-        outreachGoal: typeof candidate.outreachGoal === 'string' ? candidate.outreachGoal : 'Start a conversation',
+        outreachGoal:
+          typeof candidate.outreachGoal === 'string'
+            ? candidate.outreachGoal
+            : 'Start a conversation',
         tone: typeof candidate.tone === 'string' ? candidate.tone : 'Direct and practical',
         status: (candidate.status as OutreachStatus) ?? OUTREACH_STATUS_FALLBACK,
         linkedOpportunity:
@@ -206,16 +225,20 @@ const normalizeOutreachTemplates = (items: unknown): OutreachTemplate[] => {
     .map((item): OutreachTemplate | null => {
       if (!item || typeof item !== 'object') return null;
       const candidate = item as Record<string, unknown>;
-      const createdAt = typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString();
+      const createdAt =
+        typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString();
       return {
         id:
-          typeof candidate.id === 'string' ? candidate.id : `tpl-${Math.random().toString(36).slice(2, 9)}`,
+          typeof candidate.id === 'string'
+            ? candidate.id
+            : `tpl-${Math.random().toString(36).slice(2, 9)}`,
         name: typeof candidate.name === 'string' ? candidate.name : 'Untitled template',
         category: (candidate.category as OutreachCategory) ?? OUTREACH_CATEGORY_FALLBACK,
         openerBlock: typeof candidate.openerBlock === 'string' ? candidate.openerBlock : '',
         valueBlock: typeof candidate.valueBlock === 'string' ? candidate.valueBlock : '',
         proofBlock: typeof candidate.proofBlock === 'string' ? candidate.proofBlock : '',
-        callToActionBlock: typeof candidate.callToActionBlock === 'string' ? candidate.callToActionBlock : '',
+        callToActionBlock:
+          typeof candidate.callToActionBlock === 'string' ? candidate.callToActionBlock : '',
         signoffBlock: typeof candidate.signoffBlock === 'string' ? candidate.signoffBlock : '',
         createdAt,
         updatedAt: typeof candidate.updatedAt === 'string' ? candidate.updatedAt : createdAt
@@ -247,11 +270,14 @@ const normalizeOutreachHistory = (items: unknown): OutreachHistoryEntry[] => {
             ? candidate.id
             : `outh-${Math.random().toString(36).slice(2, 9)}`,
         draftId: typeof candidate.draftId === 'string' ? candidate.draftId : 'unknown-draft',
-        targetName: typeof candidate.targetName === 'string' ? candidate.targetName : 'Unknown target',
+        targetName:
+          typeof candidate.targetName === 'string' ? candidate.targetName : 'Unknown target',
         company: typeof candidate.company === 'string' ? candidate.company : 'Unknown company',
         status,
-        loggedAt: typeof candidate.loggedAt === 'string' ? candidate.loggedAt : new Date().toISOString(),
-        summary: typeof candidate.summary === 'string' ? candidate.summary : 'Outreach status updated.'
+        loggedAt:
+          typeof candidate.loggedAt === 'string' ? candidate.loggedAt : new Date().toISOString(),
+        summary:
+          typeof candidate.summary === 'string' ? candidate.summary : 'Outreach status updated.'
       };
     })
     .filter((item): item is OutreachHistoryEntry => Boolean(item));
@@ -264,7 +290,8 @@ const normalizeContacts = (items: unknown): Contact[] => {
     .map((item): Contact | null => {
       if (!item || typeof item !== 'object') return null;
       const candidate = item as Record<string, unknown>;
-      const legacyName = typeof candidate.fullName === 'string' ? candidate.fullName : 'Unknown contact';
+      const legacyName =
+        typeof candidate.fullName === 'string' ? candidate.fullName : 'Unknown contact';
       const legacyRole = typeof candidate.title === 'string' ? candidate.title : 'Unknown role';
       const relationship = candidate.relationship;
       const relationshipStage =
@@ -280,28 +307,40 @@ const normalizeContacts = (items: unknown): Contact[] => {
               : 'new';
 
       return {
-        id: typeof candidate.id === 'string' ? candidate.id : `contact-${Math.random().toString(36).slice(2, 9)}`,
+        id:
+          typeof candidate.id === 'string'
+            ? candidate.id
+            : `contact-${Math.random().toString(36).slice(2, 9)}`,
         name: typeof candidate.name === 'string' ? candidate.name : legacyName,
         company: typeof candidate.company === 'string' ? candidate.company : 'Unknown company',
         role: typeof candidate.role === 'string' ? candidate.role : legacyRole,
         source: typeof candidate.source === 'string' ? candidate.source : 'manual',
         relationshipStage,
         status:
-          candidate.status === 'active' || candidate.status === 'dormant' || candidate.status === 'archived'
+          candidate.status === 'active' ||
+          candidate.status === 'dormant' ||
+          candidate.status === 'archived'
             ? candidate.status
             : 'active',
-        nextAction: typeof candidate.nextAction === 'string' ? candidate.nextAction : 'Add next action',
-        followUpDate: typeof candidate.followUpDate === 'string' ? candidate.followUpDate : undefined,
+        nextAction:
+          typeof candidate.nextAction === 'string' ? candidate.nextAction : 'Add next action',
+        followUpDate:
+          typeof candidate.followUpDate === 'string' ? candidate.followUpDate : undefined,
         notes: typeof candidate.notes === 'string' ? candidate.notes : '',
         links: asStringArray(candidate.links),
         relatedOutreachDraftIds: asStringArray(candidate.relatedOutreachDraftIds),
         relatedContentTags: asStringArray(candidate.relatedContentTags),
         lastContactAt:
-          typeof candidate.lastContactAt === 'string' ? candidate.lastContactAt : new Date().toISOString(),
+          typeof candidate.lastContactAt === 'string'
+            ? candidate.lastContactAt
+            : new Date().toISOString(),
         fullName: legacyName,
         title: legacyRole,
         relationship:
-          relationship === 'new' || relationship === 'warm' || relationship === 'active-client' || relationship === 'past-client'
+          relationship === 'new' ||
+          relationship === 'warm' ||
+          relationship === 'active-client' ||
+          relationship === 'past-client'
             ? relationship
             : 'new'
       };
@@ -316,7 +355,10 @@ const normalizeCompanies = (items: unknown): Company[] => {
       if (!item || typeof item !== 'object') return null;
       const candidate = item as Record<string, unknown>;
       return {
-        id: typeof candidate.id === 'string' ? candidate.id : `company-${Math.random().toString(36).slice(2, 9)}`,
+        id:
+          typeof candidate.id === 'string'
+            ? candidate.id
+            : `company-${Math.random().toString(36).slice(2, 9)}`,
         name: typeof candidate.name === 'string' ? candidate.name : 'Unknown company',
         source: typeof candidate.source === 'string' ? candidate.source : 'manual',
         relationshipStage:
@@ -327,11 +369,15 @@ const normalizeCompanies = (items: unknown): Company[] => {
             ? candidate.relationshipStage
             : 'new',
         status:
-          candidate.status === 'active' || candidate.status === 'dormant' || candidate.status === 'archived'
+          candidate.status === 'active' ||
+          candidate.status === 'dormant' ||
+          candidate.status === 'archived'
             ? candidate.status
             : 'active',
-        nextAction: typeof candidate.nextAction === 'string' ? candidate.nextAction : 'Add next action',
-        followUpDate: typeof candidate.followUpDate === 'string' ? candidate.followUpDate : undefined,
+        nextAction:
+          typeof candidate.nextAction === 'string' ? candidate.nextAction : 'Add next action',
+        followUpDate:
+          typeof candidate.followUpDate === 'string' ? candidate.followUpDate : undefined,
         notes: typeof candidate.notes === 'string' ? candidate.notes : '',
         links: asStringArray(candidate.links),
         relatedOutreachDraftIds: asStringArray(candidate.relatedOutreachDraftIds),
@@ -365,7 +411,10 @@ const normalizeOpportunities = (items: unknown): Opportunity[] => {
             : 'prospect';
 
       return {
-        id: typeof candidate.id === 'string' ? candidate.id : `opp-${Math.random().toString(36).slice(2, 9)}`,
+        id:
+          typeof candidate.id === 'string'
+            ? candidate.id
+            : `opp-${Math.random().toString(36).slice(2, 9)}`,
         name:
           typeof candidate.name === 'string'
             ? candidate.name
@@ -398,7 +447,8 @@ const normalizeOpportunities = (items: unknown): Opportunity[] => {
             ? candidate.opportunityType
             : 'consulting',
         status: stage,
-        nextAction: typeof candidate.nextAction === 'string' ? candidate.nextAction : 'Define next action',
+        nextAction:
+          typeof candidate.nextAction === 'string' ? candidate.nextAction : 'Define next action',
         followUpDate:
           typeof candidate.followUpDate === 'string'
             ? candidate.followUpDate
@@ -410,8 +460,10 @@ const normalizeOpportunities = (items: unknown): Opportunity[] => {
         relatedOutreachDraftIds: asStringArray(candidate.relatedOutreachDraftIds),
         relatedContentTags: asStringArray(candidate.relatedContentTags),
         archivedAt: typeof candidate.archivedAt === 'string' ? candidate.archivedAt : undefined,
-        createdAt: typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString(),
-        updatedAt: typeof candidate.updatedAt === 'string' ? candidate.updatedAt : new Date().toISOString(),
+        createdAt:
+          typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString(),
+        updatedAt:
+          typeof candidate.updatedAt === 'string' ? candidate.updatedAt : new Date().toISOString(),
         valueUsd: typeof candidate.valueUsd === 'number' ? candidate.valueUsd : 0,
         confidence: typeof candidate.confidence === 'number' ? candidate.confidence : 0,
         contactId: typeof candidate.contactId === 'string' ? candidate.contactId : undefined,
@@ -430,9 +482,14 @@ const normalizeActivityNotes = (items: unknown): ActivityNote[] => {
       if (!item || typeof item !== 'object') return null;
       const candidate = item as Record<string, unknown>;
       return {
-        id: typeof candidate.id === 'string' ? candidate.id : `note-${Math.random().toString(36).slice(2, 9)}`,
+        id:
+          typeof candidate.id === 'string'
+            ? candidate.id
+            : `note-${Math.random().toString(36).slice(2, 9)}`,
         entityType:
-          candidate.entityType === 'contact' || candidate.entityType === 'company' || candidate.entityType === 'opportunity'
+          candidate.entityType === 'contact' ||
+          candidate.entityType === 'company' ||
+          candidate.entityType === 'opportunity'
             ? candidate.entityType
             : 'opportunity',
         entityId: typeof candidate.entityId === 'string' ? candidate.entityId : 'unknown',
@@ -440,7 +497,8 @@ const normalizeActivityNotes = (items: unknown): ActivityNote[] => {
         detail: typeof candidate.detail === 'string' ? candidate.detail : '',
         status: typeof candidate.status === 'string' ? candidate.status : undefined,
         nextAction: typeof candidate.nextAction === 'string' ? candidate.nextAction : undefined,
-        createdAt: typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString()
+        createdAt:
+          typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString()
       };
     })
     .filter((item): item is ActivityNote => Boolean(item));
@@ -513,8 +571,7 @@ const normalizeFollowUps = (value: unknown): FollowUpTask[] => {
       let recurrence: FollowUpTask['recurrence'];
       if (
         recurrenceCandidate &&
-        (recurrenceCandidate.interval === 'daily' ||
-          recurrenceCandidate.interval === 'weekly') &&
+        (recurrenceCandidate.interval === 'daily' || recurrenceCandidate.interval === 'weekly') &&
         typeof recurrenceCandidate.every === 'number' &&
         Number.isFinite(recurrenceCandidate.every)
       ) {
@@ -530,9 +587,7 @@ const normalizeFollowUps = (value: unknown): FollowUpTask[] => {
             ? candidate.id
             : `fu-${Math.random().toString(36).slice(2, 9)}`,
         contactId:
-          typeof candidate.contactId === 'string'
-            ? candidate.contactId
-            : 'unknown-contact',
+          typeof candidate.contactId === 'string' ? candidate.contactId : 'unknown-contact',
         reason: asTrimmedString(candidate.reason, 'Follow up'),
         dueAt,
         completed: Boolean(candidate.completed),
@@ -612,8 +667,7 @@ const normalizeSchedulerState = (value: unknown): SchedulerState => {
 
           const recurrence =
             entry.recurrence &&
-            (entry.recurrence.interval === 'daily' ||
-              entry.recurrence.interval === 'weekly') &&
+            (entry.recurrence.interval === 'daily' || entry.recurrence.interval === 'weekly') &&
             typeof entry.recurrence.every === 'number' &&
             Number.isFinite(entry.recurrence.every)
               ? {
@@ -670,7 +724,9 @@ const normalizeLinkedInOAuthState = (
     refreshToken: typeof candidate.refreshToken === 'string' ? candidate.refreshToken : undefined,
     expiresAt: typeof candidate.expiresAt === 'string' ? candidate.expiresAt : undefined,
     scope: Array.isArray(candidate.scope)
-      ? candidate.scope.filter((item): item is string => typeof item === 'string' && item.length > 0)
+      ? candidate.scope.filter(
+          (item): item is string => typeof item === 'string' && item.length > 0
+        )
       : [],
     tokenType: typeof candidate.tokenType === 'string' ? candidate.tokenType : undefined
   };
@@ -683,12 +739,17 @@ const normalizeLinkedInIdentityProfile = (
     return undefined;
   }
 
-  const candidate = value as Partial<NonNullable<BrandOpsData['settings']['syncHub']['linkedin']['profile']>>;
+  const candidate = value as Partial<
+    NonNullable<BrandOpsData['settings']['syncHub']['linkedin']['profile']>
+  >;
   const profile: NonNullable<BrandOpsData['settings']['syncHub']['linkedin']['profile']> = {};
   if (typeof candidate.sub === 'string' && candidate.sub.length > 0) profile.sub = candidate.sub;
-  if (typeof candidate.name === 'string' && candidate.name.length > 0) profile.name = candidate.name;
-  if (typeof candidate.email === 'string' && candidate.email.length > 0) profile.email = candidate.email;
-  if (typeof candidate.picture === 'string' && candidate.picture.length > 0) profile.picture = candidate.picture;
+  if (typeof candidate.name === 'string' && candidate.name.length > 0)
+    profile.name = candidate.name;
+  if (typeof candidate.email === 'string' && candidate.email.length > 0)
+    profile.email = candidate.email;
+  if (typeof candidate.picture === 'string' && candidate.picture.length > 0)
+    profile.picture = candidate.picture;
   return Object.keys(profile).length > 0 ? profile : undefined;
 };
 
@@ -701,7 +762,8 @@ const normalizeIdentityProviderSettings = (
   }
 
   const candidate = value as Partial<BrandOpsData['settings']['syncHub']['linkedin']>;
-  const hasClientId = typeof candidate.clientId === 'string' && candidate.clientId.trim().length > 0;
+  const hasClientId =
+    typeof candidate.clientId === 'string' && candidate.clientId.trim().length > 0;
 
   return {
     clientId: typeof candidate.clientId === 'string' ? candidate.clientId : fallback.clientId,
@@ -761,8 +823,7 @@ const normalizeNotificationCenterSettings = (
     workdayEndHourRaw <= workdayStartHour ? workdayStartHour + 1 : workdayEndHourRaw;
 
   return {
-    enabled:
-      typeof candidate.enabled === 'boolean' ? candidate.enabled : fallback.enabled,
+    enabled: typeof candidate.enabled === 'boolean' ? candidate.enabled : fallback.enabled,
     managerialWeight,
     workdayStartHour,
     workdayEndHour,
@@ -781,9 +842,7 @@ const normalizeNotificationCenterSettings = (
         ? candidate.preferredModel
         : fallback.preferredModel,
     roleContext:
-      typeof candidate.roleContext === 'string'
-        ? candidate.roleContext
-        : fallback.roleContext,
+      typeof candidate.roleContext === 'string' ? candidate.roleContext : fallback.roleContext,
     promptTemplate:
       typeof candidate.promptTemplate === 'string'
         ? candidate.promptTemplate
@@ -799,9 +858,7 @@ const normalizeNotificationCenterSettings = (
   };
 };
 
-const normalizeCadenceFlowSettings = (
-  value: unknown
-): BrandOpsData['settings']['cadenceFlow'] => {
+const normalizeCadenceFlowSettings = (value: unknown): BrandOpsData['settings']['cadenceFlow'] => {
   const fallback = seedData.settings.cadenceFlow;
   if (!value || typeof value !== 'object') {
     return fallback;
@@ -1099,7 +1156,9 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
   return {
     timezone: typeof candidate.timezone === 'string' ? candidate.timezone : fallback.timezone,
     defaultReminderLeadHours:
-      typeof candidate.defaultReminderLeadHours === 'number' ? candidate.defaultReminderLeadHours : fallback.defaultReminderLeadHours,
+      typeof candidate.defaultReminderLeadHours === 'number'
+        ? candidate.defaultReminderLeadHours
+        : fallback.defaultReminderLeadHours,
     weekStartsOn: candidate.weekStartsOn === 'sunday' ? 'sunday' : 'monday',
     theme: candidate.theme === 'light' ? 'light' : 'dark',
     visualMode:
@@ -1116,8 +1175,7 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
       typeof candidate.ambientFxEnabled === 'boolean'
         ? candidate.ambientFxEnabled
         : fallback.ambientFxEnabled,
-    cockpitLayout:
-      candidate.cockpitLayout === 'unified-scroll' ? 'unified-scroll' : 'sections',
+    cockpitLayout: candidate.cockpitLayout === 'unified-scroll' ? 'unified-scroll' : 'sections',
     cockpitDensity: candidate.cockpitDensity === 'compact' ? 'compact' : 'comfortable',
     localModelEnabled: Boolean(candidate.localModelEnabled),
     aiAdapterMode:
@@ -1137,8 +1195,8 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
       showContactInsights: Boolean(candidate.overlay?.showContactInsights)
     },
     automationRules: Array.isArray(candidate.automationRules)
-      ? candidate.automationRules
-          .filter((rule): rule is BrandOpsData['settings']['automationRules'][number] => {
+      ? candidate.automationRules.filter(
+          (rule): rule is BrandOpsData['settings']['automationRules'][number] => {
             return (
               Boolean(rule) &&
               typeof rule.id === 'string' &&
@@ -1151,7 +1209,8 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
                 rule.action === 'notification') &&
               typeof rule.enabled === 'boolean'
             );
-          })
+          }
+        )
       : fallback.automationRules,
     syncHub: normalizeSyncHubSettings(candidate.syncHub),
     notificationCenter: normalizeNotificationCenterSettings(candidate.notificationCenter),
@@ -1246,13 +1305,15 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
         ? base.seed.welcomeCompletedAt
         : undefined,
     onboardingVersion:
-      typeof base.seed?.onboardingVersion === 'string' && base.seed.onboardingVersion.trim().length > 0
+      typeof base.seed?.onboardingVersion === 'string' &&
+      base.seed.onboardingVersion.trim().length > 0
         ? base.seed.onboardingVersion
         : seedData.seed.onboardingVersion,
     /** Legacy guest/demo sessions removed — production requires federated OAuth. */
     guestSessionAt: undefined,
     previewMagicSignInAt:
-      typeof base.seed?.previewMagicSignInAt === 'string' && base.seed.previewMagicSignInAt.length > 0
+      typeof base.seed?.previewMagicSignInAt === 'string' &&
+      base.seed.previewMagicSignInAt.length > 0
         ? base.seed.previewMagicSignInAt
         : undefined
   }

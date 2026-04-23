@@ -75,19 +75,26 @@ export const QUERY = {
 
 export type WelcomeFlowQueryValue = 'signup';
 
-export const EXTENSION_ROUTE_CATALOG: Array<{ page: string; query: string; values: string; notes: string }> = [
+export const EXTENSION_ROUTE_CATALOG: Array<{
+  page: string;
+  query: string;
+  values: string;
+  notes: string;
+}> = [
   {
     page: PAGE.welcome,
     query: `${QUERY.welcomeFlow} (optional)`,
     values: 'signup',
-    notes: 'Omit param = sign in at welcome.html; ?flow=signup = create account. Legacy ?auth= normalized on load.'
+    notes:
+      'Omit param = sign in at welcome.html; ?flow=signup = create account. Legacy ?auth= normalized on load.'
   },
   {
     page: PAGE.mobile,
     query: `${QUERY.dashboardSection} (optional)`,
     values:
       'Tab: pulse | timeline | chat | settings | integrations | daily | cockpit — Workstream: today | pipeline | brand-content | connections (+ legacy)',
-    notes: 'One param: tab tokens for bottom nav; workstream ids open Cockpit and scroll. See `mobileShellQuery.ts`.'
+    notes:
+      'One param: tab tokens for bottom nav; workstream ids open Cockpit and scroll. See `mobileShellQuery.ts`.'
   },
   {
     page: PAGE.dashboard,
@@ -122,7 +129,10 @@ export const EXTENSION_ROUTE_CATALOG: Array<{ page: string; query: string; value
 ];
 
 function withQuery(file: string, params: Record<string, string | undefined>): string {
-  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== '') as [string, string][];
+  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== '') as [
+    string,
+    string
+  ][];
   if (entries.length === 0) return file;
   const qs = new URLSearchParams(entries).toString();
   return `${file}?${qs}`;
@@ -152,9 +162,7 @@ export function buildWelcomeUrl(opts?: { flow?: 'signup'; auth?: 'signup' | 'sig
   return buildWelcomeSignInUrl();
 }
 
-export function buildDashboardUrl(opts?: {
-  section?: DashboardSectionId;
-}): string {
+export function buildDashboardUrl(opts?: { section?: DashboardSectionId }): string {
   const params: Record<string, string> = {};
   if (opts?.section) params[QUERY.dashboardSection] = opts.section;
   return withQuery(PAGE.dashboard, params);

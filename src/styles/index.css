@@ -106,8 +106,8 @@
   --field-border: var(--color-border);
   --field-focus-ring: var(--color-focus-ring);
   font-family:
-    "Segoe UI Variable Text",
-    "Segoe UI",
+    'Segoe UI Variable Text',
+    'Segoe UI',
     Inter,
     ui-sans-serif,
     system-ui,
@@ -116,7 +116,7 @@
 }
 
 /* Monochrome light: paper / ink hierarchy (no blue identity). */
-:root[data-theme="light"] {
+:root[data-theme='light'] {
   color-scheme: light;
   /* Primitive tokens (light mode) */
   --color-bg: 248 249 251;
@@ -215,7 +215,7 @@ body {
   color: rgb(var(--color-text));
 }
 
-:root[data-theme="light"] body {
+:root[data-theme='light'] body {
   background:
     radial-gradient(100% 95% at 88% -8%, rgb(var(--color-text) / 0.028), transparent 58%),
     radial-gradient(95% 90% at -12% 108%, rgb(var(--color-text-muted) / 0.024), transparent 62%),
@@ -229,7 +229,7 @@ body {
 
 body::before,
 body::after {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -254,13 +254,13 @@ body::after {
 }
 
 /* Welcome (welcome.html): flat tokenized canvas aligned with system theme. */
-html[data-app-surface="welcome"] body {
+html[data-app-surface='welcome'] body {
   background: rgb(var(--color-bg));
   color: rgb(var(--color-text));
 }
 
-html[data-app-surface="welcome"] body::before,
-html[data-app-surface="welcome"] body::after {
+html[data-app-surface='welcome'] body::before,
+html[data-app-surface='welcome'] body::after {
   opacity: 0;
 }
 
@@ -281,7 +281,7 @@ html[data-app-surface="welcome"] body::after {
     );
   }
 
-  :root[data-theme="light"] .bo-mobile-app {
+  :root[data-theme='light'] .bo-mobile-app {
     background: linear-gradient(
       165deg,
       rgb(var(--color-bg-elevated) / 0.97),
@@ -290,7 +290,7 @@ html[data-app-surface="welcome"] body::after {
     );
   }
 
-  :root[data-theme="light"] .bo-mobile-header {
+  :root[data-theme='light'] .bo-mobile-header {
     border-bottom: 1px solid rgb(var(--color-border) / 0.55);
     background: linear-gradient(
       92deg,
@@ -301,9 +301,13 @@ html[data-app-surface="welcome"] body::after {
     box-shadow: 0 10px 26px rgb(var(--color-shadow) / 0.14);
   }
 
-  :root[data-theme="light"] .bo-mobile-nav {
+  :root[data-theme='light'] .bo-mobile-nav {
     border-top: 1px solid rgb(var(--color-border) / 0.58);
-    background: linear-gradient(0deg, rgb(var(--color-bg) / 0.99), rgb(var(--color-bg-elevated) / 0.98));
+    background: linear-gradient(
+      0deg,
+      rgb(var(--color-bg) / 0.99),
+      rgb(var(--color-bg-elevated) / 0.98)
+    );
   }
 
   .bo-mobile-skip {
@@ -348,7 +352,11 @@ html[data-app-surface="welcome"] body::after {
 
   .bo-mobile-nav {
     border-top: 1px solid rgb(var(--color-border) / 0.5);
-    background: linear-gradient(0deg, rgb(var(--color-bg) / 0.96), rgb(var(--color-bg-elevated) / 0.9));
+    background: linear-gradient(
+      0deg,
+      rgb(var(--color-bg) / 0.96),
+      rgb(var(--color-bg-elevated) / 0.9)
+    );
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
     padding-left: max(0.15rem, env(safe-area-inset-left, 0px));
@@ -360,18 +368,18 @@ html[data-app-surface="welcome"] body::after {
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
   }
 
-  [data-visual-mode="retroMagic"] {
+  [data-visual-mode='retroMagic'] {
     --retro-noise-opacity: 0.045;
     --glass-blur-strong: 20px;
     --glass-saturate: 115%;
   }
 
-  [data-motion-mode="wild"] {
+  [data-motion-mode='wild'] {
     --duration-liquid-enter: 400ms;
     --duration-liquid-hover: 260ms;
   }
 
-  [data-motion-mode="off"] {
+  [data-motion-mode='off'] {
     --duration-fast: 0ms;
     --duration-base: 0ms;
     --duration-slow: 0ms;
@@ -385,7 +393,11 @@ html[data-app-surface="welcome"] body::after {
     overflow: clip;
     border-color: rgb(var(--color-primary) / 0.34);
     background:
-      linear-gradient(145deg, rgb(var(--color-surface) / 0.95), rgb(var(--color-bg-elevated) / 0.96)),
+      linear-gradient(
+        145deg,
+        rgb(var(--color-surface) / 0.95),
+        rgb(var(--color-bg-elevated) / 0.96)
+      ),
       radial-gradient(130% 160% at 110% -6%, rgb(var(--retro-glow-pink) / 0.12), transparent 58%),
       radial-gradient(120% 150% at -10% 110%, rgb(var(--retro-glow-cyan) / 0.1), transparent 54%);
     box-shadow:
@@ -395,7 +407,7 @@ html[data-app-surface="welcome"] body::after {
   }
 
   .bo-retro-panel::after {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -411,16 +423,16 @@ html[data-app-surface="welcome"] body::after {
   }
 
   /* Light: `screen` sheen on pale surfaces reads as haze; soft-light + lower opacity + subtler scanlines. */
-  :root[data-theme="light"][data-visual-mode="retroMagic"] {
+  :root[data-theme='light'][data-visual-mode='retroMagic'] {
     --retro-noise-opacity: 0.03;
   }
 
-  :root[data-theme="light"][data-visual-mode="retroMagic"] .bo-retro-panel::after {
+  :root[data-theme='light'][data-visual-mode='retroMagic'] .bo-retro-panel::after {
     mix-blend-mode: soft-light;
     opacity: 0.28;
   }
 
-  :root[data-theme="light"][data-visual-mode="retroMagic"] .bo-retro-card:hover::before {
+  :root[data-theme='light'][data-visual-mode='retroMagic'] .bo-retro-card:hover::before {
     opacity: 0.4;
   }
 
@@ -448,11 +460,16 @@ html[data-app-surface="welcome"] body::after {
   }
 
   .bo-retro-card::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(120deg, transparent 26%, rgb(var(--color-text) / 0.1) 48%, transparent 74%);
+    background: linear-gradient(
+      120deg,
+      transparent 26%,
+      rgb(var(--color-text) / 0.1) 48%,
+      transparent 74%
+    );
     opacity: 0;
     transform: translateX(-38%);
     transition:
@@ -470,7 +487,8 @@ html[data-app-surface="welcome"] body::after {
   }
 
   .bo-retro-section-enter {
-    animation: bo-retro-section-enter calc(var(--duration-liquid-enter) + 60ms) var(--ease-liquid-out);
+    animation: bo-retro-section-enter calc(var(--duration-liquid-enter) + 60ms)
+      var(--ease-liquid-out);
   }
 
   .bo-retro-ambient {
@@ -479,7 +497,7 @@ html[data-app-surface="welcome"] body::after {
 
   .bo-retro-ambient::before,
   .bo-retro-ambient::after {
-    content: "";
+    content: '';
     position: absolute;
     pointer-events: none;
     inset: -12%;
@@ -487,7 +505,7 @@ html[data-app-surface="welcome"] body::after {
     transition: opacity var(--duration-liquid-hover) var(--ease-liquid-out);
   }
 
-  [data-ambient-fx="on"] .bo-retro-ambient::before {
+  [data-ambient-fx='on'] .bo-retro-ambient::before {
     opacity: 0.36;
     background:
       radial-gradient(circle at 12% 18%, rgb(var(--retro-glow-cyan) / 0.14), transparent 36%),
@@ -495,7 +513,7 @@ html[data-app-surface="welcome"] body::after {
     animation: bo-retro-float 14s var(--ease-liquid-in-out) infinite alternate;
   }
 
-  [data-ambient-fx="on"] .bo-retro-ambient::after {
+  [data-ambient-fx='on'] .bo-retro-ambient::after {
     opacity: 0.26;
     background:
       radial-gradient(circle at 24% 84%, rgb(var(--retro-glow-gold) / 0.08), transparent 34%),
@@ -525,23 +543,28 @@ html[data-app-surface="welcome"] body::after {
     animation: bo-retro-nav-signal 420ms var(--ease-liquid-out);
   }
 
-  [data-visual-mode="retroMagic"] .bo-card {
+  [data-visual-mode='retroMagic'] .bo-card {
     border-color: rgb(var(--retro-glow-cyan) / 0.28);
     background:
-      linear-gradient(162deg, rgb(var(--color-surface) / 0.9), rgb(var(--color-bg-elevated) / 0.86) 56%, rgb(var(--color-bg) / 0.88)),
+      linear-gradient(
+        162deg,
+        rgb(var(--color-surface) / 0.9),
+        rgb(var(--color-bg-elevated) / 0.86) 56%,
+        rgb(var(--color-bg) / 0.88)
+      ),
       radial-gradient(112% 140% at 96% 4%, rgb(var(--retro-glow-pink) / 0.15), transparent 58%),
       radial-gradient(112% 140% at 8% 96%, rgb(var(--retro-glow-cyan) / 0.14), transparent 52%);
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   }
 
-  [data-visual-mode="retroMagic"] .bo-pill {
+  [data-visual-mode='retroMagic'] .bo-pill {
     border-color: rgb(var(--retro-glow-cyan) / 0.4);
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.1),
       0 0 14px rgb(var(--retro-glow-cyan) / 0.16);
   }
 
-  [data-visual-mode="retroMagic"] .bo-link:hover {
+  [data-visual-mode='retroMagic'] .bo-link:hover {
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.08),
       0 10px 22px rgb(var(--color-shadow) / 0.34),
@@ -621,7 +644,7 @@ html[data-app-surface="welcome"] body::after {
   }
 
   .bo-dashboard-shell::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -631,7 +654,8 @@ html[data-app-surface="welcome"] body::after {
       radial-gradient(90% 120% at 94% 6%, rgb(var(--color-secondary) / 0.06), transparent 56%);
   }
 
-  .bo-dashboard-shell--sidebar-open {}
+  .bo-dashboard-shell--sidebar-open {
+  }
 
   /** Cockpit compact density: tighter page padding (see docs/cockpit-compact-ux-spec.md). */
   .bo-dashboard-shell--compact {
@@ -645,25 +669,30 @@ html[data-app-surface="welcome"] body::after {
   .bo-system-overlay {
     animation: bo-overlay-enter var(--duration-liquid-enter) var(--ease-liquid-out);
     backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
-    background:
-      linear-gradient(180deg, rgb(var(--color-shadow) / 0.58), rgb(var(--color-shadow) / 0.72));
+    background: linear-gradient(
+      180deg,
+      rgb(var(--color-shadow) / 0.58),
+      rgb(var(--color-shadow) / 0.72)
+    );
   }
 
   .bo-system-overlay--soft {
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    background:
-      linear-gradient(180deg, rgb(var(--color-shadow) / 0.48), rgb(var(--color-shadow) / 0.62));
+    background: linear-gradient(
+      180deg,
+      rgb(var(--color-shadow) / 0.48),
+      rgb(var(--color-shadow) / 0.62)
+    );
   }
 
   .bo-system-sheet {
     border-color: rgb(var(--color-border) / 0.76);
-    background:
-      linear-gradient(
-        154deg,
-        rgb(var(--color-surface) / 0.88),
-        rgb(var(--color-bg-elevated) / 0.84) 62%,
-        rgb(var(--color-bg) / 0.88)
-      );
+    background: linear-gradient(
+      154deg,
+      rgb(var(--color-surface) / 0.88),
+      rgb(var(--color-bg-elevated) / 0.84) 62%,
+      rgb(var(--color-bg) / 0.88)
+    );
     box-shadow:
       0 24px 48px rgb(var(--color-shadow) / 0.52),
       0 0 0 1px rgb(var(--color-primary) / 0.1),
@@ -681,7 +710,11 @@ html[data-app-surface="welcome"] body::after {
   .bo-sidebar-overlay {
     animation: bo-overlay-enter var(--duration-liquid-enter) var(--ease-liquid-out);
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    background: linear-gradient(180deg, rgb(var(--color-shadow) / 0.52), rgb(var(--color-shadow) / 0.66));
+    background: linear-gradient(
+      180deg,
+      rgb(var(--color-shadow) / 0.52),
+      rgb(var(--color-shadow) / 0.66)
+    );
   }
 
   .bo-sidebar-curtain {
@@ -714,13 +747,12 @@ html[data-app-surface="welcome"] body::after {
     overflow: clip;
     padding: clamp(0.7rem, 0.9vw, 0.95rem);
     border-color: rgb(var(--color-border) / 0.66);
-    background:
-      linear-gradient(
-        160deg,
-        rgb(var(--color-surface) / 0.9),
-        rgb(var(--color-bg-elevated) / 0.86) 58%,
-        rgb(var(--color-bg) / 0.88)
-      );
+    background: linear-gradient(
+      160deg,
+      rgb(var(--color-surface) / 0.9),
+      rgb(var(--color-bg-elevated) / 0.86) 58%,
+      rgb(var(--color-bg) / 0.88)
+    );
     box-shadow:
       0 12px 28px rgb(var(--color-shadow) / 0.38),
       0 0 0 1px rgb(var(--color-primary) / 0.07),
@@ -734,13 +766,12 @@ html[data-app-surface="welcome"] body::after {
 
   .bo-glass-panel {
     border-color: rgb(var(--color-border) / var(--glass-border-alpha));
-    background:
-      linear-gradient(
-        156deg,
-        rgb(var(--color-surface) / var(--glass-panel-alpha)),
-        rgb(var(--color-bg-elevated) / calc(var(--glass-panel-alpha) - 0.04)) 58%,
-        rgb(var(--color-bg) / calc(var(--glass-panel-alpha) - 0.02))
-      );
+    background: linear-gradient(
+      156deg,
+      rgb(var(--color-surface) / var(--glass-panel-alpha)),
+      rgb(var(--color-bg-elevated) / calc(var(--glass-panel-alpha) - 0.04)) 58%,
+      rgb(var(--color-bg) / calc(var(--glass-panel-alpha) - 0.02))
+    );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.04),
       0 10px 24px rgb(var(--color-shadow) / var(--glass-shadow-alpha));
@@ -749,13 +780,12 @@ html[data-app-surface="welcome"] body::after {
 
   .bo-glass-panel--muted {
     border-color: rgb(var(--color-border) / 0.62);
-    background:
-      linear-gradient(
-        158deg,
-        rgb(var(--color-surface) / 0.64),
-        rgb(var(--color-bg-elevated) / 0.62) 60%,
-        rgb(var(--color-bg) / 0.66)
-      );
+    background: linear-gradient(
+      158deg,
+      rgb(var(--color-surface) / 0.64),
+      rgb(var(--color-bg-elevated) / 0.62) 60%,
+      rgb(var(--color-bg) / 0.66)
+    );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.035),
       0 8px 20px rgb(var(--color-shadow) / 0.28);
@@ -764,22 +794,25 @@ html[data-app-surface="welcome"] body::after {
 
   .bo-glass-chip {
     border-color: rgb(var(--color-border) / 0.78);
-    background:
-      linear-gradient(
-        170deg,
-        rgb(var(--color-surface) / 0.52),
-        rgb(var(--color-bg) / 0.48)
-      );
+    background: linear-gradient(
+      170deg,
+      rgb(var(--color-surface) / 0.52),
+      rgb(var(--color-bg) / 0.48)
+    );
     box-shadow: inset 0 1px 0 rgb(var(--color-text) / 0.035);
     backdrop-filter: blur(var(--glass-blur-soft)) saturate(var(--glass-saturate));
   }
 
   .bo-card::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(120% 140% at 96% 2%, rgb(var(--color-primary) / 0.09), transparent 58%);
+    background: radial-gradient(
+      120% 140% at 96% 2%,
+      rgb(var(--color-primary) / 0.09),
+      transparent 58%
+    );
     opacity: 0.28;
   }
 
@@ -795,13 +828,12 @@ html[data-app-surface="welcome"] body::after {
   .bo-panel {
     @apply rounded-xl border p-3;
     border-color: rgb(var(--color-border) / 0.72);
-    background:
-      linear-gradient(
-        158deg,
-        rgb(var(--panel-bg) / 0.78),
-        rgb(var(--bg-page) / 0.74) 62%,
-        rgb(var(--bg-page) / 0.8)
-      );
+    background: linear-gradient(
+      158deg,
+      rgb(var(--panel-bg) / 0.78),
+      rgb(var(--bg-page) / 0.74) 62%,
+      rgb(var(--bg-page) / 0.8)
+    );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.035),
       0 8px 20px rgb(var(--panel-shadow) / 0.28);
@@ -811,13 +843,12 @@ html[data-app-surface="welcome"] body::after {
   .bo-panel-muted {
     @apply rounded-xl border p-3;
     border-color: rgb(var(--color-border) / 0.62);
-    background:
-      linear-gradient(
-        158deg,
-        rgb(var(--panel-bg) / 0.62),
-        rgb(var(--bg-page) / 0.58) 62%,
-        rgb(var(--bg-page) / 0.66)
-      );
+    background: linear-gradient(
+      158deg,
+      rgb(var(--panel-bg) / 0.62),
+      rgb(var(--bg-page) / 0.58) 62%,
+      rgb(var(--bg-page) / 0.66)
+    );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.03),
       0 6px 16px rgb(var(--panel-shadow) / 0.24);
@@ -827,12 +858,7 @@ html[data-app-surface="welcome"] body::after {
   .bo-control-row {
     @apply rounded-xl border p-3 text-sm;
     border-color: rgb(var(--color-border) / 0.72);
-    background:
-      linear-gradient(
-        156deg,
-        rgb(var(--field-bg) / 0.72),
-        rgb(var(--bg-page) / 0.66)
-      );
+    background: linear-gradient(156deg, rgb(var(--field-bg) / 0.72), rgb(var(--bg-page) / 0.66));
     box-shadow: inset 0 1px 0 rgb(var(--color-text) / 0.03);
   }
 
@@ -859,21 +885,21 @@ html[data-app-surface="welcome"] body::after {
       inset 0 1px 0 rgb(var(--color-text) / 0.035);
   }
 
-  .bo-system-screen :where(
-    [class*="rounded-xl"][class*="border-slate-800"][class*="bg-slate-950"],
-    [class*="rounded-2xl"][class*="border-slate-800"][class*="bg-slate-950"],
-    [class*="rounded-3xl"][class*="border-slate-800"][class*="bg-slate-950"],
-    [class*="rounded-lg"][class*="border-slate-700"][class*="bg-slate-950"],
-    [class*="rounded-lg"][class*="border-slate-700"][class*="bg-slate-900"]
-  ) {
+  .bo-system-screen
+    :where(
+      [class*='rounded-xl'][class*='border-slate-800'][class*='bg-slate-950'],
+      [class*='rounded-2xl'][class*='border-slate-800'][class*='bg-slate-950'],
+      [class*='rounded-3xl'][class*='border-slate-800'][class*='bg-slate-950'],
+      [class*='rounded-lg'][class*='border-slate-700'][class*='bg-slate-950'],
+      [class*='rounded-lg'][class*='border-slate-700'][class*='bg-slate-900']
+    ) {
     border-color: rgb(var(--color-border) / 0.68);
-    background:
-      linear-gradient(
-        146deg,
-        rgb(var(--color-surface) / 0.78),
-        rgb(var(--color-bg-elevated) / 0.74) 62%,
-        rgb(var(--color-bg) / 0.78)
-      );
+    background: linear-gradient(
+      146deg,
+      rgb(var(--color-surface) / 0.78),
+      rgb(var(--color-bg-elevated) / 0.74) 62%,
+      rgb(var(--color-bg) / 0.78)
+    );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.04),
       0 8px 20px rgb(var(--color-shadow) / 0.28);
@@ -884,10 +910,11 @@ html[data-app-surface="welcome"] body::after {
       transform var(--duration-liquid-hover) var(--ease-liquid-out);
   }
 
-  .bo-system-screen :where(
-    [class*="rounded-xl"][class*="border-slate-800"][class*="bg-slate-950"],
-    [class*="rounded-2xl"][class*="border-slate-800"][class*="bg-slate-950"]
-  ):hover {
+  .bo-system-screen
+    :where(
+      [class*='rounded-xl'][class*='border-slate-800'][class*='bg-slate-950'],
+      [class*='rounded-2xl'][class*='border-slate-800'][class*='bg-slate-950']
+    ):hover {
     border-color: rgb(var(--color-primary) / 0.46);
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.03),
@@ -896,19 +923,19 @@ html[data-app-surface="welcome"] body::after {
   }
 
   /* Semantic token panels: same depth as migrated slate tiles */
-  .bo-system-screen :where(
-    [class*="rounded-xl"][class*="border-border"][class*="bg-bg/"],
-    [class*="rounded-2xl"][class*="border-border"][class*="bg-bg/"],
-    [class*="rounded-lg"][class*="border-border"][class*="bg-surface/"]
-  ) {
+  .bo-system-screen
+    :where(
+      [class*='rounded-xl'][class*='border-border'][class*='bg-bg/'],
+      [class*='rounded-2xl'][class*='border-border'][class*='bg-bg/'],
+      [class*='rounded-lg'][class*='border-border'][class*='bg-surface/']
+    ) {
     border-color: rgb(var(--color-border) / 0.68);
-    background:
-      linear-gradient(
-        146deg,
-        rgb(var(--color-surface) / 0.78),
-        rgb(var(--color-bg-elevated) / 0.74) 62%,
-        rgb(var(--color-bg) / 0.78)
-      );
+    background: linear-gradient(
+      146deg,
+      rgb(var(--color-surface) / 0.78),
+      rgb(var(--color-bg-elevated) / 0.74) 62%,
+      rgb(var(--color-bg) / 0.78)
+    );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.04),
       0 8px 20px rgb(var(--color-shadow) / 0.28);
@@ -919,10 +946,11 @@ html[data-app-surface="welcome"] body::after {
       transform var(--duration-liquid-hover) var(--ease-liquid-out);
   }
 
-  .bo-system-screen :where(
-    [class*="rounded-xl"][class*="border-border"][class*="bg-bg/"],
-    [class*="rounded-2xl"][class*="border-border"][class*="bg-bg/"]
-  ):hover {
+  .bo-system-screen
+    :where(
+      [class*='rounded-xl'][class*='border-border'][class*='bg-bg/'],
+      [class*='rounded-2xl'][class*='border-border'][class*='bg-bg/']
+    ):hover {
     border-color: rgb(var(--color-primary) / 0.46);
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.03),
@@ -963,7 +991,7 @@ html[data-app-surface="welcome"] body::after {
   }
 
   .bo-now-strip::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -1040,13 +1068,12 @@ html[data-app-surface="welcome"] body::after {
   .bo-auth-sheet {
     @apply rounded-2xl border px-7 py-8 sm:px-8;
     border-color: rgb(var(--color-border) / 0.9);
-    background:
-      linear-gradient(
-        154deg,
-        rgb(var(--sheet-bg) / 0.94),
-        rgb(var(--bg-page) / 0.9) 62%,
-        rgb(var(--bg-page) / 0.92)
-      );
+    background: linear-gradient(
+      154deg,
+      rgb(var(--sheet-bg) / 0.94),
+      rgb(var(--bg-page) / 0.9) 62%,
+      rgb(var(--bg-page) / 0.92)
+    );
     box-shadow:
       0 24px 80px rgb(var(--sheet-shadow) / 0.42),
       0 0 0 1px rgb(var(--color-primary) / 0.08),
@@ -1056,13 +1083,12 @@ html[data-app-surface="welcome"] body::after {
 
   .bo-overlay-drawer {
     border-left: 1px solid rgb(var(--color-border-strong) / 0.86);
-    background:
-      linear-gradient(
-        158deg,
-        rgb(var(--sheet-bg) / 0.96),
-        rgb(var(--bg-page) / 0.92) 64%,
-        rgb(var(--bg-page) / 0.94)
-      );
+    background: linear-gradient(
+      158deg,
+      rgb(var(--sheet-bg) / 0.96),
+      rgb(var(--bg-page) / 0.92) 64%,
+      rgb(var(--bg-page) / 0.94)
+    );
     box-shadow:
       0 0 48px rgb(var(--sheet-shadow) / 0.35),
       -1px 0 0 rgb(var(--color-primary) / 0.08);
@@ -1133,7 +1159,11 @@ html[data-app-surface="welcome"] body::after {
     color: rgb(var(--color-warning) / 0.76);
     background:
       radial-gradient(circle at 28% 26%, rgb(var(--color-warning-soft) / 0.14), transparent 56%),
-      linear-gradient(145deg, rgb(var(--color-bg-elevated) / 0.98), rgb(var(--color-surface) / 0.88));
+      linear-gradient(
+        145deg,
+        rgb(var(--color-bg-elevated) / 0.98),
+        rgb(var(--color-surface) / 0.88)
+      );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.05),
       0 12px 24px rgb(var(--color-shadow) / 0.32);
@@ -1335,14 +1365,14 @@ html[data-app-surface="welcome"] body::after {
     letter-spacing: 0.01em;
   }
 
-  .bo-system-screen :where(
-    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-    select,
-    textarea
-  ) {
+  .bo-system-screen
+    :where(input:not([type='checkbox']):not([type='radio']):not([type='range']), select, textarea) {
     border: 1px solid rgb(var(--color-border) / 0.74);
-    background:
-      linear-gradient(150deg, rgb(var(--color-bg-elevated) / 0.94), rgb(var(--color-bg) / 0.9));
+    background: linear-gradient(
+      150deg,
+      rgb(var(--color-bg-elevated) / 0.94),
+      rgb(var(--color-bg) / 0.9)
+    );
     color: rgb(var(--color-text));
     box-shadow: inset 0 1px 0 rgb(var(--color-text) / 0.02);
     transition:
@@ -1351,11 +1381,12 @@ html[data-app-surface="welcome"] body::after {
       transform var(--duration-liquid-hover) var(--ease-liquid-out);
   }
 
-  .bo-system-screen :where(
-    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-    select,
-    textarea
-  ):focus-visible {
+  .bo-system-screen
+    :where(
+      input:not([type='checkbox']):not([type='radio']):not([type='range']),
+      select,
+      textarea
+    ):focus-visible {
     border-color: rgb(var(--color-focus-ring) / var(--alpha-focus-ring));
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.03),
@@ -1365,7 +1396,7 @@ html[data-app-surface="welcome"] body::after {
     outline: none;
   }
 
-  .bo-system-screen :where(input[type="checkbox"], input[type="radio"], input[type="range"]) {
+  .bo-system-screen :where(input[type='checkbox'], input[type='radio'], input[type='range']) {
     accent-color: rgb(var(--color-primary) / 0.92);
   }
 
@@ -1373,7 +1404,6 @@ html[data-app-surface="welcome"] body::after {
     white-space: pre-wrap;
     word-break: break-word;
   }
-
 }
 
 @layer utilities {
@@ -1672,12 +1702,11 @@ html[data-app-surface="welcome"] body::after {
   .bo-glass-panel--muted,
   .bo-glass-chip {
     backdrop-filter: none !important;
-    background:
-      linear-gradient(
-        160deg,
-        rgb(var(--color-surface) / 0.98),
-        rgb(var(--color-bg-elevated) / 0.96)
-      ) !important;
+    background: linear-gradient(
+      160deg,
+      rgb(var(--color-surface) / 0.98),
+      rgb(var(--color-bg-elevated) / 0.96)
+    ) !important;
   }
 }
 
@@ -1688,20 +1717,19 @@ html[data-app-surface="welcome"] body::after {
   .bo-glass-panel,
   .bo-glass-panel--muted,
   .bo-glass-chip {
-    background:
-      linear-gradient(
-        160deg,
-        rgb(var(--color-surface) / 0.97),
-        rgb(var(--color-bg-elevated) / 0.95)
-      );
+    background: linear-gradient(
+      160deg,
+      rgb(var(--color-surface) / 0.97),
+      rgb(var(--color-bg-elevated) / 0.95)
+    );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.035),
       0 10px 24px rgb(var(--color-shadow) / 0.36);
   }
 }
 
-:root[data-motion-mode="off"] .bo-navdock-panel,
-:root[data-motion-mode="off"] .bo-navdock-toggle {
+:root[data-motion-mode='off'] .bo-navdock-panel,
+:root[data-motion-mode='off'] .bo-navdock-toggle {
   transition: none !important;
 }
 
@@ -1745,7 +1773,7 @@ html[data-app-surface="welcome"] body::after {
       filter var(--duration-fast) var(--ease-liquid-out);
   }
 
-  :root[data-theme="light"] .bo-btn-primary {
+  :root[data-theme='light'] .bo-btn-primary {
     color: #fff;
   }
 
@@ -1816,19 +1844,18 @@ html[data-app-surface="welcome"] body::after {
     border-radius: 1rem;
     border: 1px solid rgb(var(--color-border) / 0.5);
     padding: 0.9rem 0.95rem 0.85rem;
-    background:
-      linear-gradient(
-        155deg,
-        rgb(var(--color-bg-elevated) / 0.95),
-        rgb(var(--color-surface) / 0.85)
-      );
+    background: linear-gradient(
+      155deg,
+      rgb(var(--color-bg-elevated) / 0.95),
+      rgb(var(--color-surface) / 0.85)
+    );
     box-shadow:
       0 1px 0 rgb(var(--color-text) / 0.04) inset,
       0 6px 18px rgb(var(--color-shadow) / 0.22);
   }
 
   .bo-stat-card::after {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -1890,10 +1917,18 @@ html[data-app-surface="welcome"] body::after {
     background: rgb(var(--orb-color, var(--color-accent)));
     box-shadow: 0 0 0 3px rgb(var(--orb-color, var(--color-accent)) / 0.18);
   }
-  .bo-visual-orb--primary { --orb-color: var(--color-accent); }
-  .bo-visual-orb--warning { --orb-color: var(--color-warning); }
-  .bo-visual-orb--success { --orb-color: var(--color-success); }
-  .bo-visual-orb--info    { --orb-color: var(--color-info); }
+  .bo-visual-orb--primary {
+    --orb-color: var(--color-accent);
+  }
+  .bo-visual-orb--warning {
+    --orb-color: var(--color-warning);
+  }
+  .bo-visual-orb--success {
+    --orb-color: var(--color-success);
+  }
+  .bo-visual-orb--info {
+    --orb-color: var(--color-info);
+  }
 
   /* One subtle decorative radial behind section headers. */
   .bo-section-halo {
@@ -1902,7 +1937,7 @@ html[data-app-surface="welcome"] body::after {
   }
 
   .bo-section-halo::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: -1rem -1rem auto auto;
     width: 9rem;
@@ -1918,9 +1953,15 @@ html[data-app-surface="welcome"] body::after {
     filter: blur(2px);
   }
 
-  .bo-section-halo--primary { --halo-color: var(--color-accent); }
-  .bo-section-halo--info    { --halo-color: var(--color-info); }
-  .bo-section-halo--success { --halo-color: var(--color-success); }
+  .bo-section-halo--primary {
+    --halo-color: var(--color-accent);
+  }
+  .bo-section-halo--info {
+    --halo-color: var(--color-info);
+  }
+  .bo-section-halo--success {
+    --halo-color: var(--color-success);
+  }
 
   /* Readable section label — replaces the 9–10px uppercase tracked caps everywhere. */
   .bo-section-label {
@@ -1934,5 +1975,3 @@ html[data-app-surface="welcome"] body::after {
     text-transform: none;
   }
 }
-
-

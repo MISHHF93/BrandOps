@@ -45,12 +45,8 @@ const toTelegramEvent = (payload: unknown): ChannelEventPayload | null => {
   const message = candidate.message;
   if (!message?.text) return null;
 
-  const actorId =
-    typeof message.from?.id === 'number' ? String(message.from.id) : undefined;
-  const actorName = trimText(
-    message.from?.first_name || message.from?.username || undefined,
-    90
-  );
+  const actorId = typeof message.from?.id === 'number' ? String(message.from.id) : undefined;
+  const actorName = trimText(message.from?.first_name || message.from?.username || undefined, 90);
 
   const text = trimText(message.text);
   if (!text) return null;
@@ -75,10 +71,7 @@ const toWhatsAppEvent = (payload: unknown): ChannelEventPayload | null => {
   if (!text) return null;
 
   const contact = value?.contacts?.[0];
-  const actorName = trimText(
-    contact?.profile?.name || message.profile?.name || undefined,
-    90
-  );
+  const actorName = trimText(contact?.profile?.name || message.profile?.name || undefined, 90);
 
   return {
     platform: 'whatsapp',

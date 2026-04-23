@@ -125,7 +125,9 @@ export function buildTodayFocusBoard(snapshot: CockpitDailySnapshot): TodayFocus
     });
   }
 
-  const disconnected = snapshot.providerStatuses.filter((p) => p.status === 'disconnected' || p.status === 'error');
+  const disconnected = snapshot.providerStatuses.filter(
+    (p) => p.status === 'disconnected' || p.status === 'error'
+  );
   if (disconnected.length) {
     urgent.push({
       id: 'sync',
@@ -189,7 +191,8 @@ export function buildTodayFocusBoard(snapshot: CockpitDailySnapshot): TodayFocus
     momentum.push({
       id: 'start',
       line: 'Build momentum',
-      detail: 'Log outcomes in Chat, schedule posts, and connect sources — signals fill in as you work.'
+      detail:
+        'Log outcomes in Chat, schedule posts, and connect sources — signals fill in as you work.'
     });
   }
 

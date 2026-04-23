@@ -8,9 +8,14 @@ import {
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
-const isNum = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+const isNum = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
 
-function mergeSection<T extends Record<string, number>>(defaults: T, patch: unknown, bounds: Record<keyof T, { min: number; max: number }>): T {
+function mergeSection<T extends Record<string, number>>(
+  defaults: T,
+  patch: unknown,
+  bounds: Record<keyof T, { min: number; max: number }>
+): T {
   const out = { ...defaults };
   if (!patch || typeof patch !== 'object') return out;
   const p = patch as Record<string, unknown>;
@@ -84,10 +89,14 @@ export function mergeIntelligenceRules(remote: unknown): IntelligenceRulesPack {
     maxResults: { min: 1, max: 10 }
   });
 
-  const heatPatch = raw.heat && typeof raw.heat === 'object' ? (raw.heat as Record<string, unknown>) : undefined;
+  const heatPatch =
+    raw.heat && typeof raw.heat === 'object' ? (raw.heat as Record<string, unknown>) : undefined;
   base.heat = mergeHeatRules(base.heat, heatPatch);
 
-  const digestPatch = raw.digest && typeof raw.digest === 'object' ? (raw.digest as Record<string, unknown>) : undefined;
+  const digestPatch =
+    raw.digest && typeof raw.digest === 'object'
+      ? (raw.digest as Record<string, unknown>)
+      : undefined;
   base.digest = mergeDigestRules(base.digest, digestPatch);
 
   if (base.heat.bandWarning >= base.heat.bandCritical) {
@@ -97,7 +106,10 @@ export function mergeIntelligenceRules(remote: unknown): IntelligenceRulesPack {
   return base;
 }
 
-function mergeHeatRules(defaults: HeatRulesPack, patch: Record<string, unknown> | undefined): HeatRulesPack {
+function mergeHeatRules(
+  defaults: HeatRulesPack,
+  patch: Record<string, unknown> | undefined
+): HeatRulesPack {
   if (!patch) return defaults;
   const top = mergeSection(
     { bandCritical: defaults.bandCritical, bandWarning: defaults.bandWarning },
@@ -143,18 +155,29 @@ function mergeHeatRules(defaults: HeatRulesPack, patch: Record<string, unknown> 
       confidenceDivisor: { min: 2, max: 20 },
       heatCap: { min: 60, max: 100 }
     }),
-    notificationManagerial: mergeSection(defaults.notificationManagerial, patch.notificationManagerial, {
-      focusHeat: { min: 50, max: 100 },
-      routineHeat: { min: 40, max: 90 }
-    }),
-    notificationTechnical: mergeSection(defaults.notificationTechnical, patch.notificationTechnical, {
-      focusHeat: { min: 50, max: 100 },
-      routineHeat: { min: 40, max: 90 }
-    })
+    notificationManagerial: mergeSection(
+      defaults.notificationManagerial,
+      patch.notificationManagerial,
+      {
+        focusHeat: { min: 50, max: 100 },
+        routineHeat: { min: 40, max: 90 }
+      }
+    ),
+    notificationTechnical: mergeSection(
+      defaults.notificationTechnical,
+      patch.notificationTechnical,
+      {
+        focusHeat: { min: 50, max: 100 },
+        routineHeat: { min: 40, max: 90 }
+      }
+    )
   };
 }
 
-function mergeDigestRules(defaults: DigestRulesPack, patch: Record<string, unknown> | undefined): DigestRulesPack {
+function mergeDigestRules(
+  defaults: DigestRulesPack,
+  patch: Record<string, unknown> | undefined
+): DigestRulesPack {
   if (!patch) return defaults;
   const merged = mergeSection(defaults as unknown as Record<string, number>, patch, {
     opportunityFollowUpWithinHours: { min: 1, max: 168 },

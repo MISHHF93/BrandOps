@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { normalizeConfigureText, runSettingsConfigure } from '../../src/pages/mobile/runSettingsConfigure';
+import {
+  normalizeConfigureText,
+  runSettingsConfigure
+} from '../../src/pages/mobile/runSettingsConfigure';
 
 vi.mock('../../src/services/agent/agentWorkspaceEngine', () => ({
   executeAgentWorkspaceCommand: vi.fn()

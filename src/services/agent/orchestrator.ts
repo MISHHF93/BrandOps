@@ -1,4 +1,10 @@
-import { AgentExecutionRequest, AgentExecutionResponse, AgentMode, ChannelConnector, ChannelPlatform } from './types';
+import {
+  AgentExecutionRequest,
+  AgentExecutionResponse,
+  AgentMode,
+  ChannelConnector,
+  ChannelPlatform
+} from './types';
 
 const ALL_PRIMARY_CHANNELS: ChannelPlatform[] = ['whatsapp', 'telegram', 'linkedin'];
 

@@ -26,7 +26,11 @@ interface ThemeFieldProps {
   fieldSize?: 'compact' | 'comfortable';
 }
 
-export function CockpitThemeField({ data, onThemeChange, fieldSize = 'comfortable' }: ThemeFieldProps) {
+export function CockpitThemeField({
+  data,
+  onThemeChange,
+  fieldSize = 'comfortable'
+}: ThemeFieldProps) {
   const selectClass =
     fieldSize === 'compact'
       ? 'w-full rounded-xl border border-border bg-surface/60 px-3 py-2 text-xs'
@@ -37,7 +41,9 @@ export function CockpitThemeField({ data, onThemeChange, fieldSize = 'comfortabl
       <span>Theme</span>
       <select
         value={data.settings.theme}
-        onChange={(event) => void onThemeChange(event.target.value as BrandOpsData['settings']['theme'])}
+        onChange={(event) =>
+          void onThemeChange(event.target.value as BrandOpsData['settings']['theme'])
+        }
         className={selectClass}
       >
         <option value="dark">Dark</option>
@@ -67,9 +73,7 @@ export function CockpitVisualMotionAmbientFields({
       : 'w-full rounded-xl border border-border bg-bg/60 px-3 py-2 text-xs';
 
   const gridClass =
-    fieldSize === 'compact'
-      ? 'grid gap-3 sm:grid-cols-2'
-      : 'grid gap-3 md:grid-cols-3';
+    fieldSize === 'compact' ? 'grid gap-3 sm:grid-cols-2' : 'grid gap-3 md:grid-cols-3';
 
   return (
     <div className={gridClass}>

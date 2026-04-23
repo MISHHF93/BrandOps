@@ -49,16 +49,16 @@ BrandOps uses `chrome.identity.launchWebAuthFlow` and `chrome.identity.getRedire
 
 ## 4. `host_permissions` (justify each pattern)
 
-| Manifest entry | Why BrandOps needs it |
-|----------------|------------------------|
-| `https://*.linkedin.com/*` | **Content script** (`linkedinOverlay`) runs on LinkedIn pages the user visits for in-product LinkedIn features; OAuth flows also use LinkedIn domains. |
-| `https://www.linkedin.com/oauth/v2/*` | LinkedIn OAuth **authorization** and **token** endpoints (`/authorization`, `/accessToken`). |
-| `https://api.linkedin.com/*` | LinkedIn **OpenID userinfo** (`/v2/userinfo`) after sign-in. |
-| `https://accounts.google.com/*` | Google OAuth **authorization** (`/o/oauth2/v2/auth`). |
-| `https://oauth2.googleapis.com/*` | Google **token** endpoint. |
-| `https://openidconnect.googleapis.com/*` | Google **userinfo** for display profile. |
-| `https://github.com/*` | GitHub OAuth **authorize** and **access_token** under `github.com/login/oauth/`. |
-| `https://api.github.com/*` | GitHub **user** and **user/emails** APIs for sign-in display. |
+| Manifest entry                           | Why BrandOps needs it                                                                                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `https://*.linkedin.com/*`               | **Content script** (`linkedinOverlay`) runs on LinkedIn pages the user visits for in-product LinkedIn features; OAuth flows also use LinkedIn domains. |
+| `https://www.linkedin.com/oauth/v2/*`    | LinkedIn OAuth **authorization** and **token** endpoints (`/authorization`, `/accessToken`).                                                           |
+| `https://api.linkedin.com/*`             | LinkedIn **OpenID userinfo** (`/v2/userinfo`) after sign-in.                                                                                           |
+| `https://accounts.google.com/*`          | Google OAuth **authorization** (`/o/oauth2/v2/auth`).                                                                                                  |
+| `https://oauth2.googleapis.com/*`        | Google **token** endpoint.                                                                                                                             |
+| `https://openidconnect.googleapis.com/*` | Google **userinfo** for display profile.                                                                                                               |
+| `https://github.com/*`                   | GitHub OAuth **authorize** and **access_token** under `github.com/login/oauth/`.                                                                       |
+| `https://api.github.com/*`               | GitHub **user** and **user/emails** APIs for sign-in display.                                                                                          |
 
 If you **remove** LinkedIn from the product later, you can drop the LinkedIn-related patterns (and the LinkedIn content script) together.
 
@@ -68,11 +68,11 @@ If you **remove** LinkedIn from the product later, you can drop the LinkedIn-rel
 
 BrandOps uses **fixed path suffixes** with `chrome.identity.getRedirectURL`:
 
-| Provider | Suffix (path segment) | Register as redirect URI |
-|----------|----------------------|----------------------------|
-| Google | `google-brandops` | `https://<YOUR_EXTENSION_ID>.chromiumapp.org/google-brandops` |
-| GitHub | `github-brandops` | `https://<YOUR_EXTENSION_ID>.chromiumapp.org/github-brandops` |
-| LinkedIn | `linkedin-brandops` | `https://<YOUR_EXTENSION_ID>.chromiumapp.org/linkedin-brandops` |
+| Provider | Suffix (path segment) | Register as redirect URI                                        |
+| -------- | --------------------- | --------------------------------------------------------------- |
+| Google   | `google-brandops`     | `https://<YOUR_EXTENSION_ID>.chromiumapp.org/google-brandops`   |
+| GitHub   | `github-brandops`     | `https://<YOUR_EXTENSION_ID>.chromiumapp.org/github-brandops`   |
+| LinkedIn | `linkedin-brandops`   | `https://<YOUR_EXTENSION_ID>.chromiumapp.org/linkedin-brandops` |
 
 **How to get `<YOUR_EXTENSION_ID>`:** After the first upload (or for unpacked: the key in `chrome://extensions`), the id is stable. The redirect origin is always `https://<extension-id>.chromiumapp.org/`.
 

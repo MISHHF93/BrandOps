@@ -39,7 +39,8 @@ export const OPERATIONAL_PRESETS: readonly WorkflowBundlePreset[] = [
   },
   {
     label: 'Pipeline',
-    description: 'Client-heavy rhythm, tighter reminders, business-weighted — deals and follow-ups.',
+    description:
+      'Client-heavy rhythm, tighter reminders, business-weighted — deals and follow-ups.',
     command:
       'configure: cadence client-heavy, remind before 15 min, workday 9 to 18, max tasks per lane 5, 55% business'
   },

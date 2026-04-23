@@ -4,18 +4,17 @@ This flow is **separate from the Chrome Web Store / extension** identity model: 
 
 ## What lives in the repo vs outside
 
-| Piece | In repository | Outside repository |
-|--------|----------------|---------------------|
-| Redirect `/` → `/dashboard.html` | `vercel.json` | — |
+| Piece                                           | In repository                                      | Outside repository                                                |
+| ----------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
+| Redirect `/` → `/dashboard.html`                | `vercel.json`                                      | —                                                                 |
 | Bypass OAuth + skip onboarding when flag is set | App code + `docs/samples/vercel-preview-build.env` | Actual **values** in **Vercel → Project → Environment Variables** |
-| OAuth client IDs / secrets | `.env.example` only (commented) | Vercel env or `.env.local` (gitignored) |
+| OAuth client IDs / secrets                      | `.env.example` only (commented)                    | Vercel env or `.env.local` (gitignored)                           |
 
 Do **not** commit real OAuth secrets or production tokens. Preview “sandbox” behavior is controlled by **build-time** `VITE_*` flags (Vite inlines them at `npm run build`).
 
 ## Steps on Vercel
 
 1. **Environment variables** (Preview and/or Production — match where you deploy):
-
    - `VITE_PREVIEW_COCKPIT_UNGATED` = `1`  
      Required so the dashboard loads **without** Google/GitHub/LinkedIn connected.
 

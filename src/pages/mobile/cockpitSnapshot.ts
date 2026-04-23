@@ -33,7 +33,9 @@ export function buildNextPublishingHint(workspace: BrandOpsData): string | null 
  */
 export function buildCockpitIntelligenceExtras(workspace: BrandOpsData) {
   const contentTopSignals = localIntelligence.contentPriority(workspace.contentLibrary).slice(0, 5);
-  const outreachUrgencyTop = localIntelligence.outreachUrgency(workspace.outreachDrafts).slice(0, 5);
+  const outreachUrgencyTop = localIntelligence
+    .outreachUrgency(workspace.outreachDrafts)
+    .slice(0, 5);
   const followUpRiskTop = localIntelligence.overdueRisk(workspace).slice(0, 5);
   const integrationArtifactCount = workspace.integrationHub.artifacts.length;
   const sshTargetsCount = workspace.integrationHub.sshTargets.length;

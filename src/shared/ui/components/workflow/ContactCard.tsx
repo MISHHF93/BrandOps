@@ -47,11 +47,23 @@ export function ContactCard({
         <Badge tone="info">{source}</Badge>
       </div>
 
-      {notesPreview ? <p className="line-clamp-3 text-body text-textMuted">{notesPreview}</p> : null}
+      {notesPreview ? (
+        <p className="line-clamp-3 text-body text-textMuted">{notesPreview}</p>
+      ) : null}
 
       <footer className="flex items-center justify-end gap-1 border-t border-border/80 pt-2">
-        <IconButton icon={<Copy size={14} />} label="Copy contact summary" tooltip="Copy" onClick={onCopy} />
-        <IconButton icon={<Edit3 size={14} />} label="Edit contact" tooltip="Edit" onClick={onEdit} />
+        <IconButton
+          icon={<Copy size={14} />}
+          label="Copy contact summary"
+          tooltip="Copy"
+          onClick={onCopy}
+        />
+        <IconButton
+          icon={<Edit3 size={14} />}
+          label="Edit contact"
+          tooltip="Edit"
+          onClick={onEdit}
+        />
         <IconButton
           icon={<Archive size={14} />}
           label="Archive contact"
@@ -63,4 +75,3 @@ export function ContactCard({
     </Card>
   );
 }
-

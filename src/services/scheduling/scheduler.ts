@@ -1,11 +1,17 @@
-import { BrandOpsData, SchedulerState, SchedulerTask, SchedulerTaskStatus } from '../../types/domain';
+import {
+  BrandOpsData,
+  SchedulerState,
+  SchedulerTask,
+  SchedulerTaskStatus
+} from '../../types/domain';
 
 const DUE_SOON_WINDOW_MS = 6 * 60 * 60 * 1000;
 const MISSED_WINDOW_MS = 30 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 const DAY_MINUTES = 24 * 60;
 
-const createTaskId = (sourceType: SchedulerTask['sourceType'], sourceId: string) => `${sourceType}:${sourceId}`;
+const createTaskId = (sourceType: SchedulerTask['sourceType'], sourceId: string) =>
+  `${sourceType}:${sourceId}`;
 
 const toDateMs = (value: string | undefined, fallbackMs: number) => {
   const parsed = value ? new Date(value).getTime() : Number.NaN;
@@ -25,9 +31,7 @@ const statusForTime = (task: SchedulerTask, nowMs: number): SchedulerTaskStatus 
 };
 
 const nextReminderAt = (dueAt: string, leadMinutes: number) =>
-  toIso(
-    toDateMs(dueAt, Date.now()) - Math.max(0, Math.round(leadMinutes)) * MINUTE_MS
-  );
+  toIso(toDateMs(dueAt, Date.now()) - Math.max(0, Math.round(leadMinutes)) * MINUTE_MS);
 
 const normalizeTask = (task: SchedulerTask, nowIso: string): SchedulerTask => {
   const nowMs = new Date(nowIso).getTime();
@@ -229,14 +233,18 @@ export const scheduler = {
     const endOfWeek = new Date(startOfToday);
     endOfWeek.setDate(endOfWeek.getDate() + 7);
 
-    const active = state.tasks.filter((task) => task.status !== 'completed' && task.status !== 'cancelled');
+    const active = state.tasks.filter(
+      (task) => task.status !== 'completed' && task.status !== 'cancelled'
+    );
 
     return {
       dueSoon: active.filter((task) => task.status === 'due-soon' || task.status === 'due'),
       today: active.filter((task) => {
         const dueMs = toDateMs(task.dueAt, Number.POSITIVE_INFINITY);
         if (!Number.isFinite(dueMs)) return false;
-        return dueMs >= startOfToday.getTime() && dueMs < startOfToday.getTime() + 24 * 60 * 60 * 1000;
+        return (
+          dueMs >= startOfToday.getTime() && dueMs < startOfToday.getTime() + 24 * 60 * 60 * 1000
+        );
       }),
       thisWeek: active.filter((task) => {
         const dueMs = toDateMs(task.dueAt, Number.POSITIVE_INFINITY);

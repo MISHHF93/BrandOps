@@ -47,9 +47,7 @@ const verifyWhatsAppSignature = (rawBuffer, headerValue) => {
   if (!headerValue || typeof headerValue !== 'string' || !headerValue.startsWith('sha256=')) {
     return false;
   }
-  const expected = createHmac('sha256', WHATSAPP_APP_SECRET)
-    .update(rawBuffer)
-    .digest();
+  const expected = createHmac('sha256', WHATSAPP_APP_SECRET).update(rawBuffer).digest();
   const received = Buffer.from(headerValue.replace(/^sha256=/, ''), 'hex');
   if (received.length !== expected.length) return false;
   return timingSafeEqual(received, expected);
@@ -147,7 +145,10 @@ const server = createServer(async (req, res) => {
     }
 
     const { raw, json: payload } = await readRequestBody(req);
-    if (platform === 'whatsapp' && !verifyWhatsAppSignature(raw, req.headers['x-hub-signature-256'])) {
+    if (
+      platform === 'whatsapp' &&
+      !verifyWhatsAppSignature(raw, req.headers['x-hub-signature-256'])
+    ) {
       sendJson(res, 401, { ok: false, error: 'WhatsApp payload signature failed.' });
       return;
     }

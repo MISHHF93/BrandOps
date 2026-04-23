@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { PAGE, QUERY, buildMobileCockpitUrl, buildMobileShellUrl } from '../../src/shared/navigation/extensionLinks';
+import {
+  PAGE,
+  QUERY,
+  buildMobileCockpitUrl,
+  buildMobileShellUrl
+} from '../../src/shared/navigation/extensionLinks';
 import {
   hrefCockpitConnections,
   hrefDashboardKnowledgeOverlay,

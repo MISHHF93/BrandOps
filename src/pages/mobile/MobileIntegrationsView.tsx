@@ -64,7 +64,10 @@ export const MobileIntegrationsView = ({
             >
               Open integrations page
             </a>
-            <span className="text-textMuted"> — same shell; opens the packaged extension page.</span>
+            <span className="text-textMuted">
+              {' '}
+              — same shell; opens the packaged extension page.
+            </span>
           </p>
         </details>
       ) : null}
@@ -76,7 +79,8 @@ export const MobileIntegrationsView = ({
       >
         {snapshot.integrationHubSources.length === 0 ? (
           <p className="mt-2 text-[11px] text-textMuted">
-            No sources yet. Use Quick add below or Chat for custom <code className="text-[10px]">connect</code> /{' '}
+            No sources yet. Use Quick add below or Chat for custom{' '}
+            <code className="text-[10px]">connect</code> /{' '}
             <code className="text-[10px]">add source</code> lines.
           </p>
         ) : (
@@ -199,7 +203,9 @@ export const MobileIntegrationsView = ({
         description="Artifacts tracked by connected providers."
       >
         {snapshot.integrationArtifactsPeek.length === 0 ? (
-          <p className="mt-2 text-[11px] text-textMuted">No artifacts yet. Total: {snapshot.integrationArtifactCount}.</p>
+          <p className="mt-2 text-[11px] text-textMuted">
+            No artifacts yet. Total: {snapshot.integrationArtifactCount}.
+          </p>
         ) : (
           <ul className="mt-2 space-y-2">
             {snapshot.integrationArtifactsPeek.map((row) => (
@@ -231,7 +237,9 @@ export const MobileIntegrationsView = ({
         description="Infrastructure targets registered in the workspace."
       >
         {snapshot.sshTargetsPeek.length === 0 ? (
-          <p className="mt-2 text-[11px] text-textMuted">No SSH targets. Total: {snapshot.sshTargetsCount}.</p>
+          <p className="mt-2 text-[11px] text-textMuted">
+            No SSH targets. Total: {snapshot.sshTargetsCount}.
+          </p>
         ) : (
           <ul className="mt-2 space-y-2">
             {snapshot.sshTargetsPeek.map((row) => (
@@ -244,9 +252,7 @@ export const MobileIntegrationsView = ({
                 <button
                   type="button"
                   disabled={commandBusy}
-                  onClick={() =>
-                    void runCommand(`add note: SSH target ${row.name} (${row.host})`)
-                  }
+                  onClick={() => void runCommand(`add note: SSH target ${row.name} (${row.host})`)}
                   className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
                 >
                   Open in Chat

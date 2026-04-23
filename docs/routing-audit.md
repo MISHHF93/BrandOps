@@ -5,12 +5,12 @@ Overlay query paths on `dashboard.html` are retired; legacy `?overlay=*` links n
 
 ## Addendum (2026) — deep link matrix (live)
 
-| URL | `MobileApp` initial tab (typical) | `?section` on this host |
-|-----|----------------------------------|---------------------------|
-| `mobile.html` | **Pulse** unless `?section=` overrides (`src/pages/mobile/main.tsx`) | Tab tokens (`chat`, `settings`, …) or workstream ids → **Today** tab + scroll |
-| `dashboard.html` | Chat (see `dashboard/main.tsx`) | **Does not** force Cockpit; `section` is legacy / compat |
-| `index.html` | Redirects to `mobile.html` (preserves query) | Inherits `mobile.html` behavior after redirect |
-| `openExtensionSurface('dashboard', section)` | Navigates to `mobile.html?section=…` | N/A (implementation in `openExtensionSurface`) |
+| URL                                          | `MobileApp` initial tab (typical)                                    | `?section` on this host                                                       |
+| -------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `mobile.html`                                | **Pulse** unless `?section=` overrides (`src/pages/mobile/main.tsx`) | Tab tokens (`chat`, `settings`, …) or workstream ids → **Today** tab + scroll |
+| `dashboard.html`                             | Chat (see `dashboard/main.tsx`)                                      | **Does not** force Cockpit; `section` is legacy / compat                      |
+| `index.html`                                 | Redirects to `mobile.html` (preserves query)                         | Inherits `mobile.html` behavior after redirect                                |
+| `openExtensionSurface('dashboard', section)` | Navigates to `mobile.html?section=…`                                 | N/A (implementation in `openExtensionSurface`)                                |
 
 Source: [`src/shared/navigation/extensionLinks.ts`](../src/shared/navigation/extensionLinks.ts) (`EXTENSION_ROUTE_CATALOG`, `buildMobileCockpitUrl`), [`src/shared/navigation/openExtensionSurface.ts`](../src/shared/navigation/openExtensionSurface.ts), [`src/pages/mobile/mobileApp.tsx`](../src/pages/mobile/mobileApp.tsx).
 
@@ -26,15 +26,15 @@ Source: [`src/shared/navigation/extensionLinks.ts`](../src/shared/navigation/ext
 
 **Call sites for `openExtensionSurface(` (grep):**
 
-| File | Usage |
-|------|--------|
-| `src/shared/navigation/openExtensionSurface.ts` | Implementation |
-| `src/pages/dashboard/dashboardApp.tsx` | `'options'` (full settings + compass), `item.target`, toolbar |
-| `src/shared/ui/components/layout/ExtensionSurfaceLayout.tsx` | `'options'`, `'dashboard'` |
-| `src/pages/dashboard/components/DashboardSystemsLean.tsx` | `'options'` |
-| `src/pages/options/sections/GettingStartedSection.tsx` | `'help'` |
-| `src/pages/welcome/WelcomeTermsConsent.tsx` | `'help'` |
-| `src/shared/navigation/navigateCrownFromExtensionSurface.ts` | `'dashboard'` with section, or `item.target` |
+| File                                                         | Usage                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------- |
+| `src/shared/navigation/openExtensionSurface.ts`              | Implementation                                                |
+| `src/pages/dashboard/dashboardApp.tsx`                       | `'options'` (full settings + compass), `item.target`, toolbar |
+| `src/shared/ui/components/layout/ExtensionSurfaceLayout.tsx` | `'options'`, `'dashboard'`                                    |
+| `src/pages/dashboard/components/DashboardSystemsLean.tsx`    | `'options'`                                                   |
+| `src/pages/options/sections/GettingStartedSection.tsx`       | `'help'`                                                      |
+| `src/pages/welcome/WelcomeTermsConsent.tsx`                  | `'help'`                                                      |
+| `src/shared/navigation/navigateCrownFromExtensionSurface.ts` | `'dashboard'` with section, or `item.target`                  |
 
 **Commands (exit 0):**
 
@@ -54,13 +54,13 @@ Result: `tsc -b` OK; Vitest `tests/unit` — 10 files, 38 tests passed.
 
 ## Fixes applied
 
-| Area | Change |
-|------|--------|
-| `public/manifest.template.json` | Added `options_ui.page` = `options.html`, `open_in_tab`: true (so `openOptionsPage` is valid if used elsewhere). |
-| `src/shared/navigation/openExtensionSurface.ts` | Open **options** (and **help**) via `chrome.tabs.create` + `resolveExtensionUrl` (same pattern as Help), with `window.open` fallback. |
-| `src/pages/dashboard/dashboardApp.tsx` | `openFullSettingsWindow` → `openExtensionSurface('options')`. Compass target `options` → same (no overlay-only path). |
-| `src/pages/dashboard/components/CockpitSettingsQuickPanel.tsx` | **Open full Settings** button first; Connections link second. |
-| `src/shared/navigation/extensionLinks.ts` | Comment updated to describe `options_ui` + `openExtensionSurface`. |
+| Area                                                           | Change                                                                                                                                |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/manifest.template.json`                                | Added `options_ui.page` = `options.html`, `open_in_tab`: true (so `openOptionsPage` is valid if used elsewhere).                      |
+| `src/shared/navigation/openExtensionSurface.ts`                | Open **options** (and **help**) via `chrome.tabs.create` + `resolveExtensionUrl` (same pattern as Help), with `window.open` fallback. |
+| `src/pages/dashboard/dashboardApp.tsx`                         | `openFullSettingsWindow` → `openExtensionSurface('options')`. Compass target `options` → same (no overlay-only path).                 |
+| `src/pages/dashboard/components/CockpitSettingsQuickPanel.tsx` | **Open full Settings** button first; Connections link second.                                                                         |
+| `src/shared/navigation/extensionLinks.ts`                      | Comment updated to describe `options_ui` + `openExtensionSurface`.                                                                    |
 
 ## Deep links unchanged
 
@@ -79,14 +79,14 @@ Result: `tsc -b` OK; Vitest `tests/unit` — 10 files, 38 tests passed.
 
 **Vite MPA inputs:** `index.html` (redirect), `dashboard.html`, `welcome.html`, `options.html`, `help.html`.
 
-| Surface | React app | Compass on loading / error / auth | Notes |
-|---------|-----------|-----------------------------------|--------|
-| Dashboard | `dashboardApp.tsx` | Yes | Replaces blank loading with “Loading cockpit…” + dock; error and `DashboardAuthGate` include dock |
-| Settings | `optionsApp.tsx` | Yes | Error and loading branches mount dock |
-| Help | `helpApp.tsx` | Yes | Same |
-| Welcome | `welcomeApp.tsx` | Yes | `hostSurface="welcome"`; all branches |
-| Static | `public/privacy-policy.html` | N/A | Footer links to sibling HTML pages only (no React bundle) |
-| OAuth callbacks | `public/oauth/*.html` | N/A | Minimal redirect UIs |
+| Surface         | React app                    | Compass on loading / error / auth | Notes                                                                                             |
+| --------------- | ---------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Dashboard       | `dashboardApp.tsx`           | Yes                               | Replaces blank loading with “Loading cockpit…” + dock; error and `DashboardAuthGate` include dock |
+| Settings        | `optionsApp.tsx`             | Yes                               | Error and loading branches mount dock                                                             |
+| Help            | `helpApp.tsx`                | Yes                               | Same                                                                                              |
+| Welcome         | `welcomeApp.tsx`             | Yes                               | `hostSurface="welcome"`; all branches                                                             |
+| Static          | `public/privacy-policy.html` | N/A                               | Footer links to sibling HTML pages only (no React bundle)                                         |
+| OAuth callbacks | `public/oauth/*.html`        | N/A                               | Minimal redirect UIs                                                                              |
 
 **Toolbar:** Manifest has no `action.default_popup`; background opens `dashboard.html` in a new tab. Knowledge Center copy matches this behavior.
 

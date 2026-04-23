@@ -52,7 +52,10 @@ const applyPromptTemplate = (
   const brandContextBlock = brandReps['{{brand_context}}'];
   let out = template
     .replaceAll('{{role_context}}', data.settings.notificationCenter.roleContext)
-    .replaceAll('{{preferred_model}}', data.settings.notificationCenter.preferredModel || 'not specified')
+    .replaceAll(
+      '{{preferred_model}}',
+      data.settings.notificationCenter.preferredModel || 'not specified'
+    )
     .replaceAll('{{managerial_focus_percent}}', String(digest.managerialWeight))
     .replaceAll('{{technical_focus_percent}}', String(digest.technicalWeight))
     .replaceAll('{{managerial_tasks}}', serializeActions(digest.managerialActions))
@@ -100,7 +103,8 @@ const scheduleBlocks = (
       stream: 'technical',
       startHour: cursor,
       endHour: cursor + technicalHours,
-      objective: 'Ship product, systems, automation, and reusable assets with minimal context switching.'
+      objective:
+        'Ship product, systems, automation, and reusable assets with minimal context switching.'
     });
     cursor += technicalHours;
   }
@@ -147,7 +151,8 @@ const createManagerialActions = (data: BrandOpsData): DailyNotificationAction[] 
       id: 'mgr-followups',
       stream: 'managerial',
       title: `Clear ${overdueFollowUps.length} overdue follow-up${overdueFollowUps.length > 1 ? 's' : ''}`,
-      detail: 'Start the day by closing overdue relationship debt before it compounds into pipeline slippage.',
+      detail:
+        'Start the day by closing overdue relationship debt before it compounds into pipeline slippage.',
       sectionId: 'today',
       severity: 'critical'
     });
@@ -158,7 +163,8 @@ const createManagerialActions = (data: BrandOpsData): DailyNotificationAction[] 
       id: 'mgr-pipeline',
       stream: 'managerial',
       title: `Review ${dueOpportunities.length} active opportunit${dueOpportunities.length > 1 ? 'ies' : 'y'} due soon`,
-      detail: 'Update next actions, confidence, and blockers so the pipeline view stays decision-ready.',
+      detail:
+        'Update next actions, confidence, and blockers so the pipeline view stays decision-ready.',
       sectionId: 'pipeline',
       severity: overdueFollowUps.length > 0 ? 'focus' : 'critical'
     });
@@ -169,7 +175,8 @@ const createManagerialActions = (data: BrandOpsData): DailyNotificationAction[] 
       id: 'mgr-outreach',
       stream: 'managerial',
       title: `Ship ${readyOutreach.length} outreach touchpoint${readyOutreach.length > 1 ? 's' : ''}`,
-      detail: 'Use the outreach workspace to convert ready drafts into sent messages or scheduled follow-ups.',
+      detail:
+        'Use the outreach workspace to convert ready drafts into sent messages or scheduled follow-ups.',
       sectionId: 'pipeline',
       severity: 'focus'
     });
@@ -191,7 +198,8 @@ const createManagerialActions = (data: BrandOpsData): DailyNotificationAction[] 
       id: 'mgr-routine',
       stream: 'managerial',
       title: 'Run the daily business review',
-      detail: 'Scan revenue, reminders, and public commitments, then choose the one promise that must not slip today.',
+      detail:
+        'Scan revenue, reminders, and public commitments, then choose the one promise that must not slip today.',
       sectionId: 'pipeline',
       severity: 'routine'
     });
@@ -227,7 +235,8 @@ const createTechnicalActions = (data: BrandOpsData): DailyNotificationAction[] =
       id: 'tech-connectors',
       stream: 'technical',
       title: `Design ${plannedSources.length} pending integration connector${plannedSources.length > 1 ? 's' : ''}`,
-      detail: 'Turn planned sources into real capture flows or document the manual ingest pattern you will use.',
+      detail:
+        'Turn planned sources into real capture flows or document the manual ingest pattern you will use.',
       sectionId: 'connections',
       severity: 'focus'
     });
@@ -238,7 +247,8 @@ const createTechnicalActions = (data: BrandOpsData): DailyNotificationAction[] =
       id: 'tech-artifacts',
       stream: 'technical',
       title: `Capture first artifacts from ${sourcesWithoutArtifacts.length} source${sourcesWithoutArtifacts.length > 1 ? 's' : ''}`,
-      detail: 'Connected systems are most useful once they emit artifacts back into the hub for reuse.',
+      detail:
+        'Connected systems are most useful once they emit artifacts back into the hub for reuse.',
       sectionId: 'connections',
       severity: 'routine'
     });
@@ -249,7 +259,8 @@ const createTechnicalActions = (data: BrandOpsData): DailyNotificationAction[] =
       id: 'tech-ssh',
       stream: 'technical',
       title: `Review ${sshTargets.length} operational SSH target${sshTargets.length > 1 ? 's' : ''}`,
-      detail: 'Validate command hints, access assumptions, and which systems still need automation coverage.',
+      detail:
+        'Validate command hints, access assumptions, and which systems still need automation coverage.',
       sectionId: 'connections',
       severity: 'routine'
     });
@@ -260,7 +271,8 @@ const createTechnicalActions = (data: BrandOpsData): DailyNotificationAction[] =
       id: 'tech-routine',
       stream: 'technical',
       title: 'Stabilize the operator stack',
-      detail: 'Use today’s build block to remove friction from the product, systems, or reusable leverage assets.',
+      detail:
+        'Use today’s build block to remove friction from the product, systems, or reusable leverage assets.',
       sectionId: 'connections',
       severity: 'routine'
     });
@@ -273,8 +285,7 @@ const createDatasetActions = (data: BrandOpsData): DailyNotificationAction[] => 
   const d = getIntelligenceRules().digest;
   const untaggedContent = data.contentLibrary.filter((item) => item.tags.length === 0);
   const thinArtifacts = data.integrationHub.artifacts.filter(
-    (item) =>
-      item.tags.length === 0 || item.summary.trim().length < d.artifactThinSummaryMaxLen
+    (item) => item.tags.length === 0 || item.summary.trim().length < d.artifactThinSummaryMaxLen
   );
   const thinSources = data.integrationHub.sources.filter(
     (item) =>
@@ -292,7 +303,8 @@ const createDatasetActions = (data: BrandOpsData): DailyNotificationAction[] => 
       id: 'data-content',
       stream: 'dataset',
       title: `Tag ${untaggedContent.length} content item${untaggedContent.length > 1 ? 's' : ''}`,
-      detail: 'Add tags and goals so your content library becomes queryable and reusable instead of a passive pile.',
+      detail:
+        'Add tags and goals so your content library becomes queryable and reusable instead of a passive pile.',
       sectionId: 'brand-content',
       severity: 'focus'
     });
@@ -303,7 +315,8 @@ const createDatasetActions = (data: BrandOpsData): DailyNotificationAction[] => 
       id: 'data-artifacts',
       stream: 'dataset',
       title: `Enrich ${thinArtifacts.length} artifact record${thinArtifacts.length > 1 ? 's' : ''}`,
-      detail: 'Fill in summaries and tags so external system artifacts are actually useful during planning.',
+      detail:
+        'Fill in summaries and tags so external system artifacts are actually useful during planning.',
       sectionId: 'connections',
       severity: 'routine'
     });
@@ -325,7 +338,8 @@ const createDatasetActions = (data: BrandOpsData): DailyNotificationAction[] => 
       id: 'data-notes',
       stream: 'dataset',
       title: `Promote ${notesToCodify.length} recent note${notesToCodify.length > 1 ? 's' : ''} into reusable data`,
-      detail: 'Convert ad hoc notes into snippets, artifacts, or structured follow-up context while they are still fresh.',
+      detail:
+        'Convert ad hoc notes into snippets, artifacts, or structured follow-up context while they are still fresh.',
       sectionId: 'brand-content',
       severity: 'routine'
     });
@@ -336,7 +350,8 @@ const createDatasetActions = (data: BrandOpsData): DailyNotificationAction[] => 
       id: 'data-routine',
       stream: 'dataset',
       title: 'Run a lightweight system hygiene pass',
-      detail: 'Check tags, summaries, and artifacts so the cockpit stays searchable and model-ready.',
+      detail:
+        'Check tags, summaries, and artifacts so the cockpit stays searchable and model-ready.',
       sectionId: 'connections',
       severity: 'routine'
     });
@@ -364,7 +379,8 @@ export const dailyNotificationCenter = {
 
       return {
         ...baseDigest,
-        promptPreview: 'Execution Center is disabled. Enable it in settings to generate an operator plan.'
+        promptPreview:
+          'Execution Center is disabled. Enable it in settings to generate an operator plan.'
       };
     }
 
@@ -391,7 +407,7 @@ export const dailyNotificationCenter = {
       headline:
         managerialActions[0]?.severity === 'critical'
           ? managerialActions[0].title
-          : technicalActions[0]?.title ?? 'Run the daily operator loop'
+          : (technicalActions[0]?.title ?? 'Run the daily operator loop')
     };
 
     return {

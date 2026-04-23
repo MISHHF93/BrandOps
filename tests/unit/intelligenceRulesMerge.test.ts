@@ -5,7 +5,9 @@ import { mergeIntelligenceRules } from '../../src/rules/mergeIntelligenceRules';
 describe('mergeIntelligenceRules', () => {
   it('returns defaults when remote is missing', () => {
     const merged = mergeIntelligenceRules(undefined);
-    expect(merged.contentPriority.baseScore).toBe(INTELLIGENCE_RULES_DEFAULTS.contentPriority.baseScore);
+    expect(merged.contentPriority.baseScore).toBe(
+      INTELLIGENCE_RULES_DEFAULTS.contentPriority.baseScore
+    );
   });
 
   it('merges known partial fields with clamps', () => {
@@ -20,7 +22,9 @@ describe('mergeIntelligenceRules', () => {
 
   it('ignores incompatible schema major', () => {
     const merged = mergeIntelligenceRules({ schemaVersion: 99, contentPriority: { baseScore: 1 } });
-    expect(merged.contentPriority.baseScore).toBe(INTELLIGENCE_RULES_DEFAULTS.contentPriority.baseScore);
+    expect(merged.contentPriority.baseScore).toBe(
+      INTELLIGENCE_RULES_DEFAULTS.contentPriority.baseScore
+    );
   });
 
   it('merges nested heat and digest', () => {

@@ -1,4 +1,9 @@
-import { BrandOpsData, IntegrationSourceKind, OpportunityStage, PublishingItem } from '../../types/domain';
+import {
+  BrandOpsData,
+  IntegrationSourceKind,
+  OpportunityStage,
+  PublishingItem
+} from '../../types/domain';
 import { localIntelligence } from '../intelligence/localIntelligence';
 import { scheduler } from '../scheduling/scheduler';
 import { storageService } from '../storage/storage';
@@ -142,7 +147,10 @@ const withScheduler = async (next: BrandOpsData) => {
   return storageService.setData(merged);
 };
 
-const addNote = async (workspace: BrandOpsData, command: AgentWorkspaceCommand): Promise<AgentWorkspaceResult> => {
+const addNote = async (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand
+): Promise<AgentWorkspaceResult> => {
   const detail = trimText(command.text.split(':').slice(1).join(':') || command.text, '', 1200);
   if (!detail) return { ok: false, action: 'add-note', summary: 'Note detail was empty.' };
   const now = new Date().toISOString();
@@ -170,7 +178,11 @@ const reschedulePublishing = async (
 ): Promise<AgentWorkspaceResult> => {
   const targetDate = parseTargetDate(command.text);
   if (!targetDate) {
-    return { ok: false, action: 'reschedule-publishing', summary: 'Include a day like tomorrow or Friday.' };
+    return {
+      ok: false,
+      action: 'reschedule-publishing',
+      summary: 'Include a day like tomorrow or Friday.'
+    };
   }
   const clock = parseClock(command.text);
   targetDate.setHours(clock.hour, clock.minute, 0, 0);
@@ -188,18 +200,32 @@ const reschedulePublishing = async (
     };
   });
   if (changed === 0) {
-    return { ok: false, action: 'reschedule-publishing', summary: 'No publishing items available to reschedule.' };
+    return {
+      ok: false,
+      action: 'reschedule-publishing',
+      summary: 'No publishing items available to reschedule.'
+    };
   }
   await withScheduler({ ...workspace, publishingQueue: updatedQueue });
-  return { ok: true, action: 'reschedule-publishing', summary: `Rescheduled ${changed} publishing item(s).` };
+  return {
+    ok: true,
+    action: 'reschedule-publishing',
+    summary: `Rescheduled ${changed} publishing item(s).`
+  };
 };
 
 const addIntegrationSource = async (
   workspace: BrandOpsData,
   command: AgentWorkspaceCommand
 ): Promise<AgentWorkspaceResult> => {
-  const nameMatch = command.text.match(/source\s*:\s*([^\n]+)/i) ?? command.text.match(/connect\s+([a-z0-9\-_ ]{3,60})/i);
-  const name = trimText(nameMatch?.[1] ?? 'Agent Integration Source', 'Agent Integration Source', 100);
+  const nameMatch =
+    command.text.match(/source\s*:\s*([^\n]+)/i) ??
+    command.text.match(/connect\s+([a-z0-9\-_ ]{3,60})/i);
+  const name = trimText(
+    nameMatch?.[1] ?? 'Agent Integration Source',
+    'Agent Integration Source',
+    100
+  );
   const now = new Date().toISOString();
   await withScheduler({
     ...workspace,
@@ -220,7 +246,11 @@ const addIntegrationSource = async (
       ]
     }
   });
-  return { ok: true, action: 'add-integration-source', summary: `Integration source "${name}" added.` };
+  return {
+    ok: true,
+    action: 'add-integration-source',
+    summary: `Integration source "${name}" added.`
+  };
 };
 
 const addIntegrationArtifact = async (
@@ -328,10 +358,17 @@ const addSshTargetCommand = async (
   return { ok: true, action: 'add-ssh-target', summary: `SSH target "${name}" added.` };
 };
 
-const addOutreachDraft = async (workspace: BrandOpsData, command: AgentWorkspaceCommand): Promise<AgentWorkspaceResult> => {
+const addOutreachDraft = async (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand
+): Promise<AgentWorkspaceResult> => {
   const body = trimText(command.text.split(':').slice(1).join(':') || '', '', 2000);
   if (!body) {
-    return { ok: false, action: 'add-outreach-draft', summary: 'Use "draft outreach: <message>" to add a draft.' };
+    return {
+      ok: false,
+      action: 'add-outreach-draft',
+      summary: 'Use "draft outreach: <message>" to add a draft.'
+    };
   }
   const now = new Date().toISOString();
   await withScheduler({
@@ -363,7 +400,11 @@ const addPublishingDraft = async (
 ): Promise<AgentWorkspaceResult> => {
   const body = trimText(command.text.split(':').slice(1).join(':') || '', '', 5000);
   if (!body) {
-    return { ok: false, action: 'add-publishing-draft', summary: 'Use "draft post: <content>" to create a publishing draft.' };
+    return {
+      ok: false,
+      action: 'add-publishing-draft',
+      summary: 'Use "draft post: <content>" to create a publishing draft.'
+    };
   }
   const now = new Date().toISOString();
   await withScheduler({
@@ -391,19 +432,33 @@ const updateOpportunityStage = async (
 ): Promise<AgentWorkspaceResult> => {
   const stage = parseOpportunityStage(command.text);
   if (!stage) {
-    return { ok: false, action: 'update-opportunity-stage', summary: 'Include a stage: prospect, discovery, proposal, negotiation, won, or lost.' };
+    return {
+      ok: false,
+      action: 'update-opportunity-stage',
+      summary: 'Include a stage: prospect, discovery, proposal, negotiation, won, or lost.'
+    };
   }
   const first = workspace.opportunities.find((item) => !item.archivedAt);
   if (!first) {
-    return { ok: false, action: 'update-opportunity-stage', summary: 'No active opportunity found to update.' };
+    return {
+      ok: false,
+      action: 'update-opportunity-stage',
+      summary: 'No active opportunity found to update.'
+    };
   }
   await withScheduler({
     ...workspace,
     opportunities: workspace.opportunities.map((item) =>
-      item.id === first.id ? { ...item, status: stage, stage, updatedAt: new Date().toISOString() } : item
+      item.id === first.id
+        ? { ...item, status: stage, stage, updatedAt: new Date().toISOString() }
+        : item
     )
   });
-  return { ok: true, action: 'update-opportunity-stage', summary: `Updated ${first.company} to ${stage}.` };
+  return {
+    ok: true,
+    action: 'update-opportunity-stage',
+    summary: `Updated ${first.company} to ${stage}.`
+  };
 };
 
 const pickLabeledField = (text: string, label: string) => {
@@ -431,7 +486,11 @@ const updateOpportunity = async (
 ): Promise<AgentWorkspaceResult> => {
   const first = workspace.opportunities.find((item) => !item.archivedAt);
   if (!first) {
-    return { ok: false, action: 'update-opportunity', summary: 'No active opportunity found to update.' };
+    return {
+      ok: false,
+      action: 'update-opportunity',
+      summary: 'No active opportunity found to update.'
+    };
   }
   const stage = parseOpportunityStage(command.text);
   const value = parseNumber(command.text, 'value');
@@ -472,12 +531,14 @@ const updateOpportunity = async (
   };
 };
 
-const archiveOpportunity = async (
-  workspace: BrandOpsData
-): Promise<AgentWorkspaceResult> => {
+const archiveOpportunity = async (workspace: BrandOpsData): Promise<AgentWorkspaceResult> => {
   const first = workspace.opportunities.find((item) => !item.archivedAt);
   if (!first) {
-    return { ok: false, action: 'archive-opportunity', summary: 'No active opportunity available to archive.' };
+    return {
+      ok: false,
+      action: 'archive-opportunity',
+      summary: 'No active opportunity available to archive.'
+    };
   }
   const now = new Date().toISOString();
   await withScheduler({
@@ -486,15 +547,21 @@ const archiveOpportunity = async (
       item.id === first.id ? { ...item, archivedAt: now, updatedAt: now } : item
     )
   });
-  return { ok: true, action: 'archive-opportunity', summary: `Archived opportunity for ${first.company}.` };
+  return {
+    ok: true,
+    action: 'archive-opportunity',
+    summary: `Archived opportunity for ${first.company}.`
+  };
 };
 
-const restoreOpportunity = async (
-  workspace: BrandOpsData
-): Promise<AgentWorkspaceResult> => {
+const restoreOpportunity = async (workspace: BrandOpsData): Promise<AgentWorkspaceResult> => {
   const archived = workspace.opportunities.find((item) => Boolean(item.archivedAt));
   if (!archived) {
-    return { ok: false, action: 'restore-opportunity', summary: 'No archived opportunity found to restore.' };
+    return {
+      ok: false,
+      action: 'restore-opportunity',
+      summary: 'No archived opportunity found to restore.'
+    };
   }
   const now = new Date().toISOString();
   await withScheduler({
@@ -503,7 +570,11 @@ const restoreOpportunity = async (
       item.id === archived.id ? { ...item, archivedAt: undefined, updatedAt: now } : item
     )
   });
-  return { ok: true, action: 'restore-opportunity', summary: `Restored opportunity for ${archived.company}.` };
+  return {
+    ok: true,
+    action: 'restore-opportunity',
+    summary: `Restored opportunity for ${archived.company}.`
+  };
 };
 
 const createFollowUp = async (
@@ -512,9 +583,17 @@ const createFollowUp = async (
 ): Promise<AgentWorkspaceResult> => {
   const contact = workspace.contacts[0];
   if (!contact) {
-    return { ok: false, action: 'create-follow-up', summary: 'No contact found to attach a follow-up task.' };
+    return {
+      ok: false,
+      action: 'create-follow-up',
+      summary: 'No contact found to attach a follow-up task.'
+    };
   }
-  const reason = trimText(command.text.split(':').slice(1).join(':') || 'Chatbot-created follow-up', 'Follow up', 220);
+  const reason = trimText(
+    command.text.split(':').slice(1).join(':') || 'Chatbot-created follow-up',
+    'Follow up',
+    220
+  );
   const dueAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
   await withScheduler({
     ...workspace,
@@ -529,12 +608,14 @@ const createFollowUp = async (
       ...workspace.followUps
     ]
   });
-  return { ok: true, action: 'create-follow-up', summary: `Follow-up created for ${contact.name}.` };
+  return {
+    ok: true,
+    action: 'create-follow-up',
+    summary: `Follow-up created for ${contact.name}.`
+  };
 };
 
-const completeFollowUp = async (
-  workspace: BrandOpsData
-): Promise<AgentWorkspaceResult> => {
+const completeFollowUp = async (workspace: BrandOpsData): Promise<AgentWorkspaceResult> => {
   const task = workspace.followUps.find((item) => !item.completed);
   if (!task) {
     return { ok: false, action: 'complete-follow-up', summary: 'No incomplete follow-up found.' };
@@ -588,10 +669,14 @@ const updateContact = async (
   command: AgentWorkspaceCommand
 ): Promise<AgentWorkspaceResult> => {
   const target = workspace.contacts[0];
-  if (!target) return { ok: false, action: 'update-contact', summary: 'No contact found to update.' };
+  if (!target)
+    return { ok: false, action: 'update-contact', summary: 'No contact found to update.' };
 
   const detail = parseAfterColon(command.text, '');
-  const parts = detail.split(',').map((segment) => segment.trim()).filter(Boolean);
+  const parts = detail
+    .split(',')
+    .map((segment) => segment.trim())
+    .filter(Boolean);
   const name = parts[0] ? trimText(parts[0], target.name, 90) : target.name;
   const company = parts[1] ? trimText(parts[1], target.company, 90) : target.company;
   const role = parts[2] ? trimText(parts[2], target.role, 90) : target.role;
@@ -607,7 +692,9 @@ const updateContact = async (
   return { ok: true, action: 'update-contact', summary: `Updated contact ${name}.` };
 };
 
-const parseContactRelationshipStage = (text: string): 'new' | 'building' | 'trusted' | 'partner' | null => {
+const parseContactRelationshipStage = (
+  text: string
+): 'new' | 'building' | 'trusted' | 'partner' | null => {
   const tail = parseAfterColon(text, text).toLowerCase();
   const token = tail.split(/[,\n]/)[0]?.trim() ?? '';
   if (token === 'new' || token === 'building' || token === 'trusted' || token === 'partner') {
@@ -626,7 +713,11 @@ const updateContactRelationship = async (
 ): Promise<AgentWorkspaceResult> => {
   const target = workspace.contacts[0];
   if (!target) {
-    return { ok: false, action: 'update-contact-relationship', summary: 'No contact found to update.' };
+    return {
+      ok: false,
+      action: 'update-contact-relationship',
+      summary: 'No contact found to update.'
+    };
   }
   const stage = parseContactRelationshipStage(command.text);
   if (!stage) {
@@ -639,7 +730,9 @@ const updateContactRelationship = async (
   await withScheduler({
     ...workspace,
     contacts: workspace.contacts.map((c) =>
-      c.id === target.id ? { ...c, relationshipStage: stage, lastContactAt: new Date().toISOString() } : c
+      c.id === target.id
+        ? { ...c, relationshipStage: stage, lastContactAt: new Date().toISOString() }
+        : c
     )
   });
   return {
@@ -692,11 +785,19 @@ const updateContentItem = async (
 ): Promise<AgentWorkspaceResult> => {
   const target = workspace.contentLibrary.find((item) => item.status !== 'archived');
   if (!target) {
-    return { ok: false, action: 'update-content-item', summary: 'No active content item found to update.' };
+    return {
+      ok: false,
+      action: 'update-content-item',
+      summary: 'No active content item found to update.'
+    };
   }
   const body = parseAfterColon(command.text, '');
   if (!body) {
-    return { ok: false, action: 'update-content-item', summary: 'Use "update content: <text>" to update content.' };
+    return {
+      ok: false,
+      action: 'update-content-item',
+      summary: 'Use "update content: <text>" to update content.'
+    };
   }
   const title = trimText(body.split('\n')[0] ?? target.title, target.title, 140);
   await withScheduler({
@@ -715,12 +816,14 @@ const updateContentItem = async (
   return { ok: true, action: 'update-content-item', summary: `Updated content item "${title}".` };
 };
 
-const duplicateContentItem = async (
-  workspace: BrandOpsData
-): Promise<AgentWorkspaceResult> => {
+const duplicateContentItem = async (workspace: BrandOpsData): Promise<AgentWorkspaceResult> => {
   const target = workspace.contentLibrary.find((item) => item.status !== 'archived');
   if (!target) {
-    return { ok: false, action: 'duplicate-content-item', summary: 'No active content item found to duplicate.' };
+    return {
+      ok: false,
+      action: 'duplicate-content-item',
+      summary: 'No active content item found to duplicate.'
+    };
   }
   const now = new Date().toISOString();
   await withScheduler({
@@ -737,21 +840,35 @@ const duplicateContentItem = async (
       ...workspace.contentLibrary
     ]
   });
-  return { ok: true, action: 'duplicate-content-item', summary: `Duplicated content item "${target.title}".` };
+  return {
+    ok: true,
+    action: 'duplicate-content-item',
+    summary: `Duplicated content item "${target.title}".`
+  };
 };
 
 const archiveContentItem = async (workspace: BrandOpsData): Promise<AgentWorkspaceResult> => {
   const item = workspace.contentLibrary.find((entry) => entry.status !== 'archived');
   if (!item) {
-    return { ok: false, action: 'archive-content-item', summary: 'No active content item found to archive.' };
+    return {
+      ok: false,
+      action: 'archive-content-item',
+      summary: 'No active content item found to archive.'
+    };
   }
   await withScheduler({
     ...workspace,
     contentLibrary: workspace.contentLibrary.map((entry) =>
-      entry.id === item.id ? { ...entry, status: 'archived', updatedAt: new Date().toISOString() } : entry
+      entry.id === item.id
+        ? { ...entry, status: 'archived', updatedAt: new Date().toISOString() }
+        : entry
     )
   });
-  return { ok: true, action: 'archive-content-item', summary: `Archived content item "${item.title}".` };
+  return {
+    ok: true,
+    action: 'archive-content-item',
+    summary: `Archived content item "${item.title}".`
+  };
 };
 
 const updatePublishingItem = async (
@@ -760,7 +877,11 @@ const updatePublishingItem = async (
 ): Promise<AgentWorkspaceResult> => {
   const target = workspace.publishingQueue[0];
   if (!target) {
-    return { ok: false, action: 'update-publishing-item', summary: 'No publishing item found to update.' };
+    return {
+      ok: false,
+      action: 'update-publishing-item',
+      summary: 'No publishing item found to update.'
+    };
   }
 
   const status = parsePublishingStatus(command.text);
@@ -824,10 +945,11 @@ const runPipelineHealth = (workspace: BrandOpsData): AgentWorkspaceResult => {
     };
   }
   const ranked = localIntelligence.pipelineHealth(active);
-  const lines = ranked.slice(0, 8).map(
-    (s, i) =>
-      `${i + 1}) ${s.label} — score ${s.score}: ${s.reason.replace(/\s+/g, ' ').trim()}`
-  );
+  const lines = ranked
+    .slice(0, 8)
+    .map(
+      (s, i) => `${i + 1}) ${s.label} — score ${s.score}: ${s.reason.replace(/\s+/g, ' ').trim()}`
+    );
   let summary = lines.join(' · ');
   if (summary.length > MAX_PIPELINE_HEALTH_SUMMARY) {
     summary = `${summary.slice(0, MAX_PIPELINE_HEALTH_SUMMARY - 1)}…`;
@@ -908,7 +1030,11 @@ const runParsedRoute = async (
     case 'pipeline-health':
       return runPipelineHealth(workspace);
     case 'update-opportunity':
-      if (opportunityUsesRichUpdate(command.text) || lower.includes('value') || lower.includes('confidence')) {
+      if (
+        opportunityUsesRichUpdate(command.text) ||
+        lower.includes('value') ||
+        lower.includes('confidence')
+      ) {
         return updateOpportunity(workspace, command);
       }
       return updateOpportunityStage(workspace, command);

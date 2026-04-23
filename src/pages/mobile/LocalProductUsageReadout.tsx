@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Activity, RefreshCw, Shield } from 'lucide-react';
-import { getLocalProductUsageSummary, type LocalProductUsageSummary } from '../../services/usage/localProductUsage';
+import {
+  getLocalProductUsageSummary,
+  type LocalProductUsageSummary
+} from '../../services/usage/localProductUsage';
 
 function fmtMs(n: number | null) {
   if (n === null) return '—';
@@ -89,8 +92,9 @@ export function LocalProductUsageReadout() {
         <p className="flex min-w-0 items-start gap-1.5 text-[10px] font-medium text-textSoft">
           <Shield className="mt-0.5 h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
           <span>
-            Stored on this device only. Maps to the roadmap: habit, command confidence, and perceived
-            performance. NPS, support themes, and multi-user retention need separate processes.
+            Stored on this device only. Maps to the roadmap: habit, command confidence, and
+            perceived performance. NPS, support themes, and multi-user retention need separate
+            processes.
           </span>
         </p>
         <button
@@ -111,12 +115,17 @@ export function LocalProductUsageReadout() {
 
       <p className="text-[10px] leading-snug text-textMuted">
         <span className="font-semibold text-textSoft">Habit: </span>
-        active days in rolling windows; <span className="font-semibold text-textSoft"> Command confidence: </span>
-        outcomes & timing; <span className="font-semibold text-textSoft"> See → act: </span> navigations to Chat from
-        other tabs.
+        active days in rolling windows;{' '}
+        <span className="font-semibold text-textSoft"> Command confidence: </span>
+        outcomes & timing; <span className="font-semibold text-textSoft"> See → act: </span>{' '}
+        navigations to Chat from other tabs.
       </p>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Navigations to Chat from each tab">
+      <div
+        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+        role="group"
+        aria-label="Navigations to Chat from each tab"
+      >
         {(
           [
             ['Pulse', summary.fromPulseToChat],
@@ -129,8 +138,13 @@ export function LocalProductUsageReadout() {
             key={label}
             className="rounded-lg border border-border/40 bg-surface/40 px-2 py-2 text-center"
           >
-            <p className="text-[9px] font-semibold uppercase tracking-wide text-textSoft">{label}</p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums text-text" title={`→ Chat: ${n}`}>
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-textSoft">
+              {label}
+            </p>
+            <p
+              className="mt-0.5 text-lg font-semibold tabular-nums text-text"
+              title={`→ Chat: ${n}`}
+            >
               {n}
             </p>
             <p className="text-[9px] text-textSoft">→ Chat</p>
@@ -158,7 +172,9 @@ export function LocalProductUsageReadout() {
           </dd>
         </div>
         <div className="flex flex-col gap-0.5 border-b border-border/30 py-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-2">
-          <dt className="shrink-0 sm:max-w-[55%]">Median time between command completions (rolling)</dt>
+          <dt className="shrink-0 sm:max-w-[55%]">
+            Median time between command completions (rolling)
+          </dt>
           <dd className="min-w-0 text-left font-medium tabular-nums text-text sm:text-right">
             {fmtMs(summary.medianMsBetweenCommands)}
           </dd>
@@ -177,13 +193,19 @@ export function LocalProductUsageReadout() {
         </div>
         <div className="flex flex-col gap-0.5 pt-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-2">
           <dt className="shrink-0 sm:max-w-[55%]">First recorded app open (device clock)</dt>
-          <dd className="min-w-0 break-words text-left text-text sm:text-right" title={summary.firstOpenAt}>
+          <dd
+            className="min-w-0 break-words text-left text-text sm:text-right"
+            title={summary.firstOpenAt}
+          >
             {firstAt}
           </dd>
         </div>
         <div className="mt-1 flex items-center gap-1.5 border-t border-border/30 pt-2 text-[10px] text-textSoft">
           <Activity className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
-          <span>These numbers update as you use the shell. Use Refresh to pull the latest after commands elsewhere.</span>
+          <span>
+            These numbers update as you use the shell. Use Refresh to pull the latest after commands
+            elsewhere.
+          </span>
         </div>
       </dl>
     </div>

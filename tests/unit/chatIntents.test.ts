@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { suggestIntents, getInputRouteHint, getIntentByCommandLine } from '../../src/pages/mobile/chatIntents';
+import {
+  suggestIntents,
+  getInputRouteHint,
+  getIntentByCommandLine
+} from '../../src/pages/mobile/chatIntents';
 
 describe('chatIntents', () => {
   it('returns ranked smart chips when input is empty', () => {

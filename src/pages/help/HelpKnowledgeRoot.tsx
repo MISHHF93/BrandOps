@@ -49,13 +49,21 @@ export function HelpKnowledgeRoot() {
             <a href={todayHref} className={navLinkClass}>
               Today
             </a>
-            <a href={integrationsTabHref} className={navLinkClass} title="mobile.html?section=integrations">
+            <a
+              href={integrationsTabHref}
+              className={navLinkClass}
+              title="mobile.html?section=integrations"
+            >
               Integrations tab
             </a>
             <a href={settingsHref} className={navLinkClass}>
               Settings
             </a>
-            <a href={integrationsHubHref} className={navLinkClass} title="integrations.html — extension hub">
+            <a
+              href={integrationsHubHref}
+              className={navLinkClass}
+              title="integrations.html — extension hub"
+            >
               Integrations page
             </a>
           </nav>

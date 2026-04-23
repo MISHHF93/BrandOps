@@ -1,2 +1,23 @@
 dist
 node_modules
+
+# Generated Capacitor/Android assets (mirror of dist/)
+android/app/src/main/assets/public
+android/app/build
+android/build
+android/.gradle
+
+# Generated OAuth public artifact
+public/manifest.template.json
+public/oauth/github-brandops.html
+public/oauth/google-brandops.html
+public/oauth/linkedin-brandops.html
+public/privacy-policy.html
+
+# Cursor/skill templates (authored in upstream tooling)
+.cursor
+
+# Lockfiles / generated caches
+package-lock.json
+*.log
+.diag-*.log

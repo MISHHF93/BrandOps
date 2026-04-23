@@ -1,7 +1,10 @@
 import { type ChangeEvent, useCallback, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Command as CommandPaletteIcon } from 'lucide-react';
-import { executeAgentWorkspaceCommand, type AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
+import {
+  executeAgentWorkspaceCommand,
+  type AgentWorkspaceResult
+} from '../../services/agent/agentWorkspaceEngine';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import type { BrandOpsData } from '../../types/domain';
 import {
@@ -48,7 +51,11 @@ import { AppleSignInButton } from '../../shared/ui/oauth/AppleSignInButton';
 import { EmailMagicLinkButton } from '../../shared/ui/oauth/EmailMagicLinkButton';
 import { GitHubSignInButton } from '../../shared/ui/oauth/GitHubSignInButton';
 import { LinkedInSignInButton } from '../../shared/ui/oauth/LinkedInSignInButton';
-import { OnDeviceDialogTrustFooter, OnDeviceTrustLine, WorkspaceDataHint } from '../../shared/ui/brandopsPolish';
+import {
+  OnDeviceDialogTrustFooter,
+  OnDeviceTrustLine,
+  WorkspaceDataHint
+} from '../../shared/ui/brandopsPolish';
 import {
   recordCommandOutcome,
   recordInitialShellReady,
@@ -71,7 +78,9 @@ const COMMAND_CHIPS_KEY = 'brandops:agent:commandChips';
 const MAX_PERSISTED_MESSAGES = 50;
 const MAX_COMMAND_CHIPS = 24;
 
-const defaultWelcomeMessage = (surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'): ChatMessage => {
+const defaultWelcomeMessage = (
+  surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'
+): ChatMessage => {
   const mobileLine =
     'Type a command (try pipeline health) or press ⌘K / Ctrl+K. Pulse: what is due. Today: full digest.';
   const welcomeLine =
@@ -181,7 +190,9 @@ const buildStripFromWorkspace = (data: BrandOpsData) => ({
 /** Max size for inlining text file contents into the command string (agent is text-only). */
 const MAX_CHAT_TEXT_ATTACHMENT = 32_000;
 const STRIPE_CHECKOUT_URL = import.meta.env.VITE_STRIPE_CHECKOUT_URL as string | undefined;
-const STRIPE_BILLING_PORTAL_URL = import.meta.env.VITE_STRIPE_BILLING_PORTAL_URL as string | undefined;
+const STRIPE_BILLING_PORTAL_URL = import.meta.env.VITE_STRIPE_BILLING_PORTAL_URL as
+  | string
+  | undefined;
 
 type ChatComposerAttachment = {
   name: string;
@@ -221,11 +232,31 @@ function LaunchAuthGate({
         Launch setup uses one account across mobile and extension. Pick a provider:
       </p>
       <div className="mt-3 grid gap-2">
-        <GoogleSignInButton onClick={() => onSignInProvider('google')} variant="continue" className={btnFocus} />
-        <AppleSignInButton onClick={() => onSignInProvider('apple')} variant="continue" className={btnFocus} />
-        <EmailMagicLinkButton onClick={() => onSignInProvider('email')} variant="continue" className={btnFocus} />
-        <LinkedInSignInButton onClick={() => onSignInProvider('linkedin')} variant="continue" className={btnFocus} />
-        <GitHubSignInButton onClick={() => onSignInProvider('github')} variant="continue" className={btnFocus} />
+        <GoogleSignInButton
+          onClick={() => onSignInProvider('google')}
+          variant="continue"
+          className={btnFocus}
+        />
+        <AppleSignInButton
+          onClick={() => onSignInProvider('apple')}
+          variant="continue"
+          className={btnFocus}
+        />
+        <EmailMagicLinkButton
+          onClick={() => onSignInProvider('email')}
+          variant="continue"
+          className={btnFocus}
+        />
+        <LinkedInSignInButton
+          onClick={() => onSignInProvider('linkedin')}
+          variant="continue"
+          className={btnFocus}
+        />
+        <GitHubSignInButton
+          onClick={() => onSignInProvider('github')}
+          variant="continue"
+          className={btnFocus}
+        />
       </div>
     </section>
   );
@@ -289,7 +320,9 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
 
   const [initialShell] = useState(() => readInitialShellState(initialTab));
   const [activeTab, setActiveTab] = useState<MobileShellTabId>(() => initialShell.tab);
-  const [cockpitWorkstream, setCockpitWorkstream] = useState<DashboardSectionId>(() => initialShell.workstream);
+  const [cockpitWorkstream, setCockpitWorkstream] = useState<DashboardSectionId>(
+    () => initialShell.workstream
+  );
   const [input, setInput] = useState('');
   /** Agent command in flight (Chat send, quick commands from any tab). */
   const [commandLoading, setCommandLoading] = useState(false);
@@ -306,7 +339,9 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
   const [chatAttachment, setChatAttachment] = useState<ChatComposerAttachment | null>(null);
-  const [launchAccess, setLaunchAccess] = useState<LaunchAccessState>(() => readLaunchAccessState());
+  const [launchAccess, setLaunchAccess] = useState<LaunchAccessState>(() =>
+    readLaunchAccessState()
+  );
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
@@ -379,7 +414,10 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   useEffect(() => {
     if (!isAppShellWithSectionQuery()) return;
     const onPopState = () => {
-      const p = parseMobileShellFromSearchParams(new URLSearchParams(window.location.search), initialTab);
+      const p = parseMobileShellFromSearchParams(
+        new URLSearchParams(window.location.search),
+        initialTab
+      );
       setActiveTab(p.tab);
       setCockpitWorkstream(p.workstream ?? DEFAULT_DASHBOARD_SECTION);
     };
@@ -694,7 +732,11 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               title="Command palette (Ctrl+K or ⌘K)"
               aria-label="Open command palette"
             >
-              <CommandPaletteIcon className="inline h-3.5 w-3.5 -translate-y-px sm:mr-1" strokeWidth={2} aria-hidden />
+              <CommandPaletteIcon
+                className="inline h-3.5 w-3.5 -translate-y-px sm:mr-1"
+                strokeWidth={2}
+                aria-hidden
+              />
               <span>Commands</span>
             </button>
             <button
@@ -720,9 +762,17 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         {shouldRequireLaunchAuth(launchAccess) ? (
           <LaunchAuthGate btnFocus={btnFocus} onSignInProvider={onSignInProvider} />
         ) : shouldRequireLaunchMembership(launchAccess) && activeTab !== 'settings' ? (
-          <MembershipGate btnFocus={btnFocus} onStartCheckout={onStartCheckout} onOpenBillingPortal={onOpenBillingPortal} />
+          <MembershipGate
+            btnFocus={btnFocus}
+            onStartCheckout={onStartCheckout}
+            onOpenBillingPortal={onOpenBillingPortal}
+          />
         ) : activeTab === 'chat' ? (
-          <section className="bo-surface-enter space-y-3" aria-label="Chat conversation" key="shell-chat">
+          <section
+            className="bo-surface-enter space-y-3"
+            aria-label="Chat conversation"
+            key="shell-chat"
+          >
             <MobileChatView
               messages={messages}
               loading={commandLoading}
@@ -841,7 +891,10 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
           <button
             type="button"
             onClick={onMarkMembershipActive}
-            className={clsx('w-full rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-sm text-text', btnFocus)}
+            className={clsx(
+              'w-full rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-sm text-text',
+              btnFocus
+            )}
           >
             Mark membership active (QA)
           </button>
@@ -866,7 +919,8 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               Archive workspace data?
             </h2>
             <p className="mt-2 text-sm text-textMuted">
-              This command can archive an opportunity or content. It cannot be undone from the chat UI.
+              This command can archive an opportunity or content. It cannot be undone from the chat
+              UI.
             </p>
             <p className="mt-2 rounded-lg border border-border/50 bg-bgSubtle/80 p-2 font-mono text-xs text-textMuted">
               {pendingDestructive}
@@ -914,7 +968,9 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             <h2 id={dialogClearId} className="text-base font-semibold text-text">
               Clear chat transcript?
             </h2>
-            <p className="mt-2 text-sm text-textMuted">This removes the on-device message history. Command chips are unchanged.</p>
+            <p className="mt-2 text-sm text-textMuted">
+              This removes the on-device message history. Command chips are unchanged.
+            </p>
             <OnDeviceDialogTrustFooter />
             <div className="mt-4 flex justify-end gap-2">
               <button
@@ -961,8 +1017,9 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               Reset workspace to seed data?
             </h2>
             <p className="mt-2 text-sm text-textMuted">
-              Replaces all BrandOps workspace data on this device with the default seed. Chat transcript and command chips
-              are not cleared — use Settings session actions if you want those gone.
+              Replaces all BrandOps workspace data on this device with the default seed. Chat
+              transcript and command chips are not cleared — use Settings session actions if you
+              want those gone.
             </p>
             <OnDeviceDialogTrustFooter />
             <div className="mt-4 flex justify-end gap-2">

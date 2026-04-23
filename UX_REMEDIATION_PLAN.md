@@ -10,18 +10,18 @@
 
 After walking the live shell (`src/pages/mobile/*.tsx`) and the global stylesheet (`src/styles/index.css`), these were the concrete problems:
 
-| # | Issue                                                                    | Evidence                                                                                                                                                                 |
-| - | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1 | **Chronic tiny text (9–11px)** in primary content                        | `text-[9px]`, `text-[10px]`, `text-[11px]`, `text-micro` (0.6875rem) everywhere in Pulse, Today, Chat, Settings                                                          |
-| 2 | **No visual hierarchy** — body / meta / caption all look equally muted   | `textMuted` + `textSoft` fill most screens; rare use of color; stat tiles (`pulseTile`) are 10px uppercase labels above tiny numbers                                     |
-| 3 | **Cognitive overload** — every tab narrates itself 3–5 times             | `MobileApp` header prints tab purpose, then `MobileTabPageHeader` title + subtitle, then `ShellSectionCallout` repeats the purpose, then each section has its own blurb  |
-| 4 | **Button taxonomy collapse** — everything looks like a ghost chip        | `mobileChipClass`, `.bo-link`, `pulseTile`, "Open in Chat", "Run in Chat", "Review first", "Copy" all share the same rounded-outline-small aesthetic                     |
-| 5 | **Primary actions have no primary styling**                              | The Chat "Send" button uses `bg-surfaceActive` (same as disabled pill backgrounds); Pulse "Run in Chat" is a 10px text chip next to "Review first"                       |
-| 6 | **Monochrome accent palette reads as dead**                              | `--color-primary: 184 190 201` (a neutral grey) — "primary" never actually pops                                                                                          |
-| 7 | **Redundant meta-explanations of navigation itself**                     | Pulse body shows *"Intelligence here uses the same local rules…"*, Today shows *"Today is for planning — not the same screen as Pulse (timeline)."*, FirstRun explains the five tabs again |
-| 8 | **"Every button takes me to Chat"** — user confusion about command loop  | Quick actions all route through `sendQuickCommand` → switch to Chat → execute. The destination is correct, but no visual feedback connected the source button to its result, so it felt like navigation, not execution |
-| 9 | **Too many density tiers of the same content**                           | Pulse: 4 color-coded "Matters now / Needs attention / Growing / AI" sections + 3 bucket lists (Today/This week/Later) + a Jump bar + an inline pipeline-health CTA         |
-| 10| **Chat header spends 3 lines explaining which tab executes commands**     | `MobileChatView` header: *"This is where work actually runs. Use chips and matches, or Guided examples. Today is for planning and digests; Pulse is the time-ordered queue — both read; Chat executes."* |
+| #   | Issue                                                                   | Evidence                                                                                                                                                                                                               |
+| --- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Chronic tiny text (9–11px)** in primary content                       | `text-[9px]`, `text-[10px]`, `text-[11px]`, `text-micro` (0.6875rem) everywhere in Pulse, Today, Chat, Settings                                                                                                        |
+| 2   | **No visual hierarchy** — body / meta / caption all look equally muted  | `textMuted` + `textSoft` fill most screens; rare use of color; stat tiles (`pulseTile`) are 10px uppercase labels above tiny numbers                                                                                   |
+| 3   | **Cognitive overload** — every tab narrates itself 3–5 times            | `MobileApp` header prints tab purpose, then `MobileTabPageHeader` title + subtitle, then `ShellSectionCallout` repeats the purpose, then each section has its own blurb                                                |
+| 4   | **Button taxonomy collapse** — everything looks like a ghost chip       | `mobileChipClass`, `.bo-link`, `pulseTile`, "Open in Chat", "Run in Chat", "Review first", "Copy" all share the same rounded-outline-small aesthetic                                                                   |
+| 5   | **Primary actions have no primary styling**                             | The Chat "Send" button uses `bg-surfaceActive` (same as disabled pill backgrounds); Pulse "Run in Chat" is a 10px text chip next to "Review first"                                                                     |
+| 6   | **Monochrome accent palette reads as dead**                             | `--color-primary: 184 190 201` (a neutral grey) — "primary" never actually pops                                                                                                                                        |
+| 7   | **Redundant meta-explanations of navigation itself**                    | Pulse body shows _"Intelligence here uses the same local rules…"_, Today shows _"Today is for planning — not the same screen as Pulse (timeline)."_, FirstRun explains the five tabs again                             |
+| 8   | **"Every button takes me to Chat"** — user confusion about command loop | Quick actions all route through `sendQuickCommand` → switch to Chat → execute. The destination is correct, but no visual feedback connected the source button to its result, so it felt like navigation, not execution |
+| 9   | **Too many density tiers of the same content**                          | Pulse: 4 color-coded "Matters now / Needs attention / Growing / AI" sections + 3 bucket lists (Today/This week/Later) + a Jump bar + an inline pipeline-health CTA                                                     |
+| 10  | **Chat header spends 3 lines explaining which tab executes commands**   | `MobileChatView` header: _"This is where work actually runs. Use chips and matches, or Guided examples. Today is for planning and digests; Pulse is the time-ordered queue — both read; Chat executes."_               |
 
 ---
 
@@ -29,7 +29,7 @@ After walking the live shell (`src/pages/mobile/*.tsx`) and the global styleshee
 
 The product copy grew into the UI. Over ~40 commits, every feature added a clarifying sentence next to itself so users would "know the shell." Instead of clarifying, the sentences compete with each other at identical visual weight, and the accent tokens were made neutral-grey for "calm aesthetic," which removed every affordance the sentences referred to.
 
-The **logic is sound** — commands do execute, the agent engine is deterministic, tabs work correctly, URL deep-linking works. The failure is perceptual: users can't *find* the action inside the wall of 11px grey text.
+The **logic is sound** — commands do execute, the agent engine is deterministic, tabs work correctly, URL deep-linking works. The failure is perceptual: users can't _find_ the action inside the wall of 11px grey text.
 
 ---
 
@@ -51,7 +51,7 @@ The **logic is sound** — commands do execute, the agent engine is deterministi
 
 - Bump `micro` from `0.6875rem` to `0.75rem` (12px) with 1rem line-height.
 - Add typography scale: `textLabel` 13px/1.2rem, `textMeta` 12px/1rem.
-- Add a real **brand accent** token `--color-accent` (not grey) reused by primary CTAs, live status dots, and hero halos. Calibrated for both dark and light modes so the monochrome identity is preserved everywhere *except* primary affordances.
+- Add a real **brand accent** token `--color-accent` (not grey) reused by primary CTAs, live status dots, and hero halos. Calibrated for both dark and light modes so the monochrome identity is preserved everywhere _except_ primary affordances.
 - Add component classes:
   - `.bo-btn-primary` — filled, accent gradient, 13px, min-h 36px. Used by Chat Send, "Run in Chat" (Pulse), and Run in FirstRun.
   - `.bo-btn-ghost` — outline neutral chip for secondary nav only. Separates "navigate" from "execute" visually.
@@ -75,12 +75,12 @@ The **logic is sound** — commands do execute, the agent engine is deterministi
 - Section headers switch from `text-[10px] uppercase tracking-wide` to `text-label font-semibold` with a small colored dot (`bo-visual-orb`).
 - Remove the "Intelligence here uses the same local rules…" meta-paragraph.
 - Remove the `ShellSectionCallout` (already covered by the hero). **Keep** the three "What matters now / needs attention / growing" + "AI-recommended next actions" headings — SSR tests assert them.
-- "Run in Chat" becomes `bo-btn-primary` (filled, accent). "Review first" stays as `bo-link` outline. Now the user can *see* which button changes the workspace.
+- "Run in Chat" becomes `bo-btn-primary` (filled, accent). "Review first" stays as `bo-link` outline. Now the user can _see_ which button changes the workspace.
 - Keep "Jump" row — the integration tests rely on it.
 
 ### 4.5 Chat — `src/pages/mobile/MobileChatView.tsx` and `ChatCommandBar.tsx`
 
-- Replace three-line header blurb with a one-liner: *"Type or tap. Commands execute here."*
+- Replace three-line header blurb with a one-liner: _"Type or tap. Commands execute here."_
 - Bubble padding/readability bumped (text-sm body default, wider line-height).
 - `ChatCommandBar` Send button: `bo-btn-primary` with the sparkle icon. Disabled state keeps the loader but no longer visually matches the idle state (was confusing).
 - Typeahead rows get larger touch targets (min-h 40px) and readable 13px title.
@@ -94,7 +94,7 @@ The **logic is sound** — commands do execute, the agent engine is deterministi
 
 ### 4.7 First-run card — `src/pages/mobile/FirstRunJourneyCard.tsx`
 
-- Trim the explanatory sentence from 42 words → 15 words: *"Read in Pulse / Today. Execute in Chat."* plus the three tab chips and one primary Run.
+- Trim the explanatory sentence from 42 words → 15 words: _"Read in Pulse / Today. Execute in Chat."_ plus the three tab chips and one primary Run.
 - "Run: pipeline health" becomes the primary CTA with `bo-btn-primary`.
 
 ### 4.8 Stat tile primitive — `src/pages/mobile/cockpitDailyPrimitives.tsx`
@@ -136,4 +136,5 @@ Single focused commit on `main`:
 Then pushed to the existing remote (`git push origin HEAD`).
 
 ---
+
 _Authored_: UX pass, Apr 23 2026. No changes to backend surfaces; all work is in the React mobile shell and the shared design tokens.

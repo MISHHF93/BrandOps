@@ -9,7 +9,13 @@ export interface AppShellProps {
   contentClassName?: string;
 }
 
-export function AppShell({ nav, children, className, navClassName, contentClassName }: AppShellProps) {
+export function AppShell({
+  nav,
+  children,
+  className,
+  navClassName,
+  contentClassName
+}: AppShellProps) {
   return (
     <div
       className={cn(
@@ -24,15 +30,18 @@ export function AppShell({ nav, children, className, navClassName, contentClassN
         )}
       >
         {nav ? (
-          <aside className={cn('rounded-lg border border-border/80 bg-bgElevated p-3', navClassName)}>
+          <aside
+            className={cn('rounded-lg border border-border/80 bg-bgElevated p-3', navClassName)}
+          >
             {nav}
           </aside>
         ) : null}
-        <main className={cn('rounded-lg border border-border/80 bg-bgElevated p-3', contentClassName)}>
+        <main
+          className={cn('rounded-lg border border-border/80 bg-bgElevated p-3', contentClassName)}
+        >
           {children}
         </main>
       </div>
     </div>
   );
 }
-

@@ -40,10 +40,7 @@ const sectionShell = (accent: 'now' | 'fix' | 'grow' | 'ai') => {
         : accent === 'grow'
           ? 'border-l-success'
           : 'border-l-info';
-  return clsx(
-    'rounded-xl border border-border/50 bg-bgSubtle/40 px-3 py-3 border-l-4',
-    border
-  );
+  return clsx('rounded-xl border border-border/50 bg-bgSubtle/40 px-3 py-3 border-l-4', border);
 };
 
 function LineList({ items }: { items: { id: string; line: string; detail?: string }[] }) {
@@ -139,7 +136,11 @@ export const PulseTimelineView = ({
                   type="button"
                   disabled={commandBusy}
                   onClick={() => primeChat(primeLineForRow(row))}
-                  className={clsx('bo-btn-ghost', btnFocus, 'disabled:cursor-not-allowed disabled:opacity-50')}
+                  className={clsx(
+                    'bo-btn-ghost',
+                    btnFocus,
+                    'disabled:cursor-not-allowed disabled:opacity-50'
+                  )}
                 >
                   Open in Chat
                 </button>
@@ -167,7 +168,12 @@ export const PulseTimelineView = ({
 
       <div className="grid grid-cols-2 gap-2.5">
         <StatCard label="Due today" value={dueToday} sub="in queue" tone="now" />
-        <StatCard label="Attention" value={home.needsAttention.length} sub="needs a look" tone="fix" />
+        <StatCard
+          label="Attention"
+          value={home.needsAttention.length}
+          sub="needs a look"
+          tone="fix"
+        />
         <StatCard label="Momentum" value={home.momentum.length} sub="signals up" tone="grow" />
         <StatCard label="Recommended" value={recommendedCount} sub="AI actions" tone="ai" />
       </div>
@@ -249,10 +255,18 @@ export const PulseTimelineView = ({
           <button type="button" onClick={() => onNavigateTab('daily')} className={jumpBtn}>
             Today
           </button>
-          <button type="button" onClick={() => onOpenCockpitWorkstream('pipeline')} className={jumpBtn}>
+          <button
+            type="button"
+            onClick={() => onOpenCockpitWorkstream('pipeline')}
+            className={jumpBtn}
+          >
             Pipeline
           </button>
-          <button type="button" onClick={() => onOpenCockpitWorkstream('brand-content')} className={jumpBtn}>
+          <button
+            type="button"
+            onClick={() => onOpenCockpitWorkstream('brand-content')}
+            className={jumpBtn}
+          >
             Brand &amp; posts
           </button>
         </div>

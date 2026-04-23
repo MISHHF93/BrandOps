@@ -33,7 +33,8 @@ export const workspaceModules: WorkspaceModule[] = [
   {
     id: 'publishing-queue',
     title: 'Publishing Queue',
-    description: 'Today · Brand & content — planned posts, reminders, publish windows, and completion state.',
+    description:
+      'Today · Brand & content — planned posts, reminders, publish windows, and completion state.',
     status: 'active',
     route: 'dashboard'
   },
@@ -47,7 +48,8 @@ export const workspaceModules: WorkspaceModule[] = [
   {
     id: 'pipeline-crm',
     title: 'Pipeline CRM',
-    description: 'Today · Pipeline — opportunities, stages, replies, follow-ups, and pipeline confidence.',
+    description:
+      'Today · Pipeline — opportunities, stages, replies, follow-ups, and pipeline confidence.',
     status: 'active',
     route: 'dashboard'
   },
@@ -61,7 +63,8 @@ export const workspaceModules: WorkspaceModule[] = [
   {
     id: 'linkedin-companion',
     title: 'LinkedIn Companion',
-    description: 'LinkedIn page overlay — lightweight capture (full content work under Today · Brand & content).',
+    description:
+      'LinkedIn page overlay — lightweight capture (full content work under Today · Brand & content).',
     status: 'active',
     route: 'content'
   },

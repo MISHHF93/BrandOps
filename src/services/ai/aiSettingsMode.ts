@@ -210,9 +210,7 @@ export const applyAiSettingsOperations = (
           break;
         case 'set-ambient-fx':
           data.settings.ambientFxEnabled = Boolean(operation.payload.ambientFxEnabled);
-          applied.push(
-            `Ambient FX ${data.settings.ambientFxEnabled ? 'enabled' : 'disabled'}.`
-          );
+          applied.push(`Ambient FX ${data.settings.ambientFxEnabled ? 'enabled' : 'disabled'}.`);
           break;
         case 'set-debug-mode':
           data.settings.debugMode = Boolean(operation.payload.debugMode);

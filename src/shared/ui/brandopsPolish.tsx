@@ -36,13 +36,7 @@ export function parseDataOpsTone(message: string): DataOpsFeedbackTone {
 /**
  * Toasts the workspace data line in the app header: trust-forward, with tone, motion-safe.
  */
-export function WorkspaceDataHint({
-  message,
-  className
-}: {
-  message: string;
-  className?: string;
-}) {
+export function WorkspaceDataHint({ message, className }: { message: string; className?: string }) {
   const tone = parseDataOpsTone(message);
   const Icon = tone === 'success' ? CheckCircle2 : tone === 'caution' ? AlertCircle : Info;
   const color =
@@ -88,7 +82,10 @@ export function OnDeviceTrustLine({ className }: { className?: string }) {
 export function OnDeviceDialogTrustFooter({ className }: { className?: string }) {
   return (
     <p
-      className={clsx('mt-3 flex items-start gap-1.5 text-[10px] leading-snug text-textSoft', className)}
+      className={clsx(
+        'mt-3 flex items-start gap-1.5 text-[10px] leading-snug text-textSoft',
+        className
+      )}
       role="note"
     >
       <Shield className="mt-0.5 h-3 w-3 shrink-0 text-textSoft/80" strokeWidth={2} aria-hidden />
@@ -118,7 +115,9 @@ export function AgentWorkingState({ label = 'Agent is on it' }: { label?: string
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-text">{label}</p>
-          <p className="text-[10px] text-textSoft">Running your command and updating the workspace on-device.</p>
+          <p className="text-[10px] text-textSoft">
+            Running your command and updating the workspace on-device.
+          </p>
         </div>
         <Sparkles className="h-4 w-4 shrink-0 text-primary/70" strokeWidth={2} aria-hidden />
       </div>
@@ -150,7 +149,9 @@ export function EmptyState({
     >
       <p className="text-sm font-medium text-text">{title}</p>
       <p className="mt-1 text-[11px] leading-relaxed text-textSoft">{body}</p>
-      {children ? <div className="mt-3 flex flex-wrap items-center justify-center gap-2">{children}</div> : null}
+      {children ? (
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">{children}</div>
+      ) : null}
     </div>
   );
 }

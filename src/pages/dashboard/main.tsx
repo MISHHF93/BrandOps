@@ -13,7 +13,9 @@ if (typeof window !== 'undefined') {
   if (retiredOverlayTarget) {
     const target = new URL(retiredOverlayTarget, window.location.href);
     window.location.replace(target.toString());
-  } else if (shouldRedirectDashboardSectionToMobile(window.location.pathname, window.location.search)) {
+  } else if (
+    shouldRedirectDashboardSectionToMobile(window.location.pathname, window.location.search)
+  ) {
     const target = new URL('mobile.html', window.location.href);
     target.search = window.location.search;
     target.hash = window.location.hash;

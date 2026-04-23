@@ -15,7 +15,13 @@ export interface CurrentSectionBarProps {
 /**
  * Lightweight breadcrumb-style strip: BrandOps / section — avoids duplicating a full second header.
  */
-export function CurrentSectionBar({ label, description, leading, actions, className }: CurrentSectionBarProps) {
+export function CurrentSectionBar({
+  label,
+  description,
+  leading,
+  actions,
+  className
+}: CurrentSectionBarProps) {
   return (
     <div
       className={cn(

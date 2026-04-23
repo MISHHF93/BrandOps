@@ -1,7 +1,4 @@
-import {
-  knowledgeCenterDailyPlaybook,
-  knowledgeCenterTopics
-} from './knowledgeCenterTopics';
+import { knowledgeCenterDailyPlaybook, knowledgeCenterTopics } from './knowledgeCenterTopics';
 import { KnowledgeTopicIcon } from './knowledgeCenterTopicIcons';
 import { QUERY } from '../navigation/extensionLinks';
 
@@ -53,11 +50,16 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
             <h2 id="kc-reference-heading" className="text-base font-semibold text-text">
               Reference
             </h2>
-            <p className="mt-0.5 text-xs text-textMuted">Pick a topic, then expand only if you need more detail.</p>
+            <p className="mt-0.5 text-xs text-textMuted">
+              Pick a topic, then expand only if you need more detail.
+            </p>
           </div>
         </div>
 
-        <nav aria-label="Knowledge Center topics" className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs">
+        <nav
+          aria-label="Knowledge Center topics"
+          className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs"
+        >
           {knowledgeCenterTopics.map((topic) => (
             <a
               key={topic.id}
@@ -77,7 +79,11 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
               (topic.paragraphs[0] ? topic.paragraphs[0].split(/(?<=[.!?])\s+/)[0] : '');
 
             return (
-              <article key={topic.id} id={topic.id} className="bo-card scroll-mt-24 space-y-2.5 p-4">
+              <article
+                key={topic.id}
+                id={topic.id}
+                className="bo-card scroll-mt-24 space-y-2.5 p-4"
+              >
                 <h2 className="flex items-center gap-2 text-base font-semibold text-text">
                   <KnowledgeTopicIcon topicId={topic.id} size={18} />
                   {topic.title}

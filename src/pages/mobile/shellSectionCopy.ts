@@ -12,20 +12,7 @@ export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
   settings: 'Control & trust — you, your account, and how BrandOps behaves.'
 };
 
-/** Short wayfinding when the whole bar must be named (Help, palette copy, docs). */
-export const SHELL_COMPASS_LINE =
-  'Pulse: timeline · Chat: act · Today: plan · Integrations: connect tools · Settings: you & trust';
-
-/** @deprecated Prefer {@link SHELL_TAB_PURPOSE} in UI; use {@link SHELL_COMPASS_LINE} for one-line lists. */
-export const SHELL_SECTIONS_LINE = SHELL_COMPASS_LINE;
-
-/** @deprecated Use {@link SHELL_COMPASS_LINE}. */
-export const SHELL_FOUR_SECTIONS_LINE = SHELL_COMPASS_LINE;
-
-export const SHELL_SECTION_COPY: Record<
-  MobileShellTabId,
-  { headline: string; body: string }
-> = {
+export const SHELL_SECTION_COPY: Record<MobileShellTabId, { headline: string; body: string }> = {
   pulse: {
     headline: 'Pulse — stay oriented',
     body: 'A single time-ordered queue across follow-ups, publishing, scheduler, and outreach. Not your plan for the day — that is Today.'

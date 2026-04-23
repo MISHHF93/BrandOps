@@ -25,7 +25,9 @@ export function SettingsTierAOverview({
 }) {
   const seedLine = `${snapshot.seedReadout.source} · v${snapshot.seedReadout.version}`;
   const offerPreview =
-    snapshot.primaryOffer.length > 48 ? `${snapshot.primaryOffer.slice(0, 46)}…` : snapshot.primaryOffer;
+    snapshot.primaryOffer.length > 48
+      ? `${snapshot.primaryOffer.slice(0, 46)}…`
+      : snapshot.primaryOffer;
   const oneLine = (s: string) => s.replace(/\s+/g, ' ').trim();
   const profileSavedSummary = (() => {
     const o = oneLine(snapshot.operatorName) || '—';
@@ -65,12 +67,18 @@ export function SettingsTierAOverview({
 
       <dl className="mt-3 overflow-hidden rounded-lg border border-border/45 text-[11px] text-textMuted">
         <div className="border-b border-border/40 px-2.5 py-2.5">
-          <dt className="text-[10px] font-medium uppercase tracking-wide text-textSoft">Profile (saved)</dt>
-          <dd className="mt-1 min-w-0 break-words text-left leading-relaxed text-text">{profileSavedSummary}</dd>
+          <dt className="text-[10px] font-medium uppercase tracking-wide text-textSoft">
+            Profile (saved)
+          </dt>
+          <dd className="mt-1 min-w-0 break-words text-left leading-relaxed text-text">
+            {profileSavedSummary}
+          </dd>
         </div>
         <div className="px-2.5 py-2.5">
           <dt className="text-[10px] font-medium uppercase tracking-wide text-textSoft">Seed</dt>
-          <dd className="mt-1 min-w-0 break-words text-left text-text leading-relaxed">{seedLine}</dd>
+          <dd className="mt-1 min-w-0 break-words text-left text-text leading-relaxed">
+            {seedLine}
+          </dd>
         </div>
       </dl>
       {snapshot.intelligenceRulesReadout.error ? (
@@ -91,7 +99,11 @@ export function SettingsTierAOverview({
           Help &amp; reference
         </a>
         {onOpenToday ? (
-          <button type="button" className={clsx('bo-link bo-link--sm !normal-case', btnFocus)} onClick={onOpenToday}>
+          <button
+            type="button"
+            className={clsx('bo-link bo-link--sm !normal-case', btnFocus)}
+            onClick={onOpenToday}
+          >
             View Today
           </button>
         ) : null}
@@ -200,7 +212,10 @@ export function SettingsAssistantComposer({
       <div id={statusId} className="mt-2 min-h-[1.25rem]" role="status" aria-live="polite">
         {applyBusy ? <p className="text-[11px] text-textSoft">Applying…</p> : null}
         {!applyBusy && applyError ? (
-          <p className="rounded border border-danger/35 bg-dangerSoft/10 px-2 py-1.5 text-[11px] text-danger" role="alert">
+          <p
+            className="rounded border border-danger/35 bg-dangerSoft/10 px-2 py-1.5 text-[11px] text-danger"
+            role="alert"
+          >
             {applyError}
           </p>
         ) : null}
@@ -262,7 +277,8 @@ export function SettingsWorkflowModesHero({
         </h2>
       </div>
       <p className="text-[11px] text-textSoft">
-        One tap applies a bundled setup (still runs through Chat). Pick the closest match, then refine with Assistant.
+        One tap applies a bundled setup (still runs through Chat). Pick the closest match, then
+        refine with Assistant.
       </p>
       <ul className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {OPERATIONAL_PRESETS.map((preset) => (
@@ -279,7 +295,9 @@ export function SettingsWorkflowModesHero({
               )}
             >
               <span className="text-sm font-semibold text-text">{preset.label}</span>
-              <span className="mt-1.5 line-clamp-3 text-[11px] leading-snug text-textSoft">{preset.description}</span>
+              <span className="mt-1.5 line-clamp-3 text-[11px] leading-snug text-textSoft">
+                {preset.description}
+              </span>
             </button>
           </li>
         ))}
@@ -323,7 +341,10 @@ export function SettingsDataSafetyBlock({
         onChange={(e) => void onImportPick(e)}
       />
       {importMessage ? (
-        <p className="mb-2 rounded border border-border/50 bg-bgSubtle/60 px-2 py-1.5 text-[11px] text-textMuted" role="status">
+        <p
+          className="mb-2 rounded border border-border/50 bg-bgSubtle/60 px-2 py-1.5 text-[11px] text-textMuted"
+          role="status"
+        >
           {importMessage}
         </p>
       ) : null}
@@ -341,7 +362,11 @@ export function SettingsDataSafetyBlock({
         >
           Reset workspace to seed…
         </button>
-        <button type="button" onClick={onRequestClearChat} className={clsx(mobileChipClass(btnFocus), 'w-full justify-center')}>
+        <button
+          type="button"
+          onClick={onRequestClearChat}
+          className={clsx(mobileChipClass(btnFocus), 'w-full justify-center')}
+        >
           Clear chat transcript
         </button>
       </div>

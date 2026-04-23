@@ -15,7 +15,15 @@ export type MobileShellTabId = 'pulse' | 'chat' | 'daily' | 'integrations' | 'se
  * `timeline` is an alias for `pulse`.
  * Do not add strings that match {@link DashboardSectionId} for a different meaning.
  */
-const RESERVED_SECTION_TAB = new Set(['pulse', 'timeline', 'chat', 'settings', 'integrations', 'daily', 'cockpit']);
+const RESERVED_SECTION_TAB = new Set([
+  'pulse',
+  'timeline',
+  'chat',
+  'settings',
+  'integrations',
+  'daily',
+  'cockpit'
+]);
 
 export type ParsedMobileShellQuery = {
   tab: MobileShellTabId;
@@ -67,7 +75,10 @@ export function parseMobileShellFromSearchParams(
  * `?section=` value to store for the current shell (tab + optional Cockpit workstream).
  * On the Cockpit tab, use the workstream id (`today`, `pipeline`, …), not the `daily` token, once a workstream is active.
  */
-export function sectionParamValueForShellState(tab: MobileShellTabId, workstream: DashboardSectionId): string {
+export function sectionParamValueForShellState(
+  tab: MobileShellTabId,
+  workstream: DashboardSectionId
+): string {
   if (tab === 'pulse') return 'pulse';
   if (tab === 'chat') return 'chat';
   if (tab === 'settings') return 'settings';
@@ -85,7 +96,10 @@ export function isAppShellWithSectionQuery(): boolean {
 }
 
 /** Update the address bar `section` (and preserve other search params) on the shell page. */
-export function replaceMobileShellQueryInUrl(tab: MobileShellTabId, workstream: DashboardSectionId) {
+export function replaceMobileShellQueryInUrl(
+  tab: MobileShellTabId,
+  workstream: DashboardSectionId
+) {
   if (typeof window === 'undefined') return;
   const value = sectionParamValueForShellState(tab, workstream);
   const url = new URL(window.location.href);

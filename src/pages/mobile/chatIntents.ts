@@ -18,7 +18,8 @@ export type BrandOpsChatIntent = {
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
 
-const blob = (i: BrandOpsChatIntent) => norm([i.title, i.subtitle, i.command, i.id.replace(/-/g, ' ')].join(' '));
+const blob = (i: BrandOpsChatIntent) =>
+  norm([i.title, i.subtitle, i.command, i.id.replace(/-/g, ' ')].join(' '));
 
 const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
   {
@@ -163,9 +164,21 @@ export const BRANDOPS_CHAT_INTENTS: BrandOpsChatIntent[] = CHAT_INTENT_RAW;
 
 /** Curated example groups (same source as the composer). */
 export const CHAT_EXAMPLE_GROUPS: { id: string; label: string; commandIds: string[] }[] = [
-  { id: 'essentials', label: 'Start fast', commandIds: ['check-pipeline', 'jot-note', 'follow-up'] },
-  { id: 'pipeline', label: 'Pipeline & people', commandIds: ['outreach', 'add-contact', 'opportunity'] },
-  { id: 'content', label: 'Content & calendar', commandIds: ['post', 'content-idea', 'reschedule'] },
+  {
+    id: 'essentials',
+    label: 'Start fast',
+    commandIds: ['check-pipeline', 'jot-note', 'follow-up']
+  },
+  {
+    id: 'pipeline',
+    label: 'Pipeline & people',
+    commandIds: ['outreach', 'add-contact', 'opportunity']
+  },
+  {
+    id: 'content',
+    label: 'Content & calendar',
+    commandIds: ['post', 'content-idea', 'reschedule']
+  },
   { id: 'connect', label: 'Connections', commandIds: ['notion', 'add-source'] }
 ];
 

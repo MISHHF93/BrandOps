@@ -29,13 +29,13 @@ Non-goals (unchanged):
 
 ## 2. Current behavior (as implemented)
 
-| User action | Code path | Result |
-|-------------|-----------|--------|
-| Compass → section | `handleCockpitNavigation` → `navigateToSection` in [`src/pages/dashboard/dashboardApp.tsx`](src/pages/dashboard/dashboardApp.tsx) | Stays on dashboard; updates `?section=` and scroll. |
-| Compass → Settings / Knowledge on **dashboard** | Same handler; **no** `openExtensionSurface` for `help` / `options` | Sets `cockpitOverlay` to `'help'` \| `'settings'`; renders [`CockpitSurfaceOverlay`](src/pages/dashboard/components/CockpitSurfaceOverlay.tsx). |
-| **Deep link** `dashboard.html?overlay=help` \| `settings` | `useEffect` reads [`QUERY.cockpitOverlay`](src/shared/navigation/extensionLinks.ts), opens overlay, **strips** param from URL | Same overlays as compass. |
-| Compass → Settings / Knowledge from **options** or **help** | [`navigateCrownFromExtensionSurface`](src/shared/navigation/navigateCrownFromExtensionSurface.ts) | Uses `openExtensionSurface` (options page, new tab for help per `openExtensionSurface.ts`). |
-| Full Dashboard pill on dashboard host | [`RightPillNavDock`](src/shared/ui/components/navigation/RightPillNavDock.tsx) | Hidden when `hostSurface === 'dashboard'`. |
+| User action                                                 | Code path                                                                                                                         | Result                                                                                                                                          |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Compass → section                                           | `handleCockpitNavigation` → `navigateToSection` in [`src/pages/dashboard/dashboardApp.tsx`](src/pages/dashboard/dashboardApp.tsx) | Stays on dashboard; updates `?section=` and scroll.                                                                                             |
+| Compass → Settings / Knowledge on **dashboard**             | Same handler; **no** `openExtensionSurface` for `help` / `options`                                                                | Sets `cockpitOverlay` to `'help'` \| `'settings'`; renders [`CockpitSurfaceOverlay`](src/pages/dashboard/components/CockpitSurfaceOverlay.tsx). |
+| **Deep link** `dashboard.html?overlay=help` \| `settings`   | `useEffect` reads [`QUERY.cockpitOverlay`](src/shared/navigation/extensionLinks.ts), opens overlay, **strips** param from URL     | Same overlays as compass.                                                                                                                       |
+| Compass → Settings / Knowledge from **options** or **help** | [`navigateCrownFromExtensionSurface`](src/shared/navigation/navigateCrownFromExtensionSurface.ts)                                 | Uses `openExtensionSurface` (options page, new tab for help per `openExtensionSurface.ts`).                                                     |
+| Full Dashboard pill on dashboard host                       | [`RightPillNavDock`](src/shared/ui/components/navigation/RightPillNavDock.tsx)                                                    | Hidden when `hostSurface === 'dashboard'`.                                                                                                      |
 
 ---
 
@@ -51,14 +51,14 @@ Non-goals (unchanged):
 
 ## 4. Technical approach (implementation map)
 
-| Plan item | Location |
-|-----------|----------|
-| Overlay state | `cockpitOverlay` in `dashboardApp.tsx` |
-| Presentation | `CockpitSurfaceOverlay.tsx` |
-| Knowledge | `KnowledgeCenterBody`, `helpApp.tsx` + overlay |
-| Quick settings | `CockpitSettingsQuickPanel.tsx` + `CockpitAppearanceFields.tsx` shared with `CoreSetupSection` |
-| Connections CTA | `navigateToSection('connections')` from quick panel |
-| Redundant “Full Dashboard” | `RightPillNavDock` `hideRedundantFullDashboard` includes `dashboard` |
+| Plan item                  | Location                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| Overlay state              | `cockpitOverlay` in `dashboardApp.tsx`                                                         |
+| Presentation               | `CockpitSurfaceOverlay.tsx`                                                                    |
+| Knowledge                  | `KnowledgeCenterBody`, `helpApp.tsx` + overlay                                                 |
+| Quick settings             | `CockpitSettingsQuickPanel.tsx` + `CockpitAppearanceFields.tsx` shared with `CoreSetupSection` |
+| Connections CTA            | `navigateToSection('connections')` from quick panel                                            |
+| Redundant “Full Dashboard” | `RightPillNavDock` `hideRedundantFullDashboard` includes `dashboard`                           |
 
 **Not implemented (optional):** lazy-loaded overlay chunks; focus trap; dashboard `?topic=` for Knowledge overlay scroll.
 
@@ -66,14 +66,14 @@ Non-goals (unchanged):
 
 ## 5. Files touched (canonical)
 
-| Area | Files |
-|------|--------|
-| Dashboard | [`src/pages/dashboard/dashboardApp.tsx`](src/pages/dashboard/dashboardApp.tsx) |
-| Nav dock | [`src/shared/ui/components/navigation/RightPillNavDock.tsx`](src/shared/ui/components/navigation/RightPillNavDock.tsx) |
-| Overlay UI | [`src/pages/dashboard/components/CockpitSurfaceOverlay.tsx`](src/pages/dashboard/components/CockpitSurfaceOverlay.tsx) |
-| Help reuse | [`src/shared/help/KnowledgeCenterBody.tsx`](src/shared/help/KnowledgeCenterBody.tsx), [`src/pages/help/helpApp.tsx`](src/pages/help/helpApp.tsx) |
-| Quick settings | [`src/pages/dashboard/components/CockpitSettingsQuickPanel.tsx`](src/pages/dashboard/components/CockpitSettingsQuickPanel.tsx) |
-| Appearance shared | [`src/shared/ui/components/CockpitAppearanceFields.tsx`](src/shared/ui/components/CockpitAppearanceFields.tsx) |
+| Area              | Files                                                                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Dashboard         | [`src/pages/dashboard/dashboardApp.tsx`](src/pages/dashboard/dashboardApp.tsx)                                                                                                 |
+| Nav dock          | [`src/shared/ui/components/navigation/RightPillNavDock.tsx`](src/shared/ui/components/navigation/RightPillNavDock.tsx)                                                         |
+| Overlay UI        | [`src/pages/dashboard/components/CockpitSurfaceOverlay.tsx`](src/pages/dashboard/components/CockpitSurfaceOverlay.tsx)                                                         |
+| Help reuse        | [`src/shared/help/KnowledgeCenterBody.tsx`](src/shared/help/KnowledgeCenterBody.tsx), [`src/pages/help/helpApp.tsx`](src/pages/help/helpApp.tsx)                               |
+| Quick settings    | [`src/pages/dashboard/components/CockpitSettingsQuickPanel.tsx`](src/pages/dashboard/components/CockpitSettingsQuickPanel.tsx)                                                 |
+| Appearance shared | [`src/shared/ui/components/CockpitAppearanceFields.tsx`](src/shared/ui/components/CockpitAppearanceFields.tsx)                                                                 |
 | Links / deep link | [`src/shared/navigation/extensionLinks.ts`](src/shared/navigation/extensionLinks.ts), [`src/shared/navigation/SurfaceNavLinks.tsx`](src/shared/navigation/SurfaceNavLinks.tsx) |
 
 ---

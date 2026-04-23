@@ -29,14 +29,7 @@ const toneIcons = {
   danger: TriangleAlert
 } satisfies Record<ToastTone, typeof Info>;
 
-export function Toast({
-  title,
-  message,
-  tone = 'info',
-  action,
-  onClose,
-  className
-}: ToastProps) {
+export function Toast({ title, message, tone = 'info', action, onClose, className }: ToastProps) {
   const Icon = toneIcons[tone];
 
   return (
@@ -56,7 +49,12 @@ export function Toast({
           {action ? <div className="mt-2">{action}</div> : null}
         </div>
         {onClose ? (
-          <IconButton icon={<X size={14} />} label="Dismiss notification" tooltip="Dismiss" onClick={onClose} />
+          <IconButton
+            icon={<X size={14} />}
+            label="Dismiss notification"
+            tooltip="Dismiss"
+            onClick={onClose}
+          />
         ) : null}
       </div>
     </article>
@@ -79,4 +77,3 @@ export function ToastViewport({ children, className }: ToastViewportProps) {
     </section>
   );
 }
-

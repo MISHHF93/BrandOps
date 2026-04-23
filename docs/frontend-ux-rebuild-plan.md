@@ -18,13 +18,13 @@ This document captures what the current BrandOps client **is**, which layers are
 
 ### 2.1 Stack and delivery
 
-| Area | Choice |
-|------|--------|
-| UI | React 18, TypeScript |
-| Styling | Tailwind CSS 3, `clsx`, shared primitives under `src/shared/ui/components` |
-| Icons / motion | `lucide-react`, `motion` |
-| Build | Vite 7, **multi‑page** bundle (separate HTML entries) |
-| Native | Capacitor 8 (Android) |
+| Area           | Choice                                                                     |
+| -------------- | -------------------------------------------------------------------------- |
+| UI             | React 18, TypeScript                                                       |
+| Styling        | Tailwind CSS 3, `clsx`, shared primitives under `src/shared/ui/components` |
+| Icons / motion | `lucide-react`, `motion`                                                   |
+| Build          | Vite 7, **multi‑page** bundle (separate HTML entries)                      |
+| Native         | Capacitor 8 (Android)                                                      |
 
 ### 2.2 HTML surfaces (each is its own document)
 
@@ -80,25 +80,25 @@ Most workspace behavior is **local-first** (extension storage / `browserLocalSto
 
 Use this table as the checklist for UX specs, visual design, and acceptance tests. “Fixture” here means a **bounded UI scenario** (surface + user intent + data state), not only automated test data.
 
-| ID | Surface | Primary user job | Critical states to design |
-|----|---------|------------------|---------------------------|
-| F‑SHELL‑01 | Bottom nav + header | Orient and switch modes | 5 tabs, active tab, badge/hint if any |
-| F‑SHELL‑02 | Deep link / URL | Resume at workstream | `?section=` tab vs workstream parsing |
-| F‑PULSE‑01 | Pulse timeline | Scan cadence and upcoming work | empty, dense, overdue |
-| F‑CHAT‑01 | Chat thread | Natural language operations | welcome, user/assistant, command-result, loading, error |
-| F‑CHAT‑02 | Composer + starters | Discover commands | starters expanded/collapsed, chips history |
-| F‑CHAT‑03 | Destructive flows | Confirm archive/reset | confirm dialogs (see `needsDestructiveConfirm` pattern) |
-| F‑COCKPIT‑01 | Today workstream | Mission / priorities | zero vs populated snapshot |
-| F‑COCKPIT‑02 | Pipeline workstream | CRM + outreach | opportunities, outreach drafts, pipeline health |
-| F‑COCKPIT‑03 | Brand & content | Library + publishing | content items, queue, brand vault refs |
-| F‑COCKPIT‑04 | Connections | Integrations mental model inside Today | sources, artifacts, SSH (peek rows + navigation to Integrations) |
-| F‑COCKPIT‑05 | Workstream command strip | Act without opening Chat | per-workstream commands (map to `cockpit-command-surface-map`) |
-| F‑INT‑01 | Integrations tab | Register sources | connected / planned / monitoring |
-| F‑SET‑01 | Settings | Workspace prefs, AI mode, export/import | apply loading, success/error |
-| F‑WEL‑01 | Welcome | Sign in / sign up | `?flow=signup`, OAuth buttons |
-| F‑HELP‑01 | Knowledge Center | Learn surfaces | topic deep link `?topic=` |
-| F‑A11Y‑01 | Global | Keyboard and screen reader | focus order, landmarks, live regions for chat |
-| F‑AND‑01 | Android WebView | Same shell in Capacitor | safe areas, back behavior, storage parity |
+| ID           | Surface                  | Primary user job                        | Critical states to design                                        |
+| ------------ | ------------------------ | --------------------------------------- | ---------------------------------------------------------------- |
+| F‑SHELL‑01   | Bottom nav + header      | Orient and switch modes                 | 5 tabs, active tab, badge/hint if any                            |
+| F‑SHELL‑02   | Deep link / URL          | Resume at workstream                    | `?section=` tab vs workstream parsing                            |
+| F‑PULSE‑01   | Pulse timeline           | Scan cadence and upcoming work          | empty, dense, overdue                                            |
+| F‑CHAT‑01    | Chat thread              | Natural language operations             | welcome, user/assistant, command-result, loading, error          |
+| F‑CHAT‑02    | Composer + starters      | Discover commands                       | starters expanded/collapsed, chips history                       |
+| F‑CHAT‑03    | Destructive flows        | Confirm archive/reset                   | confirm dialogs (see `needsDestructiveConfirm` pattern)          |
+| F‑COCKPIT‑01 | Today workstream         | Mission / priorities                    | zero vs populated snapshot                                       |
+| F‑COCKPIT‑02 | Pipeline workstream      | CRM + outreach                          | opportunities, outreach drafts, pipeline health                  |
+| F‑COCKPIT‑03 | Brand & content          | Library + publishing                    | content items, queue, brand vault refs                           |
+| F‑COCKPIT‑04 | Connections              | Integrations mental model inside Today  | sources, artifacts, SSH (peek rows + navigation to Integrations) |
+| F‑COCKPIT‑05 | Workstream command strip | Act without opening Chat                | per-workstream commands (map to `cockpit-command-surface-map`)   |
+| F‑INT‑01     | Integrations tab         | Register sources                        | connected / planned / monitoring                                 |
+| F‑SET‑01     | Settings                 | Workspace prefs, AI mode, export/import | apply loading, success/error                                     |
+| F‑WEL‑01     | Welcome                  | Sign in / sign up                       | `?flow=signup`, OAuth buttons                                    |
+| F‑HELP‑01    | Knowledge Center         | Learn surfaces                          | topic deep link `?topic=`                                        |
+| F‑A11Y‑01    | Global                   | Keyboard and screen reader              | focus order, landmarks, live regions for chat                    |
+| F‑AND‑01     | Android WebView          | Same shell in Capacitor                 | safe areas, back behavior, storage parity                        |
 
 **Engine constraint fixture (product + UX):** Several agent actions target the **first matching entity** in engine order, not a user-selected row. Rebuild should either **document clearly** or **add selection** — tracked as a cross-cutting decision (see section 6).
 
@@ -123,33 +123,33 @@ Use this table as the checklist for UX specs, visual design, and acceptance test
 
 **Option C — Workstream-first shell** (Today/Pipeline/Brand/Connections as top-level) with Chat as FAB or drawer; Integrations and Settings as secondary. Higher build cost; clearest CRM/content split.
 
-Recommendation: decide in a short **IA workshop** using fixture IDs F‑SHELL‑01, F‑PULSE‑01, F‑COCKPIT‑* with three lo-fi flows (new user, daily operator, integrations admin).
+Recommendation: decide in a short **IA workshop** using fixture IDs F‑SHELL‑01, F‑PULSE‑01, F‑COCKPIT‑\* with three lo-fi flows (new user, daily operator, integrations admin).
 
 ---
 
 ## 6. Cross-cutting decisions (log before high-fidelity design)
 
-| # | Question | Options |
-|---|----------|---------|
-| D1 | Row-scoped vs engine-default mutations | Keep engine contract; add pickers; or hybrid |
-| D2 | Module vocabulary (`modules.ts`) vs four workstreams | Consolidate copy only vs change nav |
-| D3 | Design system | Extend `src/shared/ui/components` vs new tokens + primitives |
-| D4 | State management | Keep React local state in shell vs introduce lightweight store for snapshots |
-| D5 | Theming | Continue `applyDocumentThemeFromAppSettings` contract vs CSS variables overhaul |
+| #   | Question                                             | Options                                                                         |
+| --- | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
+| D1  | Row-scoped vs engine-default mutations               | Keep engine contract; add pickers; or hybrid                                    |
+| D2  | Module vocabulary (`modules.ts`) vs four workstreams | Consolidate copy only vs change nav                                             |
+| D3  | Design system                                        | Extend `src/shared/ui/components` vs new tokens + primitives                    |
+| D4  | State management                                     | Keep React local state in shell vs introduce lightweight store for snapshots    |
+| D5  | Theming                                              | Continue `applyDocumentThemeFromAppSettings` contract vs CSS variables overhaul |
 
 ---
 
 ## 7. Phased delivery (suggested)
 
-| Phase | Outcome | Touches |
-|-------|---------|--------|
-| P0 | Foundations: type scale, spacing, color roles, button/input variants | `shared/ui`, Tailwind config |
-| P1 | Shell + navigation redesign | `mobileApp.tsx`, `mobileTabPrimitives`, URL sync |
-| P2 | Chat experience | `MobileChatView`, message bubbles, loading/error |
-| P3 | Cockpit workstreams | `CockpitDailyView`, `Cockpit*WorkstreamSection`, command strip |
-| P4 | Integrations + Settings | `MobileIntegrationsView`, `MobileSettingsView` |
-| P5 | Welcome, Help, error boundary polish | `welcome`, `help`, `AppErrorBoundary` |
-| P6 | Android pass | Capacitor config, safe areas, QA against F‑AND‑01 |
+| Phase | Outcome                                                              | Touches                                                        |
+| ----- | -------------------------------------------------------------------- | -------------------------------------------------------------- |
+| P0    | Foundations: type scale, spacing, color roles, button/input variants | `shared/ui`, Tailwind config                                   |
+| P1    | Shell + navigation redesign                                          | `mobileApp.tsx`, `mobileTabPrimitives`, URL sync               |
+| P2    | Chat experience                                                      | `MobileChatView`, message bubbles, loading/error               |
+| P3    | Cockpit workstreams                                                  | `CockpitDailyView`, `Cockpit*WorkstreamSection`, command strip |
+| P4    | Integrations + Settings                                              | `MobileIntegrationsView`, `MobileSettingsView`                 |
+| P5    | Welcome, Help, error boundary polish                                 | `welcome`, `help`, `AppErrorBoundary`                          |
+| P6    | Android pass                                                         | Capacitor config, safe areas, QA against F‑AND‑01              |
 
 Each phase should exit with **fixture acceptance** for the relevant rows in section 3.
 
@@ -157,16 +157,16 @@ Each phase should exit with **fixture acceptance** for the relevant rows in sect
 
 ## 8. Key file map (for implementers)
 
-| Concern | Location |
-|---------|----------|
-| Shell / tabs | `src/pages/mobile/mobileApp.tsx`, `mobileTabConfig.ts`, `mobileShellQuery.ts` |
-| Workstreams | `src/pages/mobile/CockpitDailyView.tsx`, `Cockpit*WorkstreamSection.tsx` |
-| Snapshot | `src/pages/mobile/buildWorkspaceSnapshot.ts` |
-| Domain types | `src/types/domain.ts` |
-| Persistence | `src/services/storage/storage.ts` |
-| Agent API | `src/services/agent/agentWorkspaceEngine.ts`, `intent/commandIntent.ts` |
-| Routes / pages | `src/shared/navigation/extensionLinks.ts`, `vite.config.ts` |
-| Command ↔ UI map | `docs/cockpit-command-surface-map.md` |
+| Concern          | Location                                                                      |
+| ---------------- | ----------------------------------------------------------------------------- |
+| Shell / tabs     | `src/pages/mobile/mobileApp.tsx`, `mobileTabConfig.ts`, `mobileShellQuery.ts` |
+| Workstreams      | `src/pages/mobile/CockpitDailyView.tsx`, `Cockpit*WorkstreamSection.tsx`      |
+| Snapshot         | `src/pages/mobile/buildWorkspaceSnapshot.ts`                                  |
+| Domain types     | `src/types/domain.ts`                                                         |
+| Persistence      | `src/services/storage/storage.ts`                                             |
+| Agent API        | `src/services/agent/agentWorkspaceEngine.ts`, `intent/commandIntent.ts`       |
+| Routes / pages   | `src/shared/navigation/extensionLinks.ts`, `vite.config.ts`                   |
+| Command ↔ UI map | `docs/cockpit-command-surface-map.md`                                         |
 
 ---
 

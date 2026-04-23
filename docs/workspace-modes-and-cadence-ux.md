@@ -63,14 +63,14 @@ This spec aligns **cadence** (one vocabulary, one primary control), **workspace 
 
 ## 5. Implementation map
 
-| Piece | Location |
-|-------|-----------|
-| Cadence copy + configure fragment | `src/pages/mobile/cadencePresentation.ts` |
-| Composer blank starters | `src/pages/mobile/configurationStarters.ts` |
-| Presets (CONFIG without cadence; OPERATIONAL labels + layout) | `mobileSettingsPresets.ts`, `MobileSettingsAISurface.tsx` |
-| Tier A workspace summary (no cadence) | `SettingsTierAOverview` in `MobileSettingsAISurface.tsx` |
-| Assistant priming | `SettingsAssistantComposer` in `MobileSettingsAISurface.tsx` |
-| Operating mode `<select>` + Apply | `MobileSettingsView.tsx` (`SettingsEditablePanel`) |
+| Piece                                                         | Location                                                     |
+| ------------------------------------------------------------- | ------------------------------------------------------------ |
+| Cadence copy + configure fragment                             | `src/pages/mobile/cadencePresentation.ts`                    |
+| Composer blank starters                                       | `src/pages/mobile/configurationStarters.ts`                  |
+| Presets (CONFIG without cadence; OPERATIONAL labels + layout) | `mobileSettingsPresets.ts`, `MobileSettingsAISurface.tsx`    |
+| Tier A workspace summary (no cadence)                         | `SettingsTierAOverview` in `MobileSettingsAISurface.tsx`     |
+| Assistant priming                                             | `SettingsAssistantComposer` in `MobileSettingsAISurface.tsx` |
+| Operating mode `<select>` + Apply                             | `MobileSettingsView.tsx` (`SettingsEditablePanel`)           |
 
 ---
 

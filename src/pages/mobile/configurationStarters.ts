@@ -15,7 +15,9 @@ function starterSnippet(value: string, max = 100) {
   return value.replace(/"/g, "'").replace(/\n/g, ' ').trim().slice(0, max);
 }
 
-export function buildComposerBlankStarters(snapshot: MobileWorkspaceSnapshot): ComposerBlankStarter[] {
+export function buildComposerBlankStarters(
+  snapshot: MobileWorkspaceSnapshot
+): ComposerBlankStarter[] {
   return [
     {
       label: 'Workday',

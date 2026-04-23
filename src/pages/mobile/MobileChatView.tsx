@@ -70,7 +70,10 @@ export const MobileChatView = ({
               <button
                 type="button"
                 onClick={onOpenToday}
-                className={clsx('font-medium text-accent underline-offset-2 hover:underline', btnFocus)}
+                className={clsx(
+                  'font-medium text-accent underline-offset-2 hover:underline',
+                  btnFocus
+                )}
               >
                 Today
               </button>{' '}
@@ -182,7 +185,9 @@ export const MobileChatView = ({
                       {meta ? (
                         <span className="block">
                           <span className="block font-semibold text-text">{meta.title}</span>
-                          <span className="mt-0.5 line-clamp-2 block text-meta text-textSoft">{meta.subtitle}</span>
+                          <span className="mt-0.5 line-clamp-2 block text-meta text-textSoft">
+                            {meta.subtitle}
+                          </span>
                         </span>
                       ) : (
                         command
@@ -229,7 +234,10 @@ export const MobileChatView = ({
                   key={cmd}
                   type="button"
                   onClick={() => onQuickCommand(cmd)}
-                  className={clsx('max-w-full truncate rounded-lg border border-border/50 bg-surface/50 px-2.5 py-1.5 text-left text-[11px] text-textMuted', btnFocus)}
+                  className={clsx(
+                    'max-w-full truncate rounded-lg border border-border/50 bg-surface/50 px-2.5 py-1.5 text-left text-[11px] text-textMuted',
+                    btnFocus
+                  )}
                   title={cmd}
                 >
                   {cmd.length > 48 ? `${cmd.slice(0, 46)}…` : cmd}

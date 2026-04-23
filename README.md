@@ -3,6 +3,7 @@
 BrandOps is a command-first workspace for operators who manage pipeline, publishing, outreach, and integrations from one shell.
 
 The active product is a single shell with five tabs:
+
 - Pulse
 - Chat
 - Today
@@ -64,6 +65,7 @@ src/
   - `public/privacy-policy.html`
 
 Routing and link helpers live in:
+
 - `src/shared/navigation/extensionLinks.ts`
 - `src/shared/navigation/navigationIntents.ts`
 - `src/shared/navigation/openExtensionSurface.ts`
@@ -80,6 +82,7 @@ Routing and link helpers live in:
 6. UI refreshes from normalized workspace snapshot
 
 Primary files:
+
 - `src/pages/mobile/mobileApp.tsx`
 - `src/services/agent/intent/commandIntent.ts`
 - `src/services/agent/agentWorkspaceEngine.ts`
@@ -90,6 +93,7 @@ Primary files:
 ## Background Responsibilities
 
 `src/background/index.ts` handles:
+
 - install/startup initialization
 - scheduler alarm wiring
 - reminder notifications
@@ -100,6 +104,7 @@ Primary files:
   - `AGENT_BRIDGE_ENVELOPE`
 
 On first install, welcome routing is gated by launch/session state:
+
 - `src/shared/account/launchLifecycleGate.ts`
 - `src/shared/account/launchAccess.ts`
 - `src/shared/identity/sessionAccess.ts`
@@ -114,6 +119,7 @@ On first install, welcome routing is gated by launch/session state:
 - Chat thread and quick command chips are separate UI-local keys
 
 Primary files:
+
 - `src/services/storage/storage.ts`
 - `src/shared/storage/browserStorage.ts`
 - `src/pages/mobile/mobileApp.tsx`
@@ -123,15 +129,18 @@ Primary files:
 ## Launch UX Gates
 
 The shell enforces:
+
 - Auth gate (when not using preview ungated flows)
 - Membership gate **only if** `VITE_ENFORCE_MEMBERSHIP_GATE=1` (or `true`) at build time — omit for local dev / building without Stripe
 
 Shared gate contract:
+
 - `shouldRequireLaunchAuth(...)`
 - `shouldRequireLaunchMembership(...)`
 - `canOpenLaunchWorkspace(...)`
 
 Files:
+
 - `src/shared/account/launchLifecycleGate.ts`
 - `src/pages/mobile/mobileApp.tsx`
 - `src/background/index.ts`
@@ -145,6 +154,7 @@ Files:
 - Older multi-panel cockpit/module stacks are removed from active page entrypoints.
 
 References:
+
 - `src/pages/dashboard/dashboardRedirect.ts`
 - `src/services/sync/nonLaunchOauthGuard.ts`
 - `APPLICATION_WIRING_STATUS.md`
@@ -166,6 +176,7 @@ npm run dev
 ```
 
 Notes:
+
 - Dev is fixed to `http://localhost:5173`.
 - `scripts/dev.mjs` handles Windows port cleanup behavior.
 
@@ -224,4 +235,3 @@ This runs check + build + dist verification + release packaging.
 - AI model fundamentals: `docs/AI_CHATBOT_FUNDAMENTALS.md`
 - Cockpit command surface map: `docs/cockpit-command-surface-map.md`
 - Data model: `docs/data-model.md`
-

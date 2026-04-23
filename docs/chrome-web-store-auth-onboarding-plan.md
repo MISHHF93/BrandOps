@@ -41,12 +41,12 @@ This is the same mental model as “Log in with Google” on a typical web app. 
 
 ## 3. Information architecture
 
-| Surface | Purpose |
-|--------|---------|
-| **Welcome / Auth** (`welcome.html` or dedicated `auth.html`) | **Sign in** and **Sign up** via third-party buttons; privacy; recovery links. |
-| **Dashboard** | Requires **`canAccessApp`**: a **connected** Google, GitHub, or LinkedIn session only (`hasFederatedSession`). |
-| **Settings** | OAuth: optional **override** client IDs (dev); publisher IDs via **`VITE_*_CLIENT_ID`** at build; disconnect; **primary IdP** if multiple linked. |
-| **Extension popup** | Optional: compact “Sign in” / “Signed in as …” consistent with full pages. |
+| Surface                                                      | Purpose                                                                                                                                           |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Welcome / Auth** (`welcome.html` or dedicated `auth.html`) | **Sign in** and **Sign up** via third-party buttons; privacy; recovery links.                                                                     |
+| **Dashboard**                                                | Requires **`canAccessApp`**: a **connected** Google, GitHub, or LinkedIn session only (`hasFederatedSession`).                                    |
+| **Settings**                                                 | OAuth: optional **override** client IDs (dev); publisher IDs via **`VITE_*_CLIENT_ID`** at build; disconnect; **primary IdP** if multiple linked. |
+| **Extension popup**                                          | Optional: compact “Sign in” / “Signed in as …” consistent with full pages.                                                                        |
 
 **Copy rule:** Prefer **“Sign in with Google”** / **“Continue with Google”** (and equivalents) over **“Link your profile”** as the primary headline when the goal is app login.
 
@@ -91,12 +91,12 @@ This is the same mental model as “Log in with Google” on a typical web app. 
 
 ## 6. Gap analysis: vision vs extension-only reality
 
-| Aspect | Target product (your intent) | Typical extension-only implementation |
-|--------|------------------------------|--------------------------------------|
-| **Login meaning** | User **uses the app** by signing in with Google/LinkedIn/GitHub | OAuth succeeds; tokens stored locally; **no** central “BrandOps account” DB |
-| **Sign up** | Distinct first-time path | Often same OAuth flow + “workspace initialized” flag |
-| **Recovery** | Email / support / device transfer | Limited without a server |
-| **Enforcement** | Dashboard locked until signed in | Implemented: `DashboardAuthGate` + `canAccessApp` (= `hasFederatedSession` only) |
+| Aspect            | Target product (your intent)                                    | Typical extension-only implementation                                            |
+| ----------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Login meaning** | User **uses the app** by signing in with Google/LinkedIn/GitHub | OAuth succeeds; tokens stored locally; **no** central “BrandOps account” DB      |
+| **Sign up**       | Distinct first-time path                                        | Often same OAuth flow + “workspace initialized” flag                             |
+| **Recovery**      | Email / support / device transfer                               | Limited without a server                                                         |
+| **Enforcement**   | Dashboard locked until signed in                                | Implemented: `DashboardAuthGate` + `canAccessApp` (= `hasFederatedSession` only) |
 
 **Implementation note:** Publisher OAuth client IDs: `VITE_GOOGLE_CLIENT_ID`, `VITE_GITHUB_CLIENT_ID`, `VITE_LINKEDIN_CLIENT_ID` (see [`src/shared/config/oauthPublisherIds.ts`](../src/shared/config/oauthPublisherIds.ts)). Effective client ID = env **or** Settings override. A **backend** is still optional for multi-device accounts.
 
@@ -149,10 +149,10 @@ Codebase alignment (ongoing; listing/policy items remain your responsibility):
 
 ## Document history
 
-| Version | Summary |
-|---------|---------|
-| 1.0 | Superseded — do not use for product wording. |
-| 2.0 | **Third-party federated login**; guest mode; local vs backend; checklist. |
-| 2.1 | Checklist aligned with implemented session gate + sign-out + copy updates. |
-| 2.2 | Privacy policy + listing justifications + OAuth redirect doc; `VITE_PRIVACY_POLICY_URL` wiring. |
-| 2.3 | Publisher `VITE_*_CLIENT_ID`; `canAccessApp` federated-only; removed guest cockpit path. |
+| Version | Summary                                                                                         |
+| ------- | ----------------------------------------------------------------------------------------------- |
+| 1.0     | Superseded — do not use for product wording.                                                    |
+| 2.0     | **Third-party federated login**; guest mode; local vs backend; checklist.                       |
+| 2.1     | Checklist aligned with implemented session gate + sign-out + copy updates.                      |
+| 2.2     | Privacy policy + listing justifications + OAuth redirect doc; `VITE_PRIVACY_POLICY_URL` wiring. |
+| 2.3     | Publisher `VITE_*_CLIENT_ID`; `canAccessApp` federated-only; removed guest cockpit path.        |

@@ -17,7 +17,9 @@ describe('cockpit navigation vs mobile Cockpit', () => {
   it('keeps group 0 section items aligned with observedSectionIds', () => {
     const group0 = cockpitNavigationGroups[0];
     const sectionItems = group0?.items.filter((i) => i.type === 'section') ?? [];
-    const targets = sectionItems.map((i) => (i as { type: 'section'; target: DashboardSectionId }).target);
+    const targets = sectionItems.map(
+      (i) => (i as { type: 'section'; target: DashboardSectionId }).target
+    );
     expect(targets).toEqual(observedSectionIds);
   });
 
