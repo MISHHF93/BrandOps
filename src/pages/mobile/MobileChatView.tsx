@@ -1,4 +1,13 @@
-import { AlertCircle, CheckCircle2, Copy, History, MessageCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  Bot,
+  CheckCircle2,
+  ChevronDown,
+  Copy,
+  History,
+  MessageCircle,
+  User
+} from 'lucide-react';
 import clsx from 'clsx';
 import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
@@ -45,7 +54,8 @@ export interface MobileChatViewProps {
 }
 
 /**
- * Chat tab: thread, guided examples (plain language), and recent runs.
+ * Chat tab: thread, guided examples (icon + short label), and recent runs. Slim header so the
+ * thread dominates; icons on bubbles identify you vs. the agent without a "You:" / "Agent:" label.
  */
 export const MobileChatView = ({
   messages,
@@ -66,18 +76,18 @@ export const MobileChatView = ({
           <div className="min-w-0">
             <h2 className="text-h1 text-text">Chat</h2>
             <p className="mt-0.5 text-label text-textMuted">
-              Type or tap — commands execute here.{' '}
+              Type or tap.{' '}
               <button
                 type="button"
                 onClick={onOpenToday}
+                title="Open Today to plan"
                 className={clsx(
-                  'font-medium text-accent underline-offset-2 hover:underline',
+                  'inline-flex items-center gap-1 font-medium text-accent underline-offset-2 hover:underline',
                   btnFocus
                 )}
               >
                 Today
-              </button>{' '}
-              to plan.
+              </button>
             </p>
           </div>
         </div>
@@ -97,53 +107,81 @@ export const MobileChatView = ({
             <article
               key={message.id}
               className={clsx(
-                message.role === 'user' &&
-                  'ml-auto mr-0 max-w-[min(100%,20rem)] rounded-2xl border border-borderStrong/50 bg-surfaceActive px-3 py-2 text-sm leading-relaxed text-text shadow-sm sm:mr-1',
-                message.role === 'assistant' && 'mr-auto max-w-[min(100%,24rem)]'
+                'flex items-start gap-2',
+                message.role === 'user' ? 'ml-auto mr-0 flex-row-reverse' : 'mr-auto'
               )}
             >
-              {message.role === 'user' ? (
-                message.text
-              ) : message.resultKind === 'command-result' && message.action ? (
-                <div className="space-y-2 rounded-2xl border border-border/50 bg-bgElevated/95 px-3 py-2.5 text-sm shadow-inner">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {message.ok ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-successSoft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-success">
-                        <CheckCircle2 size={12} aria-hidden />
-                        Ok
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-warningSoft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-warning">
-                        <AlertCircle size={12} aria-hidden />
-                        Issue
-                      </span>
-                    )}
-                    <code className="rounded border border-border/40 bg-bgSubtle/80 px-1.5 py-0.5 text-[11px] text-info">
-                      {message.action}
-                    </code>
-                    <button
-                      type="button"
-                      className={clsx(
-                        'ml-auto inline-flex items-center gap-1 rounded-md border border-border/50 px-2 py-0.5 text-[10px] text-textSoft',
-                        btnFocus
+              <span
+                className={clsx(
+                  'mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border',
+                  message.role === 'user'
+                    ? 'border-borderStrong/50 bg-surfaceActive text-text'
+                    : 'border-accent/40 bg-accentSoft/25 text-accent'
+                )}
+                aria-hidden
+              >
+                {message.role === 'user' ? (
+                  <User className="h-3.5 w-3.5" strokeWidth={2.25} />
+                ) : (
+                  <Bot className="h-3.5 w-3.5" strokeWidth={2.25} />
+                )}
+              </span>
+              <div
+                className={clsx(
+                  message.role === 'user' &&
+                    'max-w-[min(100%,20rem)] rounded-2xl border border-borderStrong/50 bg-surfaceActive px-3 py-2 text-sm leading-relaxed text-text shadow-sm'
+                )}
+              >
+                {message.role === 'user' ? (
+                  message.text
+                ) : message.resultKind === 'command-result' && message.action ? (
+                  <div className="space-y-2 rounded-2xl border border-border/50 bg-bgElevated/95 px-3 py-2.5 text-sm shadow-inner">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {message.ok ? (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full bg-successSoft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-success"
+                          title="Command succeeded"
+                        >
+                          <CheckCircle2 size={12} aria-hidden />
+                          Ok
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full bg-warningSoft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-warning"
+                          title="Command had an issue"
+                        >
+                          <AlertCircle size={12} aria-hidden />
+                          Issue
+                        </span>
                       )}
-                      onClick={() =>
-                        copyToClipboard(
-                          `${message.action}\n${message.text}${message.strip ? `\n${JSON.stringify(message.strip)}` : ''}`
-                        )
-                      }
-                    >
-                      <Copy size={12} aria-hidden />
-                      Copy
-                    </button>
+                      <code className="rounded border border-border/40 bg-bgSubtle/80 px-1.5 py-0.5 text-[11px] text-info">
+                        {message.action}
+                      </code>
+                      <button
+                        type="button"
+                        className={clsx(
+                          'ml-auto inline-flex items-center gap-1 rounded-md border border-border/50 px-2 py-0.5 text-[10px] text-textSoft hover:text-text',
+                          btnFocus
+                        )}
+                        title="Copy command output"
+                        aria-label="Copy command output"
+                        onClick={() =>
+                          copyToClipboard(
+                            `${message.action}\n${message.text}${message.strip ? `\n${JSON.stringify(message.strip)}` : ''}`
+                          )
+                        }
+                      >
+                        <Copy size={12} aria-hidden />
+                      </button>
+                    </div>
+                    <p className="text-text leading-relaxed">{message.text}</p>
                   </div>
-                  <p className="text-text leading-relaxed">{message.text}</p>
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-border/50 bg-bgElevated/95 px-3 py-2.5 text-sm leading-relaxed text-text">
-                  {message.text}
-                </div>
-              )}
+                ) : (
+                  <div className="rounded-2xl border border-border/50 bg-bgElevated/95 px-3 py-2.5 text-sm leading-relaxed text-text">
+                    {message.text}
+                  </div>
+                )}
+              </div>
             </article>
           ))
         )}
@@ -160,16 +198,25 @@ export const MobileChatView = ({
           )}
         >
           <span className="inline-flex w-full items-center justify-between gap-2">
-            <span>Guided examples</span>
-            <span className="text-[10px] font-normal text-textSoft group-open:hidden">Expand</span>
+            <span className="inline-flex items-center gap-1.5">
+              <MessageCircle size={14} className="text-textSoft" aria-hidden />
+              <span>Guided examples</span>
+            </span>
+            <ChevronDown
+              size={14}
+              className="text-textSoft transition-transform group-open:rotate-180"
+              aria-hidden
+            />
           </span>
         </summary>
         <div className="space-y-4 border-t border-border/30 px-3 pb-3 pt-3">
           {CHAT_QUICK_STARTER_GROUPS.map((group) => (
             <div key={group.id}>
               <p className="bo-section-label">
-                <span className="bo-visual-orb" aria-hidden />
-                {group.label}
+                <span className="bo-icon-chip bo-icon-chip--xs bo-icon-chip--muted" aria-hidden>
+                  <MessageCircle className="h-3 w-3" strokeWidth={2.25} />
+                </span>
+                <span>{group.label}</span>
               </p>
               <div className="mt-2 flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
                 {group.commands.map((command) => {
@@ -211,15 +258,23 @@ export const MobileChatView = ({
           >
             <span className="inline-flex items-center gap-1.5 font-medium text-text">
               <History size={14} className="text-textSoft" aria-hidden />
-              Recent commands
+              <span>Recent commands</span>
+              <span className="bo-count-pill" aria-hidden>
+                {commandHistory.length}
+              </span>
             </span>
-            <span className="text-[10px] text-textSoft">{commandHistory.length}</span>
+            <ChevronDown
+              size={14}
+              className="text-textSoft transition-transform group-open:rotate-180"
+              aria-hidden
+            />
           </summary>
           <div className="border-t border-border/30 px-3 pb-3 pt-2">
             <div className="mb-2 flex justify-end">
               <button
                 type="button"
                 className={clsx('text-[10px] text-textSoft hover:text-textMuted', btnFocus)}
+                title="Clear recent commands"
                 onClick={(e) => {
                   e.stopPropagation();
                   onClearCommandHistory();

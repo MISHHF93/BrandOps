@@ -36,13 +36,21 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Pulse"');
+    // Symbol-first section headers keep the long phrasing inside an sr-only span so screen
+    // readers (and these assertions) still get the full label even though sighted users see
+    // the short keyword next to the icon chip.
     expect(html).toContain('What matters now');
     expect(html).toContain('What needs attention');
     expect(html).toContain('What is growing');
     expect(html).toContain('AI-recommended next actions');
+    expect(html).toContain('>Now<');
+    expect(html).toContain('>Attention<');
+    expect(html).toContain('>Growing<');
+    expect(html).toContain('>AI suggestions<');
     expect(html).toContain('Jump');
     expect(html).toContain('Brand &amp; posts');
     expect(html).toContain('Open in Chat');
+    expect(html).toContain('bo-icon-chip');
     expect(html).toContain('role="list"');
   });
 
@@ -91,14 +99,17 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Today"');
+    // The visible header is just "Today" now; the long form survives as an sr-only fallback.
     expect(html).toContain('Today — plan and work');
     expect(html).toContain('Work areas');
-    expect(html).toContain('What to do today');
-    expect(html).toContain('Urgent');
-    expect(html).toContain('Momentum');
+    expect(html).toContain('>Do today<');
+    expect(html).toContain('>Urgent<');
+    expect(html).toContain('>Momentum<');
     expect(html).toContain('At a glance');
     expect(html).toContain('Queue');
     expect(html).toContain('OAuth');
+    expect(html).toContain('bo-metric-tile');
+    expect(html).toContain('bo-pill-nav');
     expect(html).toContain('id="cockpit-today"');
     expect(html).toContain('id="cockpit-pipeline"');
     expect(html).toContain('id="cockpit-brand"');

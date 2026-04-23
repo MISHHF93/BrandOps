@@ -59,13 +59,14 @@ export const CockpitDailyView = ({
   return (
     <div className="mt-1 space-y-5" aria-label="Today">
       <MobileTabPageHeader
-        title="Today — plan and work"
-        subtitle="Plan the day and switch work areas. Anything that changes data runs in Chat."
+        title="Today"
+        subtitle="Plan the day. Actions run in Chat."
         icon={CalendarCheck2}
         iconWrapperClassName="flex items-center justify-center rounded-xl border border-info/40 bg-infoSoft/25"
         iconClassName="text-info"
         haloTone="info"
       />
+      <span className="sr-only">Today — plan and work</span>
 
       <CockpitWorkstreamBar
         btnFocus={btnFocus}

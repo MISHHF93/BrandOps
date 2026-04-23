@@ -1,18 +1,86 @@
 import clsx from 'clsx';
-import { ArrowUpRight, Crosshair, Flame, Sparkles, TrendingUp } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Bell,
+  Briefcase,
+  CalendarClock,
+  Compass,
+  Crosshair,
+  Database,
+  FileText,
+  Flame,
+  Gauge,
+  Inbox,
+  KeyRound,
+  MessageSquare,
+  PlugZap,
+  Rocket,
+  Send,
+  Sparkles,
+  TrendingUp
+} from 'lucide-react';
 import { pulseTile } from './cockpitDailyPrimitives';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 import { buildTodayFocusBoard } from './todayFocusModel';
+import type { TodayFocusLine } from './todayFocusModel';
 
-function LineList({ items }: { items: { id: string; line: string; detail?: string }[] }) {
+type LineTone = 'info' | 'warning' | 'success' | 'primary' | 'muted';
+
+function iconForLineId(id: string): { Icon: LucideIcon; tone: LineTone } {
+  if (
+    id.startsWith('sched') ||
+    id === 'pub-hint' ||
+    id === 'pub-q' ||
+    id === 'horizon' ||
+    id === 'queue'
+  )
+    return { Icon: CalendarClock, tone: 'info' };
+  if (id.startsWith('fu') || id === 'missed') return { Icon: MessageSquare, tone: 'warning' };
+  if (id.startsWith('out')) return { Icon: Send, tone: 'primary' };
+  if (
+    id.startsWith('opp') ||
+    id === 'closing' ||
+    id === 'close-1' ||
+    id.startsWith('deal') ||
+    id === 'pipe-weight' ||
+    id === 'pipe-sum' ||
+    id === 'weighted' ||
+    id === 'fu-open'
+  )
+    return { Icon: Briefcase, tone: 'success' };
+  if (id.startsWith('content')) return { Icon: FileText, tone: 'primary' };
+  if (id === 'sync') return { Icon: PlugZap, tone: 'warning' };
+  if (id === 'sources' || id === 'vault' || id === 'ops')
+    return { Icon: Database, tone: 'primary' };
+  if (id === 'cadence') return { Icon: Compass, tone: 'info' };
+  if (id === 'due') return { Icon: Bell, tone: 'warning' };
+  if (id === 'next-pub' || id === 'empty-do' || id === 'start' || id === 'seed')
+    return { Icon: Rocket, tone: 'primary' };
+  if (id === 'clear' || id === 'no-fire') return { Icon: Sparkles, tone: 'success' };
+  return { Icon: Inbox, tone: 'muted' };
+}
+
+function LineList({ items }: { items: TodayFocusLine[] }) {
   return (
     <ul className="mt-1.5 space-y-1.5" role="list">
-      {items.map((item) => (
-        <li key={item.id} className="text-[11px] leading-snug text-textMuted">
-          <p className="font-medium text-text">{item.line}</p>
-          {item.detail ? <p className="mt-0.5 text-[10px] text-textSoft">{item.detail}</p> : null}
-        </li>
-      ))}
+      {items.map((item) => {
+        const { Icon, tone } = iconForLineId(item.id);
+        return (
+          <li key={item.id} className="bo-line-row">
+            <span
+              className={clsx('bo-icon-chip bo-icon-chip--xs mt-0.5', `bo-icon-chip--${tone}`)}
+              aria-hidden
+            >
+              <Icon className="h-3 w-3" strokeWidth={2.25} />
+            </span>
+            <div className="bo-line-row__body">
+              <p className="bo-line-row__title">{item.line}</p>
+              {item.detail ? <p className="bo-line-row__detail">{item.detail}</p> : null}
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -34,7 +102,8 @@ type CockpitFocusEngineProps = {
 };
 
 /**
- * Replaces the plain “at a glance” strip with a three-lane focus engine and keeps the read-only count row.
+ * Icon-first focus board. Section titles shrink to a single noun; the icon + tonal border
+ * carry the meaning so users scan visually instead of reading long headlines.
  */
 export const CockpitFocusEngine = ({
   snapshot,
@@ -50,27 +119,39 @@ export const CockpitFocusEngine = ({
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-1">
         <div className={card('do')}>
           <div className="bo-section-label">
-            <span className="bo-visual-orb bo-visual-orb--info" aria-hidden />
-            <Crosshair className="h-4 w-4 text-info" strokeWidth={2} aria-hidden />
-            What to do today
+            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--info" aria-hidden>
+              <Crosshair className="h-3.5 w-3.5" strokeWidth={2.25} />
+            </span>
+            <span>Do today</span>
+            <span className="bo-count-pill" aria-hidden>
+              {focus.doToday.length}
+            </span>
           </div>
           <LineList items={focus.doToday} />
         </div>
 
         <div className={card('urgent')}>
           <div className="bo-section-label">
-            <span className="bo-visual-orb bo-visual-orb--warning" aria-hidden />
-            <Flame className="h-4 w-4 text-warning" strokeWidth={2} aria-hidden />
-            Urgent &amp; at risk
+            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--warning" aria-hidden>
+              <Flame className="h-3.5 w-3.5" strokeWidth={2.25} />
+            </span>
+            <span>Urgent</span>
+            <span className="bo-count-pill" aria-hidden>
+              {focus.urgent.length}
+            </span>
           </div>
           <LineList items={focus.urgent} />
         </div>
 
         <div className={card('grow')}>
           <div className="bo-section-label">
-            <span className="bo-visual-orb bo-visual-orb--success" aria-hidden />
-            <TrendingUp className="h-4 w-4 text-success" strokeWidth={2} aria-hidden />
-            Momentum
+            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--success" aria-hidden>
+              <TrendingUp className="h-3.5 w-3.5" strokeWidth={2.25} />
+            </span>
+            <span>Momentum</span>
+            <span className="bo-count-pill" aria-hidden>
+              {focus.momentum.length}
+            </span>
           </div>
           <LineList items={focus.momentum} />
         </div>
@@ -79,8 +160,10 @@ export const CockpitFocusEngine = ({
       {focus.quickActions.length > 0 ? (
         <div className="rounded-xl border border-border/45 bg-surface/40 p-3">
           <p className="bo-section-label">
-            <Sparkles className="h-4 w-4 text-accent" strokeWidth={2} aria-hidden />
-            Fast actions (Chat)
+            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--primary" aria-hidden>
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} />
+            </span>
+            <span>Fast actions</span>
           </p>
           <ul className="mt-2 flex flex-wrap gap-2" role="list">
             {focus.quickActions.map((a) => (
@@ -105,6 +188,7 @@ export const CockpitFocusEngine = ({
                       commandBusy && 'pointer-events-none opacity-50',
                       btnFocus
                     )}
+                    title="Put in Chat composer without sending"
                   >
                     Prime
                   </button>
@@ -117,21 +201,51 @@ export const CockpitFocusEngine = ({
 
       <div aria-labelledby="cockpit-at-a-glance-heading">
         <p id="cockpit-at-a-glance-heading" className="bo-section-label mb-2">
-          <span className="bo-visual-orb" aria-hidden />
-          At a glance
+          <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--muted" aria-hidden>
+            <Gauge className="h-3.5 w-3.5" strokeWidth={2.25} />
+          </span>
+          <span>At a glance</span>
         </p>
         <div
           role="group"
           aria-label="Workspace metric counts, read-only — not buttons"
           className="-mx-1 flex gap-2 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]"
         >
-          {pulseTile('Follow-ups', snapshot.incompleteFollowUps, 'open')}
-          {pulseTile('Queue', snapshot.publishingQueue, 'items')}
-          {pulseTile('Opps', snapshot.activeOpportunities, 'active')}
-          {pulseTile('Sched', snapshot.dueTodayTasks, 'due / due-soon')}
-          {pulseTile('Missed', snapshot.missedTasks, 'tasks')}
-          {pulseTile('OAuth', snapshot.syncProvidersConnected, 'connected')}
-          {pulseTile('Sources', snapshot.integrationSources, 'integrations')}
+          {pulseTile('Follow-ups', snapshot.incompleteFollowUps, 'open', {
+            icon: MessageSquare,
+            tone: 'warning',
+            title: 'Open follow-ups'
+          })}
+          {pulseTile('Queue', snapshot.publishingQueue, 'items', {
+            icon: Inbox,
+            tone: 'info',
+            title: 'Publishing queue items'
+          })}
+          {pulseTile('Opps', snapshot.activeOpportunities, 'active', {
+            icon: Briefcase,
+            tone: 'success',
+            title: 'Active opportunities'
+          })}
+          {pulseTile('Sched', snapshot.dueTodayTasks, 'due / due-soon', {
+            icon: CalendarClock,
+            tone: 'info',
+            title: 'Scheduler tasks due today or due-soon'
+          })}
+          {pulseTile('Missed', snapshot.missedTasks, 'tasks', {
+            icon: Bell,
+            tone: 'warning',
+            title: 'Missed scheduler tasks'
+          })}
+          {pulseTile('OAuth', snapshot.syncProvidersConnected, 'connected', {
+            icon: KeyRound,
+            tone: 'success',
+            title: 'OAuth providers connected'
+          })}
+          {pulseTile('Sources', snapshot.integrationSources, 'integrations', {
+            icon: Database,
+            tone: 'primary',
+            title: 'Registered integration sources'
+          })}
         </div>
       </div>
     </div>
