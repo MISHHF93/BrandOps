@@ -26,6 +26,20 @@ export function hrefPrimaryAppChat(): string {
   return r(buildMobileShellUrl({ tab: 'chat' }));
 }
 
+export function hrefPrimaryAppPulse(): string {
+  return r(buildMobileShellUrl({ tab: 'pulse' }));
+}
+
+/** Today tab with cockpit default scroll (`?section=today`). */
+export function hrefPrimaryAppToday(): string {
+  return r(buildMobileCockpitUrl({ section: 'today' }));
+}
+
+/** Pipeline workstream deep link on primary app (`?section=pipeline`). */
+export function hrefPrimaryAppPipeline(): string {
+  return r(buildMobileCockpitUrl({ section: 'pipeline' }));
+}
+
 export function hrefPrimaryAppSettingsTab(): string {
   return r(buildMobileShellUrl({ tab: 'settings' }));
 }

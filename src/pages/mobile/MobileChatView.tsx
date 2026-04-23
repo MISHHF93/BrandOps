@@ -6,7 +6,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
-import { SHELL_FOUR_SECTIONS_LINE } from './shellSectionCopy';
+import { SHELL_SECTIONS_LINE } from './shellSectionCopy';
 import type { MobileShellTabId } from './mobileShellQuery';
 import { ShellSectionCallout } from './ShellSectionCallout';
 
@@ -79,7 +79,7 @@ export const MobileChatView = ({
           </div>
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Chat</h2>
-            <p className="text-[11px] text-zinc-500">{SHELL_FOUR_SECTIONS_LINE}</p>
+            <p className="text-[11px] text-zinc-500">{SHELL_SECTIONS_LINE}</p>
             <p className="mt-1 text-[11px] text-zinc-500">
               Commands run on-device. Starters and history run on tap; clear transcript in Settings.
             </p>
@@ -99,6 +99,9 @@ export const MobileChatView = ({
         </p>
         <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Other sections</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <button type="button" className={jumpClass} onClick={() => onNavigateTab('pulse')}>
+            Pulse
+          </button>
           <button type="button" className={jumpClass} onClick={() => onNavigateTab('daily')}>
             Today
           </button>

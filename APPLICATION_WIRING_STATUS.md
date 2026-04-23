@@ -6,11 +6,11 @@ Track what is fully connected between the chatbot frontend and backend command/r
 
 ## Active Frontend Entry Surfaces
 
-- `index.html` -> redirects to `mobile.html`
-- `mobile.html` -> `src/pages/mobile/main.tsx` -> `MobileApp` (document: `data-app-surface="mobile"`, `surfaceLabel="mobile"`)
+- `index.html` -> redirects to `mobile.html` (preserves query/hash; default shell tab is set by `MobileApp` when `?section` is absent)
+- `mobile.html` -> `src/pages/mobile/main.tsx` -> `MobileApp` with **`initialTab: 'pulse'`** (document: `data-app-surface="mobile"`, `surfaceLabel="mobile"`)
 - `dashboard.html` -> `src/pages/dashboard/main.tsx` -> `renderChatbotSurface` -> `MobileApp` (`data-app-surface="dashboard"`)
 - `options.html` -> `src/pages/options/main.tsx` -> `renderChatbotSurface` -> `MobileApp` (`data-app-surface="options"`) — required for Chrome MV3 `options_ui`
-- `help.html` -> `src/pages/help/main.tsx` -> `renderChatbotSurface` -> `MobileApp` initial tab Cockpit/daily (`data-app-surface="help"`)
+- `help.html` -> `src/pages/help/main.tsx` -> `HelpKnowledgeRoot` (Knowledge Center; not the `MobileApp` shell) (`data-app-surface="help"`)
 - `welcome.html` -> `src/pages/welcome/main.tsx` -> `renderChatbotSurface` -> `MobileApp` (`data-app-surface="welcome"`)
 - Peripheral (not the main shell): `public/oauth/*-brandops.html` (OAuth callback UIs), `public/privacy-policy.html` (legal)
 
@@ -18,9 +18,11 @@ Track what is fully connected between the chatbot frontend and backend command/r
 
 **Knowledge / help IA:** in-dashboard Knowledge is opened via `dashboard.html?overlay=help` (Chat tab + overlay). A separate `help.html` is the dedicated Help / daily-brief document (initial Cockpit tab). See the “Knowledge Center” and **Settings** dual-entry notes in [`src/shared/navigation/extensionLinks.ts`](src/shared/navigation/extensionLinks.ts).
 
+The **Pulse** tab (id `pulse`) is a read-only mixed timeline (follow-ups, publishing, scheduler, outreach drafts) from `buildPulseTimeline` / `MobileWorkspaceSnapshot.pulseTimelineRows`; actions are primed or run from **Chat** as elsewhere in the shell.
+
 The **Cockpit** tab in `MobileApp` (tab id `daily`) is the platform **overview**: pulse-style KPIs and four workstream sections (Today, Pipeline, Brand & content, Connections) read from the workspace snapshot and `localIntelligence` helpers. Deep creation and configuration still happen via chat and commands, not in that tab alone.
 
-**Deep links:** `mobile.html?section=today|pipeline|brand-content|connections` opens the Cockpit tab and scrolls to the block (`extensionLinks` + `getCockpitMobileSectionHeadingId`). A bare `?section=` on `dashboard.html` (without `?overlay=`) is redirected to the same `?section` on `mobile.html` (see `shouldRedirectDashboardSectionToMobile`). Workstream links from `openExtensionSurface` / `buildMobileCockpitUrl` target `mobile.html`.
+**Deep links:** `mobile.html?section=pulse` (alias `timeline`) opens the Pulse tab. `mobile.html?section=today|pipeline|brand-content|connections` opens the Cockpit tab and scrolls to the block (`extensionLinks` + `getCockpitMobileSectionHeadingId`). A bare `?section=` on `dashboard.html` (without `?overlay=`) is redirected to the same `?section` on `mobile.html` (see `shouldRedirectDashboardSectionToMobile`). Workstream links from `openExtensionSurface` / `buildMobileCockpitUrl` target `mobile.html`.
 
 **Settings:** the same Settings tab is reachable as `options.html` (required for extension options) and `mobile.html?section=settings`.
 
@@ -92,6 +94,10 @@ Status: **Connected**
 
 There is no global React state store; product UI is `MobileApp` + `storageService` reads.
 
+## Product note — dedicated pipeline / publishing pages
+
+Dedicated full-page **pipeline grid** or **WYSIWYG post** editors are **deferred**. The v1 contract is **Today (digest) + Chat (commands)** on `mobile.html`; adding separate HTML surfaces would duplicate the cockpit unless they ship distinct non-chat affordances (e.g. calendar, drag-drop stages, rich text). Revisit only after wayfinding and starters prove insufficient for growth/sales workflows.
+
 ## Remaining Gaps (Non-blocking)
 
 - Optional LLM-assisted intent with typed args and validation (v2).
@@ -104,6 +110,7 @@ Status: **Partial**
 
 - `tests/unit/chatbotSurfaceWiring.test.ts` verifies all web entrypoints mount chatbot routing and that `renderChatbotSurface` threads `data-app-surface` / `MobileApp` `surfaceLabel`.
 - `tests/unit/appDocumentSurface.test.ts`, `tests/unit/mobileShellQuery.test.ts`, `tests/unit/dashboardRedirect.test.ts`, and `tests/unit/navigateCrownFromExtensionSurface.test.ts` cover shell URL and crown navigation.
+- `tests/unit/uiCommandEntrypoints.test.ts` guards that cockpit / settings / chat views do not call `executeCommandFlow` directly (shell uses Chat-visible quick commands).
 - Unit suite validates command engine behaviors and bridge/runtime logic.
 - **`npm run knip`:** runs [knip](https://github.com/webpro-nl/knip) with `--no-exit-code` (non-blocking). The report still lists many `src/shared/ui/**` files not imported by MobileApp after the chatbot migration—use the output as a **backlog** for orphan pruning, not a clean bill of health. Optional: add `globals` to `devDependencies` for ESLint if you want to clear the “unlisted” line.
 

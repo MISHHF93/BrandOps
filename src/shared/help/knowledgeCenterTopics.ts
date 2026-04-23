@@ -1,6 +1,7 @@
 /**
  * Knowledge Center: static in-repo topics (no markdown pipeline).
  * Order reflects onboarding priority: surfaces first, then execution concepts.
+ * Copy matches the **MobileApp** shell (`mobile.html` and siblings), not legacy dashboard pages.
  */
 export interface KnowledgeCenterTopic {
   id: string;
@@ -23,29 +24,29 @@ export interface KnowledgeCenterDailyPlaybook {
 
 /** Featured “start here” block for the Knowledge Center layout. */
 export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
-  title: 'Every day in BrandOps',
+  title: 'Every day in BrandOps (mobile shell)',
   intro:
-    'Treat the Dashboard Today area as your cockpit: scan the map, then execute the smallest set of high-leverage moves. Publishing and outreach stay manual-assist—copy, act in-channel, then mark status here.',
+    'BrandOps is chatbot-first: the **Chat** tab runs workspace commands; the **Today** tab is a read-only cockpit digest (pipeline, brand, connections). Integrations and Settings round out the four bottom tabs. Your fastest loop: scan Today, then execute in Chat.',
   steps: [
     {
-      title: 'Open the Dashboard → Today',
-      body: 'Use Today for the mission map, health readouts, Execution Center queue, and reminders. If you use section mode, jump to Today from the cockpit nav.'
+      title: 'Open Today for the cockpit digest',
+      body: 'Use the Today tab (or mobile.html?section=today) for metrics, pipeline signals, publishing peeks, and connection counts. Lists are read-only — actions are buttons that open Chat or run a command immediately.'
     },
     {
-      title: 'Run the Execution Center first',
-      body: 'Work the ranked “do now” list before you drift into busywork. If Execution Center is off, Settings explains how to turn it back on.'
+      title: 'Run one command from Chat',
+      body: 'Switch to Chat and type natural-language commands (examples: pipeline health, draft post: …, add note: …). Expand Command starters for role-based chips (sales vs growth). Results appear in the thread.'
     },
     {
-      title: 'Clear one pipeline motion',
-      body: 'Advance a deal, log a follow-up, or close a loop in Pipeline CRM so revenue work does not stack silently.'
+      title: 'Clear one revenue or follow-up motion',
+      body: 'From Today → Pipeline, use “Run in Chat” / outreach chips, or type update opportunity … / draft outreach … so deal and outreach state change in the workspace.'
     },
     {
-      title: 'Ship one presence or publishing item',
-      body: 'Move the publishing queue or content drafts forward: copy the draft, post or send in the real channel, then update status in BrandOps.'
+      title: 'Ship one brand or publishing motion',
+      body: 'From Today → Brand & content, use draft post or reschedule posts commands in Chat. Publishing rows are digest-only until you act via the agent.'
     },
     {
-      title: 'Capture from the Dashboard; configure in Settings',
-      body: 'Click the extension icon to open the Dashboard in a new tab for cockpit work and capture. Reserve Settings for OAuth, integrations, backups, and layout—avoid mid-day settings rabbit holes.'
+      title: 'Configure in Settings; connect in Integrations',
+      body: 'Settings holds workspace prefs, presets, export/import, and audit. Integrations lists sources and Quick add — both complement Chat; they do not replace command execution.'
     }
   ]
 };
@@ -55,77 +56,88 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     id: 'surfaces',
     title: 'Where BrandOps runs',
     summary:
-      'Dashboard, Settings, Welcome, and this Knowledge Center—each surface has a clear job.',
+      'Primary UI is mobile.html (four tabs). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
     paragraphs: [
-      'BrandOps is a browser extension with full pages: the Dashboard (your cockpit), Settings, Welcome (sign-in), and this Knowledge Center. The toolbar icon opens the Dashboard in a new tab (there is no separate toolbar popup page in the manifest today).',
-      'The full dashboard can be one vertical page with four anchors (Today, Pipeline, Brand & content, Connections), or section mode that mounts one area at a time — choose under Settings → Core setup → Cockpit layout and density.',
-      'Heavy configuration (OAuth client IDs, LinkedIn identity, backups) lives in Settings. Day-to-day execution and capture happen on the Dashboard.'
+      'The product is a browser extension. **mobile.html** is the primary workspace: Chat, Today (cockpit), Integrations, Settings.',
+      '**welcome.html** uses the same shell with a first-run bias toward the Today tab so new users see the cockpit immediately.',
+      '**dashboard.html** loads the same shell; legacy ?section= workstream links redirect to mobile.html so deep links stay consistent.',
+      '**integrations.html** is the Chrome options_ui entry (Integrations tab by default). **help.html** is this Knowledge Center.',
+      'Use ?section= on mobile.html or integrations.html for tabs and cockpit workstreams (today, pipeline, brand-content, connections). See the mobile shell query parser in the codebase for the full token list.'
     ]
   },
   {
     id: 'first-run',
     title: 'First run and profile',
     summary:
-      'Welcome introduces the product; sign-in and sign-up both live on that page (not separate extension pages).',
+      'Welcome uses the mobile shell; sign-in and sign-up share welcome.html.',
     paragraphs: [
-      'After install, the Welcome tab introduces the product; continuing to the Dashboard marks the short cockpit checklist complete so you are not asked twice.',
-      'Sign-in and account creation share welcome.html: default is sign in (no query). Create account: welcome.html?flow=signup. Legacy ?auth= is still accepted. OAuth: Google, GitHub, LinkedIn.',
-      'If you skipped profile setup, you can complete it anytime from the first-run overlay when it appears, or tune brand fields under Brand & content → Brand vault.',
-      'LinkedIn sign-in is optional and used for identity on the Welcome screen — configure it under Settings → Integrations.'
+      'After install, **welcome.html** opens the app on **Today** first so you see pipeline and publishing signal before Chat.',
+      'Sign-in and account creation share welcome.html: default is sign in (no query). Create account: welcome.html?flow=signup. Legacy ?auth= is still accepted where implemented.',
+      'Operator and brand fields also surface on Today and in Settings forms; tune cadence and reminders under Settings when you need workspace-level changes.'
+    ]
+  },
+  {
+    id: 'chat-commands',
+    title: 'Chat commands (agent vocabulary)',
+    summary:
+      'Commands map to deterministic routes (parseCommandRoute) before executeAgentWorkspaceCommand runs.',
+    paragraphs: [
+      'Examples that match the router: add note:, create follow up:, complete follow up:, draft outreach:, draft post:, reschedule posts …, pipeline health, update opportunity …, archive opportunity, restore opportunity, add contact:, update contact:, add content:, update publishing:, connect … source:, add source:, add integration artifact:, add ssh:, configure: …',
+      'Starters in the Chat tab are curated to these patterns. If a phrase is unsupported, the assistant explains what is available.',
+      'Destructive phrases such as archive opportunity may ask for confirmation before running.'
     ]
   },
   {
     id: 'today-execution',
-    title: 'Today: mission map and execution',
+    title: 'Today: cockpit digest (not a second CRM UI)',
     summary:
-      'Today bundles the map, metrics, Execution Center, signals, and the scheduler for daily operator rhythm.',
+      'Today combines metrics, intelligence signals, and peeks from the workspace snapshot.',
     paragraphs: [
-      'The Today area combines a mission map, health metrics, the Execution Center (ranked “do now” work), operator signals (local heuristics), and the Scheduler Engine for reminders.',
-      'Execution Center can be disabled from Settings; when off, you will see a banner explaining how to turn it back on.',
-      'Publishing and outreach are manual-assist flows: copy drafts, act in the real channel, then mark status in BrandOps.'
+      'Today shows scheduler tasks, notes, contacts, pipeline projection, outreach templates/history, opportunities, brand vault preview, content library slice, publishing queue slice, and companies.',
+      'Row actions that say “Open in Chat” prime the composer; chips that run commands switch to Chat and execute so you always see the thread.',
+      'Heavy spreadsheet-style editing is intentionally out of scope — use Chat commands or future dedicated surfaces if product adds them.'
     ]
   },
   {
     id: 'connections',
-    title: 'Connections vs Settings',
+    title: 'Integrations vs Settings vs Today · Connections',
     summary:
-      'Connections shows live status; Integration hub in Settings is where targets and artifacts are edited.',
+      'Integrations tab and Today · Connections both summarize connectivity; Chat registers new sources.',
     paragraphs: [
-      'The Connections dashboard area shows status and links. OAuth targets, manual artifacts, and SSH nodes are edited in Settings → Integration hub.',
-      'LinkedIn capture runs as a content script overlay on linkedin.com — it never auto-sends messages.'
+      'The **Integrations** tab lists sources, providers, artifacts, SSH targets, and Quick add chips.',
+      '**Today → Connections** summarizes counts and links to the packaged integrations page when useful.',
+      'OAuth client configuration for the extension may still live in manifest-adjacent flows; workspace-level source creation uses Chat commands such as connect notion source: …'
     ]
   },
   {
     id: 'shortcuts',
-    title: 'Keyboard shortcuts',
-    summary: 'Alt+M opens the compass; Ctrl/Cmd+K opens the Dashboard command palette.',
+    title: 'Shortcuts and navigation',
+    summary: 'Bottom tab bar and ?section= deep links are the primary navigation.',
     paragraphs: [
-      'Open the compass menu with Alt+M. From the Dashboard, Ctrl/Cmd+K opens the command palette for quick actions like new drafts or copying workspace JSON.',
-      'Section shortcuts are documented inside the command palette when you open it from the Dashboard.'
+      'Use the bottom nav to switch tabs. Workstream pills on Today update the URL (e.g. ?section=pipeline) and scroll to the matching section.',
+      'From Chat, “Other sections” buttons jump to Today, Integrations, or Settings without losing your thread.'
     ]
   },
   {
     id: 'visual-wayfinding',
     title: 'Visual wayfinding (icons)',
     summary:
-      'Icons repeat the same meaning as labels: compass destinations, the “you are here” strip, and major section headers.',
+      'Icons repeat the same meaning as labels on tabs and section headers.',
     paragraphs: [
-      'The right-hand compass lists Dashboard areas and other windows. Each row shows a small icon plus text so you can scan the map before reading descriptions.',
-      'The strip under the header (BrandOps / …) shows the same icon family for your current section so orientation stays consistent when you scroll.',
-      'Collapsible panels such as Workspace map, Cockpit metrics, and Advanced diagnostics include a leading icon in the summary row to hint at what is inside.',
-      'Icons are decorative complements: labels and headings remain the source of truth for screen readers and clarity.'
+      'Each bottom tab has a consistent icon. Today workstreams use color-tinted cards so Pipeline, Brand & content, and Connections are easy to scan.',
+      'Icons are decorative complements: labels and headings remain the source of truth for screen readers.'
     ]
   },
   {
     id: 'intelligence-tuning',
     title: 'Optional intelligence tuning',
     summary:
-      'Ranking helpers always work offline from built-in defaults; hosted or preview builds can layer a small JSON patch.',
+      'Ranking helpers use built-in defaults; hosted builds can layer brandops-intelligence-rules.json.',
     paragraphs: [
-      'Content priority, outreach urgency, overdue risk, pipeline health, publishing windows, and template matching use fixed, explainable math in the extension.',
-      'When you self-host a web preview (or an internal build), maintainers may place `brandops-intelligence-rules.json` next to the app or set an environment URL so coefficients can be tuned without shipping a new binary.',
-      'If no file or URL is provided, nothing changes: defaults stay in effect and the cockpit behaves the same as a stock install.',
-      'Repository contributors: see `docs/intelligence-rules-remote-layers.md` for the full layering, validation, and security notes.'
+      'Content priority, outreach urgency, overdue risk, pipeline health, and publishing windows use fixed, explainable math.',
+      'When you self-host a preview, maintainers may supply rules JSON or an environment URL so coefficients can be tuned without shipping a new binary.',
+      'If no file or URL is provided, defaults stay in effect.',
+      'Repository contributors: see docs/intelligence-rules-remote-layers.md for layering and validation notes.'
     ]
   }
 ];

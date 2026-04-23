@@ -488,7 +488,34 @@ Slide 7: CTA to request audit checklist`,
     }
   ],
   scheduler: {
-    tasks: [],
+    tasks: [
+      {
+        id: 'sched-demo-1',
+        sourceId: 'follow-up-demo-1',
+        sourceType: 'follow-up',
+        title: 'Review Northstar proposal draft',
+        detail: 'Before Tuesday standup',
+        dueAt: plusHours(4),
+        remindAt: plusHours(3),
+        status: 'due-soon',
+        snoozeCount: 0,
+        createdAt: minusHours(2),
+        updatedAt: minusHours(1)
+      },
+      {
+        id: 'sched-demo-2',
+        sourceId: 'publishing-demo-1',
+        sourceType: 'publishing',
+        title: 'Publish weekly insight memo',
+        detail: 'Queue checklist',
+        dueAt: plusHours(26),
+        remindAt: plusHours(25),
+        status: 'scheduled',
+        snoozeCount: 0,
+        createdAt: minusHours(5),
+        updatedAt: minusHours(4)
+      }
+    ],
     updatedAt: now.toISOString(),
     lastHydratedAt: now.toISOString()
   },
@@ -505,7 +532,18 @@ Slide 7: CTA to request audit checklist`,
     }
   },
   externalSync: {
-    links: [],
+    links: [
+      {
+        id: 'sync-demo-1',
+        provider: 'google-calendar',
+        resourceType: 'calendar-event',
+        sourceType: 'follow-up',
+        sourceId: 'follow-up-demo-1',
+        targetId: 'cal-evt-demo-1',
+        remoteId: 'google-abc123',
+        lastSyncedAt: minusHours(1)
+      }
+    ],
     updatedAt: now.toISOString()
   },
   integrationHub: {

@@ -1,11 +1,9 @@
 /**
  * BrandOps extension — URL & page hierarchy (single source of truth)
  *
- * **Knowledge Center (two valid entry points, different UX):** `SurfaceNavLinks` and footer links
- * use `dashboard.html?overlay=help` to open the **in-dashboard Knowledge overlay** on the Chat
- * tab without leaving the document. A separate `help.html` page loads the same `MobileApp` shell
- * with **initial tab daily** (Cockpit / daily-brief) — use `buildHelpUrl` / the Help extension page
- * when a full page is needed. Do not add a third “help” route without updating this file.
+ * **Knowledge Center:** `help.html` mounts the **Knowledge Center** (`KnowledgeCenterBody`), with
+ * optional `?topic=` to scroll to a topic. `dashboard.html?overlay=help` opens the in-dashboard
+ * Knowledge overlay on Chat without leaving the document. Use `buildHelpUrl` for full-page help.
  *
  * **Settings / Integrations (two valid entry points):** Chrome MV3 `options_ui` points at `integrations.html`
  * (merged shell: Integrations tab default, Settings on the bar). In-app: `mobile.html?section=settings` for Settings only.
@@ -28,7 +26,7 @@
  *   welcome.html        → chatbot surface (`data-app-surface="welcome"`)
  *   dashboard.html      → chatbot surface; `?section` without `overlay` → redirect to `mobile.html`
  *   integrations.html  → same `MobileApp` shell (`options_ui` in manifest; `data-app-surface="integrations"`)
- *   help.html           → `MobileApp` on Cockpit/daily initial tab (`data-app-surface="help"`)
+ *   help.html           → Knowledge Center manual (`data-app-surface="help"`)
  *   privacy-policy.html → static legal (bundled)
  *
  * Layer 2 — Welcome deep link (one optional query param):
@@ -88,7 +86,7 @@ export const EXTENSION_ROUTE_CATALOG: Array<{ page: string; query: string; value
     page: PAGE.mobile,
     query: `${QUERY.dashboardSection} (optional)`,
     values:
-      'Tab: chat | settings | integrations | daily | cockpit — Workstream: today | pipeline | brand-content | connections (+ legacy)',
+      'Tab: pulse | timeline | chat | settings | integrations | daily | cockpit — Workstream: today | pipeline | brand-content | connections (+ legacy)',
     notes: 'One param: tab tokens for bottom nav; workstream ids open Cockpit and scroll. See `mobileShellQuery.ts`.'
   },
   {
@@ -171,7 +169,7 @@ export function buildDashboardUrl(opts?: {
  */
 export function buildMobileShellUrl(
   opts:
-    | { tab: 'chat' | 'settings' | 'integrations' }
+    | { tab: 'pulse' | 'chat' | 'settings' | 'integrations' }
     | { tab: 'daily' | 'cockpit' }
     | { workstream: DashboardSectionId }
 ): string {

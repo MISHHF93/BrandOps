@@ -6,6 +6,7 @@ import { bootstrapDocumentThemeFromWebStorage } from '../../shared/ui/theme';
 import { MobileApp } from '../mobile/mobileApp';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import type { MobileShellTabId } from '../mobile/mobileShellQuery';
+import { initIntelligenceRulesFromRemote } from '../../rules/intelligenceRulesRuntime';
 
 interface RenderChatbotSurfaceOptions {
   /** Matches `data-app-surface` and `MobileApp` document identity (not the legacy `chatbot-web` string). */
@@ -17,6 +18,9 @@ export const renderChatbotSurface = ({
   surfaceLabel,
   initialTab
 }: RenderChatbotSurfaceOptions) => {
+  void initIntelligenceRulesFromRemote().catch(() => {
+    /* best-effort; defaults remain in memory */
+  });
   bootstrapDocumentThemeFromWebStorage();
   document.documentElement.setAttribute('data-app-surface', surfaceLabel);
 

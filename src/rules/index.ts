@@ -8,6 +8,9 @@ export { INTELLIGENCE_RULES_DEFAULTS } from './intelligenceRulesDefaults';
 export { mergeIntelligenceRules } from './mergeIntelligenceRules';
 export {
   getIntelligenceRules,
+  getIntelligenceRulesLoadProvenance,
   initIntelligenceRulesFromRemote,
-  resetIntelligenceRulesForTests
+  resetIntelligenceRulesForTests,
+  type IntelligenceRulesLoadMode,
+  type IntelligenceRulesLoadProvenance
 } from './intelligenceRulesRuntime';

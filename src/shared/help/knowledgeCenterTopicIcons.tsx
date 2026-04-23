@@ -5,6 +5,7 @@ import {
   Eye,
   Keyboard,
   LayoutGrid,
+  MessageSquareText,
   Plug2,
   SlidersHorizontal,
   UserCircle
@@ -14,6 +15,7 @@ import {
 const TOPIC_ICONS: Record<string, LucideIcon> = {
   surfaces: LayoutGrid,
   'first-run': UserCircle,
+  'chat-commands': MessageSquareText,
   'today-execution': CalendarRange,
   connections: Plug2,
   shortcuts: Keyboard,

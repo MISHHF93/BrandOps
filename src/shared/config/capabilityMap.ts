@@ -1,8 +1,8 @@
 /**
- * Where each capability primarily lives in the four-tab `MobileApp` shell.
+ * Where each capability primarily lives in the `MobileApp` shell.
  * Tab ids match bottom nav / `MobileShellTabId` in `src/pages/mobile/mobileShellQuery.ts`.
  */
-export type AppShellTabId = 'chat' | 'daily' | 'integrations' | 'settings';
+export type AppShellTabId = 'pulse' | 'chat' | 'daily' | 'integrations' | 'settings';
 
 export interface CockpitCapability {
   id: string;
@@ -37,9 +37,9 @@ export const cockpitCapabilities: CockpitCapability[] = [
   {
     id: 'scheduler-cadence',
     label: 'Scheduler and cadence',
-    summary: 'Due work and reminders on Today; cadence and workday caps in Settings.',
-    primaryTab: 'daily',
-    secondaryTabs: ['settings']
+    summary: 'Due work surfaces on Pulse and Today; cadence and workday caps in Settings.',
+    primaryTab: 'pulse',
+    secondaryTabs: ['daily', 'settings']
   },
   {
     id: 'integrations-manual',
@@ -59,6 +59,8 @@ export const cockpitCapabilities: CockpitCapability[] = [
 
 export function appShellTabLabel(tab: AppShellTabId): string {
   switch (tab) {
+    case 'pulse':
+      return 'Pulse';
     case 'chat':
       return 'Chat';
     case 'daily':

@@ -18,4 +18,12 @@ describe('parseCommandRoute', () => {
     expect(parseCommandRoute('What is our opportunity health?')).toBe('pipeline-health');
     expect(parseCommandRoute('rank opportunities by priority')).toBe('pipeline-health');
   });
+
+  it('maps archive / restore opportunity and content duplicate / archive', () => {
+    expect(parseCommandRoute('archive opportunity')).toBe('archive-opportunity');
+    expect(parseCommandRoute('restore opportunity')).toBe('restore-opportunity');
+    expect(parseCommandRoute('duplicate content: Execution beats inspiration')).toBe('duplicate-content');
+    expect(parseCommandRoute('archive content: Hook: workflow ambiguity')).toBe('archive-content');
+  });
 });
+

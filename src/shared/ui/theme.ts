@@ -1,4 +1,4 @@
-import type { BrandOpsData, UiTheme } from '../../types/domain';
+import type { AppSettings, BrandOpsData, UiTheme } from '../../types/domain';
 
 /** Web dev (`browserLocalStorage`) key — same as `browserStorage` scoped local key for `brandops:data`. */
 const WEB_LOCAL_DATA_KEY = 'brandops:local:brandops:data';
@@ -23,6 +23,15 @@ export function bootstrapDocumentThemeFromWebStorage(): void {
     // Corrupt or legacy payload — default :root tokens apply until store init.
   }
 }
+
+/** Apply light/dark and motion/visual/ambient from persisted `AppSettings` (e.g. after `storageService.getData`). */
+export const applyDocumentThemeFromAppSettings = (settings: AppSettings): void => {
+  applyDocumentTheme(settings.theme, {
+    visualMode: settings.visualMode,
+    motionMode: settings.motionMode,
+    ambientFxEnabled: settings.ambientFxEnabled
+  });
+};
 
 export const applyDocumentTheme = (
   theme: UiTheme,

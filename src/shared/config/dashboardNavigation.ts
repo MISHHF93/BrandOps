@@ -111,7 +111,7 @@ export const observedSectionIds: DashboardSectionId[] = cockpitNavigationGroups.
 );
 
 /**
- * `id` values on Cockpit (mobile) section headings in `CockpitDailyView`.
+ * `id` values on Cockpit (mobile) section headings in `Cockpit*WorkstreamSection.tsx` (composed by `CockpitDailyView`).
  * Must stay in sync with `observedSectionIds` and deep links `?section=<DashboardSectionId>`.
  */
 const COCKPIT_MOBILE_HEADING_IDS: Record<DashboardSectionId, string> = {

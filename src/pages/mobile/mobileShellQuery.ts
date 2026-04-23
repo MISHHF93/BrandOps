@@ -7,14 +7,15 @@ import {
 /**
  * Primary shell tabs in `MobileApp` (bottom nav). Kept in sync with {@link MOBILE_SHELL_NAV_TABS} in `mobileTabConfig.ts`.
  */
-export type MobileShellTabId = 'chat' | 'daily' | 'integrations' | 'settings';
+export type MobileShellTabId = 'pulse' | 'chat' | 'daily' | 'integrations' | 'settings';
 
 /**
  * Reserved `?section=` values that select a **tab**, not a Cockpit workstream.
  * `daily` and `cockpit` open the Cockpit tab and default the workstream to `today` for highlight/scroll.
+ * `timeline` is an alias for `pulse`.
  * Do not add strings that match {@link DashboardSectionId} for a different meaning.
  */
-const RESERVED_SECTION_TAB = new Set(['chat', 'settings', 'integrations', 'daily', 'cockpit']);
+const RESERVED_SECTION_TAB = new Set(['pulse', 'timeline', 'chat', 'settings', 'integrations', 'daily', 'cockpit']);
 
 export type ParsedMobileShellQuery = {
   tab: MobileShellTabId;
@@ -39,6 +40,9 @@ export function parseMobileShellFromSearchParams(
   }
   const lower = raw.toLowerCase();
   if (RESERVED_SECTION_TAB.has(lower)) {
+    if (lower === 'pulse' || lower === 'timeline') {
+      return { tab: 'pulse', workstream: null };
+    }
     if (lower === 'chat') {
       return { tab: 'chat', workstream: null };
     }
@@ -64,6 +68,7 @@ export function parseMobileShellFromSearchParams(
  * On the Cockpit tab, use the workstream id (`today`, `pipeline`, …), not the `daily` token, once a workstream is active.
  */
 export function sectionParamValueForShellState(tab: MobileShellTabId, workstream: DashboardSectionId): string {
+  if (tab === 'pulse') return 'pulse';
   if (tab === 'chat') return 'chat';
   if (tab === 'settings') return 'settings';
   if (tab === 'integrations') return 'integrations';

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { executeAgentWorkspaceCommand } from '../../services/agent/agentWorkspaceEngine';
+import { executeAgentWorkspaceCommand, type AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import type { BrandOpsData } from '../../types/domain';
 import {
@@ -14,6 +14,7 @@ import {
   replaceMobileShellQueryInUrl
 } from './mobileShellQuery';
 import { CockpitDailyView } from './CockpitDailyView';
+import { PulseTimelineView } from './PulseTimelineView';
 import { MobileChatView, type ChatMessage } from './MobileChatView';
 import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
@@ -22,7 +23,9 @@ import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocu
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
-import { SHELL_FOUR_SECTIONS_LINE } from './shellSectionCopy';
+import { SHELL_SECTIONS_LINE } from './shellSectionCopy';
+import { runSettingsConfigure } from './runSettingsConfigure';
+import { applyDocumentThemeFromAppSettings } from '../../shared/ui/theme';
 
 const uid = () => `msg-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -31,7 +34,7 @@ const btnFocus =
 
 interface MobileAppProps {
   initialTab?: MobileShellTabId;
-  /** Host HTML document: `mobile` for `mobile.html`; `renderChatbotSurface` passes welcome | dashboard | integrations | help. */
+  /** Host HTML document: `mobile` for `mobile.html`; `renderChatbotSurface` passes welcome | dashboard | integrations (`help.html` is the Knowledge Center entry, not this shell). */
   surfaceLabel?: AppDocumentSurfaceId | 'chatbot';
 }
 
@@ -40,12 +43,21 @@ const COMMAND_CHIPS_KEY = 'brandops:agent:commandChips';
 const MAX_PERSISTED_MESSAGES = 50;
 const MAX_COMMAND_CHIPS = 24;
 
-const defaultWelcomeMessage = (): ChatMessage => ({
-  id: uid(),
-  role: 'assistant',
-  resultKind: 'plain',
-  text: `Agent ready — use the four bottom tabs (Chat, Today, Integrations, Settings) or type a command below. Expand Command starters for grouped examples.`
-});
+const defaultWelcomeMessage = (surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'): ChatMessage => {
+  const base =
+    'Use the bottom tabs: Chat (commands), Today (cockpit digest), Integrations (sources), Settings (workspace prefs). Expand Command starters for one-tap examples.';
+  const welcomeFirstRun =
+    'You opened on Today first — scan pipeline, brand, and connections. Switch to Chat to run commands (try pipeline health) or expand Command starters. Help in the header opens the full manual.';
+  return {
+    id: uid(),
+    role: 'assistant',
+    resultKind: 'plain',
+    text:
+      surface === 'welcome'
+        ? `Welcome — ${welcomeFirstRun} ${base}`
+        : `Agent ready — ${base}`
+  };
+};
 
 const normalizeStoredMessage = (raw: unknown): ChatMessage | null => {
   if (!raw || typeof raw !== 'object') return null;
@@ -155,7 +167,7 @@ function readInitialShellState(initialTab: MobileShellTabId): {
   return { tab: p.tab, workstream: p.workstream ?? DEFAULT_DASHBOARD_SECTION };
 }
 
-export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: MobileAppProps) => {
+export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: MobileAppProps) => {
   const dialogDestrId = useId();
   const dialogClearId = useId();
   const dialogResetId = useId();
@@ -168,7 +180,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [activeTab, setActiveTab] = useState<MobileShellTabId>(() => initialShell.tab);
   const [cockpitWorkstream, setCockpitWorkstream] = useState<DashboardSectionId>(() => initialShell.workstream);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+  /** Agent command in flight (Chat send, quick commands from any tab). */
+  const [commandLoading, setCommandLoading] = useState(false);
+  /** Settings Preferences `configure:` apply in flight only. */
+  const [settingsApplyLoading, setSettingsApplyLoading] = useState(false);
   const [snapshot, setSnapshot] = useState<MobileWorkspaceSnapshot>(() =>
     buildWorkspaceSnapshot(createInMemorySeededWorkspace())
   );
@@ -180,12 +195,13 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
-    return [defaultWelcomeMessage()];
+    return [defaultWelcomeMessage(surfaceLabel)];
   });
 
   const refreshWorkspaceSnapshot = useCallback(async () => {
     try {
       const workspace = await storageService.getData();
+      applyDocumentThemeFromAppSettings(workspace.settings);
       setSnapshot(buildWorkspaceSnapshot(workspace));
     } catch (err) {
       console.error('BrandOps: failed to refresh workspace snapshot', err);
@@ -269,9 +285,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   }, [dataOpsHint]);
 
   const executeCommandFlow = async (trimmed: string) => {
-    if (!trimmed || loading) return;
+    if (!trimmed || commandLoading) return;
     setMessages((prev) => [...prev, { id: uid(), role: 'user', text: trimmed }]);
-    setLoading(true);
+    setCommandLoading(true);
     try {
       const result = await executeAgentWorkspaceCommand({
         text: trimmed,
@@ -307,12 +323,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         }
       ]);
     } finally {
-      setLoading(false);
+      setCommandLoading(false);
     }
   };
 
   const startSend = (trimmed: string) => {
-    if (!trimmed || loading) return;
+    if (!trimmed || commandLoading) return;
     if (needsDestructiveConfirm(trimmed)) {
       setPendingDestructive(trimmed);
       return;
@@ -323,7 +339,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   /** Switches to Chat and runs the command immediately (same engine as Send). */
   const sendQuickCommand = (command: string) => {
     const trimmed = command.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || commandLoading) return;
     commitTab('chat');
     setInput('');
     queueMicrotask(() => {
@@ -331,15 +347,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     });
   };
 
-  const runCommand = async (command: string) => {
-    const trimmed = command.trim();
-    if (!trimmed || loading) return;
-    if (needsDestructiveConfirm(trimmed)) {
-      setPendingDestructive(trimmed);
-      return;
-    }
-    await executeCommandFlow(trimmed);
-  };
+  /** Same as {@link sendQuickCommand}: Today / Integrations / Settings chips must show Chat + thread results. */
+  const runCommand = sendQuickCommand;
 
   const primeChat = useCallback(
     (line: string) => {
@@ -376,30 +385,29 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
 
   /** Same engine as Chat `configure:`, but does not append to the chat thread (use from Settings forms). */
   const applySettingsConfigure = useCallback(
-    async (line: string) => {
+    async (line: string): Promise<AgentWorkspaceResult | null> => {
       const full = line.trim();
-      if (!full || loading) return;
-      const text = full.startsWith('configure:') ? full : `configure: ${full}`;
-      setLoading(true);
+      if (!full || settingsApplyLoading) return null;
+      setSettingsApplyLoading(true);
       try {
-        await executeAgentWorkspaceCommand({
-          text,
-          actorName: 'mobile-operator',
-          source: mapDocumentSurfaceToAgentSource(surfaceLabel)
-        });
-        await refreshWorkspaceSnapshot();
+        const result = await runSettingsConfigure(line, surfaceLabel, false);
+        if (result?.ok) {
+          await refreshWorkspaceSnapshot();
+        }
+        return result;
       } catch (err) {
         console.error('BrandOps: settings apply failed', err);
+        return null;
       } finally {
-        setLoading(false);
+        setSettingsApplyLoading(false);
       }
     },
-    [loading, refreshWorkspaceSnapshot, surfaceLabel]
+    [settingsApplyLoading, refreshWorkspaceSnapshot, surfaceLabel]
   );
 
   const submitMessage = async () => {
     const trimmed = input.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || commandLoading) return;
     setInput('');
     startSend(trimmed);
   };
@@ -416,7 +424,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? activeTab} tab
               </span>
               {' · '}
-              {SHELL_FOUR_SECTIONS_LINE}
+              {SHELL_SECTIONS_LINE}
             </p>
             {dataOpsHint ? (
               <p className="mt-1 text-[10px] text-indigo-300/90" role="status">
@@ -439,7 +447,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           <section className="space-y-3" aria-label="Chat conversation">
             <MobileChatView
               messages={messages}
-              loading={loading}
+              loading={commandLoading}
               commandHistory={commandHistory}
               onQuickCommand={sendQuickCommand}
               onClearCommandHistory={() => {
@@ -462,10 +470,22 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             className="rounded-2xl border border-white/10 bg-zinc-900/40 p-4 text-sm text-zinc-300 shadow-xl shadow-black/20 backdrop-blur-sm"
             aria-label={`${activeTab} tab`}
           >
+            {activeTab === 'pulse' ? (
+              <PulseTimelineView
+                snapshot={snapshot}
+                btnFocus={btnFocus}
+                commandBusy={commandLoading}
+                runCommand={runCommand}
+                primeChat={primeChat}
+                onNavigateTab={commitTab}
+              />
+            ) : null}
+
             {activeTab === 'daily' ? (
               <CockpitDailyView
                 snapshot={snapshot}
                 btnFocus={btnFocus}
+                commandBusy={commandLoading}
                 runCommand={runCommand}
                 goToChat={() => commitTab('chat')}
                 primeChat={primeChat}
@@ -479,6 +499,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               <MobileIntegrationsView
                 snapshot={snapshot}
                 btnFocus={btnFocus}
+                commandBusy={commandLoading}
                 runCommand={runCommand}
                 documentSurface={surfaceLabel}
               />
@@ -490,7 +511,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 btnFocus={btnFocus}
                 runCommand={runCommand}
                 applySettingsConfigure={applySettingsConfigure}
-                applyBusy={loading}
+                applyBusy={settingsApplyLoading}
+                commandBusy={commandLoading}
                 onRequestClearChat={() => setPendingClearChat(true)}
                 onExportWorkspace={exportWorkspace}
                 onImportWorkspace={importWorkspace}
@@ -519,7 +541,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             />
             <button
               type="button"
-              disabled={loading}
+              disabled={commandLoading}
               onClick={() => void submitMessage()}
               className={`rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-md disabled:opacity-50 ${btnFocus}`}
             >
@@ -607,7 +629,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 className={`rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white ${btnFocus}`}
                 onClick={() => {
                   setPendingClearChat(false);
-                  setMessages([defaultWelcomeMessage()]);
+                  setMessages([defaultWelcomeMessage(surfaceLabel)]);
                   if (typeof localStorage !== 'undefined') {
                     localStorage.removeItem(CHAT_THREAD_KEY);
                   }
@@ -677,7 +699,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         className="fixed inset-x-0 bottom-0 z-10 border-t border-white/5 bg-zinc-950/95 backdrop-blur-md"
         aria-label="Primary"
       >
-        <ul className="mx-auto flex w-full max-w-md items-center justify-between px-2 py-2">
+        <ul className="mx-auto flex w-full max-w-md items-center justify-between gap-0.5 px-1 py-2">
           {MOBILE_SHELL_NAV_TABS.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -686,7 +708,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 <button
                   type="button"
                   onClick={() => commitTab(tab.id)}
-                  className={`flex min-w-16 flex-col items-center gap-1 rounded-lg px-2 py-1 text-[11px] ${btnFocus} ${
+                  className={`flex min-w-[3.25rem] flex-col items-center gap-1 rounded-lg px-1 py-1 text-[10px] sm:min-w-14 sm:text-[11px] ${btnFocus} ${
                     active ? 'text-indigo-400' : 'text-zinc-500'
                   }`}
                 >

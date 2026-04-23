@@ -23,7 +23,7 @@ These are the main **deterministic** rule surfaces (good candidates for remote p
 - **Publishing recommendations**: time windows (e.g. within 2h vs 24h) driving titles and rationale copy.
 - **Template suggestions**: token overlap length threshold and result count.
 
-**Implementation note:** Typed **`IntelligenceRulesPack`** (including **`heat`** / **`digest`**) merges from defaults + optional remote JSON. **`localIntelligence`** and **`dailyNotificationCenter`** read **`getIntelligenceRules()`** at runtime. There is **no** `executionHeatModel` **source file** in `src/` after the chatbot migration; the former cockpit “execution heat” UI used these coefficients but is **not** in the current tree.
+**Implementation note:** Typed **`IntelligenceRulesPack`** (including **`heat`** / **`digest`**) merges from defaults + optional remote JSON. **`localIntelligence`** and **`dailyNotificationCenter`** read **`getIntelligenceRules()`** at runtime. **`initIntelligenceRulesFromRemote()`** must run to apply L2 overlays: it is invoked from the extension service worker on install/startup and from HTML entrypoints (`renderChatbotSurface`, `mobile/main`, `help/main`). Provenance (`getIntelligenceRulesLoadProvenance`) and a small coefficient readout are shown under **Settings → Intelligence rules (effective)** via `intelligenceRulesReadout` on the workspace snapshot. There is **no** `executionHeatModel` **source file** in `src/` after the chatbot migration; the former cockpit “execution heat” UI used these coefficients but is **not** in the current tree.
 
 ### 2.2 Execution heat (rule pack coefficients)
 

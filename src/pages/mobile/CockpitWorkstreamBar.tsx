@@ -20,6 +20,7 @@ export interface CockpitWorkstreamBarProps {
 /**
  * Second-level nav for the Cockpit tab only: one control per `cockpitNavigationGroups[0]`
  * dashboard workstream. URL `?section=` and active state are owned by `MobileApp`.
+ * Sticky bar = Today **Pattern A** (single long scroll + subnav); see `docs/mobile-shell-interaction-audit.md`.
  */
 export const CockpitWorkstreamBar = ({
   btnFocus,

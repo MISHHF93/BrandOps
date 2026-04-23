@@ -25,6 +25,7 @@ describe('extensionLinks', () => {
   });
 
   it('builds mobile shell URLs for tabs and workstreams', () => {
+    expect(buildMobileShellUrl({ tab: 'pulse' })).toBe(`${PAGE.mobile}?${QUERY.dashboardSection}=pulse`);
     expect(buildMobileShellUrl({ tab: 'settings' })).toBe(`${PAGE.mobile}?${QUERY.dashboardSection}=settings`);
     expect(buildMobileShellUrl({ tab: 'daily' })).toBe(`${PAGE.mobile}?${QUERY.dashboardSection}=daily`);
     expect(buildMobileShellUrl({ workstream: 'pipeline' })).toBe(

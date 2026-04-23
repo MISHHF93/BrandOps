@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { PAGE, QUERY, buildMobileShellUrl } from '../../src/shared/navigation/extensionLinks';
+import { PAGE, QUERY, buildMobileCockpitUrl, buildMobileShellUrl } from '../../src/shared/navigation/extensionLinks';
 import {
   hrefCockpitConnections,
   hrefDashboardKnowledgeOverlay,
   hrefHelpPage,
   hrefPrimaryAppChat,
   hrefPrimaryAppDefault,
-  hrefPrimaryAppSettingsTab
+  hrefPrimaryAppPipeline,
+  hrefPrimaryAppPulse,
+  hrefPrimaryAppSettingsTab,
+  hrefPrimaryAppToday
 } from '../../src/shared/navigation/navigationIntents';
 import { resolveExtensionUrl } from '../../src/shared/navigation/extensionRuntime';
 
@@ -18,6 +21,9 @@ describe('navigationIntents', () => {
     expect(hrefPrimaryAppDefault()).toBe(r(PAGE.mobile));
     expect(hrefPrimaryAppChat()).toBe(r(buildMobileShellUrl({ tab: 'chat' })));
     expect(hrefPrimaryAppSettingsTab()).toBe(r(buildMobileShellUrl({ tab: 'settings' })));
+    expect(hrefPrimaryAppToday()).toBe(r(buildMobileCockpitUrl({ section: 'today' })));
+    expect(hrefPrimaryAppPipeline()).toBe(r(buildMobileCockpitUrl({ section: 'pipeline' })));
+    expect(hrefPrimaryAppPulse()).toBe(r(buildMobileShellUrl({ tab: 'pulse' })));
   });
 
   it('resolves Help page and topic query', () => {

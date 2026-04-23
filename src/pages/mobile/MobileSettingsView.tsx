@@ -1,21 +1,38 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Settings2 } from 'lucide-react';
+import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import type { CadenceFlowMode, VisualMode, MotionMode } from '../../types/domain';
 import { hrefHelpPage } from '../../shared/navigation/navigationIntents';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
+import type { IntelligenceRulesLoadMode } from '../../rules/intelligenceRulesRuntime';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { MobileSettingsFullReadout } from './mobileSettingsReadout';
 import { CONFIG_PRESETS, OPERATIONAL_PRESETS } from './mobileSettingsPresets';
 import { MobileTabPageHeader, MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { ShellSectionCallout } from './ShellSectionCallout';
+import { SettingsCockpitCapabilityDisclosure } from './SettingsCockpitCapabilityDisclosure';
 
 export type { MobileWorkspaceSnapshot as MobileSettingsSnapshot } from './buildWorkspaceSnapshot';
 
 function forConfigureQuoting(value: string) {
   return value.replace(/"/g, "'").replace(/\n/g, ' ').trim();
 }
+
+function intelligenceRulesSourceLabel(mode: IntelligenceRulesLoadMode): string {
+  switch (mode) {
+    case 'env-url':
+      return 'Remote (VITE_INTELLIGENCE_RULES_URL)';
+    case 'bundled-json':
+      return 'Packaged brandops-intelligence-rules.json';
+    default:
+      return 'Embedded defaults';
+  }
+}
+
+const settingsRunChipClass = (btnFocus: string) =>
+  `${mobileChipClass(btnFocus)} disabled:cursor-not-allowed disabled:opacity-50`;
 
 const fieldClass = (btnFocus: string) =>
   `w-full rounded-lg border border-zinc-600/60 bg-zinc-900/80 px-2.5 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-indigo-500/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
@@ -103,10 +120,11 @@ function SettingsEditablePanel({
   btnFocus
 }: {
   snapshot: MobileWorkspaceSnapshot;
-  applySettingsConfigure: (s: string) => Promise<void>;
+  applySettingsConfigure: (s: string) => Promise<AgentWorkspaceResult | null>;
   applyBusy: boolean;
   btnFocus: string;
 }) {
+  const [applyError, setApplyError] = useState<string | null>(null);
   const [wdStart, setWdStart] = useState('');
   const [wdEnd, setWdEnd] = useState('');
   const [maxTasks, setMaxTasks] = useState('');
@@ -152,6 +170,32 @@ function SettingsEditablePanel({
     return () => window.clearTimeout(t);
   }, [applyHint]);
 
+  useEffect(() => {
+    if (!applyError) return;
+    const t = window.setTimeout(() => setApplyError(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [applyError]);
+
+  const runApply = useCallback(
+    async (line: string, validationHint?: string) => {
+      if (validationHint) {
+        setApplyError(null);
+        setApplyHint(validationHint);
+        return;
+      }
+      setApplyError(null);
+      const r = await applySettingsConfigure(line);
+      if (r === null) return;
+      if (!r.ok) {
+        setApplyHint(null);
+        setApplyError(r.summary);
+        return;
+      }
+      setApplyHint(r.summary.trim() || 'Applied.');
+    },
+    [applySettingsConfigure]
+  );
+
   const onApplySchedule = useCallback(async () => {
     const wds = Math.max(0, Math.min(23, Math.round(Number(wdStart) || 0)));
     const wde = Math.max(1, Math.min(24, Math.round(Number(wdEnd) || 18)));
@@ -159,32 +203,23 @@ function SettingsEditablePanel({
     const rM = Math.max(5, Math.min(90, Math.round(Number(remindMin) || 20)));
     const mw = Math.max(10, Math.min(90, Math.round(Number(mWeight) || 50)));
     const line = `workday ${wds} to ${wde}, max tasks per lane ${maxT}, remind before ${rM} min, ${mw}% business`;
-    await applySettingsConfigure(line);
-    setApplyHint('Schedule and weights saved.');
-  }, [
-    applySettingsConfigure,
-    wdStart,
-    wdEnd,
-    maxTasks,
-    remindMin,
-    mWeight
-  ]);
+    await runApply(line);
+  }, [runApply, wdStart, wdEnd, maxTasks, remindMin, mWeight]);
 
   const onApplyProfile = useCallback(async () => {
     const op = forConfigureQuoting(operatorName);
     const po = forConfigureQuoting(primaryOffer);
     const fm = forConfigureQuoting(focusMetric);
     if (!op && !po && !fm) {
-      setApplyHint('Enter at least one profile field.');
+      void runApply('', 'Enter at least one profile field.');
       return;
     }
     const parts: string[] = [];
     if (op) parts.push(`operator name is "${op}"`);
     if (po) parts.push(`primary offer is "${po}"`);
     if (fm) parts.push(`focus metric is "${fm}"`);
-    await applySettingsConfigure(parts.join(', '));
-    setApplyHint('Profile updated.');
-  }, [applySettingsConfigure, operatorName, primaryOffer, focusMetric]);
+    await runApply(parts.join(', '));
+  }, [runApply, operatorName, primaryOffer, focusMetric]);
 
   const onApplyCadence = useCallback(async () => {
     const line =
@@ -195,15 +230,13 @@ function SettingsEditablePanel({
           : cadenceMode === 'client-heavy'
             ? 'cadence client-heavy'
             : 'cadence balanced';
-    await applySettingsConfigure(line);
-    setApplyHint('Cadence mode saved.');
-  }, [applySettingsConfigure, cadenceMode]);
+    await runApply(line);
+  }, [runApply, cadenceMode]);
 
   const onApplyVisual = useCallback(async () => {
     const line = visualMode === 'retroMagic' ? 'retro' : 'classic';
-    await applySettingsConfigure(line);
-    setApplyHint('Visual mode saved.');
-  }, [applySettingsConfigure, visualMode]);
+    await runApply(line);
+  }, [runApply, visualMode]);
 
   const onApplyMotion = useCallback(async () => {
     const map: Record<MotionMode, string> = {
@@ -211,21 +244,18 @@ function SettingsEditablePanel({
       balanced: 'motion balanced',
       wild: 'motion wild'
     };
-    await applySettingsConfigure(map[motionMode]);
-    setApplyHint('Motion mode saved.');
-  }, [applySettingsConfigure, motionMode]);
+    await runApply(map[motionMode]);
+  }, [runApply, motionMode]);
 
   const onToggleAmbient = useCallback(async () => {
     const line = snapshot.ambientFxEnabled ? 'disable ambient' : 'enable ambient';
-    await applySettingsConfigure(line);
-    setApplyHint(snapshot.ambientFxEnabled ? 'Ambient effects off.' : 'Ambient effects on.');
-  }, [applySettingsConfigure, snapshot.ambientFxEnabled]);
+    await runApply(line);
+  }, [runApply, snapshot.ambientFxEnabled]);
 
   const onToggleDebug = useCallback(async () => {
     const line = snapshot.debugMode ? 'disable debug' : 'enable debug';
-    await applySettingsConfigure(line);
-    setApplyHint(snapshot.debugMode ? 'Debug off.' : 'Debug on.');
-  }, [applySettingsConfigure, snapshot.debugMode]);
+    await runApply(line);
+  }, [runApply, snapshot.debugMode]);
 
   const f = fieldClass(btnFocus);
   const pBtn = primaryBtn(btnFocus);
@@ -235,6 +265,11 @@ function SettingsEditablePanel({
       title="Preferences"
       description="Adjust workspace fields stored on this device. Apply uses the same configure engine as Chat, without posting to the chat feed."
     >
+      {applyError ? (
+        <p className="mb-2 rounded border border-rose-500/30 bg-rose-950/20 px-2 py-1.5 text-[11px] text-rose-200/95" role="alert">
+          {applyError}
+        </p>
+      ) : null}
       {applyHint ? (
         <p className="mb-2 rounded border border-indigo-500/30 bg-indigo-950/20 px-2 py-1.5 text-[11px] text-indigo-200/95">
           {applyHint}
@@ -462,8 +497,11 @@ export interface MobileSettingsViewProps {
   btnFocus: string;
   runCommand: (command: string) => void | Promise<void>;
   /** `configure:` via agent engine without posting to the chat feed. */
-  applySettingsConfigure: (configurePayloadOrLine: string) => Promise<void>;
+  applySettingsConfigure: (configurePayloadOrLine: string) => Promise<AgentWorkspaceResult | null>;
+  /** Preferences panel `configure:` apply only. */
   applyBusy: boolean;
+  /** Chat / quick-command in flight (presets, audit re-run, vault chips). */
+  commandBusy: boolean;
   onRequestClearChat: () => void;
   onExportWorkspace: () => Promise<void>;
   onImportWorkspace: (raw: string) => Promise<void>;
@@ -485,10 +523,13 @@ export const MobileSettingsView = ({
   documentSurface,
   runCommand,
   applySettingsConfigure,
-  applyBusy
+  applyBusy,
+  commandBusy
 }: MobileSettingsViewProps) => {
   const importRef = useRef<HTMLInputElement>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  /** Any agent route (settings apply or chat quick command) — avoid parallel `executeAgentWorkspaceCommand`. */
+  const agentRouteBusy = commandBusy || applyBusy;
 
   useEffect(() => {
     if (!importMessage) return;
@@ -522,6 +563,157 @@ export const MobileSettingsView = ({
 
       <ShellSectionCallout tab="settings" className="mt-3" />
 
+      <MobileTabSection
+        id="settings-dataset-lineage"
+        title="Dataset lineage"
+        description="Seed metadata for this device (demo vs production-empty, version)."
+      >
+        <dl className="mt-2 space-y-1.5 text-[11px] text-zinc-300">
+          <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+            <dt className="shrink-0 text-zinc-500">Source</dt>
+            <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.source}</dd>
+          </div>
+          <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+            <dt className="shrink-0 text-zinc-500">Version</dt>
+            <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.version}</dd>
+          </div>
+          <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+            <dt className="shrink-0 text-zinc-500">Seeded at</dt>
+            <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.seededAt}</dd>
+          </div>
+          {snapshot.seedReadout.welcomeCompletedAt ? (
+            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+              <dt className="shrink-0 text-zinc-500">Welcome completed</dt>
+              <dd className="min-w-0 break-words text-right text-zinc-200">
+                {snapshot.seedReadout.welcomeCompletedAt}
+              </dd>
+            </div>
+          ) : null}
+          {snapshot.seedReadout.onboardingVersion ? (
+            <div className="flex justify-between gap-2 py-1.5">
+              <dt className="shrink-0 text-zinc-500">Onboarding copy</dt>
+              <dd className="min-w-0 break-words text-right text-zinc-200">
+                v{snapshot.seedReadout.onboardingVersion}
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      </MobileTabSection>
+
+      <MobileTabSection
+        id="settings-intelligence-rules"
+        title="Intelligence rules (effective)"
+        description="Coefficients for cockpit ranking and digest slices. Resolved at extension startup and when this page loads."
+      >
+        {!snapshot.intelligenceRulesReadout.initRan ? (
+          <p className="mt-2 text-[10px] text-zinc-500">
+            Load status will refresh after the first rules init (extension background on install/startup, or this
+            document load).
+          </p>
+        ) : null}
+        <dl className="mt-2 space-y-1.5 text-[11px] text-zinc-300">
+          <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+            <dt className="shrink-0 text-zinc-500">Source</dt>
+            <dd className="min-w-0 break-words text-right text-zinc-200">
+              {intelligenceRulesSourceLabel(snapshot.intelligenceRulesReadout.mode)}
+            </dd>
+          </div>
+          {snapshot.intelligenceRulesReadout.detail ? (
+            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+              <dt className="shrink-0 text-zinc-500">Resolved from</dt>
+              <dd className="min-w-0 break-words text-right text-zinc-200">
+                {snapshot.intelligenceRulesReadout.detail}
+              </dd>
+            </div>
+          ) : null}
+          {snapshot.intelligenceRulesReadout.error ? (
+            <div className="rounded border border-amber-500/25 bg-amber-950/20 px-2 py-1.5 text-[10px] text-amber-200/95">
+              {snapshot.intelligenceRulesReadout.error}
+            </div>
+          ) : null}
+        </dl>
+        <details className="group mt-3 rounded-lg border border-white/5 bg-zinc-950/30 p-2 open:border-indigo-500/20">
+          <summary
+            className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-zinc-500 ${btnFocus} [&::-webkit-details-marker]:hidden`}
+          >
+            <span className="inline-flex items-center gap-2">
+              Sample coefficients
+              <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">(expand)</span>
+            </span>
+          </summary>
+          <dl className="mt-3 space-y-1.5 text-[11px] text-zinc-300">
+            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+              <dt className="shrink-0 text-zinc-500">Schema version</dt>
+              <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.schemaVersion}</dd>
+            </div>
+            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+              <dt className="shrink-0 text-zinc-500">Content priority base</dt>
+              <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.contentPriorityBaseScore}</dd>
+            </div>
+            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+              <dt className="shrink-0 text-zinc-500">Outreach stale after (h)</dt>
+              <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.outreachStaleAfterHours}</dd>
+            </div>
+            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+              <dt className="shrink-0 text-zinc-500">Publishing urgent within (h)</dt>
+              <dd className="text-right text-zinc-200">
+                {snapshot.intelligenceRulesReadout.publishingUrgentWithinHours}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
+              <dt className="shrink-0 text-zinc-500">Digest content-priority top N</dt>
+              <dd className="text-right text-zinc-200">
+                {snapshot.intelligenceRulesReadout.digestTechnicalContentPriorityTop}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2 py-1.5">
+              <dt className="shrink-0 text-zinc-500">Publishing preview slice</dt>
+              <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.previewQueueSlice}</dd>
+            </div>
+          </dl>
+        </details>
+        <p className="mt-2 text-[10px] text-zinc-600">
+          Template:{' '}
+          <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-400">
+            public/brandops-intelligence-rules.example.json
+          </code>
+        </p>
+      </MobileTabSection>
+
+      <MobileTabSection
+        id="settings-messaging-vault"
+        title="Messaging vault"
+        description="Reusable snippets by category (titles only; full text stays in workspace data)."
+      >
+        {snapshot.settingsMessagingVaultPeek.length === 0 ? (
+          <p className="mt-2 text-[11px] text-zinc-500">No messaging vault entries in this workspace.</p>
+        ) : (
+          <ul className="mt-2 space-y-2">
+            {snapshot.settingsMessagingVaultPeek.map((row) => (
+              <li
+                key={row.id}
+                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+              >
+                <p className="font-medium text-zinc-100">{row.title}</p>
+                <p className="text-[10px] text-zinc-500">{row.category}</p>
+                <button
+                  type="button"
+                  disabled={agentRouteBusy}
+                  onClick={() =>
+                    void runCommand(`add note: review messaging vault entry "${row.title.replace(/"/g, "'")}"`)
+                  }
+                  className={`mt-2 ${settingsRunChipClass(btnFocus)}`}
+                >
+                  Log note in Chat
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </MobileTabSection>
+
+      <SettingsCockpitCapabilityDisclosure btnFocus={btnFocus} />
+
       <SettingsEditablePanel
         snapshot={snapshot}
         applySettingsConfigure={applySettingsConfigure}
@@ -549,7 +741,7 @@ export const MobileSettingsView = ({
       <MobileTabSection
         id="settings-presets"
         title="One-tap configure presets"
-        description="Sends a configure line like Chat. Use the form above for precise control; use these for common bundles."
+        description='Sends a configure: line like Chat. Chips below adjust UI and cadence. Workspace modes package settings for pipeline work, publishing, deep focus, and launch pushes (Pulse / Today–aligned, still on-device agent routes).'
       >
         <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">UI &amp; cadence</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -557,24 +749,29 @@ export const MobileSettingsView = ({
             <button
               key={preset.label}
               type="button"
+              disabled={agentRouteBusy}
               onClick={() => void runCommand(preset.command)}
-              className={mobileChipClass(btnFocus)}
+              className={settingsRunChipClass(btnFocus)}
             >
               {preset.label}
             </button>
           ))}
         </div>
-        <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Sprint bundles</p>
-        <div className="mt-1.5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Workspace modes</p>
+        <div className="mt-1.5 flex flex-col gap-3">
           {OPERATIONAL_PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              onClick={() => void runCommand(preset.command)}
-              className={mobileChipClass(btnFocus)}
-            >
-              {preset.label}
-            </button>
+            <div key={preset.label} className="rounded-lg border border-white/5 bg-zinc-950/20 px-2 py-2">
+              <button
+                type="button"
+                disabled={agentRouteBusy}
+                title={preset.description}
+                onClick={() => void runCommand(preset.command)}
+                className={`w-full text-left ${settingsRunChipClass(btnFocus)}`}
+              >
+                {preset.label}
+              </button>
+              <p className="mt-1.5 pl-0.5 text-[10px] leading-snug text-zinc-500">{preset.description}</p>
+            </div>
           ))}
         </div>
       </MobileTabSection>
@@ -608,8 +805,9 @@ export const MobileSettingsView = ({
                 <p className="mt-1 text-[10px] leading-snug text-zinc-500">{entry.summary}</p>
                 <button
                   type="button"
+                  disabled={agentRouteBusy}
                   onClick={() => void runCommand(entry.commandPreview)}
-                  className={`mt-2 ${mobileChipClass(btnFocus)}`}
+                  className={`mt-2 ${settingsRunChipClass(btnFocus)}`}
                 >
                   Run again
                 </button>
@@ -637,25 +835,14 @@ export const MobileSettingsView = ({
           </p>
         ) : null}
         <div className="mt-2 flex flex-col gap-2">
-          <button
-            type="button"
-            disabled={applyBusy}
-            onClick={() => void onExportWorkspace()}
-            className={dataBtn}
-          >
+          <button type="button" onClick={() => void onExportWorkspace()} className={dataBtn}>
             Export workspace JSON
           </button>
-          <button
-            type="button"
-            disabled={applyBusy}
-            onClick={() => importRef.current?.click()}
-            className={dataBtn}
-          >
+          <button type="button" onClick={() => importRef.current?.click()} className={dataBtn}>
             Import workspace JSON…
           </button>
           <button
             type="button"
-            disabled={applyBusy}
             onClick={onRequestResetWorkspace}
             className={`${dataBtn} border-amber-600/40 text-amber-100/95`}
           >

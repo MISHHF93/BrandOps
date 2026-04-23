@@ -1,4 +1,4 @@
-import { CalendarCheck2, MessageCircle, PlugZap, Settings } from 'lucide-react';
+import { Activity, CalendarCheck2, MessageCircle, PlugZap, Settings } from 'lucide-react';
 import type { MobileShellTabId } from './mobileShellQuery';
 
 /**
@@ -10,6 +10,7 @@ export const MOBILE_SHELL_NAV_TABS: ReadonlyArray<{
   label: string;
   icon: typeof MessageCircle;
 }> = [
+  { id: 'pulse', label: 'Pulse', icon: Activity },
   { id: 'chat', label: 'Chat', icon: MessageCircle },
   { id: 'daily', label: 'Today', icon: CalendarCheck2 },
   { id: 'integrations', label: 'Integrations', icon: PlugZap },

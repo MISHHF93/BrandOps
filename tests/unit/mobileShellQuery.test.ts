@@ -5,6 +5,17 @@ import {
 } from '../../src/pages/mobile/mobileShellQuery';
 
 describe('mobileShellQuery', () => {
+  it('parses pulse and timeline tab tokens', () => {
+    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=pulse'), 'chat')).toEqual({
+      tab: 'pulse',
+      workstream: null
+    });
+    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=timeline'), 'chat')).toEqual({
+      tab: 'pulse',
+      workstream: null
+    });
+  });
+
   it('parses tab tokens (case-insensitive)', () => {
     expect(parseMobileShellFromSearchParams(new URLSearchParams('section=settings'), 'chat')).toEqual({
       tab: 'settings',
@@ -51,9 +62,14 @@ describe('mobileShellQuery', () => {
       tab: 'chat',
       workstream: null
     });
+    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=not-a-real-token'), 'pulse')).toEqual({
+      tab: 'pulse',
+      workstream: null
+    });
   });
 
   it('sectionParamValueForShellState encodes tab vs workstream', () => {
+    expect(sectionParamValueForShellState('pulse', 'today')).toBe('pulse');
     expect(sectionParamValueForShellState('settings', 'today')).toBe('settings');
     expect(sectionParamValueForShellState('chat', 'today')).toBe('chat');
     expect(sectionParamValueForShellState('integrations', 'today')).toBe('integrations');

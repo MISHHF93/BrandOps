@@ -5,6 +5,17 @@ import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { MobileTabPageHeader, MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { ShellSectionCallout } from './ShellSectionCallout';
 
+const chipDisabled = 'disabled:cursor-not-allowed disabled:opacity-50';
+
+export interface MobileIntegrationsViewProps {
+  snapshot: MobileWorkspaceSnapshot;
+  btnFocus: string;
+  /** True while an agent command round-trip is in flight (disables command chips). */
+  commandBusy?: boolean;
+  runCommand: (command: string) => void | Promise<void>;
+  documentSurface?: AppDocumentSurfaceId | 'chatbot';
+}
+
 /**
  * Integrations-only: provider health and command shortcuts. No Cockpit/Settings duplicates; no “recent” audit list.
  * Matches the in-tab density of {@link MobileSettingsView}.
@@ -12,14 +23,10 @@ import { ShellSectionCallout } from './ShellSectionCallout';
 export const MobileIntegrationsView = ({
   snapshot,
   btnFocus,
+  commandBusy = false,
   runCommand,
   documentSurface = 'mobile'
-}: {
-  snapshot: MobileWorkspaceSnapshot;
-  btnFocus: string;
-  runCommand: (command: string) => void | Promise<void>;
-  documentSurface?: AppDocumentSurfaceId | 'chatbot';
-}) => {
+}: MobileIntegrationsViewProps) => {
   return (
     <div className="mt-2 space-y-5" aria-label="Integrations">
       <MobileTabPageHeader
@@ -64,8 +71,8 @@ export const MobileIntegrationsView = ({
           <div className="mt-2 space-y-2 text-[11px] text-zinc-500">
             <p>No sources in this workspace yet.</p>
             <p>
-              Use <strong className="text-zinc-400">Quick add</strong> below, or in{' '}
-              <strong className="text-zinc-400">Chat</strong> try something like{' '}
+              Open the <strong className="text-zinc-400">Chat</strong> tab — commands run there and you will see the
+              assistant reply. Use <strong className="text-zinc-400">Quick add</strong> below (same behavior), or type:{' '}
               <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-300">
                 connect notion source: Growth workspace
               </code>
@@ -87,8 +94,9 @@ export const MobileIntegrationsView = ({
                 </div>
                 <button
                   type="button"
+                  disabled={commandBusy}
                   onClick={() => void runCommand(`add note: check integration source ${row.name}`)}
-                  className={mobileChipClass(btnFocus)}
+                  className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
                 >
                   Log note in Chat
                 </button>
@@ -118,6 +126,73 @@ export const MobileIntegrationsView = ({
         </ul>
       </MobileTabSection>
 
+      {snapshot.externalSyncLinksPeek.length > 0 ? (
+        <MobileTabSection
+          id="integrations-external-sync"
+          title="External sync"
+          description="Links between workspace entities and Google Calendar / Tasks when configured."
+        >
+          <ul className="mt-2 space-y-2">
+            {snapshot.externalSyncLinksPeek.map((row) => (
+              <li
+                key={row.id}
+                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+              >
+                <p className="font-medium text-zinc-100">
+                  {row.provider} · {row.resourceType}
+                </p>
+                <p className="mt-0.5 text-[10px] text-zinc-500">
+                  {row.sourceType} · synced {row.lastSyncedAt}
+                </p>
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() => void runCommand(`add note: review external sync ${row.id}`)}
+                  className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
+                >
+                  Log note in Chat
+                </button>
+              </li>
+            ))}
+          </ul>
+        </MobileTabSection>
+      ) : null}
+
+      {snapshot.integrationLiveFeedPeek.length > 0 ? (
+        <MobileTabSection
+          id="integrations-live-feed"
+          title="Hub activity"
+          description="Recent integration hub events from this workspace."
+        >
+          <ul className="mt-2 space-y-2">
+            {snapshot.integrationLiveFeedPeek.map((row) => (
+              <li
+                key={row.id}
+                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="min-w-0 font-medium text-zinc-100">{row.title}</p>
+                  <span
+                    className={`shrink-0 text-[10px] font-medium uppercase ${
+                      row.level === 'warning'
+                        ? 'text-amber-300/90'
+                        : row.level === 'success'
+                          ? 'text-emerald-300/90'
+                          : 'text-sky-300/90'
+                    }`}
+                  >
+                    {row.level}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[10px] text-zinc-500">{row.source}</p>
+                <p className="mt-1 text-[10px] leading-snug text-zinc-400">{row.detail}</p>
+                <p className="mt-1 text-[10px] text-zinc-600">{row.happenedAt}</p>
+              </li>
+            ))}
+          </ul>
+        </MobileTabSection>
+      ) : null}
+
       <MobileTabSection
         id="integrations-artifacts"
         title="Synced artifacts"
@@ -136,10 +211,11 @@ export const MobileIntegrationsView = ({
                 <p className="text-[10px] text-zinc-500">{row.artifactType}</p>
                 <button
                   type="button"
+                  disabled={commandBusy}
                   onClick={() =>
                     void runCommand(`add note: review artifact ${row.title.replace(/"/g, "'")}`)
                   }
-                  className={`mt-2 ${mobileChipClass(btnFocus)}`}
+                  className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
                 >
                   Log note in Chat
                 </button>
@@ -167,10 +243,11 @@ export const MobileIntegrationsView = ({
                 <p className="text-[10px] text-zinc-500">{row.host}</p>
                 <button
                   type="button"
+                  disabled={commandBusy}
                   onClick={() =>
                     void runCommand(`add note: SSH target ${row.name} (${row.host})`)
                   }
-                  className={`mt-2 ${mobileChipClass(btnFocus)}`}
+                  className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
                 >
                   Log note in Chat
                 </button>
@@ -188,31 +265,35 @@ export const MobileIntegrationsView = ({
         <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <button
             type="button"
+            disabled={commandBusy}
             onClick={() => void runCommand('connect notion source: Growth workspace')}
-            className={mobileChipClass(btnFocus)}
+            className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
           >
             Add connection
           </button>
           <button
             type="button"
+            disabled={commandBusy}
             onClick={() => void runCommand('add source: webhook pipeline')}
-            className={mobileChipClass(btnFocus)}
+            className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
           >
             Add contact source
           </button>
           <button
             type="button"
+            disabled={commandBusy}
             onClick={() => void runCommand('add integration artifact: weekly metrics rollup')}
-            className={mobileChipClass(btnFocus)}
+            className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
           >
             Add artifact stub
           </button>
           <button
             type="button"
+            disabled={commandBusy}
             onClick={() =>
               void runCommand('add ssh: name: staging host: staging.internal port: 22 user: deploy')
             }
-            className={mobileChipClass(btnFocus)}
+            className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
           >
             Add SSH stub
           </button>

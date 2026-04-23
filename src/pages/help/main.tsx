@@ -1,6 +1,18 @@
-import { renderChatbotSurface } from '../chatbotWeb/renderChatbotSurface';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import '../../styles/index.css';
+import { bootstrapDocumentThemeFromWebStorage } from '../../shared/ui/theme';
+import { initIntelligenceRulesFromRemote } from '../../rules/intelligenceRulesRuntime';
+import { HelpKnowledgeRoot } from './HelpKnowledgeRoot';
 
-renderChatbotSurface({
-  surfaceLabel: 'help',
-  initialTab: 'daily'
+void initIntelligenceRulesFromRemote().catch(() => {
+  /* best-effort */
 });
+
+bootstrapDocumentThemeFromWebStorage();
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
+    <HelpKnowledgeRoot />
+  </React.StrictMode>
+);

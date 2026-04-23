@@ -5,11 +5,12 @@ import { resolve } from 'node:path';
 const read = (relativePath: string) =>
   readFileSync(resolve(process.cwd(), relativePath), 'utf8');
 
-describe('MobileApp four-tab wiring (contract)', () => {
+describe('MobileApp shell tab wiring (contract)', () => {
   const mobileApp = read('src/pages/mobile/mobileApp.tsx');
 
   it('maps each activeTab branch to the correct surface component', () => {
     expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*?<MobileChatView/);
+    expect(mobileApp).toMatch(/activeTab === 'pulse'[\s\S]*?<PulseTimelineView/);
     expect(mobileApp).toMatch(/activeTab === 'daily'[\s\S]*?<CockpitDailyView/);
     expect(mobileApp).toMatch(/activeTab === 'integrations'[\s\S]*?<MobileIntegrationsView/);
     expect(mobileApp).toMatch(/activeTab === 'settings'[\s\S]*?<MobileSettingsView/);
@@ -36,9 +37,28 @@ describe('MobileApp four-tab wiring (contract)', () => {
     expect(mobileApp).toContain('onRequestResetWorkspace');
   });
 
-  it('exposes bottom nav labels aligned with URL tokens (chat, today, integrations, settings)', () => {
+  it('aliases runCommand to sendQuickCommand so shell chips use the same Chat-visible path as quick sends', () => {
+    expect(mobileApp).toMatch(/const runCommand = sendQuickCommand/);
+    expect(mobileApp).toMatch(/const sendQuickCommand[\s\S]*?commitTab\('chat'\)/);
+  });
+
+  it('threads commandBusy from commandLoading into Today and Integrations command surfaces', () => {
+    const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
+    const integrationsJsx = mobileApp.match(/<MobileIntegrationsView[\s\S]*?\/>/)?.[0] ?? '';
+    expect(cockpitJsx).toContain('commandBusy={commandLoading}');
+    expect(integrationsJsx).toContain('commandBusy={commandLoading}');
+  });
+
+  it('splits settings apply busy from chat command busy on MobileSettingsView', () => {
+    const settingsJsx = mobileApp.match(/<MobileSettingsView[\s\S]*?\/>/)?.[0] ?? '';
+    expect(settingsJsx).toContain('applyBusy={settingsApplyLoading}');
+    expect(settingsJsx).toContain('commandBusy={commandLoading}');
+  });
+
+  it('exposes bottom nav labels aligned with URL tokens (pulse, chat, today, integrations, settings)', () => {
     expect(mobileApp).toContain('MOBILE_SHELL_NAV_TABS');
     const tabConfig = read('src/pages/mobile/mobileTabConfig.ts');
+    expect(tabConfig).toContain("{ id: 'pulse', label: 'Pulse'");
     expect(tabConfig).toContain("{ id: 'chat', label: 'Chat'");
     expect(tabConfig).toContain("{ id: 'daily', label: 'Today'");
     expect(tabConfig).toContain("{ id: 'integrations', label: 'Integrations'");
@@ -60,9 +80,21 @@ describe('Mobile shell query parity (mobile + integrations HTML)', () => {
     expect(shell).toContain('integrations');
     expect(mobileApp).toContain('isAppShellWithSectionQuery');
   });
+
+  it('keeps popstate + parseMobileShellFromSearchParams wired for deep-link back/forward', () => {
+    expect(mobileApp).toContain("addEventListener('popstate'");
+    expect(mobileApp).toContain('parseMobileShellFromSearchParams');
+    expect(mobileApp).toContain('replaceMobileShellQueryInUrl');
+    expect(mobileApp).toMatch(/getCockpitMobileSectionHeadingId[\s\S]*?scrollIntoView/);
+  });
 });
 
 describe('Surface entrypoints', () => {
+  it('mobile.html boots MobileApp with Pulse as the default tab', () => {
+    const main = read('src/pages/mobile/main.tsx');
+    expect(main).toContain('initialTab="pulse"');
+  });
+
   it('integrations.html boots renderChatbotSurface with integrations surface', () => {
     const main = read('src/pages/integrations/main.tsx');
     expect(main).toContain("surfaceLabel: 'integrations'");
@@ -72,5 +104,10 @@ describe('Surface entrypoints', () => {
   it('maps integrations document to chatbot-web agent source', () => {
     const src = read('src/shared/navigation/appDocumentSurface.ts');
     expect(src).toContain("'integrations'");
+  });
+
+  it('help.html boots HelpKnowledgeRoot', () => {
+    const main = read('src/pages/help/main.tsx');
+    expect(main).toContain('HelpKnowledgeRoot');
   });
 });

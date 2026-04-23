@@ -7,6 +7,7 @@ import { BridgeReplayGuard } from '../services/agent/bridgeReplayGuard';
 import { isBridgeNonceReplayed } from '../services/agent/bridgeNonceStore';
 import { toRuntimeWebhookMessage, verifyWebhookBridgeEnvelope } from '../services/agent/webhookBridge';
 import { hasFederatedSession } from '../shared/identity/sessionAccess';
+import { initIntelligenceRulesFromRemote } from '../rules/intelligenceRulesRuntime';
 
 const ALARM_PREFIX = 'brandops:task:';
 const bridgeReplayFallback = new BridgeReplayGuard();
@@ -109,6 +110,11 @@ const executeAndRespondFromWebhookPayload = async (
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   try {
+    await initIntelligenceRulesFromRemote();
+  } catch (error) {
+    console.error('[BrandOps] Intelligence rules init failed on install.', error);
+  }
+  try {
     await scheduleAlarms();
   } catch (error) {
     console.error('[BrandOps] Failed to schedule alarms on install.', error);
@@ -127,6 +133,11 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 chrome.runtime.onStartup.addListener(async () => {
+  try {
+    await initIntelligenceRulesFromRemote();
+  } catch (error) {
+    console.error('[BrandOps] Intelligence rules init failed on startup.', error);
+  }
   try {
     await scheduleAlarms();
   } catch (error) {

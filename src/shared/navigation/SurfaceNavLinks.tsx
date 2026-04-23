@@ -4,7 +4,10 @@ import {
   hrefDashboardKnowledgeOverlay,
   hrefHelpPage,
   hrefPrimaryAppChat,
+  hrefPrimaryAppPipeline,
+  hrefPrimaryAppPulse,
   hrefPrimaryAppSettingsTab,
+  hrefPrimaryAppToday,
   hrefSignIn,
   hrefSignUp
 } from './navigationIntents';
@@ -18,7 +21,7 @@ export interface SurfaceNavLinksProps {
 
 /**
  * Footer links: sign-in flow → primary app (`mobile.html`) by tab, Help page, legal.
- * (Legacy `dashboard.html` kept for URLs that need Chat + overlay; see `hrefDashboardKnowledgeOverlay`.)
+ * Primary app is `mobile.html`. `dashboard.html?overlay=help` is for embedded Knowledge overlay; see `hrefDashboardKnowledgeOverlay`.
  */
 export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
   const privacyHref = getPrivacyPolicyHref();
@@ -27,6 +30,9 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
   const signUpHref = hrefSignUp();
   const settingsHref = hrefPrimaryAppSettingsTab();
   const mainAppChatHref = hrefPrimaryAppChat();
+  const pulseHref = hrefPrimaryAppPulse();
+  const todayHref = hrefPrimaryAppToday();
+  const pipelineHref = hrefPrimaryAppPipeline();
   const knowledgeOverlayHref = hrefDashboardKnowledgeOverlay();
   const helpPageHref = hrefHelpPage();
   const connectionsHref = hrefCockpitConnections();
@@ -44,17 +50,30 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       <a className={linkClass} href={signUpHref}>
         Sign up
       </a>
+      <a className={linkClass} href={pulseHref} title="mobile.html?section=pulse">
+        Pulse (timeline)
+      </a>
       <a className={linkClass} href={mainAppChatHref}>
-        Main app (Chat)
+        Primary app (Chat)
+      </a>
+      <a className={linkClass} href={todayHref} title="mobile.html?section=today">
+        Today (cockpit)
+      </a>
+      <a className={linkClass} href={pipelineHref} title="mobile.html?section=pipeline">
+        Pipeline
       </a>
       <a className={linkClass} href={settingsHref}>
         Settings
       </a>
-      <a className={linkClass} href={knowledgeOverlayHref}>
-        Knowledge (in dashboard)
+      <a
+        className={linkClass}
+        href={knowledgeOverlayHref}
+        title="Opens dashboard.html with Knowledge overlay; same shell as mobile after load"
+      >
+        Knowledge overlay
       </a>
       <a className={linkClass} href={helpPageHref}>
-        Help page
+        Help (full page)
       </a>
       <a className={linkClass} href={connectionsHref}>
         Integrations
