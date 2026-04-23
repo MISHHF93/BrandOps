@@ -6,11 +6,11 @@ export const CockpitAtAGlanceStrip = ({ snapshot }: { snapshot: CockpitDailySnap
   <div aria-labelledby="cockpit-at-a-glance-heading">
     <p
       id="cockpit-at-a-glance-heading"
-      className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500"
+      className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-textMuted"
     >
       At a glance
     </p>
-    <p className="mb-1.5 text-[10px] text-zinc-600">
+    <p className="mb-1.5 text-[10px] text-textSoft">
       Digest row — workspace counts only (not buttons). Actions live in each work area below.
     </p>
     <div

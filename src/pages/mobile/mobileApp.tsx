@@ -608,7 +608,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               <button
                 ref={confirmBtnRef}
                 type="button"
-                className={`rounded-lg bg-warning px-3 py-2 text-sm font-semibold text-zinc-950 ${btnFocus}`}
+                className={`rounded-lg bg-warning px-3 py-2 text-sm font-semibold text-text ${btnFocus}`}
                 onClick={() => {
                   const cmd = pendingDestructive;
                   setPendingDestructive(null);
@@ -699,7 +699,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               <button
                 ref={resetConfirmRef}
                 type="button"
-                className={`rounded-lg bg-warning px-3 py-2 text-sm font-semibold text-zinc-950 ${btnFocus}`}
+                className={`rounded-lg bg-warning px-3 py-2 text-sm font-semibold text-text ${btnFocus}`}
                 onClick={() => {
                   setPendingResetWorkspace(false);
                   void (async () => {

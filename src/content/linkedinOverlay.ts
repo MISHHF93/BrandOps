@@ -164,6 +164,7 @@ const ensureStyles = () => {
       --bo-success: #3ECF8E;
       --bo-danger: #FF6B6B;
       --bo-warning: #F5B942;
+      /* Injected UI: fixed dark chrome on LinkedIn; not wired to in-app theme. */
       --bo-shadow: 0 12px 30px rgba(0, 0, 0, 0.34);
     }
     #${ROOT_ID} {

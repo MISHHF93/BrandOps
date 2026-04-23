@@ -11,7 +11,7 @@ const PIPELINE_STRIP_ITEMS = [
 ] as const;
 
 const rowChip = (btnFocus: string) =>
-  `rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
+  `rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] text-text ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
 
 /**
  * `id="cockpit-pipeline"` must stay stable for `?section=pipeline` and scroll targets.
@@ -26,24 +26,24 @@ export const CockpitPipelineWorkstreamSection = ({
   meta
 }: CockpitPipelineSectionProps) => (
   <section
-    className="scroll-mt-28 rounded-xl border border-emerald-500/15 bg-emerald-950/10 p-3 text-xs"
+    className="scroll-mt-28 rounded-xl border border-success/25 bg-success/5 p-3 text-xs"
     aria-labelledby="cockpit-pipeline"
   >
-    <h3 id="cockpit-pipeline" className="text-sm font-semibold text-zinc-100">
+    <h3 id="cockpit-pipeline" className="text-sm font-semibold text-text">
       {meta.label}
     </h3>
-    <p className="mt-0.5 text-[11px] text-zinc-500">{meta.description}</p>
-    <p className="mt-2 text-[10px] text-zinc-600">
-      Pipeline lists are <strong className="text-zinc-500">read-only digest</strong>. Stage changes and outreach run in{' '}
-      <strong className="text-zinc-400">Chat</strong> — not the Settings tab.
+    <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
+    <p className="mt-2 text-[10px] text-textSoft">
+      Pipeline lists are <strong className="text-textMuted">read-only digest</strong>. Stage changes and outreach run in{' '}
+      <strong className="text-text">Chat</strong> — not the Settings tab.
     </p>
     {onOpenPulse ? (
-      <p className="mt-1.5 text-[10px] text-zinc-500">
+      <p className="mt-1.5 text-[10px] text-textMuted">
         Chronological mix (follow-ups, outreach, publishing):{' '}
         <button
           type="button"
           onClick={onOpenPulse}
-          className={`font-medium text-indigo-300/90 underline-offset-2 hover:underline ${btnFocus}`}
+          className={`font-medium text-info underline-offset-2 hover:underline ${btnFocus}`}
         >
           Pulse
         </button>
@@ -58,25 +58,25 @@ export const CockpitPipelineWorkstreamSection = ({
       primeChat={primeChat}
       items={PIPELINE_STRIP_ITEMS}
     />
-    <p className="mt-1 text-[10px] text-zinc-600">
-      Archive / restore apply to the <strong className="text-zinc-500">first active</strong> or{' '}
-      <strong className="text-zinc-500">first archived</strong> opportunity in workspace order — refine in Chat if you
+    <p className="mt-1 text-[10px] text-textSoft">
+      Archive / restore apply to the <strong className="text-textMuted">first active</strong> or{' '}
+      <strong className="text-textMuted">first archived</strong> opportunity in workspace order — refine in Chat if you
       need a specific deal.
     </p>
 
     <div className="mt-3 space-y-3">
       <div
-        className="rounded-lg border border-emerald-500/25 bg-emerald-950/20 p-2.5"
+        className="rounded-lg border border-success/30 bg-success/10 p-2.5"
         aria-labelledby="cockpit-pipeline-projection-heading"
       >
         <p
           id="cockpit-pipeline-projection-heading"
-          className="text-[10px] font-semibold uppercase tracking-wide text-emerald-400/90"
+          className="text-[10px] font-semibold uppercase tracking-wide text-success"
         >
           Weighted projection
         </p>
-        <p className="mt-1 text-[10px] leading-snug text-zinc-500">
-          Open deals only (excludes won, lost, archived). <span className="text-zinc-400">Weighted</span> is Σ value ×
+        <p className="mt-1 text-[10px] leading-snug text-textMuted">
+          Open deals only (excludes won, lost, archived). <span className="text-textSoft">Weighted</span> is Σ value ×
           confidence% — a sizing lens from the same rules as deal health, not a forecast.
         </p>
         <div
@@ -110,36 +110,36 @@ export const CockpitPipelineWorkstreamSection = ({
 
       <div>
         <div className="flex items-center justify-between gap-2">
-          <p className="font-medium text-zinc-200">Deal health (heuristic)</p>
+          <p className="font-medium text-text">Deal health (heuristic)</p>
           <button
             type="button"
             disabled={commandBusy}
             onClick={() => void runCommand('pipeline health')}
-            className={`shrink-0 rounded-full border border-emerald-600/40 bg-zinc-900/50 px-2 py-0.5 text-[10px] text-emerald-200 ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
+            className={`shrink-0 rounded-full border border-success/40 bg-surface/70 px-2 py-0.5 text-[10px] text-success ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             Run in Chat
           </button>
         </div>
         {snapshot.pipelineSignals.length === 0 ? (
           <div className="mt-1 space-y-1">
-            <p className="text-[11px] text-zinc-500">No active opportunities in the workspace yet.</p>
-            <p className="text-[11px] text-zinc-500">
-              In <strong className="text-zinc-400">Chat</strong>, add opportunities or run{' '}
-              <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-300">pipeline health</code> after you
+            <p className="text-[11px] text-textMuted">No active opportunities in the workspace yet.</p>
+            <p className="text-[11px] text-textMuted">
+              In <strong className="text-text">Chat</strong>, add opportunities or run{' '}
+              <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">pipeline health</code> after you
               have deals in motion.
             </p>
           </div>
         ) : (
           <ol className="mt-1 space-y-1.5">
             {snapshot.pipelineSignals.map((row, i) => (
-              <li key={row.id} className="border-b border-white/5 pb-1.5 last:border-0 last:pb-0">
+              <li key={row.id} className="border-b border-border/25 pb-1.5 last:border-0 last:pb-0">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-zinc-200">
+                  <span className="text-text">
                     {i + 1}. {row.label}
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] text-emerald-300/90">{row.score}</span>
+                  <span className="shrink-0 font-mono text-[11px] text-success">{row.score}</span>
                 </div>
-                <p className="text-[10px] leading-snug text-zinc-500">{row.reason}</p>
+                <p className="text-[10px] leading-snug text-textMuted">{row.reason}</p>
               </li>
             ))}
           </ol>
@@ -159,17 +159,17 @@ export const CockpitPipelineWorkstreamSection = ({
       )}
 
       {snapshot.cockpitOutreachTemplatePeek.length > 0 ? (
-        <div className="border-t border-white/5 pt-3">
-          <p className="text-[11px] font-medium text-zinc-400">Outreach templates</p>
-          <p className="mt-0.5 text-[10px] text-zinc-600">Read-only digest.</p>
+        <div className="border-t border-border/25 pt-3">
+          <p className="text-[11px] font-medium text-textSoft">Outreach templates</p>
+          <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
           <ul className="mt-2 space-y-2">
             {snapshot.cockpitOutreachTemplatePeek.map((row) => (
               <li
                 key={row.id}
-                className="rounded-lg border border-white/5 bg-zinc-950/35 px-2 py-2 text-[11px] text-zinc-300"
+                className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
               >
-                <p className="font-medium text-zinc-100">{row.name}</p>
-                <p className="text-[10px] text-zinc-500">
+                <p className="font-medium text-text">{row.name}</p>
+                <p className="text-[10px] text-textMuted">
                   {row.category} · updated {formatPeekDue(row.updatedAt)}
                 </p>
                 <button
@@ -187,24 +187,24 @@ export const CockpitPipelineWorkstreamSection = ({
       ) : null}
 
       {snapshot.cockpitOutreachHistoryPeek.length > 0 ? (
-        <div className="border-t border-white/5 pt-3">
-          <p className="text-[11px] font-medium text-zinc-400">Outreach history</p>
-          <p className="mt-0.5 text-[10px] text-zinc-600">Read-only digest.</p>
+        <div className="border-t border-border/25 pt-3">
+          <p className="text-[11px] font-medium text-textSoft">Outreach history</p>
+          <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
           <ul className="mt-2 space-y-2">
             {snapshot.cockpitOutreachHistoryPeek.map((row) => (
               <li
                 key={row.id}
-                className="rounded-lg border border-white/5 bg-zinc-950/35 px-2 py-2 text-[11px] text-zinc-300"
+                className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
               >
-                <p className="font-medium text-zinc-100">
+                <p className="font-medium text-text">
                   {row.targetName}
-                  <span className="font-normal text-zinc-500"> · {row.company}</span>
+                  <span className="font-normal text-textSoft"> · {row.company}</span>
                 </p>
-                <p className="text-[10px] text-zinc-500">
+                <p className="text-[10px] text-textMuted">
                   {row.status} · {formatPeekDue(row.loggedAt)}
                 </p>
                 {row.summaryPreview ? (
-                  <p className="mt-1 text-[10px] leading-snug text-zinc-500">{row.summaryPreview}</p>
+                  <p className="mt-1 text-[10px] leading-snug text-textMuted">{row.summaryPreview}</p>
                 ) : null}
                 <button
                   type="button"
@@ -221,22 +221,22 @@ export const CockpitPipelineWorkstreamSection = ({
       ) : null}
     </div>
     {snapshot.cockpitOpportunityPeek.length > 0 ? (
-      <div className="mt-3 border-t border-white/5 pt-3">
-        <p className="text-[11px] font-medium text-zinc-400">Opportunities in workspace</p>
-        <p className="mt-0.5 text-[10px] text-zinc-600">
+      <div className="mt-3 border-t border-border/25 pt-3">
+        <p className="text-[11px] font-medium text-textSoft">Opportunities in workspace</p>
+        <p className="mt-0.5 text-[10px] text-textSoft">
           Read-only peek. Agent stage updates still apply to the first active deal unless you name fields in Chat.
         </p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitOpportunityPeek.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-white/5 bg-zinc-950/35 px-2 py-2 text-[11px] text-zinc-300"
+              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
             >
-              <p className="font-medium text-zinc-100">
+              <p className="font-medium text-text">
                 {row.name}
-                <span className="font-normal text-zinc-500"> · {row.company}</span>
+                <span className="font-normal text-textSoft"> · {row.company}</span>
               </p>
-              <p className="mt-0.5 text-[10px] text-zinc-500">
+              <p className="mt-0.5 text-[10px] text-textMuted">
                 {row.status}
                 {row.nextAction ? ` · ${row.nextAction}` : ''}
               </p>

@@ -96,23 +96,23 @@ function WorkspaceModelReadout({
       title="Workspace model (read-only)"
       description="Values from persisted BrandOpsData (domain types in src/types/domain.ts). Collapsed by default to keep the tab scannable."
     >
-      <details className="group mt-2 rounded-lg border border-white/5 bg-zinc-950/30 p-2 open:border-indigo-500/20">
+      <details className="group mt-2 rounded-lg border border-border/30 bg-surface/45 p-2 open:border-primary/25">
         <summary
-          className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-zinc-500 ${btnFocus} [&::-webkit-details-marker]:hidden`}
+          className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-textMuted ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >
           <span className="inline-flex items-center gap-2">
             Expand full settings readout
-            <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">({rows.length} fields)</span>
+            <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">({rows.length} fields)</span>
           </span>
         </summary>
         <dl className="mt-3 max-h-[min(24rem,50vh)] space-y-0 overflow-y-auto text-[11px] [scrollbar-width:thin]">
           {rows.map(([label, value]) => (
             <div
               key={label}
-              className="flex justify-between gap-2 border-b border-white/5 py-1.5 last:border-b-0"
+              className="flex justify-between gap-2 border-b border-border/30 py-1.5 last:border-b-0"
             >
-              <dt className="shrink-0 text-zinc-500">{label}</dt>
-              <dd className="min-w-0 break-words text-right text-zinc-200">{value}</dd>
+              <dt className="shrink-0 text-textMuted">{label}</dt>
+              <dd className="min-w-0 break-words text-right text-text">{value}</dd>
             </div>
           ))}
         </dl>
@@ -281,15 +281,15 @@ function SettingsEditablePanel({
         </p>
       ) : null}
       {applyHint ? (
-        <p className="mb-2 rounded border border-indigo-500/30 bg-indigo-950/20 px-2 py-1.5 text-[11px] text-indigo-200/95">
+        <p className="mb-2 rounded border border-info/30 bg-info/10 px-2 py-1.5 text-[11px] text-text">
           {applyHint}
         </p>
       ) : null}
 
-      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Workday, tasks, weights</p>
+      <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">Workday, tasks, weights</p>
       <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-wd-start">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-wd-start">
             Start (hour, 0–23)
           </label>
           <input
@@ -303,7 +303,7 @@ function SettingsEditablePanel({
           />
         </div>
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-wd-end">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-wd-end">
             End (hour, 1–24)
           </label>
           <input
@@ -317,7 +317,7 @@ function SettingsEditablePanel({
           />
         </div>
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-max-t">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-max-t">
             Max tasks / lane
           </label>
           <input
@@ -331,7 +331,7 @@ function SettingsEditablePanel({
           />
         </div>
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-remind">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-remind">
             Remind before (min)
           </label>
           <input
@@ -346,7 +346,7 @@ function SettingsEditablePanel({
         </div>
       </div>
       <div className="mt-2">
-        <label className="text-[11px] text-zinc-500" htmlFor="bo-mw">
+        <label className="text-[11px] text-textMuted" htmlFor="bo-mw">
           Business / managerial weight (%)
         </label>
         <input
@@ -363,10 +363,10 @@ function SettingsEditablePanel({
         Apply workday, tasks, remind &amp; weight
       </button>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Operating mode</p>
+      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">Operating mode</p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="min-w-0 flex-1">
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-cadence">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-cadence">
             Preset
           </label>
           <select
@@ -386,8 +386,8 @@ function SettingsEditablePanel({
         </button>
       </div>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Profile</p>
-      <p className="mb-2 text-[10px] leading-snug text-zinc-500">
+      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">Profile</p>
+      <p className="mb-2 text-[10px] leading-snug text-textMuted">
         Each value is sent to the operating plan / external models with a clear label (operator name, positioning, offer, brand voice, focus metric) so the model does not confuse them. In Notification Center → prompt template, use{' '}
         <code className="text-[9px] text-textSoft">{'{{brand_context}}'}</code> for the full block, or{' '}
         <code className="text-[9px] text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
@@ -395,7 +395,7 @@ function SettingsEditablePanel({
       </p>
       <div className="space-y-2">
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-op">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-op">
             Operator name
           </label>
           <input
@@ -409,7 +409,7 @@ function SettingsEditablePanel({
           />
         </div>
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-positioning">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-positioning">
             Positioning
           </label>
           <textarea
@@ -425,7 +425,7 @@ function SettingsEditablePanel({
           />
         </div>
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-offer">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-offer">
             Primary offer
           </label>
           <input
@@ -439,7 +439,7 @@ function SettingsEditablePanel({
           />
         </div>
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-voice">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-voice">
             Brand voice
           </label>
           <textarea
@@ -455,7 +455,7 @@ function SettingsEditablePanel({
           />
         </div>
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-fm">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-fm">
             Focus metric
           </label>
           <input
@@ -474,10 +474,10 @@ function SettingsEditablePanel({
         </button>
       </div>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Visual &amp; motion</p>
+      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">Visual &amp; motion</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-vis">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-vis">
             Visual
           </label>
           <select
@@ -494,7 +494,7 @@ function SettingsEditablePanel({
           </button>
         </div>
         <div>
-          <label className="text-[11px] text-zinc-500" htmlFor="bo-mot">
+          <label className="text-[11px] text-textMuted" htmlFor="bo-mot">
             Motion
           </label>
           <select
@@ -513,7 +513,7 @@ function SettingsEditablePanel({
         </div>
       </div>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Toggles</p>
+      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">Toggles</p>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -659,31 +659,31 @@ export const MobileSettingsView = ({
             title="Dataset lineage"
             description="Seed metadata for this device (demo vs production-empty, version)."
           >
-            <dl className="mt-2 space-y-1.5 text-[11px] text-zinc-300">
-              <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                <dt className="shrink-0 text-zinc-500">Source</dt>
-                <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.source}</dd>
+            <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
+              <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                <dt className="shrink-0 text-textMuted">Source</dt>
+                <dd className="min-w-0 break-words text-right text-text">{snapshot.seedReadout.source}</dd>
               </div>
-              <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                <dt className="shrink-0 text-zinc-500">Version</dt>
-                <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.version}</dd>
+              <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                <dt className="shrink-0 text-textMuted">Version</dt>
+                <dd className="min-w-0 break-words text-right text-text">{snapshot.seedReadout.version}</dd>
               </div>
-              <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                <dt className="shrink-0 text-zinc-500">Seeded at</dt>
-                <dd className="min-w-0 break-words text-right text-zinc-200">{snapshot.seedReadout.seededAt}</dd>
+              <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                <dt className="shrink-0 text-textMuted">Seeded at</dt>
+                <dd className="min-w-0 break-words text-right text-text">{snapshot.seedReadout.seededAt}</dd>
               </div>
               {snapshot.seedReadout.welcomeCompletedAt ? (
-                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                  <dt className="shrink-0 text-zinc-500">Welcome completed</dt>
-                  <dd className="min-w-0 break-words text-right text-zinc-200">
+                <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                  <dt className="shrink-0 text-textMuted">Welcome completed</dt>
+                  <dd className="min-w-0 break-words text-right text-text">
                     {snapshot.seedReadout.welcomeCompletedAt}
                   </dd>
                 </div>
               ) : null}
               {snapshot.seedReadout.onboardingVersion ? (
                 <div className="flex justify-between gap-2 py-1.5">
-                  <dt className="shrink-0 text-zinc-500">Onboarding copy</dt>
-                  <dd className="min-w-0 break-words text-right text-zinc-200">
+                  <dt className="shrink-0 text-textMuted">Onboarding copy</dt>
+                  <dd className="min-w-0 break-words text-right text-text">
                     v{snapshot.seedReadout.onboardingVersion}
                   </dd>
                 </div>
@@ -697,75 +697,75 @@ export const MobileSettingsView = ({
             description="Coefficients for cockpit ranking and digest slices. Resolved at extension startup and when this page loads."
           >
             {!snapshot.intelligenceRulesReadout.initRan ? (
-              <p className="mt-2 text-[10px] text-zinc-500">
+              <p className="mt-2 text-[10px] text-textMuted">
                 Load status will refresh after the first rules init (extension background on install/startup, or this
                 document load).
               </p>
             ) : null}
-            <dl className="mt-2 space-y-1.5 text-[11px] text-zinc-300">
-              <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                <dt className="shrink-0 text-zinc-500">Source</dt>
-                <dd className="min-w-0 break-words text-right text-zinc-200">
+            <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
+              <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                <dt className="shrink-0 text-textMuted">Source</dt>
+                <dd className="min-w-0 break-words text-right text-text">
                   {intelligenceRulesSourceLabel(snapshot.intelligenceRulesReadout.mode)}
                 </dd>
               </div>
               {snapshot.intelligenceRulesReadout.detail ? (
-                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                  <dt className="shrink-0 text-zinc-500">Resolved from</dt>
-                  <dd className="min-w-0 break-words text-right text-zinc-200">
+                <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                  <dt className="shrink-0 text-textMuted">Resolved from</dt>
+                  <dd className="min-w-0 break-words text-right text-text">
                     {snapshot.intelligenceRulesReadout.detail}
                   </dd>
                 </div>
               ) : null}
               {snapshot.intelligenceRulesReadout.error ? (
-                <div className="rounded border border-amber-500/25 bg-amber-950/20 px-2 py-1.5 text-[10px] text-amber-200/95">
+                <div className="rounded border border-warning/30 bg-warning/10 px-2 py-1.5 text-[10px] text-text">
                   {snapshot.intelligenceRulesReadout.error}
                 </div>
               ) : null}
             </dl>
-            <details className="group mt-3 rounded-lg border border-white/5 bg-zinc-950/30 p-2 open:border-indigo-500/20">
+            <details className="group mt-3 rounded-lg border border-border/30 bg-surface/45 p-2 open:border-primary/25">
               <summary
-                className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-zinc-500 ${btnFocus} [&::-webkit-details-marker]:hidden`}
+                className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-textMuted ${btnFocus} [&::-webkit-details-marker]:hidden`}
               >
                 <span className="inline-flex items-center gap-2">
                   Sample coefficients
-                  <span className="text-[10px] font-normal normal-case text-zinc-600 group-open:hidden">(expand)</span>
+                  <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">(expand)</span>
                 </span>
               </summary>
-              <dl className="mt-3 space-y-1.5 text-[11px] text-zinc-300">
-                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                  <dt className="shrink-0 text-zinc-500">Schema version</dt>
-                  <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.schemaVersion}</dd>
+              <dl className="mt-3 space-y-1.5 text-[11px] text-textMuted">
+                <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                  <dt className="shrink-0 text-textMuted">Schema version</dt>
+                  <dd className="text-right text-text">{snapshot.intelligenceRulesReadout.schemaVersion}</dd>
                 </div>
-                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                  <dt className="shrink-0 text-zinc-500">Content priority base</dt>
-                  <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.contentPriorityBaseScore}</dd>
+                <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                  <dt className="shrink-0 text-textMuted">Content priority base</dt>
+                  <dd className="text-right text-text">{snapshot.intelligenceRulesReadout.contentPriorityBaseScore}</dd>
                 </div>
-                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                  <dt className="shrink-0 text-zinc-500">Outreach stale after (h)</dt>
-                  <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.outreachStaleAfterHours}</dd>
+                <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                  <dt className="shrink-0 text-textMuted">Outreach stale after (h)</dt>
+                  <dd className="text-right text-text">{snapshot.intelligenceRulesReadout.outreachStaleAfterHours}</dd>
                 </div>
-                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                  <dt className="shrink-0 text-zinc-500">Publishing urgent within (h)</dt>
-                  <dd className="text-right text-zinc-200">
+                <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                  <dt className="shrink-0 text-textMuted">Publishing urgent within (h)</dt>
+                  <dd className="text-right text-text">
                     {snapshot.intelligenceRulesReadout.publishingUrgentWithinHours}
                   </dd>
                 </div>
-                <div className="flex justify-between gap-2 border-b border-white/5 py-1.5">
-                  <dt className="shrink-0 text-zinc-500">Digest content-priority top N</dt>
-                  <dd className="text-right text-zinc-200">
+                <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+                  <dt className="shrink-0 text-textMuted">Digest content-priority top N</dt>
+                  <dd className="text-right text-text">
                     {snapshot.intelligenceRulesReadout.digestTechnicalContentPriorityTop}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-2 py-1.5">
-                  <dt className="shrink-0 text-zinc-500">Publishing preview slice</dt>
-                  <dd className="text-right text-zinc-200">{snapshot.intelligenceRulesReadout.previewQueueSlice}</dd>
+                  <dt className="shrink-0 text-textMuted">Publishing preview slice</dt>
+                  <dd className="text-right text-text">{snapshot.intelligenceRulesReadout.previewQueueSlice}</dd>
                 </div>
               </dl>
             </details>
-            <p className="mt-2 text-[10px] text-zinc-600">
+            <p className="mt-2 text-[10px] text-textSoft">
               Template:{' '}
-              <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-400">
+              <code className="rounded bg-surface/90 px-1 text-[10px] text-textSoft">
                 public/brandops-intelligence-rules.example.json
               </code>
             </p>
@@ -777,16 +777,16 @@ export const MobileSettingsView = ({
             description="Reusable snippets by category (titles only; full text stays in workspace data)."
           >
             {snapshot.settingsMessagingVaultPeek.length === 0 ? (
-              <p className="mt-2 text-[11px] text-zinc-500">No messaging vault entries in this workspace.</p>
+              <p className="mt-2 text-[11px] text-textMuted">No messaging vault entries in this workspace.</p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {snapshot.settingsMessagingVaultPeek.map((row) => (
                   <li
                     key={row.id}
-                    className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+                    className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
                   >
-                    <p className="font-medium text-zinc-100">{row.title}</p>
-                    <p className="text-[10px] text-zinc-500">{row.category}</p>
+                    <p className="font-medium text-text">{row.title}</p>
+                    <p className="text-[10px] text-textMuted">{row.category}</p>
                     <button
                       type="button"
                       disabled={agentRouteBusy}
@@ -813,7 +813,7 @@ export const MobileSettingsView = ({
             description="Commands that touched workspace data, newest first. Re-run repeats the same line in Chat."
           >
             {snapshot.recentAudit.length === 0 ? (
-              <p className="mt-2 text-[11px] text-zinc-500">
+              <p className="mt-2 text-[11px] text-textMuted">
                 No commands recorded yet. Run a command in Chat to populate this list.
               </p>
             ) : (
@@ -821,19 +821,19 @@ export const MobileSettingsView = ({
                 {snapshot.recentAudit.map((entry) => (
                   <li
                     key={entry.id}
-                    className="rounded-lg border border-white/5 bg-zinc-950/30 px-2.5 py-2 text-[11px] text-zinc-300"
+                    className="rounded-lg border border-border/30 bg-surface/45 px-2.5 py-2 text-[11px] text-textMuted"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <code className="break-all text-left text-[10px] text-indigo-200/95">{entry.commandPreview}</code>
+                      <code className="break-all text-left text-[10px] text-info">{entry.commandPreview}</code>
                       <span
                         className={`shrink-0 text-[10px] font-medium uppercase ${
-                          entry.ok ? 'text-emerald-400/90' : 'text-amber-300/90'
+                          entry.ok ? 'text-success' : 'text-warning'
                         }`}
                       >
                         {entry.ok ? 'ok' : 'issue'}
                       </span>
                     </div>
-                    <p className="mt-1 text-[10px] leading-snug text-zinc-500">{entry.summary}</p>
+                    <p className="mt-1 text-[10px] leading-snug text-textMuted">{entry.summary}</p>
                     <button
                       type="button"
                       disabled={agentRouteBusy}
@@ -849,28 +849,28 @@ export const MobileSettingsView = ({
           </MobileTabSection>
 
           <section
-            className="rounded-xl border border-zinc-600/25 bg-zinc-950/50 p-3 text-xs"
+            className="rounded-xl border border-borderStrong/30 bg-surface/55 p-3 text-xs"
             aria-labelledby="settings-extension-escape"
           >
-            <h3 id="settings-extension-escape" className="text-sm font-semibold text-zinc-100">
+            <h3 id="settings-extension-escape" className="text-sm font-semibold text-text">
               Extension shell
             </h3>
             {documentSurface === 'integrations' ? (
-              <p className="mt-1 text-[11px] text-zinc-500">
-                This is the MV3 <strong className="text-zinc-400">extension</strong> page (manifest <code>options_ui</code>
-                ): same <strong className="text-zinc-400">BrandOps Mobile</strong> shell as <code>mobile.html</code>. Use
+              <p className="mt-1 text-[11px] text-textMuted">
+                This is the MV3 <strong className="text-textSoft">extension</strong> page (manifest <code>options_ui</code>
+                ): same <strong className="text-textSoft">BrandOps Mobile</strong> shell as <code>mobile.html</code>. Use
                 the bottom bar for Integrations vs Settings; preferences above match the main app tab.
               </p>
             ) : (
               <>
-                <p className="mt-1 text-[11px] text-zinc-500">
-                  Opens <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-300">integrations.html</code>{' '}
+                <p className="mt-1 text-[11px] text-textMuted">
+                  Opens <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">integrations.html</code>{' '}
                   in a new tab—the same UI as Chrome extension options, aligned with the Integrations tab link there.
                 </p>
                 <button
                   type="button"
                   onClick={() => openExtensionSurface('integrations')}
-                  className={`mt-2 w-full rounded-lg border border-zinc-600/50 bg-zinc-900/40 px-2.5 py-2 text-left text-[12px] text-zinc-300 ${btnFocus}`}
+                  className={`mt-2 w-full rounded-lg border border-borderStrong/50 bg-surface/55 px-2.5 py-2 text-left text-[12px] text-textMuted ${btnFocus}`}
                 >
                   Open integrations page in a new tab
                 </button>

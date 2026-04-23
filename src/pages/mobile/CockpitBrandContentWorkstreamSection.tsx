@@ -11,7 +11,7 @@ const BRAND_STRIP_ITEMS = [
 ] as const;
 
 const rowChip = (btnFocus: string) =>
-  `rounded-full border border-zinc-600/50 bg-zinc-900/50 px-2 py-0.5 text-[10px] ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
+  `rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] text-text ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
 
 /**
  * `id="cockpit-brand"` must stay stable for `?section=brand-content` and scroll targets.
@@ -26,35 +26,35 @@ export const CockpitBrandContentWorkstreamSection = ({
   meta
 }: CockpitBrandContentSectionProps) => (
   <section
-    className="scroll-mt-28 rounded-xl border border-violet-500/15 bg-violet-950/10 p-3 text-xs"
+    className="scroll-mt-28 rounded-xl border border-secondary/25 bg-secondary/5 p-3 text-xs"
     aria-labelledby="cockpit-brand"
   >
-    <h3 id="cockpit-brand" className="text-sm font-semibold text-zinc-100">
+    <h3 id="cockpit-brand" className="text-sm font-semibold text-text">
       {meta.label}
     </h3>
-    <p className="mt-0.5 text-[11px] text-zinc-500">{meta.description}</p>
-    <p className="mt-2 text-[10px] text-zinc-600">
-      Brand and publishing rows are <strong className="text-zinc-500">read-only digest</strong>. Drafts and updates run
-      in <strong className="text-zinc-400">Chat</strong> — not Settings.
+    <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
+    <p className="mt-2 text-[10px] text-textSoft">
+      Brand and publishing rows are <strong className="text-textMuted">read-only digest</strong>. Drafts and updates run
+      in <strong className="text-text">Chat</strong> — not Settings.
     </p>
     {onOpenPulse ? (
-      <p className="mt-1.5 text-[10px] text-zinc-500">
+      <p className="mt-1.5 text-[10px] text-textMuted">
         Full mixed queue:{' '}
         <button
           type="button"
           onClick={onOpenPulse}
-          className={`font-medium text-indigo-300/90 underline-offset-2 hover:underline ${btnFocus}`}
+          className={`font-medium text-info underline-offset-2 hover:underline ${btnFocus}`}
         >
           Pulse
         </button>
       </p>
     ) : null}
-    <p className="mt-2 text-zinc-400">
-      Publishing queue: <span className="text-zinc-100">{snapshot.publishingQueue}</span> items · Queued or due-soon:{' '}
-      <span className="text-zinc-100">{snapshot.queuedPublishing}</span>
+    <p className="mt-2 text-textSoft">
+      Publishing queue: <span className="text-text">{snapshot.publishingQueue}</span> items · Queued or due-soon:{' '}
+      <span className="text-text">{snapshot.queuedPublishing}</span>
     </p>
     {snapshot.nextPublishingHint ? (
-      <p className="mt-1 text-[11px] text-violet-200/80">Next: {snapshot.nextPublishingHint}</p>
+      <p className="mt-1 text-[11px] text-textMuted">Next: {snapshot.nextPublishingHint}</p>
     ) : null}
     <CockpitWorkstreamCommandStrip
       ariaLabel="Brand and content Chat starters"
@@ -64,8 +64,8 @@ export const CockpitBrandContentWorkstreamSection = ({
       primeChat={primeChat}
       items={BRAND_STRIP_ITEMS}
     />
-    <p className="mt-1 text-[10px] text-zinc-600">
-      Duplicate / archive in the strip target the <strong className="text-zinc-500">first active</strong> library item;
+    <p className="mt-1 text-[10px] text-textSoft">
+      Duplicate / archive in the strip target the <strong className="text-textMuted">first active</strong> library item;
       use row buttons to prime lines that name a specific title.
     </p>
     {(() => {
@@ -77,24 +77,22 @@ export const CockpitBrandContentWorkstreamSection = ({
         Boolean(bv.shortBioPreview);
       if (!hasVaultPeek) return null;
       return (
-        <div className="mt-3 rounded-lg border border-violet-500/20 bg-violet-950/15 p-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-violet-300/90">
-            Brand vault (read-only)
-          </p>
-          <p className="mt-1 text-[10px] text-zinc-500">
+        <div className="mt-3 rounded-lg border border-primary/25 bg-primary/5 p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">Brand vault (read-only)</p>
+          <p className="mt-1 text-[10px] text-textMuted">
             {bv.filledListFieldsCount} list section{bv.filledListFieldsCount === 1 ? '' : 's'} with content
           </p>
           {bv.positioningPreview ? (
-            <p className="mt-2 text-[11px] leading-snug text-zinc-300">{bv.positioningPreview}</p>
+            <p className="mt-2 text-[11px] leading-snug text-textMuted">{bv.positioningPreview}</p>
           ) : null}
           {bv.firstHeadlineOption ? (
-            <p className="mt-1 text-[10px] text-zinc-500">
-              <span className="text-zinc-500">Headline option:</span>{' '}
-              <span className="text-zinc-200">{bv.firstHeadlineOption}</span>
+            <p className="mt-1 text-[10px] text-textMuted">
+              <span className="text-textSoft">Headline option:</span>{' '}
+              <span className="text-text">{bv.firstHeadlineOption}</span>
             </p>
           ) : null}
           {bv.shortBioPreview ? (
-            <p className="mt-1 text-[10px] leading-snug text-zinc-500">{bv.shortBioPreview}</p>
+            <p className="mt-1 text-[10px] leading-snug text-textSoft">{bv.shortBioPreview}</p>
           ) : null}
           <button
             type="button"
@@ -114,17 +112,17 @@ export const CockpitBrandContentWorkstreamSection = ({
       'In Chat: add content: … and optional status so priority can rank (e.g. add content: AI growth memo draft, status draft).'
     )}
     {snapshot.cockpitContentPeek.length > 0 ? (
-      <div className="mt-3 border-t border-white/5 pt-3">
-        <p className="text-[11px] font-medium text-zinc-400">Content library (top)</p>
-        <p className="mt-0.5 text-[10px] text-zinc-600">Read-only digest.</p>
+      <div className="mt-3 border-t border-border/25 pt-3">
+        <p className="text-[11px] font-medium text-textSoft">Content library (top)</p>
+        <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitContentPeek.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-white/5 bg-zinc-950/35 px-2 py-2 text-[11px] text-zinc-300"
+              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
             >
-              <p className="font-medium text-zinc-100">{row.title}</p>
-              <p className="text-[10px] text-zinc-500">{row.status}</p>
+              <p className="font-medium text-text">{row.title}</p>
+              <p className="text-[10px] text-textMuted">{row.status}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <button
                   type="button"
@@ -159,17 +157,17 @@ export const CockpitBrandContentWorkstreamSection = ({
       </div>
     ) : null}
     {snapshot.cockpitPublishingPeek.length > 0 ? (
-      <div className="mt-3 border-t border-white/5 pt-3">
-        <p className="text-[11px] font-medium text-zinc-400">Publishing queue (top)</p>
-        <p className="mt-0.5 text-[10px] text-zinc-600">Read-only digest.</p>
+      <div className="mt-3 border-t border-border/25 pt-3">
+        <p className="text-[11px] font-medium text-textSoft">Publishing queue (top)</p>
+        <p className="mt-0.5 text-[10px] text-textSoft">Read-only digest.</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitPublishingPeek.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-white/5 bg-zinc-950/35 px-2 py-2 text-[11px] text-zinc-300"
+              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
             >
-              <p className="font-medium text-zinc-100">{row.title}</p>
-              <p className="text-[10px] text-zinc-500">{row.status}</p>
+              <p className="font-medium text-text">{row.title}</p>
+              <p className="text-[10px] text-textMuted">{row.status}</p>
               <button
                 type="button"
                 disabled={commandBusy}

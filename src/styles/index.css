@@ -66,6 +66,9 @@
   --glass-border-alpha: 0.68;
   --glass-panel-alpha: 0.82;
   --glass-shadow-alpha: 0.34;
+  /* Body canvas veils: tune per theme to avoid dark-mode opacity feeling muddy in light. */
+  --body-veil-before-opacity: 0.18;
+  --body-veil-after-opacity: 0.52;
   /* ============================ */
   /* Semantic aliases             */
   /* ============================ */
@@ -115,11 +118,12 @@
   --color-surface: 255 255 255;
   --color-surface-hover: 243 245 249;
   --color-surface-active: 235 238 245;
-  --color-border: 210 214 223;
-  --color-border-strong: 186 192 204;
+  /* Stronger stroke + slightly inkier secondary text: reads clearer on white/glass. */
+  --color-border: 204 210 220;
+  --color-border-strong: 175 183 198;
   --color-text: 17 20 28;
-  --color-text-muted: 76 84 100;
-  --color-text-soft: 118 126 142;
+  --color-text-muted: 68 76 94;
+  --color-text-soft: 106 114 132;
   --color-primary: 52 58 72;
   --color-primary-hover: 34 39 52;
   --color-primary-soft: 52 58 72;
@@ -147,9 +151,13 @@
   --retro-glow-cyan: 140 148 165;
   --retro-glow-pink: 128 136 152;
   --retro-glow-gold: 155 162 178;
-  --glass-border-alpha: 0.55;
-  --glass-panel-alpha: 0.72;
-  --glass-shadow-alpha: 0.12;
+  /* Glass aligned with dark-mode structure (0.82 panel); border/shadow hold separation on paper. */
+  --glass-border-alpha: 0.6;
+  --glass-panel-alpha: 0.82;
+  --glass-shadow-alpha: 0.16;
+  --glass-saturate: 105%;
+  --body-veil-before-opacity: 0.1;
+  --body-veil-after-opacity: 0.3;
   /* Semantic aliases */
   --bg-page: var(--color-bg);
   --bg-surface-1: var(--color-bg-elevated);
@@ -195,6 +203,18 @@ body {
   color: rgb(var(--color-text));
 }
 
+:root[data-theme="light"] body {
+  background:
+    radial-gradient(100% 95% at 88% -8%, rgb(var(--color-text) / 0.028), transparent 58%),
+    radial-gradient(95% 90% at -12% 108%, rgb(var(--color-text-muted) / 0.024), transparent 62%),
+    linear-gradient(
+      168deg,
+      rgb(var(--color-bg-elevated)),
+      rgb(var(--color-bg)) 54%,
+      rgb(var(--color-bg-subtle)) 100%
+    );
+}
+
 body::before,
 body::after {
   content: "";
@@ -211,14 +231,14 @@ body::before {
     transparent 38%,
     rgb(var(--color-text-muted) / 0.02) 100%
   );
-  opacity: 0.18;
+  opacity: var(--body-veil-before-opacity);
 }
 
 body::after {
   background:
     linear-gradient(180deg, rgb(var(--color-text) / 0.018), transparent 28%),
     linear-gradient(0deg, rgb(var(--color-shadow) / 0.32), transparent 26%);
-  opacity: 0.52;
+  opacity: var(--body-veil-after-opacity);
 }
 
 /* Welcome (welcome.html): flat tokenized canvas aligned with system theme. */
@@ -247,6 +267,31 @@ html[data-app-surface="welcome"] body::after {
       rgb(var(--color-bg)) 42%,
       rgb(var(--color-bg-subtle)) 100%
     );
+  }
+
+  :root[data-theme="light"] .bo-mobile-app {
+    background: linear-gradient(
+      165deg,
+      rgb(var(--color-bg-elevated) / 0.97),
+      rgb(var(--color-bg)) 42%,
+      rgb(var(--color-bg-subtle)) 100%
+    );
+  }
+
+  :root[data-theme="light"] .bo-mobile-header {
+    border-bottom: 1px solid rgb(var(--color-border) / 0.55);
+    background: linear-gradient(
+      92deg,
+      rgb(var(--color-surface) / 0.97),
+      rgb(var(--color-bg-elevated) / 0.99) 55%,
+      rgb(var(--color-bg) / 1)
+    );
+    box-shadow: 0 10px 26px rgb(var(--color-shadow) / 0.14);
+  }
+
+  :root[data-theme="light"] .bo-mobile-nav {
+    border-top: 1px solid rgb(var(--color-border) / 0.58);
+    background: linear-gradient(0deg, rgb(var(--color-bg) / 0.99), rgb(var(--color-bg-elevated) / 0.98));
   }
 
   .bo-mobile-skip {
@@ -351,6 +396,20 @@ html[data-app-surface="welcome"] body::after {
       );
     mix-blend-mode: screen;
     opacity: 0.48;
+  }
+
+  /* Light: `screen` sheen on pale surfaces reads as haze; soft-light + lower opacity + subtler scanlines. */
+  :root[data-theme="light"][data-visual-mode="retroMagic"] {
+    --retro-noise-opacity: 0.03;
+  }
+
+  :root[data-theme="light"][data-visual-mode="retroMagic"] .bo-retro-panel::after {
+    mix-blend-mode: soft-light;
+    opacity: 0.28;
+  }
+
+  :root[data-theme="light"][data-visual-mode="retroMagic"] .bo-retro-card:hover::before {
+    opacity: 0.4;
   }
 
   .bo-retro-glow {

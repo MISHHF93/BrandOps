@@ -58,7 +58,7 @@ export const MobileIntegrationsView = ({
           >
             Open packaged integrations page
           </a>{' '}
-          <span className="text-zinc-500">for the same shell in the extension options UI.</span>
+          <span className="text-textMuted">for the same shell in the extension options UI.</span>
         </p>
       ) : null}
 
@@ -68,12 +68,12 @@ export const MobileIntegrationsView = ({
         description="From your workspace hub; use Quick add or Chat for new connections."
       >
         {snapshot.integrationHubSources.length === 0 ? (
-          <div className="mt-2 space-y-2 text-[11px] text-zinc-500">
+          <div className="mt-2 space-y-2 text-[11px] text-textMuted">
             <p>No sources in this workspace yet.</p>
             <p>
-              Open the <strong className="text-zinc-400">Chat</strong> tab — commands run there and you will see the
-              assistant reply. Use <strong className="text-zinc-400">Quick add</strong> below (same behavior), or type:{' '}
-              <code className="rounded bg-zinc-900/80 px-1 text-[10px] text-zinc-300">
+              Open the <strong className="text-text">Chat</strong> tab — commands run there and you will see the
+              assistant reply. Use <strong className="text-text">Quick add</strong> below (same behavior), or type:{' '}
+              <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">
                 connect notion source: Growth workspace
               </code>
               .
@@ -84,12 +84,12 @@ export const MobileIntegrationsView = ({
             {snapshot.integrationHubSources.slice(0, 20).map((row) => (
               <li
                 key={row.id}
-                className="flex flex-col gap-1.5 rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-1.5 rounded-lg border border-border/30 bg-surface/45 px-2 py-2 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-[12px] font-medium text-zinc-100">{row.name}</p>
-                  <p className="text-[10px] text-zinc-500">
-                    {row.kind} · <span className="text-zinc-400">{row.status}</span>
+                  <p className="truncate text-[12px] font-medium text-text">{row.name}</p>
+                  <p className="text-[10px] text-textMuted">
+                    {row.kind} · <span className="text-textSoft">{row.status}</span>
                   </p>
                 </div>
                 <button
@@ -105,7 +105,7 @@ export const MobileIntegrationsView = ({
           </ul>
         )}
         {snapshot.integrationHubSources.length > 20 ? (
-          <p className="mt-2 text-[10px] text-zinc-500">
+          <p className="mt-2 text-[10px] text-textMuted">
             Showing 20 of {snapshot.integrationSources}. More in Chat.
           </p>
         ) : null}
@@ -116,11 +116,11 @@ export const MobileIntegrationsView = ({
         title="Provider status"
         description="OAuth and sync; detailed tuning in Chat if you need a specific provider."
       >
-        <ul className="mt-2 space-y-1.5 text-zinc-300">
+        <ul className="mt-2 space-y-1.5 text-textMuted">
           {snapshot.providerStatuses.map((provider) => (
             <li key={provider.id} className="flex justify-between gap-2 text-[11px]">
-              <span className="text-zinc-400">{provider.id}</span>
-              <span className="text-zinc-100">{provider.status}</span>
+              <span className="text-textSoft">{provider.id}</span>
+              <span className="text-text">{provider.status}</span>
             </li>
           ))}
         </ul>
@@ -136,12 +136,12 @@ export const MobileIntegrationsView = ({
             {snapshot.externalSyncLinksPeek.map((row) => (
               <li
                 key={row.id}
-                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+                className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
               >
-                <p className="font-medium text-zinc-100">
+                <p className="font-medium text-text">
                   {row.provider} · {row.resourceType}
                 </p>
-                <p className="mt-0.5 text-[10px] text-zinc-500">
+                <p className="mt-0.5 text-[10px] text-textMuted">
                   {row.sourceType} · synced {row.lastSyncedAt}
                 </p>
                 <button
@@ -168,25 +168,25 @@ export const MobileIntegrationsView = ({
             {snapshot.integrationLiveFeedPeek.map((row) => (
               <li
                 key={row.id}
-                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+                className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <p className="min-w-0 font-medium text-zinc-100">{row.title}</p>
+                  <p className="min-w-0 font-medium text-text">{row.title}</p>
                   <span
                     className={`shrink-0 text-[10px] font-medium uppercase ${
                       row.level === 'warning'
-                        ? 'text-amber-300/90'
+                        ? 'text-warning'
                         : row.level === 'success'
-                          ? 'text-emerald-300/90'
-                          : 'text-sky-300/90'
+                          ? 'text-success'
+                          : 'text-info'
                     }`}
                   >
                     {row.level}
                   </span>
                 </div>
-                <p className="mt-0.5 text-[10px] text-zinc-500">{row.source}</p>
-                <p className="mt-1 text-[10px] leading-snug text-zinc-400">{row.detail}</p>
-                <p className="mt-1 text-[10px] text-zinc-600">{row.happenedAt}</p>
+                <p className="mt-0.5 text-[10px] text-textMuted">{row.source}</p>
+                <p className="mt-1 text-[10px] leading-snug text-textSoft">{row.detail}</p>
+                <p className="mt-1 text-[10px] text-textSoft">{row.happenedAt}</p>
               </li>
             ))}
           </ul>
@@ -199,16 +199,16 @@ export const MobileIntegrationsView = ({
         description="Registered integration artifacts; add more from Chat with add artifact or add integration artifact."
       >
         {snapshot.integrationArtifactsPeek.length === 0 ? (
-          <p className="mt-2 text-[11px] text-zinc-500">No artifacts yet. Total: {snapshot.integrationArtifactCount}.</p>
+          <p className="mt-2 text-[11px] text-textMuted">No artifacts yet. Total: {snapshot.integrationArtifactCount}.</p>
         ) : (
           <ul className="mt-2 space-y-2">
             {snapshot.integrationArtifactsPeek.map((row) => (
               <li
                 key={row.id}
-                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+                className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
               >
-                <p className="font-medium text-zinc-100">{row.title}</p>
-                <p className="text-[10px] text-zinc-500">{row.artifactType}</p>
+                <p className="font-medium text-text">{row.title}</p>
+                <p className="text-[10px] text-textMuted">{row.artifactType}</p>
                 <button
                   type="button"
                   disabled={commandBusy}
@@ -231,16 +231,16 @@ export const MobileIntegrationsView = ({
         description="Infrastructure nodes in the hub; register new targets from Chat."
       >
         {snapshot.sshTargetsPeek.length === 0 ? (
-          <p className="mt-2 text-[11px] text-zinc-500">No SSH targets. Total: {snapshot.sshTargetsCount}.</p>
+          <p className="mt-2 text-[11px] text-textMuted">No SSH targets. Total: {snapshot.sshTargetsCount}.</p>
         ) : (
           <ul className="mt-2 space-y-2">
             {snapshot.sshTargetsPeek.map((row) => (
               <li
                 key={row.id}
-                className="rounded-lg border border-white/5 bg-zinc-950/30 px-2 py-2 text-[11px] text-zinc-300"
+                className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
               >
-                <p className="font-medium text-zinc-100">{row.name}</p>
-                <p className="text-[10px] text-zinc-500">{row.host}</p>
+                <p className="font-medium text-text">{row.name}</p>
+                <p className="text-[10px] text-textMuted">{row.host}</p>
                 <button
                   type="button"
                   disabled={commandBusy}
