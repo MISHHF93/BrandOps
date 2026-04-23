@@ -1,3 +1,4 @@
+import { PlugZap } from 'lucide-react';
 import { CockpitWorkstreamCommandStrip } from './CockpitWorkstreamCommandStrip';
 import {
   hrefExtensionIntegrationsPage,
@@ -37,27 +38,35 @@ export const CockpitConnectionsWorkstreamSection = ({
     className="scroll-mt-28 rounded-xl border border-info/25 bg-info/5 p-3 text-xs"
     aria-labelledby="cockpit-connections"
   >
-    <h3 id="cockpit-connections" className="text-sm font-semibold text-text">
-      {meta.label}
-    </h3>
-    <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
+    <div className="flex items-center justify-between gap-2">
+      <h3
+        id="cockpit-connections"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-text"
+      >
+        <PlugZap className="h-4 w-4 shrink-0 text-info" strokeWidth={2.25} aria-hidden />
+        {meta.label}
+      </h3>
+      <span className="inline-flex shrink-0 items-center gap-1.5">
+        <a
+          href={hrefPrimaryAppIntegrationsTab()}
+          className={`rounded-full border border-info/40 bg-surface/70 px-2 py-0.5 text-[10px] font-medium text-info ${btnFocus}`}
+          title="Open Integrations tab"
+        >
+          Integrations
+        </a>
+        <a
+          href={hrefExtensionIntegrationsPage()}
+          className={`rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] font-medium text-textMuted ${btnFocus}`}
+          title="Open full Integrations page"
+        >
+          Page
+        </a>
+      </span>
+    </div>
     <span className="sr-only">
-      Counts and provider status are read-only. Use Integrations for connection changes.
+      {meta.description} Counts and provider status are read-only. Use Integrations for connection
+      changes.
     </span>
-    <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
-      <a
-        href={hrefPrimaryAppIntegrationsTab()}
-        className={`font-medium text-info underline underline-offset-2 ${btnFocus}`}
-      >
-        Integrations tab
-      </a>
-      <a
-        href={hrefExtensionIntegrationsPage()}
-        className={`font-medium text-info/75 underline underline-offset-2 ${btnFocus}`}
-      >
-        Integrations page
-      </a>
-    </p>
     <CockpitWorkstreamCommandStrip
       ariaLabel="Connections workstream Chat starters"
       btnFocus={btnFocus}

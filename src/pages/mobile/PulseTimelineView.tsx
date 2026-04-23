@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
@@ -117,31 +118,16 @@ function LineList({ items }: { items: PulseHomeLine[] }) {
   );
 }
 
-type StatTone = 'now' | 'fix' | 'grow' | 'ai';
-function StatCard({
-  label,
-  value,
-  sub,
-  tone,
-  icon: Icon
-}: {
+type PulseFocusId = 'now' | 'fix' | 'grow' | 'ai';
+
+type PulseFocusTab = {
+  id: PulseFocusId;
   label: string;
-  value: number;
-  sub?: string;
-  tone: StatTone;
+  count: number;
   icon: LucideIcon;
-}) {
-  return (
-    <div className={clsx('bo-stat-card', `bo-stat-card--${tone}`)}>
-      <span className="bo-stat-card__icon" aria-hidden>
-        <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
-      </span>
-      <p className="bo-stat-card__label">{label}</p>
-      <p className="bo-stat-card__value">{value}</p>
-      {sub ? <p className="bo-stat-card__sub">{sub}</p> : null}
-    </div>
-  );
-}
+  tone: 'primary' | 'warning' | 'success' | 'info';
+  srLabel: string;
+};
 
 export interface PulseTimelineViewProps {
   snapshot: MobileWorkspaceSnapshot;
@@ -175,7 +161,42 @@ export const PulseTimelineView = ({
   }
 
   const recommendedCount = home.recommendedActions.length;
-  const dueToday = grouped.today.length;
+  const [activeFocus, setActiveFocus] = useState<PulseFocusId>('now');
+
+  const focusTabs: PulseFocusTab[] = [
+    {
+      id: 'now',
+      label: 'Now',
+      count: home.mattersNow.length,
+      icon: Lightbulb,
+      tone: 'primary',
+      srLabel: 'What matters now'
+    },
+    {
+      id: 'fix',
+      label: 'Attention',
+      count: home.needsAttention.length,
+      icon: TriangleAlert,
+      tone: 'warning',
+      srLabel: 'What needs attention'
+    },
+    {
+      id: 'grow',
+      label: 'Growing',
+      count: home.momentum.length,
+      icon: TrendingUp,
+      tone: 'success',
+      srLabel: 'What is growing'
+    },
+    {
+      id: 'ai',
+      label: 'AI suggestions',
+      count: recommendedCount,
+      icon: Sparkles,
+      tone: 'info',
+      srLabel: 'AI-recommended next actions'
+    }
+  ];
 
   const renderBucket = (key: 'today' | 'thisWeek' | 'later', title: string, Icon: LucideIcon) => {
     const list = grouped[key];
@@ -238,193 +259,194 @@ export const PulseTimelineView = ({
     );
   };
 
-  const jumpBtnClass = `inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-surface/60 px-2.5 py-1.5 text-label font-medium text-text hover:border-borderStrong hover:bg-surfaceActive/80 ${btnFocus}`;
+  const jumpIconBtn = `inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-surface/50 text-textSoft hover:border-borderStrong hover:text-text ${btnFocus}`;
+
+  const renderAiSuggestions = () => (
+    <ul className="mt-2 space-y-2" role="list">
+      {home.recommendedActions.map((a) => (
+        <li
+          key={a.id}
+          className="rounded-lg border border-border/40 bg-bgSubtle/45 px-3 py-2.5 text-label text-textMuted"
+        >
+          <div className="flex items-start gap-2">
+            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--info mt-0.5" aria-hidden>
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold leading-snug text-text">{a.title}</p>
+              <p className="mt-0.5 text-meta text-textSoft">{a.rationale}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() => void runCommand(a.command)}
+                  className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
+                  title={`Run: ${a.command}`}
+                >
+                  <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
+                  Run
+                </button>
+                <button
+                  type="button"
+                  disabled={commandBusy}
+                  onClick={() => primeChat(a.command)}
+                  className={clsx('bo-btn-ghost', btnFocus)}
+                  title="Put in Chat composer without sending"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
+                  Review
+                </button>
+              </div>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <div className="mt-1 space-y-5" aria-label="Pulse">
       <MobileTabPageHeader
         title="Pulse"
-        subtitle="What is due soonest — at a glance."
+        subtitle="What is due soonest."
         icon={Activity}
         iconWrapperClassName="flex items-center justify-center rounded-xl border border-accent/40 bg-accentSoft/25"
         iconClassName="text-accent"
         haloTone="primary"
       />
 
-      <div className="grid grid-cols-2 gap-2.5">
-        <StatCard label="Due today" value={dueToday} sub="in queue" tone="now" icon={Bell} />
-        <StatCard
-          label="Attention"
-          value={home.needsAttention.length}
-          sub="needs a look"
-          tone="fix"
-          icon={TriangleAlert}
-        />
-        <StatCard
-          label="Momentum"
-          value={home.momentum.length}
-          sub="signals up"
-          tone="grow"
-          icon={TrendingUp}
-        />
-        <StatCard label="AI" value={recommendedCount} sub="suggested" tone="ai" icon={Sparkles} />
+      <div
+        role="tablist"
+        aria-label="Pulse focus areas"
+        className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]"
+      >
+        {focusTabs.map((tab) => {
+          const isActive = activeFocus === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`pulse-focus-${tab.id}`}
+              id={`pulse-focus-tab-${tab.id}`}
+              onClick={() => setActiveFocus(tab.id)}
+              title={tab.srLabel}
+              className={clsx(
+                'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-label font-medium transition',
+                btnFocus,
+                isActive
+                  ? 'border-accent/60 bg-accent/15 text-text'
+                  : 'border-border/55 bg-surface/55 text-textMuted hover:border-borderStrong hover:text-text'
+              )}
+            >
+              <span
+                className={clsx('bo-icon-chip bo-icon-chip--xs', `bo-icon-chip--${tab.tone}`)}
+                aria-hidden
+              >
+                <Icon className="h-3 w-3" strokeWidth={2.25} />
+              </span>
+              <span>{tab.label}</span>
+              <span className="bo-count-pill" aria-hidden>
+                {tab.count}
+              </span>
+              <span className="sr-only">{tab.srLabel}</span>
+            </button>
+          );
+        })}
       </div>
 
-      <div className={sectionShell('now')}>
-        <div className="bo-section-label">
-          <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--primary" aria-hidden>
-            <Lightbulb className="h-3.5 w-3.5" strokeWidth={2.25} />
-          </span>
-          <span>Now</span>
-          <span className="bo-count-pill" aria-hidden>
-            {home.mattersNow.length}
-          </span>
-          <span className="sr-only">What matters now</span>
-        </div>
+      <div
+        id="pulse-focus-now"
+        role="tabpanel"
+        aria-labelledby="pulse-focus-tab-now"
+        hidden={activeFocus !== 'now'}
+        className={sectionShell('now')}
+      >
         <LineList items={home.mattersNow} />
       </div>
 
-      <div className={sectionShell('fix')}>
-        <div className="bo-section-label">
-          <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--warning" aria-hidden>
-            <TriangleAlert className="h-3.5 w-3.5" strokeWidth={2.25} />
-          </span>
-          <span>Attention</span>
-          <span className="bo-count-pill" aria-hidden>
-            {home.needsAttention.length}
-          </span>
-          <span className="sr-only">What needs attention</span>
-        </div>
+      <div
+        id="pulse-focus-fix"
+        role="tabpanel"
+        aria-labelledby="pulse-focus-tab-fix"
+        hidden={activeFocus !== 'fix'}
+        className={sectionShell('fix')}
+      >
         <LineList items={home.needsAttention} />
       </div>
 
-      <div className={sectionShell('grow')}>
-        <div className="bo-section-label">
-          <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--success" aria-hidden>
-            <TrendingUp className="h-3.5 w-3.5" strokeWidth={2.25} />
-          </span>
-          <span>Growing</span>
-          <span className="bo-count-pill" aria-hidden>
-            {home.momentum.length}
-          </span>
-          <span className="sr-only">What is growing</span>
-        </div>
+      <div
+        id="pulse-focus-grow"
+        role="tabpanel"
+        aria-labelledby="pulse-focus-tab-grow"
+        hidden={activeFocus !== 'grow'}
+        className={sectionShell('grow')}
+      >
         <LineList items={home.momentum} />
       </div>
 
-      <div className={sectionShell('ai')}>
-        <div className="bo-section-label">
-          <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--info" aria-hidden>
-            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} />
-          </span>
-          <span>AI suggestions</span>
-          <span className="bo-count-pill" aria-hidden>
-            {recommendedCount}
-          </span>
-          <span className="sr-only">AI-recommended next actions</span>
-        </div>
-        <ul className="mt-2 space-y-2" role="list">
-          {home.recommendedActions.map((a) => (
-            <li
-              key={a.id}
-              className="rounded-lg border border-border/40 bg-bgSubtle/45 px-3 py-2.5 text-label text-textMuted"
-            >
-              <div className="flex items-start gap-2">
-                <span
-                  className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--info mt-0.5"
-                  aria-hidden
-                >
-                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold leading-snug text-text">{a.title}</p>
-                  <p className="mt-0.5 text-meta text-textSoft">{a.rationale}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled={commandBusy}
-                      onClick={() => void runCommand(a.command)}
-                      className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
-                      title={`Run: ${a.command}`}
-                    >
-                      <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-                      Run
-                    </button>
-                    <button
-                      type="button"
-                      disabled={commandBusy}
-                      onClick={() => primeChat(a.command)}
-                      className={clsx('bo-btn-ghost', btnFocus)}
-                      title="Put in Chat composer without sending"
-                    >
-                      <MessageCircle className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-                      Review
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+      <div
+        id="pulse-focus-ai"
+        role="tabpanel"
+        aria-labelledby="pulse-focus-tab-ai"
+        hidden={activeFocus !== 'ai'}
+        className={sectionShell('ai')}
+      >
+        {renderAiSuggestions()}
       </div>
 
-      <div className="bo-glass-panel--muted rounded-xl border border-border/55 p-3">
-        <p className="bo-section-label">
-          <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--muted" aria-hidden>
-            <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2.25} />
-          </span>
-          <span>Jump</span>
-        </p>
-        <div className="mt-2 flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={commandBusy}
+          onClick={() => void runCommand('pipeline health')}
+          className={clsx('bo-btn-primary', btnFocus)}
+          title="Run: pipeline health"
+        >
+          <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
+          Pipeline health
+        </button>
+        <span className="ml-auto inline-flex items-center gap-1.5" aria-label="Jump">
+          <span className="sr-only">Jump</span>
           <button
             type="button"
             onClick={() => onNavigateTab('chat')}
-            className={jumpBtnClass}
+            className={jumpIconBtn}
             title="Open Chat"
+            aria-label="Open Chat"
           >
             <MessageCircle className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-            Chat
           </button>
           <button
             type="button"
             onClick={() => onNavigateTab('daily')}
-            className={jumpBtnClass}
+            className={jumpIconBtn}
             title="Open Today"
+            aria-label="Open Today"
           >
             <Sun className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-            Today
           </button>
           <button
             type="button"
             onClick={() => onOpenCockpitWorkstream('pipeline')}
-            className={jumpBtnClass}
+            className={jumpIconBtn}
             title="Open Pipeline workstream"
+            aria-label="Open Pipeline workstream"
           >
             <Workflow className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-            Pipeline
           </button>
           <button
             type="button"
             onClick={() => onOpenCockpitWorkstream('brand-content')}
-            className={jumpBtnClass}
+            className={jumpIconBtn}
             title="Open Brand & posts workstream"
+            aria-label="Open Brand & posts workstream"
           >
             <FileText className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-            Brand &amp; posts
           </button>
-        </div>
-        <div className="mt-3">
-          <button
-            type="button"
-            disabled={commandBusy}
-            onClick={() => void runCommand('pipeline health')}
-            className={clsx('bo-btn-primary', btnFocus)}
-            title="Run: pipeline health"
-          >
-            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-            Pipeline health
-          </button>
-        </div>
+        </span>
       </div>
 
       {rows.length === 0 ? (

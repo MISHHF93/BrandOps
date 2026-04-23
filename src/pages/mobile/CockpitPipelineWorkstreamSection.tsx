@@ -1,3 +1,4 @@
+import { Briefcase } from 'lucide-react';
 import { CockpitWorkstreamCommandStrip } from './CockpitWorkstreamCommandStrip';
 import { pulseTile, signalList, formatPeekDue } from './cockpitDailyPrimitives';
 import type { CockpitPipelineSectionProps } from './cockpitSectionTypes';
@@ -37,26 +38,29 @@ export const CockpitPipelineWorkstreamSection = ({
     className="scroll-mt-28 rounded-xl border border-success/25 bg-success/5 p-3 text-xs"
     aria-labelledby="cockpit-pipeline"
   >
-    <h3 id="cockpit-pipeline" className="text-sm font-semibold text-text">
-      {meta.label}
-    </h3>
-    <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
-    <span className="sr-only">
-      Pipeline lists are read-only digest. Stage changes and outreach run in Chat — not the Settings
-      tab.
-    </span>
-    {onOpenPulse ? (
-      <p className="mt-1.5 text-[10px] text-textMuted">
-        Chronological mix:{' '}
+    <div className="flex items-center justify-between gap-2">
+      <h3
+        id="cockpit-pipeline"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-text"
+      >
+        <Briefcase className="h-4 w-4 shrink-0 text-success" strokeWidth={2.25} aria-hidden />
+        {meta.label}
+      </h3>
+      {onOpenPulse ? (
         <button
           type="button"
           onClick={onOpenPulse}
-          className={`font-medium text-info underline-offset-2 hover:underline ${btnFocus}`}
+          className={`rounded-full border border-info/40 bg-surface/70 px-2 py-0.5 text-[10px] font-medium text-info ${btnFocus}`}
+          title="Open Pulse for the chronological mix"
         >
           Pulse
         </button>
-      </p>
-    ) : null}
+      ) : null}
+    </div>
+    <span className="sr-only">
+      {meta.description} Pipeline lists are read-only digest. Stage changes and outreach run in Chat
+      — not the Settings tab. Chronological mix in Pulse.
+    </span>
 
     <CockpitWorkstreamCommandStrip
       ariaLabel="Pipeline workstream Chat starters"

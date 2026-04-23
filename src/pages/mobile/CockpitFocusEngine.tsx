@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import clsx from 'clsx';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -24,6 +25,17 @@ import { pulseTile } from './cockpitDailyPrimitives';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 import { buildTodayFocusBoard } from './todayFocusModel';
 import type { TodayFocusLine } from './todayFocusModel';
+
+type FocusId = 'do' | 'urgent' | 'grow';
+
+type FocusTab = {
+  id: FocusId;
+  label: string;
+  count: number;
+  icon: LucideIcon;
+  tone: 'info' | 'warning' | 'success';
+  items: TodayFocusLine[];
+};
 
 type LineTone = 'info' | 'warning' | 'success' | 'primary' | 'muted';
 
@@ -85,7 +97,7 @@ function LineList({ items }: { items: TodayFocusLine[] }) {
   );
 }
 
-const card = (role: 'do' | 'urgent' | 'grow') =>
+const panelShell = (role: FocusId) =>
   clsx(
     'rounded-xl border border-border/50 bg-bgSubtle/30 p-2.5 border-l-4',
     role === 'do' && 'border-l-info',
@@ -113,49 +125,90 @@ export const CockpitFocusEngine = ({
   primeChat
 }: CockpitFocusEngineProps) => {
   const focus = buildTodayFocusBoard(snapshot);
+  const [activeFocus, setActiveFocus] = useState<FocusId>('do');
+
+  const focusTabs: FocusTab[] = [
+    {
+      id: 'do',
+      label: 'Do today',
+      count: focus.doToday.length,
+      icon: Crosshair,
+      tone: 'info',
+      items: focus.doToday
+    },
+    {
+      id: 'urgent',
+      label: 'Urgent',
+      count: focus.urgent.length,
+      icon: Flame,
+      tone: 'warning',
+      items: focus.urgent
+    },
+    {
+      id: 'grow',
+      label: 'Momentum',
+      count: focus.momentum.length,
+      icon: TrendingUp,
+      tone: 'success',
+      items: focus.momentum
+    }
+  ];
 
   return (
     <div className="space-y-3" aria-label="Today focus engine">
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-1">
-        <div className={card('do')}>
-          <div className="bo-section-label">
-            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--info" aria-hidden>
-              <Crosshair className="h-3.5 w-3.5" strokeWidth={2.25} />
-            </span>
-            <span>Do today</span>
-            <span className="bo-count-pill" aria-hidden>
-              {focus.doToday.length}
-            </span>
-          </div>
-          <LineList items={focus.doToday} />
-        </div>
-
-        <div className={card('urgent')}>
-          <div className="bo-section-label">
-            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--warning" aria-hidden>
-              <Flame className="h-3.5 w-3.5" strokeWidth={2.25} />
-            </span>
-            <span>Urgent</span>
-            <span className="bo-count-pill" aria-hidden>
-              {focus.urgent.length}
-            </span>
-          </div>
-          <LineList items={focus.urgent} />
-        </div>
-
-        <div className={card('grow')}>
-          <div className="bo-section-label">
-            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--success" aria-hidden>
-              <TrendingUp className="h-3.5 w-3.5" strokeWidth={2.25} />
-            </span>
-            <span>Momentum</span>
-            <span className="bo-count-pill" aria-hidden>
-              {focus.momentum.length}
-            </span>
-          </div>
-          <LineList items={focus.momentum} />
-        </div>
+      <div
+        role="tablist"
+        aria-label="Focus areas"
+        className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]"
+      >
+        {focusTabs.map((tab) => {
+          const isActive = activeFocus === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`focus-panel-${tab.id}`}
+              id={`focus-tab-${tab.id}`}
+              onClick={() => setActiveFocus(tab.id)}
+              title={tab.label}
+              className={clsx(
+                'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-label font-medium transition',
+                btnFocus,
+                isActive
+                  ? 'border-accent/60 bg-accent/15 text-text'
+                  : 'border-border/55 bg-surface/55 text-textMuted hover:border-borderStrong hover:text-text'
+              )}
+            >
+              <span
+                className={clsx('bo-icon-chip bo-icon-chip--xs', `bo-icon-chip--${tab.tone}`)}
+                aria-hidden
+              >
+                <Icon className="h-3 w-3" strokeWidth={2.25} />
+              </span>
+              <span>{tab.label}</span>
+              <span className="bo-count-pill" aria-hidden>
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
+
+      {focusTabs.map((tab) => (
+        <div
+          key={tab.id}
+          id={`focus-panel-${tab.id}`}
+          role="tabpanel"
+          aria-labelledby={`focus-tab-${tab.id}`}
+          hidden={activeFocus !== tab.id}
+          className={panelShell(tab.id)}
+        >
+          <LineList items={tab.items} />
+        </div>
+      ))}
 
       {focus.quickActions.length > 0 ? (
         <div className="rounded-xl border border-border/45 bg-surface/40 p-3">
@@ -199,17 +252,27 @@ export const CockpitFocusEngine = ({
         </div>
       ) : null}
 
-      <div aria-labelledby="cockpit-at-a-glance-heading">
-        <p id="cockpit-at-a-glance-heading" className="bo-section-label mb-2">
+      <details className="group rounded-xl border border-border/45 bg-bgSubtle/30 open:bg-bgSubtle/45">
+        <summary
+          className={clsx(
+            'flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-label font-medium text-textMuted transition-colors hover:text-text [&::-webkit-details-marker]:hidden',
+            btnFocus
+          )}
+          aria-controls="cockpit-at-a-glance-body"
+          id="cockpit-at-a-glance-heading"
+        >
           <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--muted" aria-hidden>
             <Gauge className="h-3.5 w-3.5" strokeWidth={2.25} />
           </span>
           <span>At a glance</span>
-        </p>
+          <span className="ml-auto text-meta text-textSoft group-open:hidden">Show</span>
+          <span className="ml-auto hidden text-meta text-textSoft group-open:inline">Hide</span>
+        </summary>
         <div
+          id="cockpit-at-a-glance-body"
           role="group"
           aria-label="Workspace metric counts, read-only — not buttons"
-          className="-mx-1 flex gap-2 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]"
+          className="-mx-1 flex gap-2 overflow-x-auto px-3 pb-3 pt-1 [scrollbar-width:thin]"
         >
           {pulseTile('Follow-ups', snapshot.incompleteFollowUps, 'open', {
             icon: MessageSquare,
@@ -247,7 +310,7 @@ export const CockpitFocusEngine = ({
             title: 'Registered integration sources'
           })}
         </div>
-      </div>
+      </details>
     </div>
   );
 };

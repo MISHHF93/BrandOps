@@ -45,27 +45,26 @@ export const CockpitTodayWorkstreamSection = ({
     className="scroll-mt-28 rounded-xl border border-border/40 bg-bgSubtle/50 p-3 text-xs"
     aria-labelledby="cockpit-today"
   >
-    <div className="flex items-start justify-between gap-2">
-      <div className="min-w-0">
-        <h3 id="cockpit-today" className="text-sm font-semibold text-text">
-          {meta.label}
-        </h3>
-        <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <button
-          type="button"
-          onClick={onOpenInAppSettings}
-          className={`rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] text-textMuted hover:text-text ${btnFocus}`}
-          title="Open Settings for workday, task caps, and reminders"
-        >
-          Settings
-        </button>
-        <Sparkles size={16} className="shrink-0 text-warning/80" aria-hidden />
-      </div>
+    <div className="flex items-center justify-between gap-2">
+      <h3
+        id="cockpit-today"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-text"
+      >
+        <Sparkles className="h-4 w-4 shrink-0 text-warning/80" strokeWidth={2.25} aria-hidden />
+        {meta.label}
+      </h3>
+      <button
+        type="button"
+        onClick={onOpenInAppSettings}
+        className={`rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] text-textMuted hover:text-text ${btnFocus}`}
+        title="Open Settings for workday, task caps, and reminders"
+      >
+        Settings
+      </button>
     </div>
     <span className="sr-only">
-      Lists below are read-only peeks. Buttons open Chat (composer or send) — not Settings.
+      {meta.description} Lists below are read-only peeks. Buttons open Chat (composer or send) — not
+      Settings.
     </span>
     <p className="mt-2 text-textSoft">{snapshot.cadenceHeadline}</p>
     <p className="mt-1 text-textMuted">
