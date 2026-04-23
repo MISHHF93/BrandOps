@@ -1,7 +1,7 @@
 import { CalendarCheck2 } from 'lucide-react';
 import { cockpitNavigationGroups, type DashboardSectionId } from '../../shared/config/dashboardNavigation';
-import { CockpitAtAGlanceStrip } from './CockpitAtAGlanceStrip';
 import { CockpitBrandContentWorkstreamSection } from './CockpitBrandContentWorkstreamSection';
+import { CockpitFocusEngine } from './CockpitFocusEngine';
 import { CockpitConnectionsWorkstreamSection } from './CockpitConnectionsWorkstreamSection';
 import { CockpitPipelineWorkstreamSection } from './CockpitPipelineWorkstreamSection';
 import { CockpitTodayWorkstreamSection } from './CockpitTodayWorkstreamSection';
@@ -30,9 +30,8 @@ export interface CockpitDailyViewProps {
 }
 
 /**
- * Today tab (URL `?section=today` and related workstreams): metrics strip + four work areas.
- * Layout uses **Pattern A** — one scroll + sticky workstream bar ({@link CockpitWorkstreamBar}); sections keep stable
- * `cockpit-*` heading ids for deep links and {@link getCockpitMobileSectionHeadingId}.
+ * Today tab: focus engine (do / urgent / momentum) + four work areas.
+ * {@link CockpitWorkstreamBar} is sticky; sections keep `cockpit-*` ids for deep links.
  */
 export const CockpitDailyView = ({
   snapshot,
@@ -58,7 +57,7 @@ export const CockpitDailyView = ({
     <div className="mt-2 space-y-5" aria-label="Today">
       <MobileTabPageHeader
         title="Today"
-        subtitle='Cockpit — execution pulse and work areas. Same tab as bottom nav "Today"; deep edits in Chat.'
+        subtitle="Plan and focus — not a second Pulse. Work areas below; anything that changes data runs in Chat."
         icon={CalendarCheck2}
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12"
         iconClassName="text-info"
@@ -72,7 +71,13 @@ export const CockpitDailyView = ({
         onSelectWorkstream={onSelectWorkstream}
       />
 
-      <CockpitAtAGlanceStrip snapshot={snapshot} />
+      <CockpitFocusEngine
+        snapshot={snapshot}
+        btnFocus={btnFocus}
+        commandBusy={commandBusy}
+        runCommand={runCommand}
+        primeChat={primeChat}
+      />
 
       <CockpitTodayWorkstreamSection
         snapshot={snapshot}

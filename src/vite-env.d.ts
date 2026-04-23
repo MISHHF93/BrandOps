@@ -24,6 +24,11 @@ interface ImportMetaEnv {
   /** Injected on Vercel builds (`VERCEL=1`); used for hosted demo routing only. */
   readonly VITE_VERCEL?: string;
   /**
+   * If `1` or `true`, require active paid membership after sign-in (Chat, Today, Integrations, etc.).
+   * Omit or `0` during local development / pre-launch builds.
+   */
+  readonly VITE_ENFORCE_MEMBERSHIP_GATE?: string;
+  /**
    * Optional HTTPS URL to a JSON intelligence rules pack (partial patch over embedded defaults).
    * When unset, the client may still load `/brandops-intelligence-rules.json` from the deploy origin.
    */

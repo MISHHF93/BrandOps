@@ -1,7 +1,14 @@
 /**
- * `MobileApp` is hosted from multiple HTML documents. `data-app-surface` on `<html>` (set in
- * `renderChatbotSurface` and aligned with this list) and these props are the single source
- * of truth for which document is current — not a separate "chatbot-web" string on the component.
+ * Logical document / marketing surface id. Used for `MobileApp` `surfaceLabel`, agent source
+ * mapping, and related strings.
+ *
+ * **Shell hosts (`MobileApp`):** `mobile`, `welcome`, `dashboard`, `integrations` — all boot
+ * through `renderChatbotSurface` (`src/pages/chatbotWeb/renderChatbotSurface.tsx`), which sets
+ * `data-app-surface` on `<html>`.
+ *
+ * **`help`:** the Knowledge Center (`help.html` → `HelpKnowledgeRoot`) is **not** a `MobileApp`
+ * host and does not use `renderChatbotSurface`. The id may still appear in docs, tests, or future
+ * routing so it stays in this union.
  */
 export type AppDocumentSurfaceId = 'mobile' | 'welcome' | 'dashboard' | 'integrations' | 'help';
 

@@ -2,8 +2,8 @@
  * BrandOps extension — URL & page hierarchy (single source of truth)
  *
  * **Knowledge Center:** `help.html` mounts the **Knowledge Center** (`KnowledgeCenterBody`), with
- * optional `?topic=` to scroll to a topic. `dashboard.html?overlay=help` opens the in-dashboard
- * Knowledge overlay on Chat without leaving the document. Use `buildHelpUrl` for full-page help.
+ * optional `?topic=` to scroll to a topic. `dashboard.html?overlay=...` is retired and redirected.
+ * Use `buildHelpUrl` for canonical help navigation.
  *
  * **Settings / Integrations (two valid entry points):** Chrome MV3 `options_ui` points at `integrations.html`
  * (merged shell: Integrations tab default, Settings on the bar). In-app: `mobile.html?section=settings` for Settings only.
@@ -40,7 +40,7 @@
  *     • Tab: `chat` | `settings` | `integrations` | `daily` | `cockpit` (Cockpit defaults workstream to today)
  *     • Workstream: `today` | `pipeline` | `brand-content` | `connections` and legacy names (`overview` → today, etc.)
  *   dashboard.html?section=   → legacy/compat; prefer mobile.html for workstream deep links
- *   dashboard.html?overlay=help|settings → open overlay after load (then stripped from URL)
+ *   dashboard.html?overlay=*         → retired contract; deterministic fallback routing
  *   help.html?topic=<id>            → scroll target in Knowledge (when implemented on that page)
  */
 import type { DashboardSectionId } from '../config/dashboardNavigation';
@@ -68,7 +68,7 @@ export const QUERY = {
   /** @deprecated Legacy; still read. Prefer `flow`. */
   welcomeAuthLegacy: 'auth',
   dashboardSection: 'section',
-  /** Opens Knowledge or Quick settings overlay on the dashboard (consumed once, then removed from URL). */
+  /** @deprecated Retired dashboard overlay contract. */
   cockpitOverlay: 'overlay',
   helpTopic: 'topic'
 } as const;
@@ -91,9 +91,9 @@ export const EXTENSION_ROUTE_CATALOG: Array<{ page: string; query: string; value
   },
   {
     page: PAGE.dashboard,
-    query: `${QUERY.dashboardSection} | ${QUERY.cockpitOverlay} (optional)`,
-    values: 'legacy section param; overlay = help | settings',
-    notes: 'Chat-first surface; workstreams should use mobile.html?section=. Overlay opens in-page panel once.'
+    query: `${QUERY.dashboardSection} | ${QUERY.cockpitOverlay} (optional legacy)`,
+    values: 'legacy section param; overlay is retired and redirected',
+    notes: 'Compatibility entry only. Canonical routing is mobile/help surfaces.'
   },
   {
     page: PAGE.integrations,
@@ -152,15 +152,11 @@ export function buildWelcomeUrl(opts?: { flow?: 'signup'; auth?: 'signup' | 'sig
   return buildWelcomeSignInUrl();
 }
 
-export type CockpitOverlayParam = 'help' | 'settings';
-
 export function buildDashboardUrl(opts?: {
   section?: DashboardSectionId;
-  overlay?: CockpitOverlayParam;
 }): string {
   const params: Record<string, string> = {};
   if (opts?.section) params[QUERY.dashboardSection] = opts.section;
-  if (opts?.overlay) params[QUERY.cockpitOverlay] = opts.overlay;
   return withQuery(PAGE.dashboard, params);
 }
 

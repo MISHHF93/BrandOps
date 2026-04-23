@@ -3,6 +3,16 @@ import type { ChangeEvent } from 'react';
 import { Settings2 } from 'lucide-react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import type { CadenceFlowMode, MotionMode, VisualMode } from '../../types/domain';
+import type {
+  AuthProviderId,
+  LaunchMembershipState
+} from '../../shared/account/launchAccess';
+import { authProviderLabel } from '../../shared/account/launchAccess';
+import { GoogleSignInButton } from '../../shared/ui/oauth/GoogleSignInButton';
+import { AppleSignInButton } from '../../shared/ui/oauth/AppleSignInButton';
+import { EmailMagicLinkButton } from '../../shared/ui/oauth/EmailMagicLinkButton';
+import { LinkedInSignInButton } from '../../shared/ui/oauth/LinkedInSignInButton';
+import { GitHubSignInButton } from '../../shared/ui/oauth/GitHubSignInButton';
 import { hrefHelpPage } from '../../shared/navigation/navigationIntents';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
@@ -21,6 +31,7 @@ import {
 import { MobileTabPageHeader, MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { ShellSectionCallout } from './ShellSectionCallout';
 import { SettingsCockpitCapabilityDisclosure } from './SettingsCockpitCapabilityDisclosure';
+import { LocalProductUsageReadout } from './LocalProductUsageReadout';
 
 export type { MobileWorkspaceSnapshot as MobileSettingsSnapshot } from './buildWorkspaceSnapshot';
 
@@ -47,6 +58,89 @@ const fieldClass = (btnFocus: string) =>
 
 const primaryBtn = (btnFocus: string) =>
   `mt-2 inline-flex w-full sm:w-auto justify-center rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-xs font-medium text-text hover:bg-surfaceHover disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
+
+function membershipLabel(status: LaunchMembershipState['status']): string {
+  if (status === 'active') return 'Active';
+  if (status === 'trialing') return 'Trialing';
+  if (status === 'past_due') return 'Past due';
+  if (status === 'canceled') return 'Canceled';
+  return 'Not subscribed';
+}
+
+function AccountMembershipSection({
+  isAuthenticated,
+  provider,
+  email,
+  membership,
+  btnFocus,
+  onSignInProvider,
+  onSignOut,
+  onStartCheckout,
+  onOpenBillingPortal
+}: {
+  isAuthenticated: boolean;
+  provider: AuthProviderId | null;
+  email: string;
+  membership: LaunchMembershipState;
+  btnFocus: string;
+  onSignInProvider: (provider: AuthProviderId) => void;
+  onSignOut: () => void;
+  onStartCheckout: () => void;
+  onOpenBillingPortal: () => void;
+}) {
+  return (
+    <MobileTabSection
+      id="settings-account-membership"
+      title="Account & membership"
+      description="Sign-in provider and membership status for this workspace."
+    >
+      <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
+        <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+          <dt>Signed in</dt>
+          <dd className="text-text">{isAuthenticated ? 'Yes' : 'No'}</dd>
+        </div>
+        <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+          <dt>Provider</dt>
+          <dd className="text-text">{authProviderLabel(provider)}</dd>
+        </div>
+        <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+          <dt>Email</dt>
+          <dd className="text-text">{email || '—'}</dd>
+        </div>
+        <div className="flex justify-between gap-2 py-1.5">
+          <dt>Membership</dt>
+          <dd className="text-text">{membershipLabel(membership.status)}</dd>
+        </div>
+      </dl>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {!isAuthenticated ? (
+          <div className="grid w-full gap-2">
+            <GoogleSignInButton onClick={() => onSignInProvider('google')} className={btnFocus} />
+            <AppleSignInButton onClick={() => onSignInProvider('apple')} className={btnFocus} />
+            <EmailMagicLinkButton onClick={() => onSignInProvider('email')} className={btnFocus} />
+            <LinkedInSignInButton onClick={() => onSignInProvider('linkedin')} className={btnFocus} />
+            <GitHubSignInButton onClick={() => onSignInProvider('github')} className={btnFocus} />
+          </div>
+        ) : (
+          <>
+            <button type="button" onClick={onStartCheckout} className={mobileChipClass(btnFocus)}>
+              Start checkout
+            </button>
+            <button type="button" onClick={onOpenBillingPortal} className={mobileChipClass(btnFocus)}>
+              Manage billing
+            </button>
+            <button type="button" onClick={onSignOut} className={mobileChipClass(btnFocus)}>
+              Sign out
+            </button>
+          </>
+        )}
+      </div>
+      {membership.renewalDate ? (
+        <p className="mt-2 text-[10px] text-textSoft">Renews: {membership.renewalDate}</p>
+      ) : null}
+    </MobileTabSection>
+  );
+}
 
 function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string]> {
   return [
@@ -94,7 +188,7 @@ function WorkspaceModelReadout({
     <MobileTabSection
       id="settings-model-readout"
       title="Workspace model (read-only)"
-      description="Values from persisted BrandOpsData (domain types in src/types/domain.ts). Collapsed by default to keep the tab scannable."
+      description="Stored workspace values. Kept collapsed to keep Settings readable."
     >
       <details className="group mt-2 rounded-lg border border-border/30 bg-surface/45 p-2 open:border-primary/25">
         <summary
@@ -387,12 +481,15 @@ function SettingsEditablePanel({
       </div>
 
       <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">Profile</p>
-      <p className="mb-2 text-[10px] leading-snug text-textMuted">
-        Each value is sent to the operating plan / external models with a clear label (operator name, positioning, offer, brand voice, focus metric) so the model does not confuse them. In Notification Center → prompt template, use{' '}
-        <code className="text-[9px] text-textSoft">{'{{brand_context}}'}</code> for the full block, or{' '}
-        <code className="text-[9px] text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
-        <code className="text-[9px] text-textSoft">{'{{brand_positioning}}'}</code>, etc.
-      </p>
+      <details className="mb-2 rounded-lg border border-border/30 bg-surface/40 p-2 text-[10px] text-textMuted">
+        <summary className={`cursor-pointer font-medium text-textMuted ${btnFocus}`}>Profile field details</summary>
+        <p className="mt-1.5 leading-snug">
+          Each value is sent to the operating plan / external models with clear labels to prevent ambiguity. In Notification Center prompt template, use{' '}
+          <code className="text-[9px] text-textSoft">{'{{brand_context}}'}</code> for the full block, or{' '}
+          <code className="text-[9px] text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
+          <code className="text-[9px] text-textSoft">{'{{brand_positioning}}'}</code>, etc.
+        </p>
+      </details>
       <div className="space-y-2">
         <div>
           <label className="text-[11px] text-textMuted" htmlFor="bo-op">
@@ -554,6 +651,14 @@ export interface MobileSettingsViewProps {
   documentSurface: AppDocumentSurfaceId | 'chatbot';
   /** Optional: jump to Today after changing workspace behavior (see `docs/ai-powered-settings-revamp.md`). */
   onOpenTodayTab?: () => void;
+  isAuthenticated?: boolean;
+  authProvider?: AuthProviderId | null;
+  authEmail?: string;
+  membership?: LaunchMembershipState;
+  onSignInProvider?: (provider: AuthProviderId) => void;
+  onSignOut?: () => void;
+  onStartCheckout?: () => void;
+  onOpenBillingPortal?: () => void;
 }
 
 /**
@@ -571,7 +676,15 @@ export const MobileSettingsView = ({
   applySettingsConfigure,
   applyBusy,
   commandBusy,
-  onOpenTodayTab
+  onOpenTodayTab,
+  isAuthenticated = false,
+  authProvider = null,
+  authEmail = '',
+  membership = { status: 'none' },
+  onSignInProvider = () => {},
+  onSignOut = () => {},
+  onStartCheckout = () => {},
+  onOpenBillingPortal = () => {}
 }: MobileSettingsViewProps) => {
   const [importMessage, setImportMessage] = useState<string | null>(null);
   /** Any agent route (settings apply or chat quick command) — avoid parallel `executeAgentWorkspaceCommand`. */
@@ -599,7 +712,7 @@ export const MobileSettingsView = ({
     <div className="relative z-[1] mt-2 space-y-5 pb-10 pointer-events-auto" aria-label="Settings">
       <MobileTabPageHeader
         title="Settings"
-        subtitle="Snapshot at top (read-only). Preferences: forms. Advanced: lineage &amp; audit."
+        subtitle="You and this workspace — account, trust, cadence, export. To wire Notion, OAuth, or sources, use Integrations."
         icon={Settings2}
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12"
         iconClassName="text-info"
@@ -613,6 +726,18 @@ export const MobileSettingsView = ({
         btnFocus={btnFocus}
         onOpenToday={onOpenTodayTab}
         helpHref={hrefHelpPage()}
+      />
+
+      <AccountMembershipSection
+        isAuthenticated={isAuthenticated}
+        provider={authProvider}
+        email={authEmail}
+        membership={membership}
+        btnFocus={btnFocus}
+        onSignInProvider={onSignInProvider}
+        onSignOut={onSignOut}
+        onStartCheckout={onStartCheckout}
+        onOpenBillingPortal={onOpenBillingPortal}
       />
 
       <SettingsAssistantComposer
@@ -649,11 +774,19 @@ export const MobileSettingsView = ({
           <span className="inline-flex items-center gap-2">
             Advanced
             <span className="text-[11px] font-normal text-textSoft">
-              — dataset lineage, intelligence detail, vault, full model readout, audit
+              — local product metrics, dataset lineage, intelligence detail, vault, full model readout, audit
             </span>
           </span>
         </summary>
         <div className="space-y-5 border-t border-border/40 px-3 pb-4 pt-4">
+          <MobileTabSection
+            id="settings-local-product-metrics"
+            title="Local product metrics"
+            description="Habit, navigation to Chat, command outcomes, and shell timing — on-device only; maps to the experience roadmap success indicators."
+          >
+            <LocalProductUsageReadout />
+          </MobileTabSection>
+
           <MobileTabSection
             id="settings-dataset-lineage"
             title="Dataset lineage"
@@ -694,7 +827,7 @@ export const MobileSettingsView = ({
           <MobileTabSection
             id="settings-intelligence-rules"
             title="Intelligence rules (effective)"
-            description="Coefficients for cockpit ranking and digest slices. Resolved at extension startup and when this page loads."
+            description="Scoring for Today digests. Refreshes on page load."
           >
             {!snapshot.intelligenceRulesReadout.initRan ? (
               <p className="mt-2 text-[10px] text-textMuted">
@@ -774,7 +907,7 @@ export const MobileSettingsView = ({
           <MobileTabSection
             id="settings-messaging-vault"
             title="Messaging vault"
-            description="Reusable snippets by category (titles only; full text stays in workspace data)."
+            description="Saved snippets (titles only here)."
           >
             {snapshot.settingsMessagingVaultPeek.length === 0 ? (
               <p className="mt-2 text-[11px] text-textMuted">No messaging vault entries in this workspace.</p>
@@ -795,7 +928,7 @@ export const MobileSettingsView = ({
                       }
                       className={`mt-2 ${settingsRunChipClass(btnFocus)}`}
                     >
-                      Log note in Chat
+                      Open in Chat
                     </button>
                   </li>
                 ))}

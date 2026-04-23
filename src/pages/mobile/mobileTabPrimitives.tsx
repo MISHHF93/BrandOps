@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { MobileShellTabId } from './mobileShellQuery';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
+import { SHELL_TAB_PURPOSE } from './shellSectionCopy';
 
 /** Shared focus ring for mobile shell (matches design tokens in `src/styles/index.css`). */
 export const MOBILE_BTN_FOCUS =
@@ -92,8 +93,9 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
                 type="button"
                 onClick={() => onSelect(tab.id)}
                 aria-current={active ? 'page' : undefined}
+                title={SHELL_TAB_PURPOSE[tab.id]}
                 className={clsx(
-                  'flex w-full flex-col items-center gap-0.5 rounded-xl px-0.5 py-1.5 text-micro transition-colors duration-fast',
+                  'bo-press-ink flex w-full flex-col items-center gap-0.5 rounded-xl px-0.5 py-1.5 text-micro transition-colors duration-fast',
                   btnFocus,
                   active
                     ? 'bg-surfaceActive/90 text-text shadow-[inset_0_1px_0_rgb(var(--color-text)/0.05)]'

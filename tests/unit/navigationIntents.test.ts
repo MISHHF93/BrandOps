@@ -37,8 +37,7 @@ describe('navigationIntents', () => {
   });
 
   it('resolves dashboard knowledge overlay and integrations hub vs in-app tab', () => {
-    expect(hrefDashboardKnowledgeOverlay()).toContain(PAGE.dashboard);
-    expect(hrefDashboardKnowledgeOverlay()).toContain(QUERY.cockpitOverlay);
+    expect(hrefDashboardKnowledgeOverlay()).toContain(PAGE.help);
     expect(hrefExtensionIntegrationsPage()).toBe(r(PAGE.integrations));
     expect(hrefCockpitConnections()).toBe(hrefExtensionIntegrationsPage());
   });

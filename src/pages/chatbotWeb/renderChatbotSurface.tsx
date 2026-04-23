@@ -9,14 +9,17 @@ import type { MobileShellTabId } from '../mobile/mobileShellQuery';
 import { initIntelligenceRulesFromRemote } from '../../rules/intelligenceRulesRuntime';
 
 interface RenderChatbotSurfaceOptions {
-  /** Matches `data-app-surface` and `MobileApp` document identity (not the legacy `chatbot-web` string). */
-  surfaceLabel: AppDocumentSurfaceId;
+  /** Shell documents only — excludes `help` (Knowledge Center uses its own entry). */
+  surfaceLabel: Exclude<AppDocumentSurfaceId, 'help'>;
   initialTab: MobileShellTabId;
+  /** Defaults to `AI Chatbot: {surfaceLabel}`; override for primary `mobile.html` (e.g. BrandOps Mobile). */
+  errorBoundaryLabel?: string;
 }
 
 export const renderChatbotSurface = ({
   surfaceLabel,
-  initialTab
+  initialTab,
+  errorBoundaryLabel
 }: RenderChatbotSurfaceOptions) => {
   void initIntelligenceRulesFromRemote().catch(() => {
     /* best-effort; defaults remain in memory */
@@ -24,9 +27,11 @@ export const renderChatbotSurface = ({
   bootstrapDocumentThemeFromWebStorage();
   document.documentElement.setAttribute('data-app-surface', surfaceLabel);
 
+  const boundaryLabel = errorBoundaryLabel ?? `AI Chatbot: ${surfaceLabel}`;
+
   createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <AppErrorBoundary surfaceLabel={`AI Chatbot: ${surfaceLabel}`}>
+      <AppErrorBoundary surfaceLabel={boundaryLabel}>
         <MobileApp initialTab={initialTab} surfaceLabel={surfaceLabel} />
       </AppErrorBoundary>
     </React.StrictMode>

@@ -124,6 +124,30 @@ class WebStorageAdapter implements StorageAdapter {
   }
 }
 
+class MemoryStorageAdapter implements StorageAdapter {
+  private readonly store = new Map<string, unknown>();
+
+  async get<T>(key: string): Promise<T | undefined> {
+    return this.store.get(key) as T | undefined;
+  }
+
+  async set<T>(key: string, value: T): Promise<void> {
+    this.store.set(key, value);
+  }
+
+  async remove(key: string): Promise<void> {
+    this.store.delete(key);
+  }
+
+  async getAll<T extends Record<string, unknown>>(): Promise<T> {
+    return Object.fromEntries(this.store.entries()) as T;
+  }
+
+  async clear(): Promise<void> {
+    this.store.clear();
+  }
+}
+
 export const getBrowserStorage = (area: StorageArea = 'local'): StorageAdapter => {
   if (hasChromeStorage()) {
     if (area === 'sync') return new BrowserStorageAdapter(chrome.storage.sync);
@@ -136,7 +160,7 @@ export const getBrowserStorage = (area: StorageArea = 'local'): StorageAdapter =
     return new WebStorageAdapter(webStorage, area);
   }
 
-  throw new Error('No supported storage backend is available in this runtime.');
+  return new MemoryStorageAdapter();
 };
 
 export const browserLocalStorage: StorageAdapter = getBrowserStorage('local');

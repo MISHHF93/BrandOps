@@ -1,6 +1,7 @@
 # Routing audit — extension surfaces & Settings (2026-04-20)
 
 **Current product (2026):** Chrome **`options_ui.page`** is [`integrations.html`](../integrations.html) (see [`public/manifest.template.json`](../public/manifest.template.json)); there is no separate `options.html` in the repo. The five-tab shell and `?section=` contract live in [`src/pages/mobile/mobileShellQuery.ts`](../src/pages/mobile/mobileShellQuery.ts). Prefer [`APPLICATION_WIRING_STATUS.md`](../APPLICATION_WIRING_STATUS.md) for an up-to-date surface list.
+Overlay query paths on `dashboard.html` are retired; legacy `?overlay=*` links now fallback deterministically to canonical pages.
 
 ## Addendum (2026) — deep link matrix (live)
 

@@ -1,6 +1,7 @@
 /** Shared PKCE helpers for OAuth in the extension (Google, GitHub, LinkedIn). */
 
 import { launchBrowserOAuthWebAuthFlow } from './oauthBrowserFlow';
+import { assertLegacyOAuthSyncEnabled } from './nonLaunchOauthGuard';
 
 export { getWebOAuthRedirectUrl } from './oauthBrowserFlow';
 
@@ -36,6 +37,7 @@ export const getOAuthRedirectUrl = (pathSuffix: string): string | null => {
 
 /** Extension: chrome.identity flow. Browser: popup + /oauth/*.html callback + postMessage. */
 export async function launchOAuthWebAuthFlow(authUrl: string, redirectUri: string): Promise<string | null> {
+  assertLegacyOAuthSyncEnabled('OAuth PKCE flow');
   if (isExtensionIdentityAvailable()) {
     const url = await chrome.identity.launchWebAuthFlow({
       url: authUrl,

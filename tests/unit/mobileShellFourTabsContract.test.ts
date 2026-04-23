@@ -60,6 +60,15 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(settingsJsx).toContain('applyBusy={settingsApplyLoading}');
     expect(settingsJsx).toContain('commandBusy={commandLoading}');
     expect(settingsJsx).toContain("onOpenTodayTab={() => commitTab('daily')}");
+    expect(settingsJsx).toContain('membership={launchAccess.membership}');
+    expect(settingsJsx).toContain('onStartCheckout={onStartCheckout}');
+  });
+
+  it('gates shell behind launch auth and membership states', () => {
+    expect(mobileApp).toContain('shouldRequireLaunchAuth(launchAccess)');
+    expect(mobileApp).toContain('LaunchAuthGate');
+    expect(mobileApp).toContain('shouldRequireLaunchMembership(launchAccess)');
+    expect(mobileApp).toContain('MembershipGate');
   });
 
   it('exposes bottom nav labels aligned with URL tokens (pulse, chat, today, integrations, settings)', () => {
@@ -73,7 +82,18 @@ describe('MobileApp shell tab wiring (contract)', () => {
   });
 
   it('keeps Chat composer outside MobileChatView so input stays fixed to viewport', () => {
-    expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*placeholder="Message the agent/);
+    expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*<ChatCommandBar/);
+    const bar = read('src/pages/mobile/ChatCommandBar.tsx');
+    expect(bar).toMatch(/placeholder="What do you want to do/);
+  });
+
+  it('embeds a dismissible first-run card on the Pulse tab', () => {
+    expect(mobileApp).toMatch(/activeTab === 'pulse'[\s\S]*FirstRunJourneyCard/);
+  });
+
+  it('threads getAgentCommandLock into the command palette for accurate agent lock copy', () => {
+    expect(mobileApp).toContain("getAgentCommandLock(launchAccess, activeTab)");
+    expect(mobileApp).toContain('agentLockReason={agentCommandLock}');
   });
 });
 
@@ -99,7 +119,7 @@ describe('Mobile shell query parity (mobile + integrations HTML)', () => {
 describe('Surface entrypoints', () => {
   it('mobile.html boots MobileApp with Pulse as the default tab', () => {
     const main = read('src/pages/mobile/main.tsx');
-    expect(main).toContain('initialTab="pulse"');
+    expect(main).toMatch(/initialTab:\s*'pulse'/);
   });
 
   it('integrations.html boots renderChatbotSurface with integrations surface', () => {
@@ -116,5 +136,18 @@ describe('Surface entrypoints', () => {
   it('help.html boots HelpKnowledgeRoot', () => {
     const main = read('src/pages/help/main.tsx');
     expect(main).toContain('HelpKnowledgeRoot');
+  });
+});
+
+describe('Lifecycle gate parity contract', () => {
+  it('uses shared launch lifecycle gate helpers in mobile shell and background checks', () => {
+    const mobileApp = read('src/pages/mobile/mobileApp.tsx');
+    const background = read('src/background/index.ts');
+    const gates = read('src/shared/account/launchLifecycleGate.ts');
+
+    expect(mobileApp).toContain('shouldRequireLaunchAuth');
+    expect(mobileApp).toContain('shouldRequireLaunchMembership');
+    expect(background).toContain('canOpenLaunchWorkspace');
+    expect(gates).toContain('canOpenLaunchWorkspace');
   });
 });

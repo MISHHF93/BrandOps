@@ -7,6 +7,8 @@ import { BridgeReplayGuard } from '../services/agent/bridgeReplayGuard';
 import { isBridgeNonceReplayed } from '../services/agent/bridgeNonceStore';
 import { toRuntimeWebhookMessage, verifyWebhookBridgeEnvelope } from '../services/agent/webhookBridge';
 import { hasFederatedSession } from '../shared/identity/sessionAccess';
+import { readLaunchAccessStateForRuntime } from '../shared/account/launchAccess';
+import { canOpenLaunchWorkspace } from '../shared/account/launchLifecycleGate';
 import { initIntelligenceRulesFromRemote } from '../rules/intelligenceRulesRuntime';
 
 const ALARM_PREFIX = 'brandops:task:';
@@ -123,7 +125,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install' && chrome.runtime.getURL) {
     try {
       const data = await loadWorkspaceSafely();
-      if (!hasFederatedSession(data)) {
+      const launchAccess = await readLaunchAccessStateForRuntime();
+      if (!canOpenLaunchWorkspace(launchAccess) && !hasFederatedSession(data)) {
         await chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
       }
     } catch (error) {

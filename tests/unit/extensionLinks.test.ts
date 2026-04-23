@@ -17,10 +17,10 @@ describe('extensionLinks', () => {
     expect(buildDashboardUrl()).toBe(PAGE.dashboard);
   });
 
-  it('keeps buildDashboardUrl section for legacy overlay and dashboard+section if ever needed', () => {
-    const u = buildDashboardUrl({ section: 'today', overlay: 'help' });
+  it('keeps buildDashboardUrl section for legacy dashboard compatibility only', () => {
+    const u = buildDashboardUrl({ section: 'today' });
     expect(u).toContain(QUERY.dashboardSection);
-    expect(u).toContain(QUERY.cockpitOverlay);
+    expect(u).not.toContain(QUERY.cockpitOverlay);
     expect(u.startsWith(PAGE.dashboard)).toBe(true);
   });
 

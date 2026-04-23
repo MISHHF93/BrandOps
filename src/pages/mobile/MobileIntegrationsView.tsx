@@ -31,7 +31,7 @@ export const MobileIntegrationsView = ({
     <div className="mt-2 space-y-5" aria-label="Integrations">
       <MobileTabPageHeader
         title="Integrations"
-        subtitle="Sources, OAuth, artifacts, and SSH — pipeline metrics live on Today"
+        subtitle="Connect tools and data — sources, sync, and provider health. Account and workspace rules live in Settings."
         icon={PlugZap}
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-secondary/40 bg-secondarySoft/10"
         iconClassName="text-secondary"
@@ -51,34 +51,34 @@ export const MobileIntegrationsView = ({
       </dl>
 
       {documentSurface !== 'integrations' ? (
-        <p className="text-[11px] text-textSoft">
-          <a
-            href={hrefExtensionIntegrationsPage()}
-            className={`font-medium text-info underline underline-offset-2 ${btnFocus}`}
+        <details className="rounded-lg border border-border/40 bg-bgSubtle/30 px-2.5 py-2 text-[11px] text-textMuted">
+          <summary
+            className={`cursor-pointer list-none text-textSoft [&::-webkit-details-marker]:hidden ${btnFocus}`}
           >
-            Open packaged integrations page
-          </a>{' '}
-          <span className="text-textMuted">for the same shell in the extension options UI.</span>
-        </p>
+            <span className="font-medium text-text">Extension options (Chrome)</span>
+          </summary>
+          <p className="mt-1.5 leading-snug">
+            <a
+              href={hrefExtensionIntegrationsPage()}
+              className={`font-medium text-info underline underline-offset-2 ${btnFocus}`}
+            >
+              Open integrations page
+            </a>
+            <span className="text-textMuted"> — same shell; opens the packaged extension page.</span>
+          </p>
+        </details>
       ) : null}
 
       <MobileTabSection
         id="integrations-registered-sources"
         title="Registered sources"
-        description="From your workspace hub; use Quick add or Chat for new connections."
+        description="Connected sources from your workspace hub."
       >
         {snapshot.integrationHubSources.length === 0 ? (
-          <div className="mt-2 space-y-2 text-[11px] text-textMuted">
-            <p>No sources in this workspace yet.</p>
-            <p>
-              Open the <strong className="text-text">Chat</strong> tab — commands run there and you will see the
-              assistant reply. Use <strong className="text-text">Quick add</strong> below (same behavior), or type:{' '}
-              <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">
-                connect notion source: Growth workspace
-              </code>
-              .
-            </p>
-          </div>
+          <p className="mt-2 text-[11px] text-textMuted">
+            No sources yet. Use Quick add below or Chat for custom <code className="text-[10px]">connect</code> /{' '}
+            <code className="text-[10px]">add source</code> lines.
+          </p>
         ) : (
           <ul className="mt-2 space-y-2">
             {snapshot.integrationHubSources.slice(0, 20).map((row) => (
@@ -98,7 +98,7 @@ export const MobileIntegrationsView = ({
                   onClick={() => void runCommand(`add note: check integration source ${row.name}`)}
                   className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
                 >
-                  Log note in Chat
+                  Open in Chat
                 </button>
               </li>
             ))}
@@ -114,7 +114,7 @@ export const MobileIntegrationsView = ({
       <MobileTabSection
         id="integrations-providers"
         title="Provider status"
-        description="OAuth and sync; detailed tuning in Chat if you need a specific provider."
+        description="OAuth and sync health for each provider."
       >
         <ul className="mt-2 space-y-1.5 text-textMuted">
           {snapshot.providerStatuses.map((provider) => (
@@ -130,7 +130,7 @@ export const MobileIntegrationsView = ({
         <MobileTabSection
           id="integrations-external-sync"
           title="External sync"
-          description="Links between workspace entities and Google Calendar / Tasks when configured."
+          description="Links between workspace entities and external calendars/tasks."
         >
           <ul className="mt-2 space-y-2">
             {snapshot.externalSyncLinksPeek.map((row) => (
@@ -150,7 +150,7 @@ export const MobileIntegrationsView = ({
                   onClick={() => void runCommand(`add note: review external sync ${row.id}`)}
                   className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
                 >
-                  Log note in Chat
+                  Open in Chat
                 </button>
               </li>
             ))}
@@ -162,7 +162,7 @@ export const MobileIntegrationsView = ({
         <MobileTabSection
           id="integrations-live-feed"
           title="Hub activity"
-          description="Recent integration hub events from this workspace."
+          description="Recent events from the integrations hub."
         >
           <ul className="mt-2 space-y-2">
             {snapshot.integrationLiveFeedPeek.map((row) => (
@@ -196,7 +196,7 @@ export const MobileIntegrationsView = ({
       <MobileTabSection
         id="integrations-artifacts"
         title="Synced artifacts"
-        description="Registered integration artifacts; add more from Chat with add artifact or add integration artifact."
+        description="Artifacts tracked by connected providers."
       >
         {snapshot.integrationArtifactsPeek.length === 0 ? (
           <p className="mt-2 text-[11px] text-textMuted">No artifacts yet. Total: {snapshot.integrationArtifactCount}.</p>
@@ -217,7 +217,7 @@ export const MobileIntegrationsView = ({
                   }
                   className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
                 >
-                  Log note in Chat
+                  Open in Chat
                 </button>
               </li>
             ))}
@@ -228,7 +228,7 @@ export const MobileIntegrationsView = ({
       <MobileTabSection
         id="integrations-ssh"
         title="SSH targets"
-        description="Infrastructure nodes in the hub; register new targets from Chat."
+        description="Infrastructure targets registered in the workspace."
       >
         {snapshot.sshTargetsPeek.length === 0 ? (
           <p className="mt-2 text-[11px] text-textMuted">No SSH targets. Total: {snapshot.sshTargetsCount}.</p>
@@ -249,7 +249,7 @@ export const MobileIntegrationsView = ({
                   }
                   className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
                 >
-                  Log note in Chat
+                  Open in Chat
                 </button>
               </li>
             ))}
@@ -260,7 +260,7 @@ export const MobileIntegrationsView = ({
       <MobileTabSection
         id="integrations-quick-add"
         title="Quick add"
-        description="Sends a command like Chat — use Chat for ad-hoc phrasing."
+        description="Fast setup commands for common integration tasks."
       >
         <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <button

@@ -1,6 +1,6 @@
 import { type ChangeEvent, useCallback, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Paperclip, X } from 'lucide-react';
+import { Command as CommandPaletteIcon } from 'lucide-react';
 import { executeAgentWorkspaceCommand, type AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import type { BrandOpsData } from '../../types/domain';
@@ -22,13 +22,40 @@ import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
 import { buildWorkspaceSnapshot, type MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { MOBILE_BTN_FOCUS, MobileShellNav } from './mobileTabPrimitives';
+import { FirstRunJourneyCard, readFirstRunJourneyDismissed } from './FirstRunJourneyCard';
+import { getAgentCommandLock } from './agentCommandAccess';
+import { ChatCommandBar } from './ChatCommandBar';
+import { WorkspaceCommandPalette } from './WorkspaceCommandPalette';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
-import { SHELL_SECTIONS_LINE } from './shellSectionCopy';
+import { SHELL_TAB_PURPOSE } from './shellSectionCopy';
 import { runSettingsConfigure } from './runSettingsConfigure';
 import { applyDocumentThemeFromAppSettings } from '../../shared/ui/theme';
+import {
+  readLaunchAccessState,
+  writeLaunchAccessState,
+  authProviderLabel,
+  type AuthProviderId,
+  type LaunchAccessState
+} from '../../shared/account/launchAccess';
+import {
+  shouldRequireLaunchAuth,
+  shouldRequireLaunchMembership
+} from '../../shared/account/launchLifecycleGate';
+import { GoogleSignInButton } from '../../shared/ui/oauth/GoogleSignInButton';
+import { AppleSignInButton } from '../../shared/ui/oauth/AppleSignInButton';
+import { EmailMagicLinkButton } from '../../shared/ui/oauth/EmailMagicLinkButton';
+import { GitHubSignInButton } from '../../shared/ui/oauth/GitHubSignInButton';
+import { LinkedInSignInButton } from '../../shared/ui/oauth/LinkedInSignInButton';
+import { OnDeviceDialogTrustFooter, OnDeviceTrustLine, WorkspaceDataHint } from '../../shared/ui/brandopsPolish';
+import {
+  recordCommandOutcome,
+  recordInitialShellReady,
+  recordLocalSessionDay,
+  recordShellNavigation
+} from '../../services/usage/localProductUsage';
 
 const uid = () => `msg-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -46,15 +73,15 @@ const MAX_PERSISTED_MESSAGES = 50;
 const MAX_COMMAND_CHIPS = 24;
 
 const defaultWelcomeMessage = (surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'): ChatMessage => {
-  const base =
-    'Type a command in the field below, or open Example commands. Use the Today tab for full workspace digests.';
-  const welcomeFirstRun =
-    'You started on Today — switch here anytime to run commands (try pipeline health).';
+  const mobileLine =
+    'Type a command (try pipeline health) or press ⌘K / Ctrl+K. Pulse: what is due. Today: full digest.';
+  const welcomeLine =
+    'Use Chat, Pulse, or Today — same five tabs below. Try: pipeline health, or open Guided examples.';
   return {
     id: uid(),
     role: 'assistant',
     resultKind: 'plain',
-    text: surface === 'welcome' ? `Welcome. ${welcomeFirstRun} ${base}` : `Agent ready. ${base}`
+    text: surface === 'welcome' ? `Welcome. ${welcomeLine}` : mobileLine
   };
 };
 
@@ -154,6 +181,8 @@ const buildStripFromWorkspace = (data: BrandOpsData) => ({
 
 /** Max size for inlining text file contents into the command string (agent is text-only). */
 const MAX_CHAT_TEXT_ATTACHMENT = 32_000;
+const STRIPE_CHECKOUT_URL = import.meta.env.VITE_STRIPE_CHECKOUT_URL as string | undefined;
+const STRIPE_BILLING_PORTAL_URL = import.meta.env.VITE_STRIPE_BILLING_PORTAL_URL as string | undefined;
 
 type ChatComposerAttachment = {
   name: string;
@@ -179,6 +208,60 @@ function buildOutgoingCommandLine(
   return `add note: ${bin}`;
 }
 
+function LaunchAuthGate({
+  btnFocus,
+  onSignInProvider
+}: {
+  btnFocus: string;
+  onSignInProvider: (provider: AuthProviderId) => void;
+}) {
+  return (
+    <section className="bo-glass-panel rounded-2xl border border-border/60 p-4 text-sm text-textMuted shadow-panel">
+      <h2 className="text-h2 text-text">Sign in to continue</h2>
+      <p className="mt-1 text-[11px] text-textSoft">
+        Launch setup uses one account across mobile and extension. Pick a provider:
+      </p>
+      <div className="mt-3 grid gap-2">
+        <GoogleSignInButton onClick={() => onSignInProvider('google')} variant="continue" className={btnFocus} />
+        <AppleSignInButton onClick={() => onSignInProvider('apple')} variant="continue" className={btnFocus} />
+        <EmailMagicLinkButton onClick={() => onSignInProvider('email')} variant="continue" className={btnFocus} />
+        <LinkedInSignInButton onClick={() => onSignInProvider('linkedin')} variant="continue" className={btnFocus} />
+        <GitHubSignInButton onClick={() => onSignInProvider('github')} variant="continue" className={btnFocus} />
+      </div>
+    </section>
+  );
+}
+
+function MembershipGate({
+  btnFocus,
+  onStartCheckout,
+  onOpenBillingPortal
+}: {
+  btnFocus: string;
+  onStartCheckout: () => void;
+  onOpenBillingPortal: () => void;
+}) {
+  return (
+    <section className="bo-glass-panel rounded-2xl border border-border/60 p-4 text-sm text-textMuted shadow-panel">
+      <h2 className="text-h2 text-text">Activate membership</h2>
+      <p className="mt-1 text-[11px] text-textSoft">
+        One paid plan unlocks full workspace execution across app and extension.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" className={clsx('bo-link', btnFocus)} onClick={onStartCheckout}>
+          Open Stripe checkout
+        </button>
+        <button type="button" className={clsx('bo-link', btnFocus)} onClick={onOpenBillingPortal}>
+          Billing portal
+        </button>
+      </div>
+      <p className="mt-2 text-[10px] text-textSoft">
+        Set `VITE_STRIPE_CHECKOUT_URL` and `VITE_STRIPE_BILLING_PORTAL_URL` in env for production.
+      </p>
+    </section>
+  );
+}
+
 function readInitialShellState(initialTab: MobileShellTabId): {
   tab: MobileShellTabId;
   workstream: DashboardSectionId;
@@ -201,6 +284,9 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   const clearConfirmRef = useRef<HTMLButtonElement>(null);
   const resetConfirmRef = useRef<HTMLButtonElement>(null);
   const cockpitSectionScrollRef = useRef(false);
+  const mountAtRef = useRef(performance.now());
+  const shellReadyLoggedRef = useRef(false);
+  const prevTabForUsageRef = useRef<MobileShellTabId | null>(null);
 
   const [initialShell] = useState(() => readInitialShellState(initialTab));
   const [activeTab, setActiveTab] = useState<MobileShellTabId>(() => initialShell.tab);
@@ -218,17 +304,26 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   const [pendingClearChat, setPendingClearChat] = useState(false);
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
   const [chatAttachment, setChatAttachment] = useState<ChatComposerAttachment | null>(null);
+  const [launchAccess, setLaunchAccess] = useState<LaunchAccessState>(() => readLaunchAccessState());
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
     return [defaultWelcomeMessage(surfaceLabel)];
   });
+  const [firstRunJourneyVisible, setFirstRunJourneyVisible] = useState(
+    () => !readFirstRunJourneyDismissed()
+  );
 
   const refreshWorkspaceSnapshot = useCallback(async () => {
     try {
       const workspace = await storageService.getData();
+      if (!shellReadyLoggedRef.current) {
+        shellReadyLoggedRef.current = true;
+        void recordInitialShellReady(performance.now() - mountAtRef.current);
+      }
       applyDocumentThemeFromAppSettings(workspace.settings);
       setSnapshot(buildWorkspaceSnapshot(workspace));
     } catch (err) {
@@ -240,6 +335,21 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   useEffect(() => {
     void refreshWorkspaceSnapshot();
   }, [refreshWorkspaceSnapshot]);
+
+  useEffect(() => {
+    void recordLocalSessionDay();
+  }, []);
+
+  useEffect(() => {
+    if (prevTabForUsageRef.current === null) {
+      prevTabForUsageRef.current = activeTab;
+      return;
+    }
+    if (prevTabForUsageRef.current !== activeTab) {
+      void recordShellNavigation(prevTabForUsageRef.current, activeTab);
+    }
+    prevTabForUsageRef.current = activeTab;
+  }, [activeTab]);
 
   const commitTab = useCallback(
     (next: MobileShellTabId) => {
@@ -298,6 +408,10 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   }, [messages]);
 
   useEffect(() => {
+    writeLaunchAccessState(launchAccess);
+  }, [launchAccess]);
+
+  useEffect(() => {
     if (pendingDestructive) {
       confirmBtnRef.current?.focus();
     }
@@ -317,7 +431,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
 
   useEffect(() => {
     if (!dataOpsHint) return;
-    const t = window.setTimeout(() => setDataOpsHint(null), 4000);
+    const t = window.setTimeout(() => setDataOpsHint(null), 5200);
     return () => window.clearTimeout(t);
   }, [dataOpsHint]);
 
@@ -325,10 +439,25 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
     if (activeTab !== 'chat') setChatAttachment(null);
   }, [activeTab]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || (e.key !== 'k' && e.key !== 'K')) return;
+      e.preventDefault();
+      setCommandPaletteOpen((open) => !open);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const agentCommandLock = getAgentCommandLock(launchAccess, activeTab);
+  const canExecuteAgentCommandsFromPalette = agentCommandLock === null;
+
   const executeCommandFlow = async (trimmed: string) => {
     if (!trimmed || commandLoading) return;
     setMessages((prev) => [...prev, { id: uid(), role: 'user', text: trimmed }]);
     setCommandLoading(true);
+    const t0 = performance.now();
+    let commandOk = false;
     try {
       const result = await executeAgentWorkspaceCommand({
         text: trimmed,
@@ -351,6 +480,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
       ]);
       pushCommandChip(trimmed);
       await refreshWorkspaceSnapshot();
+      commandOk = result.ok;
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -364,6 +494,8 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         }
       ]);
     } finally {
+      const durationMs = performance.now() - t0;
+      void recordCommandOutcome({ ok: commandOk, durationMs });
       setCommandLoading(false);
     }
   };
@@ -388,6 +520,64 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
       startSend(trimmed);
     });
   };
+
+  const onSignInProvider = useCallback((provider: AuthProviderId) => {
+    const nextEmail =
+      provider === 'google'
+        ? 'google.user@brandops.app'
+        : provider === 'apple'
+          ? 'apple.user@brandops.app'
+          : provider === 'github'
+            ? 'github.user@brandops.app'
+            : provider === 'linkedin'
+              ? 'linkedin.user@brandops.app'
+              : 'operator@brandops.app';
+    setLaunchAccess((prev) => ({
+      ...prev,
+      auth: {
+        isAuthenticated: true,
+        provider,
+        email: nextEmail,
+        signedInAt: new Date().toISOString()
+      }
+    }));
+    setDataOpsHint(`Signed in with ${authProviderLabel(provider)}.`);
+  }, []);
+
+  const onSignOut = useCallback(() => {
+    setLaunchAccess((prev) => ({
+      ...prev,
+      auth: { isAuthenticated: false, provider: null, email: '' }
+    }));
+    setDataOpsHint('Signed out.');
+  }, []);
+
+  const onStartCheckout = useCallback(() => {
+    if (STRIPE_CHECKOUT_URL) {
+      window.open(STRIPE_CHECKOUT_URL, '_blank', 'noopener,noreferrer');
+    } else {
+      setDataOpsHint('Set VITE_STRIPE_CHECKOUT_URL to open checkout.');
+    }
+  }, []);
+
+  const onOpenBillingPortal = useCallback(() => {
+    if (STRIPE_BILLING_PORTAL_URL) {
+      window.open(STRIPE_BILLING_PORTAL_URL, '_blank', 'noopener,noreferrer');
+    } else {
+      setDataOpsHint('Set VITE_STRIPE_BILLING_PORTAL_URL to open billing portal.');
+    }
+  }, []);
+
+  const onMarkMembershipActive = useCallback(() => {
+    setLaunchAccess((prev) => ({
+      ...prev,
+      membership: {
+        status: 'active',
+        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      }
+    }));
+    setDataOpsHint('Membership marked active for launch QA.');
+  }, []);
 
   const onChatFileSelected = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -492,26 +682,35 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
           <div className="min-w-0">
             <p className="text-micro uppercase tracking-[0.18em] text-textSoft">BrandOps</p>
             <h1 className="text-h1 text-text">Workspace</h1>
-            <p className="text-[11px] text-textSoft">
-              <span className="text-textMuted">
+            <p className="text-[11px] leading-snug text-textSoft">
+              <span className="font-medium text-text">
                 {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? activeTab}
               </span>
-              <span className="text-textSoft"> · </span>
-              {SHELL_SECTIONS_LINE}
+              <span className="text-textSoft"> — </span>
+              {SHELL_TAB_PURPOSE[activeTab]}
             </p>
-            {dataOpsHint ? (
-              <p className="mt-1 text-[10px] text-info" role="status">
-                {dataOpsHint}
-              </p>
-            ) : null}
+            <OnDeviceTrustLine />
+            {dataOpsHint ? <WorkspaceDataHint message={dataOpsHint} /> : null}
           </div>
-          <button
-            type="button"
-            onClick={() => openExtensionSurface('help')}
-            className={`bo-link bo-link--sm shrink-0 !normal-case ${btnFocus}`}
-          >
-            Help
-          </button>
+          <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className={`bo-link bo-link--sm !normal-case ${btnFocus}`}
+              title="Command palette (Ctrl+K or ⌘K)"
+              aria-label="Open command palette"
+            >
+              <CommandPaletteIcon className="inline h-3.5 w-3.5 -translate-y-px sm:mr-1" strokeWidth={2} aria-hidden />
+              <span>Commands</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => openExtensionSurface('help')}
+              className={`bo-link bo-link--sm !normal-case ${btnFocus}`}
+            >
+              Help
+            </button>
+          </div>
         </div>
       </header>
 
@@ -524,8 +723,12 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             : 'pb-[max(10rem,calc(8.25rem+env(safe-area-inset-bottom,0px)))]'
         }`}
       >
-        {activeTab === 'chat' ? (
-          <section className="space-y-3" aria-label="Chat conversation">
+        {shouldRequireLaunchAuth(launchAccess) ? (
+          <LaunchAuthGate btnFocus={btnFocus} onSignInProvider={onSignInProvider} />
+        ) : shouldRequireLaunchMembership(launchAccess) && activeTab !== 'settings' ? (
+          <MembershipGate btnFocus={btnFocus} onStartCheckout={onStartCheckout} onOpenBillingPortal={onOpenBillingPortal} />
+        ) : activeTab === 'chat' ? (
+          <section className="bo-surface-enter space-y-3" aria-label="Chat conversation" key="shell-chat">
             <MobileChatView
               messages={messages}
               loading={commandLoading}
@@ -541,19 +744,30 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
           </section>
         ) : (
           <section
-            className="bo-glass-panel rounded-2xl border border-border/60 p-4 text-sm text-textMuted shadow-panel"
+            key={activeTab}
+            className="bo-surface-enter bo-glass-panel rounded-2xl border border-border/60 p-4 text-sm text-textMuted shadow-panel"
             aria-label={`${activeTab} tab`}
           >
             {activeTab === 'pulse' ? (
-              <PulseTimelineView
-                snapshot={snapshot}
-                btnFocus={btnFocus}
-                commandBusy={commandLoading}
-                runCommand={runCommand}
-                primeChat={primeChat}
-                onNavigateTab={commitTab}
-                onOpenCockpitWorkstream={openCockpitWorkstream}
-              />
+              <>
+                {firstRunJourneyVisible ? (
+                  <FirstRunJourneyCard
+                    btnFocus={btnFocus}
+                    onDismiss={() => setFirstRunJourneyVisible(false)}
+                    onSelectTab={commitTab}
+                    onTryCommand={(line) => runCommand(line)}
+                  />
+                ) : null}
+                <PulseTimelineView
+                  snapshot={snapshot}
+                  btnFocus={btnFocus}
+                  commandBusy={commandLoading}
+                  runCommand={runCommand}
+                  primeChat={primeChat}
+                  onNavigateTab={commitTab}
+                  onOpenCockpitWorkstream={openCockpitWorkstream}
+                />
+              </>
             ) : null}
 
             {activeTab === 'daily' ? (
@@ -595,75 +809,48 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                 onRequestResetWorkspace={() => setPendingResetWorkspace(true)}
                 documentSurface={surfaceLabel}
                 onOpenTodayTab={() => commitTab('daily')}
+                isAuthenticated={launchAccess.auth.isAuthenticated}
+                authProvider={launchAccess.auth.provider}
+                authEmail={launchAccess.auth.email}
+                membership={launchAccess.membership}
+                onSignInProvider={onSignInProvider}
+                onSignOut={onSignOut}
+                onStartCheckout={onStartCheckout}
+                onOpenBillingPortal={onOpenBillingPortal}
               />
             ) : null}
           </section>
         )}
       </main>
 
-      {activeTab === 'chat' ? (
-        <div className="bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full max-w-md px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
-          {chatAttachment ? (
-            <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-bgSubtle/80 px-2 py-1.5">
-              <p className="min-w-0 flex-1 truncate text-[11px] text-textMuted">
-                <span className="font-medium text-text">Attached</span> · {chatAttachment.name} (
-                {chatAttachment.kind === 'text' ? 'text' : 'file'})
-              </p>
-              <button
-                type="button"
-                onClick={() => setChatAttachment(null)}
-                className={clsx('shrink-0 rounded-md p-1 text-textSoft hover:text-text', btnFocus)}
-                aria-label="Remove attachment"
-              >
-                <X size={16} strokeWidth={2} aria-hidden />
-              </button>
-            </div>
-          ) : null}
-          <div className="flex items-center gap-1.5 rounded-2xl border border-border/70 bg-bgElevated/95 p-1.5 shadow-panel backdrop-blur-md sm:gap-2 sm:p-2">
-            <input
-              ref={chatFileInputRef}
-              type="file"
-              className="sr-only"
-              tabIndex={-1}
-              aria-hidden
-              onChange={onChatFileSelected}
-              accept="text/*,.txt,.md,.json,.csv,.yml,.yaml,.xml,.log,image/*,application/pdf"
-            />
-            <button
-              type="button"
-              disabled={commandLoading}
-              onClick={() => chatFileInputRef.current?.click()}
-              className={clsx(
-                'shrink-0 rounded-xl border border-border/60 p-2.5 text-textMuted hover:border-borderStrong hover:text-text',
-                'disabled:opacity-50',
-                btnFocus
-              )}
-              aria-label="Attach file"
-              title="Attach file (text files are inlined; other types add a short note to your command)"
-            >
-              <Paperclip size={18} strokeWidth={2} aria-hidden />
-            </button>
-            <input
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  void submitMessage();
-                }
-              }}
-              className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-text outline-none placeholder:text-textSoft"
-              placeholder="Message the agent…"
-              aria-label="Chat command input"
-            />
-            <button
-              type="button"
-              disabled={commandLoading}
-              onClick={() => void submitMessage()}
-              className={`shrink-0 rounded-xl border border-borderStrong/60 bg-surfaceActive px-3 py-2 text-xs font-semibold text-text shadow-sm disabled:opacity-50 ${btnFocus}`}
-            >
-              Send
-            </button>
-          </div>
+      {activeTab === 'chat' && !shouldRequireLaunchAuth(launchAccess) ? (
+        <ChatCommandBar
+          value={input}
+          onChange={setInput}
+          onSubmit={() => void submitMessage()}
+          onRunAndClear={(line) => {
+            setChatAttachment(null);
+            setInput('');
+            queueMicrotask(() => startSend(line.trim()));
+          }}
+          commandLoading={commandLoading}
+          recentCommandLines={commandHistory}
+          onFileChange={onChatFileSelected}
+          fileInputRef={chatFileInputRef}
+          chatAttachment={chatAttachment}
+          onRemoveAttachment={() => setChatAttachment(null)}
+        />
+      ) : null}
+
+      {activeTab === 'settings' && shouldRequireLaunchMembership(launchAccess) ? (
+        <div className="bo-mobile-main fixed inset-x-0 z-30 mx-auto w-full max-w-md px-2 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
+          <button
+            type="button"
+            onClick={onMarkMembershipActive}
+            className={clsx('w-full rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-sm text-text', btnFocus)}
+          >
+            Mark membership active (QA)
+          </button>
         </div>
       ) : null}
 
@@ -690,6 +877,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             <p className="mt-2 rounded-lg border border-border/50 bg-bgSubtle/80 p-2 font-mono text-xs text-textMuted">
               {pendingDestructive}
             </p>
+            <OnDeviceDialogTrustFooter />
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
@@ -733,6 +921,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               Clear chat transcript?
             </h2>
             <p className="mt-2 text-sm text-textMuted">This removes the on-device message history. Command chips are unchanged.</p>
+            <OnDeviceDialogTrustFooter />
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
@@ -781,6 +970,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               Replaces all BrandOps workspace data on this device with the default seed. Chat transcript and command chips
               are not cleared — use Settings session actions if you want those gone.
             </p>
+            <OnDeviceDialogTrustFooter />
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
@@ -814,6 +1004,18 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
       ) : null}
 
       <MobileShellNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />
+
+      <WorkspaceCommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        canExecuteAgentCommands={canExecuteAgentCommandsFromPalette}
+        agentLockReason={agentCommandLock}
+        commandBusy={commandLoading}
+        commandHistory={commandHistory}
+        onNavigateTab={commitTab}
+        onRunCommand={runCommand}
+        onOpenHelp={() => openExtensionSurface('help')}
+      />
     </div>
   );
 };

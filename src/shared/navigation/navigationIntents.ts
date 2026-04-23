@@ -4,7 +4,6 @@
  */
 import type { DashboardSectionId } from '../config/dashboardNavigation';
 import {
-  buildDashboardUrl,
   buildHelpUrl,
   buildMobileCockpitUrl,
   buildMobileShellUrl,
@@ -63,10 +62,10 @@ export function hrefHelpPage(topicId?: string): string {
 }
 
 /**
- * In-dashboard Knowledge overlay (Chat document). Distinct from {@link hrefHelpPage} (Cockpit-first help page).
+ * Legacy intent name retained for callers; routes to canonical Help page.
  */
 export function hrefDashboardKnowledgeOverlay(): string {
-  return r(buildDashboardUrl({ overlay: 'help' }));
+  return r(buildHelpUrl());
 }
 
 /** Full integrations + settings page (Chrome `options_ui`); not the Cockpit “connections” workstream. */

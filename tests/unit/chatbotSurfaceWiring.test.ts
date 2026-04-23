@@ -6,11 +6,15 @@ const read = (relativePath: string) =>
   readFileSync(resolve(process.cwd(), relativePath), 'utf8');
 
 describe('chatbot surface wiring', () => {
-  it('dashboard, integrations, and welcome entrypoints render chatbot surface', () => {
+  it('mobile, dashboard, integrations, and welcome entrypoints render chatbot surface', () => {
+    const mobileMain = read('src/pages/mobile/main.tsx');
     const dashboardMain = read('src/pages/dashboard/main.tsx');
     const integrationsMain = read('src/pages/integrations/main.tsx');
     const welcomeMain = read('src/pages/welcome/main.tsx');
 
+    expect(mobileMain).toContain('renderChatbotSurface(');
+    expect(mobileMain).toMatch(/initialTab:\s*'pulse'/);
+    expect(mobileMain).toContain("surfaceLabel: 'mobile'");
     expect(dashboardMain).toContain('renderChatbotSurface(');
     expect(integrationsMain).toContain('renderChatbotSurface(');
     expect(welcomeMain).toContain('renderChatbotSurface(');
@@ -29,7 +33,7 @@ describe('chatbot surface wiring', () => {
 
   it('mobile.html entry uses Pulse as the default shell tab', () => {
     const mobileMain = read('src/pages/mobile/main.tsx');
-    expect(mobileMain).toContain('initialTab="pulse"');
+    expect(mobileMain).toMatch(/initialTab:\s*'pulse'/);
   });
 
   it('renderChatbotSurface threads document surface into MobileApp (aligned with data-app-surface)', () => {

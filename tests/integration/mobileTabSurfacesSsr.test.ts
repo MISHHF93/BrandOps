@@ -33,7 +33,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Pulse"');
-    expect(html).toContain('Follow-ups, publishing, scheduler, and outreach');
+    expect(html).toContain('What matters now');
+    expect(html).toContain('What needs attention');
+    expect(html).toContain('What is growing');
+    expect(html).toContain('AI-recommended next actions');
     expect(html).toContain('Jump');
     expect(html).toContain('Brand &amp; posts');
     expect(html).toContain('Open in Chat');
@@ -46,7 +49,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         id: 'w',
         role: 'assistant',
         resultKind: 'plain',
-        text: 'Agent ready. Type a command in the field below, or open Example commands.'
+        text: 'Type a command (try pipeline health) or press ⌘K / Ctrl+K. Pulse: what is due. Today: full digest.'
       }
     ];
     const html = renderToString(
@@ -61,9 +64,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Chat"');
-    expect(html).toContain('Example commands');
+    expect(html).toContain('Guided examples');
     expect(html).toContain('Today');
-    expect(html).toContain('Quick checks');
+    expect(html).toContain('Start fast');
     expect(html).toContain('Recent commands');
     expect(html).toContain('pipeline health');
     expect(html).toContain('connect notion');
@@ -85,8 +88,11 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Today"');
-    expect(html).toContain('Today — cockpit');
+    expect(html).toContain('Today — plan and work');
     expect(html).toContain('Work areas');
+    expect(html).toContain('What to do today');
+    expect(html).toContain('Urgent');
+    expect(html).toContain('Momentum');
     expect(html).toContain('At a glance');
     expect(html).toContain('Queue');
     expect(html).toContain('OAuth');
@@ -129,7 +135,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Northstar Robotics');
     expect(html).toContain('Brand vault (read-only)');
     expect(html).toContain('Connections workstream Chat starters');
-    expect(html).toContain('Integrations (in app)');
+    expect(html).toContain('Integrations tab');
     expect(html).toContain('Prime duplicate');
   });
 
@@ -142,11 +148,11 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Integrations"');
-    expect(html).toContain('Integrations — hub');
+    expect(html).toContain('Integrations — connect the stack');
     expect(html).toContain('Sources');
     expect(html).toContain('Connections');
     expect(html).toContain('Registered sources');
-    expect(html).toContain('Open packaged integrations page');
+    expect(html).toContain('Open integrations page');
     expect(html).toContain('Provider status');
     expect(html).toContain('Quick add');
     expect(html).toContain('Add connection');
@@ -176,7 +182,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         runCommand: noop
       })
     );
-    expect(html).toContain('Log note in Chat');
+    expect(html).toContain('Open in Chat');
     expect(html).not.toContain('No sources in this workspace yet');
   });
 
@@ -189,7 +195,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         documentSurface: 'integrations'
       })
     );
-    expect(html).not.toContain('Open packaged integrations page');
+    expect(html).not.toContain('Open integrations page');
     expect(html).toContain('Registered sources');
   });
 
@@ -246,12 +252,11 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Settings"');
-    expect(html).toContain('Settings — trust');
-    expect(html).toContain('Read-only snapshot at top');
+    expect(html).toContain('Settings — you and your workspace');
+    expect(html).toContain('You and this workspace — account, trust, cadence, export. To wire Notion, OAuth, or sources, use Integrations.');
     expect(html).toContain('Workspace snapshot');
     expect(html).toContain('Read-only');
     expect(html).toContain('Profile (saved)');
-    expect(html).toContain('Snapshot at top (read-only)');
     expect(html).toContain('Workspace model (read-only)');
     expect(html).toContain('Preferences (edit workspace)');
     expect(html).toContain('Quick tweaks');
@@ -266,6 +271,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Dataset lineage');
     expect(html).toContain('production-empty');
     expect(html).toContain('Intelligence rules (effective)');
+    expect(html).toContain('Scoring for Today digests');
     expect(html).toContain('Sample coefficients');
     expect(html).toContain('Messaging vault');
     expect(html).toContain('No messaging vault entries in this workspace.');

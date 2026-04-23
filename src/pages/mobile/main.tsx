@@ -1,22 +1,7 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { MobileApp } from './mobileApp';
-import '../../styles/index.css';
-import { AppErrorBoundary } from '../../shared/ui/AppErrorBoundary';
-import { bootstrapDocumentThemeFromWebStorage } from '../../shared/ui/theme';
-import { initIntelligenceRulesFromRemote } from '../../rules/intelligenceRulesRuntime';
+import { renderChatbotSurface } from '../chatbotWeb/renderChatbotSurface';
 
-void initIntelligenceRulesFromRemote().catch(() => {
-  /* best-effort */
+renderChatbotSurface({
+  surfaceLabel: 'mobile',
+  initialTab: 'pulse',
+  errorBoundaryLabel: 'BrandOps Mobile'
 });
-
-bootstrapDocumentThemeFromWebStorage();
-document.documentElement.setAttribute('data-app-surface', 'mobile');
-
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <AppErrorBoundary surfaceLabel="BrandOps Mobile">
-      <MobileApp surfaceLabel="mobile" initialTab="pulse" />
-    </AppErrorBoundary>
-  </React.StrictMode>
-);

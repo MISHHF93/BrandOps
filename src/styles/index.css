@@ -1577,6 +1577,49 @@ html[data-app-surface="welcome"] body::after {
   }
 }
 
+/* Mobile shell: lightweight enter + feedback (honors reduced motion below). */
+@keyframes bo-polish-hint-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bo-polish-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(400%);
+  }
+}
+
+.bo-hint-appear {
+  animation: bo-polish-hint-enter var(--duration-base) var(--ease-liquid-out) both;
+}
+
+.bo-surface-enter {
+  animation: bo-polish-hint-enter var(--duration-base) var(--ease-liquid-out) both;
+}
+
+.bo-indeterminate {
+  animation: bo-polish-indeterminate 1.1s var(--ease-liquid-in-out) infinite;
+}
+
+.bo-press-ink {
+  transition:
+    transform var(--duration-fast) var(--ease-liquid-out),
+    box-shadow var(--duration-fast) var(--ease-liquid-out);
+}
+
+.bo-press-ink:active {
+  transform: scale(0.98);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bo-mobile-skip {
     transition: none;
@@ -1596,6 +1639,16 @@ html[data-app-surface="welcome"] body::after {
   .bo-navdock-panel {
     animation: none !important;
     transition: none !important;
+  }
+
+  .bo-hint-appear,
+  .bo-surface-enter,
+  .bo-indeterminate {
+    animation: none !important;
+  }
+
+  .bo-press-ink:active {
+    transform: none;
   }
 }
 

@@ -34,24 +34,23 @@ export const CockpitConnectionsWorkstreamSection = ({
     </h3>
     <p className="mt-0.5 text-[11px] text-textMuted">{meta.description}</p>
     <p className="mt-2 text-[10px] text-textSoft">
-      Counts and provider status are <strong className="text-textMuted">read-only</strong>. Use the Integrations tab or
-      link below for OAuth and sources — not Settings for connection edits.
+      Counts and provider status are <strong className="text-textMuted">read-only</strong>. Use Integrations for connection changes.
     </p>
     <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
       <a
         href={hrefPrimaryAppIntegrationsTab()}
         className={`font-medium text-info underline underline-offset-2 ${btnFocus}`}
       >
-        Integrations (in app)
+        Integrations tab
       </a>
       <span className="text-textSoft">·</span>
       <a
         href={hrefExtensionIntegrationsPage()}
         className={`font-medium text-info/90 underline underline-offset-2 ${btnFocus}`}
       >
-        Integrations hub
+        Integrations page
       </a>
-      <span className="text-textMuted">— OAuth, packaged options page.</span>
+      <span className="text-textMuted">— full options surface.</span>
     </p>
     <CockpitWorkstreamCommandStrip
       ariaLabel="Connections workstream Chat starters"

@@ -4,19 +4,34 @@
 
 Track what is fully connected between the chatbot frontend and backend command/runtime layers after migration.
 
+**UX / labels:** in-app copy uses a five-tab contract (`Pulse`, `Chat`, `Today`, `Integrations`, `Settings`). Distinguish **Integrations tab** (`mobile.html?section=integrations`) from the **Integrations** packaged page (`integrations.html`, MV3 `options_ui`). See `src/shared/navigation/navigationIntents.ts` and footer `SurfaceNavLinks`.
+
+### HTML entry to React root (build contract)
+
+Vite MPA inputs are defined in [`vite.config.ts`](vite.config.ts) (`build.rollupOptions.input`). Every `MobileApp` document boots through [`src/pages/chatbotWeb/renderChatbotSurface.tsx`](src/pages/chatbotWeb/renderChatbotSurface.tsx) (theme, intelligence init, `data-app-surface`, error boundary) except `help.html`, which mounts the Knowledge Center only.
+
+| HTML | Script entry | Root component | Notes |
+|------|----------------|----------------|--------|
+| `index.html` | n/a (inline redirect) | — | Client redirect to `mobile.html` (preserves query/hash). |
+| `mobile.html` | [`src/pages/mobile/main.tsx`](src/pages/mobile/main.tsx) | `MobileApp` via `renderChatbotSurface` | `surfaceLabel: 'mobile'`, `initialTab: 'pulse'`; primary in-app entry. |
+| `welcome.html` | [`src/pages/welcome/main.tsx`](src/pages/welcome/main.tsx) | `MobileApp` via `renderChatbotSurface` | `initialTab: 'daily'`. |
+| `dashboard.html` | [`src/pages/dashboard/main.tsx`](src/pages/dashboard/main.tsx) | `MobileApp` via `renderChatbotSurface` or redirect | See [`src/pages/dashboard/dashboardRedirect.ts`](src/pages/dashboard/dashboardRedirect.ts); `initialTab: 'chat'` when mounted. |
+| `integrations.html` | [`src/pages/integrations/main.tsx`](src/pages/integrations/main.tsx) | `MobileApp` via `renderChatbotSurface` | `initialTab: 'integrations'`; MV3 `options_ui` in [`public/manifest.template.json`](public/manifest.template.json). |
+| `help.html` | [`src/pages/help/main.tsx`](src/pages/help/main.tsx) | `HelpKnowledgeRoot` | Not the five-tab shell; no `renderChatbotSurface`. |
+
 ## Active Frontend Entry Surfaces
 
 - `index.html` -> redirects to `mobile.html` (preserves query/hash; default shell tab is set by `MobileApp` when `?section` is absent)
-- `mobile.html` -> `src/pages/mobile/main.tsx` -> `MobileApp` with **`initialTab: 'pulse'`** (document: `data-app-surface="mobile"`, `surfaceLabel="mobile"`)
+- `mobile.html` -> `src/pages/mobile/main.tsx` -> `renderChatbotSurface` -> `MobileApp` with **`initialTab: 'pulse'`** (document: `data-app-surface="mobile"`, `surfaceLabel="mobile"`)
 - `dashboard.html` -> `src/pages/dashboard/main.tsx` -> `renderChatbotSurface` -> `MobileApp` (`data-app-surface="dashboard"`)
-- `integrations.html` -> `src/pages/integrations/main.tsx` -> `MobileApp` (`initialTab: 'integrations'`, `data-app-surface="integrations"`) — Chrome MV3 **`options_ui.page`** in [`public/manifest.template.json`](public/manifest.template.json) points here (same shell as `mobile.html`, different default tab)
-- `help.html` -> `src/pages/help/main.tsx` -> `HelpKnowledgeRoot` (Knowledge Center; not the `MobileApp` shell) (`data-app-surface="help"`)
+- `integrations.html` -> `src/pages/integrations/main.tsx` -> `renderChatbotSurface` -> `MobileApp` (`initialTab: 'integrations'`, `data-app-surface="integrations"`) — Chrome MV3 **`options_ui.page`** in [`public/manifest.template.json`](public/manifest.template.json) points here (same shell as `mobile.html`, different default tab)
+- `help.html` -> `src/pages/help/main.tsx` -> `HelpKnowledgeRoot` (Knowledge Center; not the `MobileApp` shell)
 - `welcome.html` -> `src/pages/welcome/main.tsx` -> `renderChatbotSurface` -> `MobileApp` (`data-app-surface="welcome"`)
 - Peripheral (not the main shell): `public/oauth/*-brandops.html` (OAuth callback UIs), `public/privacy-policy.html` (legal)
 
 **Agent source mapping:** `mapDocumentSurfaceToAgentSource` in [`src/shared/navigation/appDocumentSurface.ts`](src/shared/navigation/appDocumentSurface.ts) maps `mobile` (and empty/undefined) to `executeAgentWorkspaceCommand` source `chatbot-mobile`; `welcome` | `dashboard` | `integrations` | `help` map to `chatbot-web`. This aligns **hosting HTML document** with the command pipeline — it is **not** the same axis as the five bottom-nav **tabs** inside `MobileApp`.
 
-**Knowledge / help IA:** in-dashboard Knowledge is opened via `dashboard.html?overlay=help` (Chat tab + overlay). A separate `help.html` is the full-page manual (`HelpKnowledgeRoot`). See [`src/shared/navigation/extensionLinks.ts`](src/shared/navigation/extensionLinks.ts).
+**Knowledge / help IA:** dashboard overlay query links are retired; Knowledge routes to canonical `help.html`. Legacy `dashboard.html?overlay=*` now gets deterministic fallback routing.
 
 ### Five-tab shell vs Cockpit workstreams vs peripheral pages
 
@@ -40,7 +55,7 @@ The **Pulse** tab (id `pulse`) is a read-only mixed timeline (follow-ups, publis
 
 The **Cockpit** tab in `MobileApp` (tab id `daily`) is the platform **overview**: pulse-style KPIs and four workstream sections (Today, Pipeline, Brand & content, Connections) read from the workspace snapshot and `localIntelligence` helpers. Deep creation and configuration still happen via chat and commands, not in that tab alone.
 
-**Deep links:** `mobile.html?section=pulse` (alias `timeline`) opens the Pulse tab. `mobile.html?section=today|pipeline|brand-content|connections` opens the Cockpit tab and scrolls to the block (`extensionLinks` + `getCockpitMobileSectionHeadingId`). A bare `?section=` on `dashboard.html` (without `?overlay=`) is redirected to the same `?section` on `mobile.html` (see `shouldRedirectDashboardSectionToMobile`). Workstream links from `openExtensionSurface` / `buildMobileCockpitUrl` target `mobile.html`.
+**Deep links:** `mobile.html?section=pulse` (alias `timeline`) opens the Pulse tab. `mobile.html?section=today|pipeline|brand-content|connections` opens the Cockpit tab and scrolls to the block (`extensionLinks` + `getCockpitMobileSectionHeadingId`). `dashboard.html?section=*` redirects to the same `?section` on `mobile.html`; retired `dashboard.html?overlay=*` falls back to canonical safe pages. Workstream links from `openExtensionSurface` / `buildMobileCockpitUrl` target `mobile.html`.
 
 **Settings:** reachable as `mobile.html?section=settings` (primary shell) and from any document that mounts `MobileApp` with the Settings tab selected.
 

@@ -1,12 +1,9 @@
 import { getPrivacyPolicyHref } from '../config/privacyPolicyUrl';
 import {
-  hrefCockpitWorkstream,
-  hrefDashboardKnowledgeOverlay,
   hrefExtensionIntegrationsPage,
   hrefHelpPage,
   hrefPrimaryAppChat,
   hrefPrimaryAppIntegrationsTab,
-  hrefPrimaryAppPipeline,
   hrefPrimaryAppPulse,
   hrefPrimaryAppSettingsTab,
   hrefPrimaryAppToday,
@@ -22,8 +19,8 @@ export interface SurfaceNavLinksProps {
 }
 
 /**
- * Footer links: sign-in flow → primary app (`mobile.html`) by tab, Help page, legal.
- * Primary app is `mobile.html`. `dashboard.html?overlay=help` is for embedded Knowledge overlay; see `hrefDashboardKnowledgeOverlay`.
+ * Footer: account + primary shell destinations + Help + Privacy.
+ * Labels match `navigationIntents` (tab vs `integrations.html` page).
  */
 export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
   const privacyHref = getPrivacyPolicyHref();
@@ -34,12 +31,8 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
   const mainAppChatHref = hrefPrimaryAppChat();
   const pulseHref = hrefPrimaryAppPulse();
   const todayHref = hrefPrimaryAppToday();
-  const pipelineHref = hrefPrimaryAppPipeline();
-  const brandContentHref = hrefCockpitWorkstream('brand-content');
-  const connectionsWorkstreamHref = hrefCockpitWorkstream('connections');
   const integrationsTabHref = hrefPrimaryAppIntegrationsTab();
   const integrationsHubHref = hrefExtensionIntegrationsPage();
-  const knowledgeOverlayHref = hrefDashboardKnowledgeOverlay();
   const helpPageHref = hrefHelpPage();
 
   return (
@@ -56,41 +49,25 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
         Sign up
       </a>
       <a className={linkClass} href={pulseHref} title="mobile.html?section=pulse">
-        Pulse (timeline)
+        Pulse
       </a>
       <a className={linkClass} href={mainAppChatHref}>
-        Primary app (Chat)
+        Chat
       </a>
       <a className={linkClass} href={todayHref} title="mobile.html?section=today">
-        Today (cockpit)
-      </a>
-      <a className={linkClass} href={pipelineHref} title="mobile.html?section=pipeline">
-        Pipeline
-      </a>
-      <a className={linkClass} href={brandContentHref} title="mobile.html?section=brand-content">
-        Brand &amp; content
-      </a>
-      <a className={linkClass} href={connectionsWorkstreamHref} title="mobile.html?section=connections">
-        Connections (cockpit)
+        Today
       </a>
       <a className={linkClass} href={integrationsTabHref} title="mobile.html?section=integrations">
-        Integrations (in app)
+        Integrations tab
       </a>
       <a className={linkClass} href={integrationsHubHref} title="integrations.html — extension hub / options">
-        Integrations hub
+        Integrations page
       </a>
       <a className={linkClass} href={settingsHref}>
         Settings
       </a>
-      <a
-        className={linkClass}
-        href={knowledgeOverlayHref}
-        title="Opens dashboard.html with Knowledge overlay; same shell as mobile after load"
-      >
-        Knowledge overlay
-      </a>
       <a className={linkClass} href={helpPageHref}>
-        Help (full page)
+        Help
       </a>
       <a
         className={linkClass}

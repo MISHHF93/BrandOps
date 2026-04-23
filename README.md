@@ -1,365 +1,227 @@
-# BrandOps AI Chatbot App
+# BrandOps
 
-BrandOps is a **chatbot-first AI workspace application** for solo operators and lean teams who run brand, outreach, publishing, and pipeline execution from one command interface.
+BrandOps is a command-first workspace for operators who manage pipeline, publishing, outreach, and integrations from one shell.
 
-This MVP focuses on **workflow quality** and **transparent helper logic** rather than hype:
-- no dependency on external model APIs,
-- no black-box automation claims,
-- explainable local heuristics that help prioritize work.
-
-**AI chatbot model (how intent, execution, and memory fit together):** see [docs/AI_CHATBOT_FUNDAMENTALS.md](docs/AI_CHATBOT_FUNDAMENTALS.md).
-
----
-
-## Operating philosophy
-
-BrandOps is designed as a **daily operator command surface** (chatbot + Daily tab), not a passive tool.
-
-The product assumes:
-- the user actively executes their workflow,
-- decisions are made with visibility, not automation,
-- structure beats randomness.
-
-BrandOps does not replace thinking. It organizes and amplifies it.
-
-Core principles:
-- visibility over automation
-- structure over chaos
-- execution over intention
-- clarity over abstraction
+The active product is a single shell with five tabs:
+- Pulse
+- Chat
+- Today
+- Integrations
+- Settings
 
 ---
 
-## Daily workflow
+## What Is Live Today
 
-BrandOps is optimized for a **command-first** daily loop in **Chat** and **Daily** (see MobileApp):
+- Primary app document: `mobile.html` (mounts `MobileApp`)
+- Same shell in other documents: `dashboard.html`, `welcome.html`, `integrations.html`
+- Help: `help.html` (Knowledge Center manual — not the five-tab `MobileApp` shell)
+- Background service worker handles scheduler, reminders, and runtime ingress
+- Command execution is deterministic and persists to local workspace storage
 
-1. **Chat:** natural-language commands (notes, follow-ups, publishing, opportunities, integrations, `pipeline health`, configuration presets) via the same agent engine as channels.
-2. **Daily:** snapshot counts, cadence headline, and ranked pipeline heuristics; quick action chips re-run real commands.
-3. **Content / outreach / publishing** happen in the real tools you use; BrandOps stores queue state, drafts, and follow-ups for prioritization and reminders.
+See `APPLICATION_WIRING_STATUS.md` for detailed wiring and guardrails.
 
-BrandOps is not passive. It is an execution system.
-
----
-
-## Product structure
-
-Workspace **domain areas** (data + commands, not separate web layouts):
-
-- Brand voice and vault, content library, publishing queue, outreach, pipeline opportunities, scheduler, integration hub, LinkedIn companion, settings.
-
-The **user-facing shell** is a single **AI chatbot / MobileApp** (tabs: Chat, Daily, Integrations, Settings). Legacy multi-panel “cockpit” pages are not in the active build; see [APPLICATION_WIRING_STATUS.md](APPLICATION_WIRING_STATUS.md).
+**Wayfinding:** use bottom nav for the five tabs. `integrations.html` (Chrome **options**) is the same shell with a different default tab—distinct from the in-shell **Integrations** tab. Help lives on `help.html`.
 
 ---
 
-## Product overview
-
-BrandOps gives you one command surface for:
-- capturing reusable brand messaging,
-- planning and scheduling content,
-- tracking outreach and follow-ups,
-- managing lightweight CRM opportunities,
-- reviewing risk and priorities from local intelligence helpers.
-
-### What “local intelligence” means in this project
-
-BrandOps includes rule-based helpers that score and rank work using data already in your workspace:
-- content priority scoring,
-- overdue risk scoring,
-- outreach urgency ranking,
-- publishing recommendations,
-- pipeline health heuristics,
-- vault-based snippet suggestions.
-
-These helpers are deterministic and explainable. Every score is derived from transparent rules in code, with **embedded defaults** plus an optional **remote rule pack** merge (see [`docs/intelligence-rules-remote-layers.md`](docs/intelligence-rules-remote-layers.md)).
-
----
-
-## Architecture summary
+## Architecture At A Glance
 
 ```text
 src/
-  background/                 # MV3 service worker (scheduler, channels, agent bridge)
-  content/                    # Content scripts (e.g. LinkedIn)
-  modules/                    # brandMemory/ seed + demo data only
+  background/          MV3 service worker
+  content/             content scripts (LinkedIn companion)
   pages/
-    mobile/                   # MobileApp: primary chatbot UI (Chat + Daily + …)
-    chatbotWeb/               # renderChatbotSurface → mounts MobileApp for web HTML
-    dashboard/, welcome/, options/, help/  # thin main.tsx → renderChatbotSurface → MobileApp
+    mobile/            main shell (Pulse/Chat/Today/Integrations/Settings)
+    chatbotWeb/        renderer used by web entry documents
+    dashboard/
+    welcome/
+    integrations/
+    help/
   services/
-    agent/                    # command engine, intent, channels, webhooks
-    intelligence/             # local heuristics (e.g. pipeline health, digests)
-    scheduling/               # reminder lifecycle + grouping
-    storage/                  # schema normalization + import/export
-    messaging/                # runtime message contracts
-  shared/                     # config, help copy, navigation helpers, UI primitives
-  rules/                      # intelligence rule types, defaults, merge, runtime
-  styles/                     # Tailwind and design tokens
-  types/                      # domain models
+    agent/             command intent + execution engine
+    storage/           workspace persistence + normalization
+    scheduling/        reminders + alarm lifecycle
+    messaging/         runtime message contracts
+    sync/              legacy OAuth sync modules (guarded/non-launch)
+  shared/              navigation, config, account lifecycle gates, UI primitives
+  rules/               intelligence rule defaults + runtime loading
+  types/               domain model
 ```
-
-### Runtime shape (chatbot-first)
-
-- **Root / index:** [`index.html`](index.html) redirects to [`mobile.html`](mobile.html) → [`src/pages/mobile/main.tsx`](src/pages/mobile/main.tsx) → **MobileApp** (full-screen chat and tabs).
-- **Other extension web pages** (`dashboard.html`, `options.html`, `help.html`, `welcome.html`) each bootstrap **the same** [`renderChatbotSurface`](src/pages/chatbotWeb/renderChatbotSurface.tsx) → **MobileApp** (surface label / initial tab may differ). There is no separate “cockpit” React app or compass layout in `src/pages`.
-- **Toolbar (extension icon):** still opens a primary work tab (e.g. dashboard URL) per manifest; the page content is the chatbot shell, not a legacy dashboard stack.
-- **Background worker:** scheduler reconciliation, channel webhooks, agent bridge, storage writes as documented in [mutationSurfacePolicy](src/services/agent/mutationSurfacePolicy.ts).
-
-### Documentation (this repository)
-
-These files ship with **source** and **self-hosted previews**; they are not bundled into the Chrome Web Store zip as standalone pages, but the **product behavior** they describe is in the build.
-
-| Document | Contents |
-|----------|----------|
-| [`docs/intelligence-rules-remote-layers.md`](docs/intelligence-rules-remote-layers.md) | Rule domains, L1/L2/L3 layers, optional `brandops-intelligence-rules.json` / `VITE_INTELLIGENCE_RULES_URL`, validation, roadmap. |
-| [`ICONOGRAPHY.md`](ICONOGRAPHY.md) | Lucide icon map, sizes, accessibility, and where symbols appear in the shared UI. |
-
-In-app summaries live under **Help → Knowledge Center** (topics *Visual wayfinding* and *Optional intelligence tuning*).
 
 ---
 
-## Feature list (MVP)
+## Runtime Surfaces
 
-### Core product
-- Onboarding checklist for first-time setup.
-- Global cross-module search (content, publishing, outreach, CRM, vault snippets).
-- Command palette style quick actions.
-- Keyboard shortcuts for fast navigation.
-- Improved empty and error states.
-- Consistent UI language and interaction patterns.
-- Accessibility improvements (`focus-visible`, labels, semantic dialog/alerts).
-- Developer tools in Options: debug mode toggle, mock activity generator, and guarded demo reset.
-- LinkedIn Companion safety workflow:
-  - manual-assist capture only (no auto-send or auto-click behavior),
-  - defensive validation before local writes,
-  - duplicate-safe contact capture by LinkedIn URL,
-  - keyboard-safe controls (`Escape`, `Ctrl/Cmd+Enter`) and explicit compliance messaging.
+- `index.html` -> redirects to `mobile.html` (preserves query/hash)
+- `mobile.html` -> primary shell, default tab is Pulse
+- `dashboard.html` -> same shell; `?section=*` compatibility redirects to `mobile.html`
+- `integrations.html` -> same shell, used as MV3 `options_ui` page
+- `welcome.html` -> same shell with welcome-first entry behavior
+- `help.html` -> `HelpKnowledgeRoot` / Knowledge Center
+- Peripheral pages:
+  - `public/oauth/*-brandops.html` (OAuth callback pages)
+  - `public/privacy-policy.html`
 
-### UI foundation
-- Semantic-token Tailwind design system (`bg`, `surface`, `border`, `text`, `primary`, `secondary`, semantic status colors, and `focusRing`).
-- Typed typography/radius/shadow/motion tokens for consistent component behavior.
-- Reusable component library across primitives, layout, workflow, and feedback surfaces.
-- Integrated component demo surface in Options to validate production states and interaction patterns.
-- Dashboard-safe `bg-signal-grid` background utility for subtle operator-console texture.
-
-### Data resilience
-- Full workspace export/import as JSON.
-- Clipboard + downloadable backups.
-- JSON file import and text import.
-- Schema normalization and demo reset fallback.
-- Stronger settings normalization and malformed payload guardrails on import.
-
-### Production hardening updates
-- Defensive browser-storage parsing that auto-recovers from corrupted JSON entries.
-- Safe storage recovery path in the background worker (fallback to seeded workspace if storage load fails).
-- Normalized persistence on every write (`storageService.setData`) so invalid edge inputs cannot poison state.
-- Expanded normalization coverage for brand profile, modules, follow-ups, messaging vault, scheduler tasks, and seed metadata.
-- Scheduler hardening for invalid timestamps and non-finite snooze inputs.
-- Store-level sanitization for publishing, outreach, integration source, artifact, SSH, contact, note, and opportunity mutations.
-- Integration hub form validation with inline success/error notifications.
-- Confirm dialogs for destructive archive actions in Outreach and Pipeline modules.
-- Options page status notifications promoted to inline semantic alerts for clearer operator feedback.
-
-### Production readiness directive
-
-BrandOps now enforces a production-readiness baseline:
-- unified quality gate via `npm run check` (typecheck + lint),
-- CI validation on pull requests and pushes to `main`,
-- build artifact verification via `npm run verify:dist`.
-
-**Unused-code scan:** `npm run knip` (informational; see [APPLICATION_WIRING_STATUS.md](APPLICATION_WIRING_STATUS.md)).
-
-Recommended pre-release sequence:
-
-```bash
-npm ci
-npm run check
-npm run build
-npm run verify:dist
-npm run package:release
-```
-
-This generates a downloadable release archive at:
-
-```text
-release/brandops-extension-v<version>.tar.gz
-```
-
-### Testing and QA notes
-
-- Run static checks before packaging:
-  - `npm run typecheck`
-  - `npm run lint`
-- Run behavior and performance checks:
-  - `npm run test:unit`
-  - `npm run test:perf`
-  - `npm run build`
-- Use **Options → Developer tools** for QA workflows:
-  - Enable/disable debug mode.
-  - Generate synthetic mock activity to verify loaded-state rendering and search.
-  - Reset to seeded demo workspace with confirmation.
-- Validate first-launch behavior by removing extension storage and reloading the extension.
-- New reliability tests cover:
-  - storage normalization and malformed import handling (`tests/unit/storageService.test.ts`)
-  - scheduler recovery from malformed task timestamps (`tests/unit/scheduler.test.ts`)
-  - LinkedIn companion capture safety and validation (`tests/unit/linkedinCompanionSafety.test.ts`)
-
-### Known limitations
-
-- Browser notifications/scheduler execution are best-effort while the browser is running.
-- Debug mode currently exposes internal QA utilities only in the Options page (not the Dashboard or other full-page surfaces).
-- Resume parsing remains heuristic-first for PDF and DOCX and may need manual profile edits on complex resume layouts.
-- Modal/drawer focus trapping is still limited in some component-library overlays and can be further hardened.
-- LinkedIn profile parsing depends on common selectors and `og:title`; major LinkedIn DOM changes can reduce auto-prefill quality.
-
-### Local intelligence helpers
-- Content priority ranking.
-- Overdue risk scoring.
-- Outreach urgency ranking.
-- Publishing timing recommendations.
-- Pipeline health heuristic ranking.
-- Template/snippet suggestion logic using Brand Vault reusable snippets.
+Routing and link helpers live in:
+- `src/shared/navigation/extensionLinks.ts`
+- `src/shared/navigation/navigationIntents.ts`
+- `src/shared/navigation/openExtensionSurface.ts`
 
 ---
 
-## Setup steps
+## Command And Data Flow
 
-### 1) Install dependencies
+1. User action in shell (Chat, quick action, settings command shortcut)
+2. `MobileApp` calls `executeAgentWorkspaceCommand(...)`
+3. Intent parser maps text to deterministic route
+4. Engine mutates `BrandOpsData` via `storageService`
+5. Audit trail and scheduler reconciliation update
+6. UI refreshes from normalized workspace snapshot
+
+Primary files:
+- `src/pages/mobile/mobileApp.tsx`
+- `src/services/agent/intent/commandIntent.ts`
+- `src/services/agent/agentWorkspaceEngine.ts`
+- `src/services/storage/storage.ts`
+
+---
+
+## Background Responsibilities
+
+`src/background/index.ts` handles:
+- install/startup initialization
+- scheduler alarm wiring
+- reminder notifications
+- runtime message ingress:
+  - `SYNC_SCHEDULER`
+  - `AGENT_CHANNEL_EVENT`
+  - `AGENT_CHANNEL_WEBHOOK`
+  - `AGENT_BRIDGE_ENVELOPE`
+
+On first install, welcome routing is gated by launch/session state:
+- `src/shared/account/launchLifecycleGate.ts`
+- `src/shared/account/launchAccess.ts`
+- `src/shared/identity/sessionAccess.ts`
+
+---
+
+## Storage Model
+
+- Canonical workspace key: `brandops:data`
+- Reads/writes are normalized to protect against malformed persisted state
+- Storage adapter prefers `chrome.storage`; falls back to web storage
+- Chat thread and quick command chips are separate UI-local keys
+
+Primary files:
+- `src/services/storage/storage.ts`
+- `src/shared/storage/browserStorage.ts`
+- `src/pages/mobile/mobileApp.tsx`
+
+---
+
+## Launch UX Gates
+
+The shell enforces:
+- Auth gate (when not using preview ungated flows)
+- Membership gate **only if** `VITE_ENFORCE_MEMBERSHIP_GATE=1` (or `true`) at build time — omit for local dev / building without Stripe
+
+Shared gate contract:
+- `shouldRequireLaunchAuth(...)`
+- `shouldRequireLaunchMembership(...)`
+- `canOpenLaunchWorkspace(...)`
+
+Files:
+- `src/shared/account/launchLifecycleGate.ts`
+- `src/pages/mobile/mobileApp.tsx`
+- `src/background/index.ts`
+
+---
+
+## Legacy And Guarded Areas
+
+- `dashboard.html?overlay=*` is retired; fallback routes are deterministic.
+- Legacy sync OAuth modules are quarantined behind `VITE_ENABLE_LEGACY_OAUTH_SYNC`.
+- Older multi-panel cockpit/module stacks are removed from active page entrypoints.
+
+References:
+- `src/pages/dashboard/dashboardRedirect.ts`
+- `src/services/sync/nonLaunchOauthGuard.ts`
+- `APPLICATION_WIRING_STATUS.md`
+
+---
+
+## Development
+
+Install:
 
 ```bash
 npm install
 ```
 
-### 2) Run development mode
+Run dev server:
 
 ```bash
 npm run dev
 ```
 
-The dev server is **fixed to `http://localhost:5173`** (`strictPort` in `vite.config.ts`). `npm run dev` runs `scripts/dev.mjs`, which on **Windows** tries to stop whatever is already **listening** on 5173 (stale Vite, etc.), then starts Vite. If it still fails, use `netstat -ano | findstr :5173` and end the PID in Task Manager. Use that origin for local OAuth redirect URIs.
+Notes:
+- Dev is fixed to `http://localhost:5173`.
+- `scripts/dev.mjs` handles Windows port cleanup behavior.
 
-### 3) Build extension
+---
+
+## Build And Quality
+
+Typecheck:
+
+```bash
+npm run typecheck
+```
+
+Tests:
+
+```bash
+npm run test
+```
+
+Build:
 
 ```bash
 npm run build
 ```
 
-### 3.1) Build + seal a downloadable artifact
+Full quality gate:
+
+```bash
+npm run check
+```
+
+Release pipeline:
 
 ```bash
 npm run release
 ```
 
-This runs type checks, lint, production build, dist verification, and packages the built extension into `release/`.
-
-### 4) Run checks
-
-```bash
-npm run typecheck
-npm run lint
-npm run format
-```
+This runs check + build + dist verification + release packaging.
 
 ---
 
-## Extension loading instructions
+## Load Unpacked Extension (Chrome/Edge)
 
-### Chrome / Edge (unpacked)
-
-1. Run `npm run build`.
-2. Open `chrome://extensions` or `edge://extensions`.
-3. Enable **Developer mode**.
-4. Click **Load unpacked**.
-5. Select the generated `dist/` folder.
-
-### Direct deployment handoff (artifact workflow)
-
-1. Run `npm run release`.
-2. Upload `release/brandops-extension-v<version>.tar.gz` to your artifact store or attach it to a release.
-3. Download and extract the archive wherever deployment happens.
-4. Load the extracted folder as an unpacked extension (or select `manifest.json` for temporary Firefox loading).
-
-### Firefox (temporary add-on)
-
-1. Build the project.
-2. Open `about:debugging`.
-3. Choose **This Firefox**.
-4. Click **Load Temporary Add-on**.
-5. Select `dist/manifest.json`.
+1. `npm run build`
+2. Open `chrome://extensions` (or `edge://extensions`)
+3. Enable Developer mode
+4. Click Load unpacked
+5. Select `dist/`
 
 ---
 
-## Data model summary
+## Key Docs
 
-Core entities:
+- Wiring and current state: `APPLICATION_WIRING_STATUS.md`
+- Frontend/backend path tracing: `BACKEND_FRONTEND_TRACEBACK.md`
+- AI model fundamentals: `docs/AI_CHATBOT_FUNDAMENTALS.md`
+- Cockpit command surface map: `docs/cockpit-command-surface-map.md`
+- Data model: `docs/data-model.md`
 
-- `BrandVaultEntry`
-- `ContentItem`
-- `ScheduledPost`
-- `OutreachDraft`
-- `Contact`
-- `Company`
-- `Opportunity`
-- `ActivityLog`
-
-All entities are:
-
-- locally stored
-- versionable
-- exportable/importable
-- linked across modules
-
-Relationships:
-
-- `Content -> Publishing Queue`
-- `Outreach -> Contacts -> Opportunities`
-- `Vault -> Content + Outreach`
-
-See [docs/data-model.md](docs/data-model.md) for the runtime type mapping and field-level link details.
-
----
-
-## Future roadmap
-
-### Near-term
-- Saved search views and pinning.
-- Multi-step onboarding templates by user role.
-- Rule editor for custom local scoring weights.
-- Bulk editing for queue and CRM records.
-- Centralized toast state manager to unify notification lifecycles across all modules.
-- Stronger schema version migration pipeline with explicit upgrade steps per persisted version.
-- Optional encrypted backup passphrase flow for exported local workspace archives.
-- Migrate LinkedIn companion overlay to a React + shared component-library render path for full UI token parity.
-
-### Mid-term
-- Optional offline-first desktop shell (Electron/Tauri).
-- Local analytics snapshots and trend charts.
-- Cross-device encrypted sync (opt-in).
-
-### Long-term
-- Plugin-style extension points for custom modules.
-- Team collaboration mode with local-first conflict resolution.
-- Rich policy controls for organization-grade governance.
-
----
-
-## Principles
-
-- **Visibility over automation.**
-- **Structure over chaos.**
-- **Execution over intention.**
-- **Clarity over abstraction.**
-
----
-
-## Strategic Docs
-
-- Product charter: [docs/product-charter.md](docs/product-charter.md)
-- Branch-by-branch execution plan: [docs/branch-execution-plan.md](docs/branch-execution-plan.md)
-- Product module structure: [docs/product-structure.md](docs/product-structure.md)
-- Data model details: [docs/data-model.md](docs/data-model.md)
-- Design system: [docs/design-system.md](docs/design-system.md)
-- Component library: [docs/component-library.md](docs/component-library.md)
-- One-pager IA (surfaces, compass, KPIs): [docs/one-pager-ia-and-surface-map.md](docs/one-pager-ia-and-surface-map.md)
-- Cockpit overlays (Knowledge / Quick settings on dashboard): [dashboard-cockpit-overlay-plan.md](dashboard-cockpit-overlay-plan.md)
-- Compact cockpit UX (minimal signal / growth & portfolio glance): [docs/cockpit-compact-ux-spec.md](docs/cockpit-compact-ux-spec.md)

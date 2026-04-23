@@ -4,7 +4,7 @@ import { WorkspaceModule } from '../../types/domain';
  * Logical modules and their home surface (`route`). Workstream ids and nav copy live in
  * `dashboardNavigation.ts` — keep naming aligned when you add or rename areas.
  *
- * The live product uses one four-tab shell (`MobileApp`): Chat, Today, Integrations, Settings.
+ * The live product uses one five-tab shell (`MobileApp`): Pulse, Chat, Today, Integrations, Settings.
  * HTML entry names (`mobile.html`, `dashboard.html`, `integrations.html`) are packaging only.
  */
 export const workspaceModules: WorkspaceModule[] = [
@@ -69,7 +69,7 @@ export const workspaceModules: WorkspaceModule[] = [
     id: 'settings',
     title: 'Settings',
     description:
-      'Integrations + Settings tabs — sync, export/import, models, backups, and optional local intelligence configuration.',
+      'Integrations tab and Settings: sync health, export/import, backups, optional local intelligence.',
     status: 'active',
     route: 'integrations'
   }

@@ -1,3 +1,4 @@
+/** Quarantined non-launch OAuth sync connector. Guarded by `VITE_ENABLE_LEGACY_OAUTH_SYNC`. */
 import type { BrandOpsData, LinkedInIdentityProfile, LinkedInOAuthState } from '../../types/domain';
 import {
   createCodeChallenge,

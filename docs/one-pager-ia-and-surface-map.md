@@ -1,6 +1,8 @@
 # One-pager IA: surface map, compass navigation, and KPI consolidation
 
 > **Historical / superseded:** The **cockpit / compass / dashboard** shell described here was **replaced** by a single **MobileApp** chatbot surface across extension HTML entry points. See [`APPLICATION_WIRING_STATUS.md`](../APPLICATION_WIRING_STATUS.md) and [`README.md`](../README.md). This document is retained for IA history only.
+>
+> Legacy note: `dashboard.html?overlay=*` is retired and no longer part of the supported navigation contract.
 
 **Implementation status (before chatbot migration):** Phases B–D referred to `dashboardApp`, pulse strip, and overlays. Those components are **not** in the current `src/pages` tree.
 

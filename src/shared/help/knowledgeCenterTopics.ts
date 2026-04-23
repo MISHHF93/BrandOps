@@ -26,7 +26,7 @@ export interface KnowledgeCenterDailyPlaybook {
 export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
   title: 'Every day in BrandOps (mobile shell)',
   intro:
-    'BrandOps is chatbot-first: the **Chat** tab runs workspace commands; the **Today** tab is a read-only cockpit digest (pipeline, brand, connections). Integrations and Settings round out the four bottom tabs. Your fastest loop: scan Today, then execute in Chat.',
+    'Five tabs, five jobs: **Pulse** = time-ordered “what is coming at you.” **Today** = plan and workstream digests (not a second Pulse). **Chat** = the only place commands run. **Integrations** = connect tools; **Settings** = you, account, and how BrandOps behaves. Fastest loop: orient in Pulse, plan in Today, execute in Chat.',
   steps: [
     {
       title: 'Open Today for the cockpit digest',
@@ -56,9 +56,9 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     id: 'surfaces',
     title: 'Where BrandOps runs',
     summary:
-      'Primary UI is mobile.html (four tabs). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
+      'Primary UI is mobile.html (five tabs). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
     paragraphs: [
-      'The product is a browser extension. **mobile.html** is the primary workspace: Chat, Today (cockpit), Integrations, Settings.',
+      'The product is a browser extension. **mobile.html** is the primary workspace: Pulse, Chat, Today, Integrations, Settings.',
       '**welcome.html** uses the same shell with a first-run bias toward the Today tab so new users see the cockpit immediately.',
       '**dashboard.html** loads the same shell; legacy ?section= workstream links redirect to mobile.html so deep links stay consistent.',
       '**integrations.html** is the Chrome options_ui entry (Integrations tab by default). **help.html** is this Knowledge Center.',

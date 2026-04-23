@@ -2,11 +2,9 @@ import { useEffect } from 'react';
 import { KnowledgeCenterBody } from '../../shared/help/KnowledgeCenterBody';
 import { QUERY } from '../../shared/navigation/extensionLinks';
 import {
-  hrefCockpitWorkstream,
   hrefExtensionIntegrationsPage,
   hrefPrimaryAppChat,
   hrefPrimaryAppIntegrationsTab,
-  hrefPrimaryAppPipeline,
   hrefPrimaryAppPulse,
   hrefPrimaryAppSettingsTab,
   hrefPrimaryAppToday
@@ -32,9 +30,6 @@ export function HelpKnowledgeRoot() {
   const integrationsTabHref = hrefPrimaryAppIntegrationsTab();
   const integrationsHubHref = hrefExtensionIntegrationsPage();
   const todayHref = hrefPrimaryAppToday();
-  const pipelineHref = hrefPrimaryAppPipeline();
-  const brandHref = hrefCockpitWorkstream('brand-content');
-  const connectionsHref = hrefCockpitWorkstream('connections');
 
   return (
     <div className="bo-system-screen min-h-screen min-w-0 text-text">
@@ -45,39 +40,23 @@ export function HelpKnowledgeRoot() {
             aria-label="Primary app entry points"
             className="flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-medium text-textMuted"
           >
-            <span className="w-full text-[10px] font-semibold uppercase tracking-wide text-textSoft sm:w-auto">
-              Shell tabs
-            </span>
             <a href={pulseHref} className={navLinkClass}>
               Pulse
             </a>
             <a href={chatHref} className={navLinkClass}>
               Chat
             </a>
+            <a href={todayHref} className={navLinkClass}>
+              Today
+            </a>
             <a href={integrationsTabHref} className={navLinkClass} title="mobile.html?section=integrations">
-              Integrations (in app)
+              Integrations tab
             </a>
             <a href={settingsHref} className={navLinkClass}>
               Settings
             </a>
             <a href={integrationsHubHref} className={navLinkClass} title="integrations.html — extension hub">
-              Integrations hub
-            </a>
-            <span className="hidden h-3 w-px bg-border sm:block" aria-hidden />
-            <span className="w-full text-[10px] font-semibold uppercase tracking-wide text-textSoft sm:w-auto">
-              Today workstreams
-            </span>
-            <a href={todayHref} className={navLinkClass}>
-              Today
-            </a>
-            <a href={pipelineHref} className={navLinkClass}>
-              Pipeline
-            </a>
-            <a href={brandHref} className={navLinkClass}>
-              Brand &amp; content
-            </a>
-            <a href={connectionsHref} className={navLinkClass}>
-              Connections
+              Integrations page
             </a>
           </nav>
         </div>

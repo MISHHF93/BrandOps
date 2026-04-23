@@ -1,6 +1,8 @@
 import { AlertCircle, CheckCircle2, Copy, History, MessageCircle } from 'lucide-react';
 import clsx from 'clsx';
+import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
+import { getIntentByCommandLine } from './chatIntents';
 
 export interface ChatMessage {
   id: string;
@@ -43,8 +45,7 @@ export interface MobileChatViewProps {
 }
 
 /**
- * Chat tab: message thread, optional example commands, optional recent command chips.
- * Intentionally minimal — workspace totals and section guides live on Today and the shell header.
+ * Chat tab: thread, guided examples (plain language), and recent runs.
  */
 export const MobileChatView = ({
   messages,
@@ -65,7 +66,7 @@ export const MobileChatView = ({
           <div className="min-w-0">
             <h2 className="text-h2 text-text">Chat</h2>
             <p className="text-[11px] leading-snug text-textMuted">
-              On-device agent — type in the field below, or expand examples.{' '}
+              This is where work actually runs. Use chips and matches, or Guided examples.{' '}
               <button
                 type="button"
                 onClick={onOpenToday}
@@ -73,7 +74,8 @@ export const MobileChatView = ({
               >
                 Today
               </button>
-              {''} has pipeline, publishing, and connections digests.
+              {''} is for planning and digests;{' '}
+              <span className="text-textSoft">Pulse</span> is the time-ordered queue — both read; Chat executes.
             </p>
           </div>
         </div>
@@ -145,18 +147,7 @@ export const MobileChatView = ({
         )}
       </div>
 
-      {loading ? (
-        <div
-          className="space-y-2 rounded-xl border border-border/50 bg-surface/40 p-3 motion-safe:animate-pulse"
-          role="status"
-          aria-live="polite"
-          aria-busy="true"
-        >
-          <div className="h-2 w-1/3 rounded bg-border/80" />
-          <div className="h-2 w-4/5 rounded bg-border/60" />
-          <p className="text-xs text-textSoft">Running…</p>
-        </div>
-      ) : null}
+      {loading ? <AgentWorkingState /> : null}
 
       <details className="group rounded-xl border border-border/50 bg-bgSubtle/35 open:bg-bgSubtle/50">
         <summary
@@ -167,7 +158,7 @@ export const MobileChatView = ({
           )}
         >
           <span className="inline-flex w-full items-center justify-between gap-2">
-            <span>Example commands</span>
+            <span>Guided examples</span>
             <span className="text-[10px] font-normal text-textSoft group-open:hidden">Expand</span>
           </span>
         </summary>
@@ -176,11 +167,27 @@ export const MobileChatView = ({
             <div key={group.id}>
               <p className="text-[10px] font-medium uppercase tracking-wide text-textSoft">{group.label}</p>
               <div className="mt-1.5 flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
-                {group.commands.map((command) => (
-                  <button key={command} type="button" onClick={() => onQuickCommand(command)} className={chipClass(btnFocus)}>
-                    {command}
-                  </button>
-                ))}
+                {group.commands.map((command) => {
+                  const meta = getIntentByCommandLine(command);
+                  return (
+                    <button
+                      key={command}
+                      type="button"
+                      onClick={() => onQuickCommand(command)}
+                      title={command}
+                      className={chipClass(btnFocus)}
+                    >
+                      {meta ? (
+                        <span className="block">
+                          <span className="font-medium text-text">{meta.title}</span>
+                          <span className="mt-0.5 line-clamp-2 block text-[10px] text-textSoft">{meta.subtitle}</span>
+                        </span>
+                      ) : (
+                        command
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}

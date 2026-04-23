@@ -53,7 +53,7 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
             <h2 id="kc-reference-heading" className="text-base font-semibold text-text">
               Reference
             </h2>
-            <p className="mt-0.5 text-xs text-textMuted">Jump to a topic or expand for the full guide.</p>
+            <p className="mt-0.5 text-xs text-textMuted">Pick a topic, then expand only if you need more detail.</p>
           </div>
         </div>
 

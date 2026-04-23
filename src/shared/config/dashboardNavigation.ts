@@ -79,7 +79,7 @@ export const cockpitNavigationGroups: Array<{
   },
   {
     title: 'Other windows',
-    description: 'Same four-tab shell in another HTML entry (extension packaging): Integrations options page, Help, or primary mobile with Chat selected.',
+    description: 'Same five-tab shell in another HTML entry (extension packaging): Integrations options page, Help, or primary mobile with Chat selected.',
     items: [
       {
         id: 'nav-integrations',
@@ -98,7 +98,7 @@ export const cockpitNavigationGroups: Array<{
       {
         id: 'nav-dashboard',
         label: 'Primary app (Chat)',
-        description: 'mobile.html or dashboard.html with the Chat tab selected.',
+        description: 'Canonical route is mobile.html with the Chat tab selected.',
         type: 'surface',
         target: 'dashboard'
       }

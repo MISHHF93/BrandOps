@@ -1,6 +1,6 @@
 # Surface wiring inventory
 
-Matrix of [`BrandOpsData`](src/types/domain.ts) vs [`buildWorkspaceSnapshot`](src/pages/mobile/buildWorkspaceSnapshot.ts), four-tab shell UI, and [`parseCommandRoute`](src/services/agent/intent/commandIntent.ts) / [`executeAgentWorkspaceCommand`](src/services/agent/agentWorkspaceEngine.ts). Keep this file updated when adding snapshot fields or agent routes.
+Matrix of [`BrandOpsData`](src/types/domain.ts) vs [`buildWorkspaceSnapshot`](src/pages/mobile/buildWorkspaceSnapshot.ts), five-tab shell UI, and [`parseCommandRoute`](src/services/agent/intent/commandIntent.ts) / [`executeAgentWorkspaceCommand`](src/services/agent/agentWorkspaceEngine.ts). Keep this file updated when adding snapshot fields or agent routes.
 
 | Domain key | Snapshot (field / summary) | Shell / other UI | Agent route(s) |
 |------------|----------------------------|------------------|----------------|
@@ -25,7 +25,7 @@ Matrix of [`BrandOpsData`](src/types/domain.ts) vs [`buildWorkspaceSnapshot`](sr
 | `seed` | `seedReadout` | Settings · Dataset lineage | storage / reset flows |
 | `agentAudit` | `recentAudit` | Settings | re-run prior `commandPreview` as Chat |
 
-**LinkedIn overlay:** [`src/content/linkedinOverlay.ts`](src/content/linkedinOverlay.ts) reads `companies` (and related) for overlay UI — not the four-tab shell.
+**LinkedIn overlay:** [`src/content/linkedinOverlay.ts`](src/content/linkedinOverlay.ts) reads `companies` (and related) for overlay UI — not the five-tab shell.
 
 **Help:** [`help.html`](help.html) → [`HelpKnowledgeRoot`](src/pages/help/HelpKnowledgeRoot.tsx) → [`KnowledgeCenterBody`](src/shared/help/KnowledgeCenterBody.tsx) (not `MobileApp`).
 
@@ -37,7 +37,7 @@ Matrix of [`BrandOpsData`](src/types/domain.ts) vs [`buildWorkspaceSnapshot`](sr
 |---------|----------|-------|-------|
 | `IntelligenceRulesPack` via `getIntelligenceRules()` | `intelligenceRulesReadout` in [`buildWorkspaceSnapshot.ts`](src/pages/mobile/buildWorkspaceSnapshot.ts) | Settings · **Intelligence rules (effective)** | none |
 
-**Load:** [`initIntelligenceRulesFromRemote`](src/rules/intelligenceRulesRuntime.ts) runs from the MV3 background script (`onInstalled` / `onStartup`) and from extension document entrypoints ([`renderChatbotSurface.tsx`](src/pages/chatbotWeb/renderChatbotSurface.tsx), [`mobile/main.tsx`](src/pages/mobile/main.tsx), [`help/main.tsx`](src/pages/help/main.tsx)). Optional JSON: `VITE_INTELLIGENCE_RULES_URL` first, then `brandops-intelligence-rules.json` (packaged path via `chrome.runtime.getURL` in the extension, or `/brandops-intelligence-rules.json` in dev). Template: [`public/brandops-intelligence-rules.example.json`](public/brandops-intelligence-rules.example.json).
+**Load:** [`initIntelligenceRulesFromRemote`](src/rules/intelligenceRulesRuntime.ts) runs from the MV3 background script (`onInstalled` / `onStartup`) and from extension document entrypoints: [`renderChatbotSurface.tsx`](src/pages/chatbotWeb/renderChatbotSurface.tsx) (all `MobileApp` HTML hosts, including `mobile.html` via [`main.tsx`](src/pages/mobile/main.tsx)), plus [`help/main.tsx`](src/pages/help/main.tsx) for the Knowledge Center. Optional JSON: `VITE_INTELLIGENCE_RULES_URL` first, then `brandops-intelligence-rules.json` (packaged path via `chrome.runtime.getURL` in the extension, or `/brandops-intelligence-rules.json` in dev). Template: [`public/brandops-intelligence-rules.example.json`](public/brandops-intelligence-rules.example.json).
 
 ---
 

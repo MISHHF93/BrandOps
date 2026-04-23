@@ -1,34 +1,49 @@
 import type { MobileShellTabId } from './mobileShellQuery';
 
-/** One-line map of the whole shell — use in headers and onboarding. */
-export const SHELL_SECTIONS_LINE =
-  'Five tabs — Pulse (timeline), Chat (commands), Today (cockpit), Integrations (sources), Settings (workspace prefs & data).';
+/**
+ * Emotional purpose of each tab (shown under the workspace title for the active tab).
+ * Keeps Pulse vs Today and Integrations vs Settings mentally distinct.
+ */
+export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
+  pulse: 'Calm orientation — one timeline of what is coming at you (soonest first).',
+  chat: 'Agency — tell the agent what to do; commands change your workspace.',
+  daily: 'Intention — plan the day, then deep-dive work areas (not a second Pulse).',
+  integrations: 'Your stack — connect sources, sync, and pipes between tools.',
+  settings: 'Control & trust — you, your account, and how BrandOps behaves.'
+};
 
-/** @deprecated Use {@link SHELL_SECTIONS_LINE}. */
-export const SHELL_FOUR_SECTIONS_LINE = SHELL_SECTIONS_LINE;
+/** Short wayfinding when the whole bar must be named (Help, palette copy, docs). */
+export const SHELL_COMPASS_LINE =
+  'Pulse: timeline · Chat: act · Today: plan · Integrations: connect tools · Settings: you & trust';
+
+/** @deprecated Prefer {@link SHELL_TAB_PURPOSE} in UI; use {@link SHELL_COMPASS_LINE} for one-line lists. */
+export const SHELL_SECTIONS_LINE = SHELL_COMPASS_LINE;
+
+/** @deprecated Use {@link SHELL_COMPASS_LINE}. */
+export const SHELL_FOUR_SECTIONS_LINE = SHELL_COMPASS_LINE;
 
 export const SHELL_SECTION_COPY: Record<
   MobileShellTabId,
   { headline: string; body: string }
 > = {
   pulse: {
-    headline: 'Pulse — what is due next',
-    body: 'Read-only mix of follow-ups, publishing, scheduler, and outreach drafts — soonest first. Open a row in Chat to act; Today still has full cockpit sections.'
+    headline: 'Pulse — stay oriented',
+    body: 'A single time-ordered queue across follow-ups, publishing, scheduler, and outreach. Not your plan for the day — that is Today.'
   },
   chat: {
-    headline: 'Chat — command surface',
-    body: 'Type commands in the bottom field or use Example commands. Today holds cockpit digests; Integrations and Settings keep hub and data controls out of the thread.'
+    headline: 'Chat — make it happen',
+    body: 'The only place commands execute. Use chips, typeahead, or Guided examples — then read the thread.'
   },
   daily: {
-    headline: 'Today — cockpit',
-    body: 'Execution pulse, weighted pipeline projection, opportunities to close, brand & content signals, and connections. Edits that change stored data still go through Chat commands or Settings forms.'
+    headline: 'Today — plan and work',
+    body: 'Focus engine plus workstreams (pipeline, brand, connections). Digests are read-only until you act in Chat.'
   },
   integrations: {
-    headline: 'Integrations — hub',
-    body: 'Sources, OAuth providers, synced artifacts, and SSH targets. Pipeline CRM and publishing queues are summarized on Today; run connect/add commands from Chat when you need custom phrasing.'
+    headline: 'Integrations — connect the stack',
+    body: 'Sources, OAuth, and live signals between products. Not account or workspace identity — that is Settings.'
   },
   settings: {
-    headline: 'Settings — trust & data',
-    body: 'Read-only snapshot at top. Change stored values in Preferences. Assistant and templates are shortcuts; Advanced has dataset lineage, intelligence detail, export/import, and audit.'
+    headline: 'Settings — you and your workspace',
+    body: 'Account, membership, export/import, cadence, and preferences. Not wiring external tools — that is Integrations.'
   }
 };
