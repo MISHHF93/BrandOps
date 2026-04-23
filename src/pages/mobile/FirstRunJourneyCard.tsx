@@ -34,23 +34,21 @@ export function FirstRunJourneyCard({
 }) {
   return (
     <section
-      className="mb-3 rounded-xl border border-primary/35 bg-primarySoft/20 px-3 py-3 text-[12px] text-textMuted shadow-sm"
+      className="bo-section-halo bo-section-halo--primary mb-3 rounded-xl border border-accent/40 bg-accentSoft/20 px-3 py-3 text-label text-textMuted shadow-sm"
       aria-label="Get started in under a minute"
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-start gap-2">
-          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-primary/40 bg-surface/60 text-primary">
-            <Sparkles className="h-4 w-4" strokeWidth={2} aria-hidden />
+        <div className="flex min-w-0 items-start gap-2.5">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-accent/50 bg-surface/70 text-accent">
+            <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
           </span>
           <div>
-            <p className="font-semibold text-text">Start here (30 seconds)</p>
-            <p className="mt-0.5 leading-snug">
-              <strong className="text-text">Pulse</strong> orients you in time; <strong className="text-text">Today</strong>{' '}
-              plans the day. <strong className="text-text">Chat</strong> is the only tab that executes commands.{' '}
-              <strong className="text-text">Integrations</strong> wires tools; <strong className="text-text">Settings</strong>{' '}
-              is you and trust. Same five tabs on the bar below.
+            <p className="text-h3 text-text">Start here (30 seconds)</p>
+            <p className="mt-1 leading-snug text-textMuted">
+              Read in <strong className="text-text">Pulse</strong> or <strong className="text-text">Today</strong>.
+              Execute in <strong className="text-text">Chat</strong>.
             </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
               <button
                 type="button"
                 className={mobileChipClass(btnFocus)}
@@ -73,13 +71,13 @@ export function FirstRunJourneyCard({
                 Open Today
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-textSoft">Try a quick result:</p>
-            <div className="mt-1">
+            <div className="mt-3">
               <button
                 type="button"
-                className={`${mobileChipClass(btnFocus)} border-primary/40 font-medium text-text`}
+                className={`bo-btn-primary ${btnFocus}`}
                 onClick={() => onTryCommand('pipeline health')}
               >
+                <Sparkles className="h-4 w-4" strokeWidth={2.25} aria-hidden />
                 Run: pipeline health
               </button>
             </div>

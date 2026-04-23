@@ -21,7 +21,7 @@ export interface ChatMessage {
 
 function chipClass(btnFocus: string) {
   return clsx(
-    'max-w-full rounded-lg border border-border/50 bg-surface/50 px-2.5 py-1.5 text-left text-xs leading-snug text-textMuted',
+    'max-w-full rounded-lg border border-border/55 bg-surface/55 px-3 py-2 text-left text-label leading-snug text-textMuted transition hover:border-borderStrong hover:bg-surfaceActive/70',
     btnFocus
   );
 }
@@ -58,24 +58,23 @@ export const MobileChatView = ({
 }: MobileChatViewProps) => {
   return (
     <div className="space-y-4" aria-label="Chat">
-      <header className="border-b border-border/30 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-surface/60">
-            <MessageCircle className="h-4 w-4 text-textMuted" aria-hidden />
+      <header className="bo-section-halo bo-section-halo--primary border-b border-border/30 pb-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-accent/40 bg-accentSoft/25">
+            <MessageCircle className="h-5 w-5 text-accent" aria-hidden />
           </div>
           <div className="min-w-0">
-            <h2 className="text-h2 text-text">Chat</h2>
-            <p className="text-[11px] leading-snug text-textMuted">
-              This is where work actually runs. Use chips and matches, or Guided examples.{' '}
+            <h2 className="text-h1 text-text">Chat</h2>
+            <p className="mt-0.5 text-label text-textMuted">
+              Type or tap — commands execute here.{' '}
               <button
                 type="button"
                 onClick={onOpenToday}
-                className={clsx('font-medium text-info underline-offset-2 hover:underline', btnFocus)}
+                className={clsx('font-medium text-accent underline-offset-2 hover:underline', btnFocus)}
               >
                 Today
-              </button>
-              {''} is for planning and digests;{' '}
-              <span className="text-textSoft">Pulse</span> is the time-ordered queue — both read; Chat executes.
+              </button>{' '}
+              to plan.
             </p>
           </div>
         </div>
@@ -165,8 +164,11 @@ export const MobileChatView = ({
         <div className="space-y-4 border-t border-border/30 px-3 pb-3 pt-3">
           {CHAT_QUICK_STARTER_GROUPS.map((group) => (
             <div key={group.id}>
-              <p className="text-[10px] font-medium uppercase tracking-wide text-textSoft">{group.label}</p>
-              <div className="mt-1.5 flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
+              <p className="bo-section-label">
+                <span className="bo-visual-orb" aria-hidden />
+                {group.label}
+              </p>
+              <div className="mt-2 flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
                 {group.commands.map((command) => {
                   const meta = getIntentByCommandLine(command);
                   return (
@@ -179,8 +181,8 @@ export const MobileChatView = ({
                     >
                       {meta ? (
                         <span className="block">
-                          <span className="font-medium text-text">{meta.title}</span>
-                          <span className="mt-0.5 line-clamp-2 block text-[10px] text-textSoft">{meta.subtitle}</span>
+                          <span className="block font-semibold text-text">{meta.title}</span>
+                          <span className="mt-0.5 line-clamp-2 block text-meta text-textSoft">{meta.subtitle}</span>
                         </span>
                       ) : (
                         command

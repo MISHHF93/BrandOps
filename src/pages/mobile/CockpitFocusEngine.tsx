@@ -47,32 +47,29 @@ export const CockpitFocusEngine = ({
 
   return (
     <div className="space-y-3" aria-label="Today focus engine">
-      <p className="text-[10px] leading-relaxed text-textSoft">
-        Today is for <strong className="text-textMuted/95">planning</strong> — not the same screen as{' '}
-        <strong className="text-textMuted/95">Pulse</strong> (timeline). Scoring is on-device; changes run in{' '}
-        <strong className="text-textMuted/95">Chat</strong>.
-      </p>
-
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-1">
         <div className={card('do')}>
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-textSoft">
-            <Crosshair className="h-3.5 w-3.5 text-info" strokeWidth={2} aria-hidden />
+          <div className="bo-section-label">
+            <span className="bo-visual-orb bo-visual-orb--info" aria-hidden />
+            <Crosshair className="h-4 w-4 text-info" strokeWidth={2} aria-hidden />
             What to do today
           </div>
           <LineList items={focus.doToday} />
         </div>
 
         <div className={card('urgent')}>
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-textSoft">
-            <Flame className="h-3.5 w-3.5 text-warning" strokeWidth={2} aria-hidden />
+          <div className="bo-section-label">
+            <span className="bo-visual-orb bo-visual-orb--warning" aria-hidden />
+            <Flame className="h-4 w-4 text-warning" strokeWidth={2} aria-hidden />
             Urgent &amp; at risk
           </div>
           <LineList items={focus.urgent} />
         </div>
 
         <div className={card('grow')}>
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-textSoft">
-            <TrendingUp className="h-3.5 w-3.5 text-success" strokeWidth={2} aria-hidden />
+          <div className="bo-section-label">
+            <span className="bo-visual-orb bo-visual-orb--success" aria-hidden />
+            <TrendingUp className="h-4 w-4 text-success" strokeWidth={2} aria-hidden />
             Momentum
           </div>
           <LineList items={focus.momentum} />
@@ -80,12 +77,12 @@ export const CockpitFocusEngine = ({
       </div>
 
       {focus.quickActions.length > 0 ? (
-        <div className="rounded-xl border border-border/45 bg-surface/40 p-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-textSoft">
-            <Sparkles className="mr-1 inline h-3 w-3 text-primary" strokeWidth={2} aria-hidden />
+        <div className="rounded-xl border border-border/45 bg-surface/40 p-3">
+          <p className="bo-section-label">
+            <Sparkles className="h-4 w-4 text-accent" strokeWidth={2} aria-hidden />
             Fast actions (Chat)
           </p>
-          <ul className="mt-2 flex flex-wrap gap-1.5" role="list">
+          <ul className="mt-2 flex flex-wrap gap-2" role="list">
             {focus.quickActions.map((a) => (
               <li key={a.id}>
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-1.5">
@@ -93,14 +90,10 @@ export const CockpitFocusEngine = ({
                     type="button"
                     disabled={commandBusy}
                     onClick={() => void runCommand(a.command)}
-                    className={clsx(
-                      'inline-flex min-h-[1.75rem] items-center gap-1 rounded-full border border-success/50 bg-successSoft/25 px-2.5 text-[10px] font-medium text-text',
-                      commandBusy && 'pointer-events-none opacity-50',
-                      btnFocus
-                    )}
+                    className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
                     title={a.rationale}
                   >
-                    <ArrowUpRight className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
+                    <ArrowUpRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
                     {a.label}
                   </button>
                   <button
@@ -108,7 +101,7 @@ export const CockpitFocusEngine = ({
                     disabled={commandBusy}
                     onClick={() => primeChat(a.command)}
                     className={clsx(
-                      'text-[10px] text-textSoft underline-offset-2 hover:underline',
+                      'text-meta text-textSoft underline-offset-2 hover:underline',
                       commandBusy && 'pointer-events-none opacity-50',
                       btnFocus
                     )}
@@ -123,17 +116,14 @@ export const CockpitFocusEngine = ({
       ) : null}
 
       <div aria-labelledby="cockpit-at-a-glance-heading">
-        <p
-          id="cockpit-at-a-glance-heading"
-          className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-textMuted"
-        >
+        <p id="cockpit-at-a-glance-heading" className="bo-section-label mb-2">
+          <span className="bo-visual-orb" aria-hidden />
           At a glance
         </p>
-        <p className="mb-1.5 text-[10px] text-textSoft">Load snapshot — read-only counts (actions above or in work areas).</p>
         <div
           role="group"
           aria-label="Workspace metric counts, read-only — not buttons"
-          className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]"
+          className="-mx-1 flex gap-2 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]"
         >
           {pulseTile('Follow-ups', snapshot.incompleteFollowUps, 'open')}
           {pulseTile('Queue', snapshot.publishingQueue, 'items')}

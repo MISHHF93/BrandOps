@@ -29,17 +29,21 @@ module.exports = {
         info: 'rgb(var(--color-info) / <alpha-value>)',
         infoSoft: 'rgb(var(--color-info-soft) / var(--alpha-info-soft))',
         focusRing: 'rgb(var(--color-focus-ring) / var(--alpha-focus-ring))',
-        glow: 'rgb(var(--color-glow) / <alpha-value>)'
+        glow: 'rgb(var(--color-glow) / <alpha-value>)',
+        accent: 'rgb(var(--color-accent) / <alpha-value>)',
+        accentHover: 'rgb(var(--color-accent-hover) / <alpha-value>)',
+        accentSoft: 'rgb(var(--color-accent-soft) / var(--alpha-accent-soft))'
       },
       fontSize: {
         display: ['1.75rem', { lineHeight: '2rem', fontWeight: '600' }],
         h1: ['1.375rem', { lineHeight: '1.75rem', fontWeight: '600' }],
         h2: ['1.125rem', { lineHeight: '1.5rem', fontWeight: '600' }],
         h3: ['1rem', { lineHeight: '1.375rem', fontWeight: '600' }],
-        body: ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }],
-        bodyStrong: ['0.875rem', { lineHeight: '1.25rem', fontWeight: '500' }],
+        body: ['0.9375rem', { lineHeight: '1.375rem', fontWeight: '400' }],
+        bodyStrong: ['0.9375rem', { lineHeight: '1.375rem', fontWeight: '500' }],
+        label: ['0.8125rem', { lineHeight: '1.125rem', fontWeight: '500' }],
         meta: ['0.75rem', { lineHeight: '1rem', fontWeight: '500' }],
-        micro: ['0.6875rem', { lineHeight: '0.875rem', fontWeight: '500' }]
+        micro: ['0.75rem', { lineHeight: '1rem', fontWeight: '600' }]
       },
       borderRadius: {
         sm: '8px',

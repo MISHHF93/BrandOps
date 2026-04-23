@@ -7,32 +7,32 @@ export const formatPeekDue = (iso: string) => {
 };
 
 export const pulseTile = (label: string, value: string | number, sub?: string) => (
-  <div className="min-w-[5.5rem] shrink-0 rounded-lg border border-border/40 bg-surface/60 px-2 py-1.5">
-    <p className="text-[9px] font-medium uppercase tracking-wide text-textMuted">{label}</p>
-    <p className="text-lg font-semibold tabular-nums text-text">{value}</p>
-    {sub ? <p className="text-[9px] text-textMuted">{sub}</p> : null}
+  <div className="min-w-[5.75rem] shrink-0 rounded-xl border border-border/45 bg-gradient-to-br from-bgElevated/95 to-surface/80 px-2.5 py-2 shadow-sm">
+    <p className="text-meta font-semibold text-textSoft">{label}</p>
+    <p className="mt-0.5 text-xl font-semibold tabular-nums leading-none text-text">{value}</p>
+    {sub ? <p className="mt-0.5 text-meta text-textSoft">{sub}</p> : null}
   </div>
 );
 
 export const signalList = (title: string, items: IntelligenceSignal[], empty: string, emptyHint?: string) => (
   <div>
-    <p className="text-[11px] font-medium text-textSoft">{title}</p>
+    <p className="text-label font-semibold text-text">{title}</p>
     {items.length === 0 ? (
       <div className="mt-1 space-y-1">
-        <p className="text-[11px] text-textMuted">{empty}</p>
-        {emptyHint ? <p className="text-[11px] text-textMuted">{emptyHint}</p> : null}
+        <p className="text-label text-textMuted">{empty}</p>
+        {emptyHint ? <p className="text-label text-textMuted">{emptyHint}</p> : null}
       </div>
     ) : (
-      <ol className="mt-1 space-y-1.5">
+      <ol className="mt-1.5 space-y-1.5">
         {items.map((row, i) => (
           <li key={row.id} className="border-b border-border/25 pb-1.5 last:border-0 last:pb-0">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="text-[12px] text-text">
+              <span className="text-label text-text">
                 {i + 1}. {row.label}
               </span>
-              <span className="shrink-0 font-mono text-[11px] text-info">{row.score}</span>
+              <span className="shrink-0 font-mono text-meta text-info">{row.score}</span>
             </div>
-            <p className="text-[10px] leading-snug text-textMuted">{row.reason}</p>
+            <p className="text-meta leading-snug text-textMuted">{row.reason}</p>
           </li>
         ))}
       </ol>

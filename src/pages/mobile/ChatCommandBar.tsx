@@ -139,11 +139,11 @@ export const ChatCommandBar = ({
           className="mb-1.5 rounded-xl border border-border/50 bg-bgElevated/95 px-2 py-2 shadow-sm backdrop-blur-sm"
           id={CHIPS_ID}
         >
-          <p className="mb-1.5 flex items-center gap-1.5 px-0.5 text-[10px] font-medium uppercase tracking-wide text-textSoft">
-            <Wand2 className="h-3 w-3 text-primary" strokeWidth={2} aria-hidden />
+          <p className="mb-2 flex items-center gap-1.5 px-0.5 text-label font-semibold text-text">
+            <Wand2 className="h-3.5 w-3.5 text-accent" strokeWidth={2} aria-hidden />
             Try in one tap
           </p>
-          <div className="-mx-0.5 flex snap-x snap-mandatory gap-1.5 overflow-x-auto px-0.5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-0.5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-0.5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {smartChips.map((intent) => (
               <button
                 key={intent.id}
@@ -151,15 +151,15 @@ export const ChatCommandBar = ({
                 disabled={commandLoading}
                 onClick={() => onRunAndClear(intent.command)}
                 className={clsx(
-                  'snap-start shrink-0 max-w-[min(100%,14rem)] rounded-lg border border-primary/35 bg-primarySoft/30 px-2.5 py-1.5 text-left text-xs leading-snug',
-                  'text-text shadow-sm transition hover:border-primary/50 hover:bg-primarySoft/45',
+                  'snap-start shrink-0 max-w-[min(100%,14rem)] rounded-xl border border-accent/40 bg-accentSoft/25 px-3 py-2 text-left leading-snug',
+                  'text-text shadow-sm transition hover:border-accent/70 hover:bg-accentSoft/40',
                   commandLoading && 'pointer-events-none opacity-50',
                   btn
                 )}
                 title={`${intent.subtitle} — full command in transcript`}
               >
-                <span className="block font-medium text-text">{intent.title}</span>
-                <span className="line-clamp-2 text-[10px] text-textSoft">{intent.subtitle}</span>
+                <span className="block text-label font-semibold text-text">{intent.title}</span>
+                <span className="line-clamp-2 text-meta text-textSoft">{intent.subtitle}</span>
               </button>
             ))}
           </div>
@@ -271,8 +271,8 @@ export const ChatCommandBar = ({
           }}
           onKeyDown={onKeyDown}
           disabled={commandLoading}
-          className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-text outline-none placeholder:text-textSoft disabled:cursor-not-allowed disabled:opacity-50"
-          placeholder="What do you want to do? Suggestions update as you type."
+          className="min-w-0 flex-1 bg-transparent px-1 py-2 text-[0.95rem] text-text outline-none placeholder:text-textSoft disabled:cursor-not-allowed disabled:opacity-50"
+          placeholder="What do you want to do?"
           aria-label="Chat command input"
           aria-autocomplete="list"
           aria-controls={controls}
@@ -284,21 +284,21 @@ export const ChatCommandBar = ({
           type="button"
           disabled={commandLoading}
           onClick={() => onSubmit()}
-          className={`shrink-0 inline-flex min-w-[4.5rem] items-center justify-center gap-1 rounded-xl border border-borderStrong/60 bg-surfaceActive px-3 py-2 text-xs font-semibold text-text shadow-sm disabled:opacity-100 ${btn}`}
-          title={commandLoading ? 'Working — your command is running' : 'Send (Enter) — with suggestions, Enter inserts; Send runs'}
+          className={clsx('bo-btn-primary shrink-0 min-w-[5rem]', btn)}
+          title={commandLoading ? 'Working — your command is running' : 'Send (Enter)'}
         >
           {commandLoading ? (
             <>
               <Loader2
-                className="h-3.5 w-3.5 motion-safe:animate-spin"
-                strokeWidth={2}
+                className="h-4 w-4 motion-safe:animate-spin"
+                strokeWidth={2.25}
                 aria-hidden
               />
               <span>Working</span>
             </>
           ) : (
             <>
-              <Sparkles className="h-3.5 w-3.5 opacity-80" strokeWidth={2} aria-hidden />
+              <Sparkles className="h-4 w-4" strokeWidth={2.25} aria-hidden />
               Send
             </>
           )}

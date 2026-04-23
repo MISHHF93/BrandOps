@@ -9,7 +9,6 @@ import { CockpitWorkstreamBar } from './CockpitWorkstreamBar';
 import { CockpitWorkspaceLanesDetails } from './CockpitWorkspaceLanesDetails';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 import { MobileTabPageHeader } from './mobileTabPrimitives';
-import { ShellSectionCallout } from './ShellSectionCallout';
 
 const dashboardAreas = cockpitNavigationGroups[0]?.items.filter((item) => item.type === 'section') ?? [];
 
@@ -54,16 +53,15 @@ export const CockpitDailyView = ({
   const actions = { btnFocus, commandBusy, runCommand, primeChat };
 
   return (
-    <div className="mt-2 space-y-5" aria-label="Today">
+    <div className="mt-1 space-y-5" aria-label="Today">
       <MobileTabPageHeader
-        title="Today"
-        subtitle="Plan and focus — not a second Pulse. Work areas below; anything that changes data runs in Chat."
+        title="Today — plan and work"
+        subtitle="Plan the day and switch work areas. Anything that changes data runs in Chat."
         icon={CalendarCheck2}
-        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12"
+        iconWrapperClassName="flex items-center justify-center rounded-xl border border-info/40 bg-infoSoft/25"
         iconClassName="text-info"
+        haloTone="info"
       />
-
-      <ShellSectionCallout tab="daily" className="mt-3" />
 
       <CockpitWorkstreamBar
         btnFocus={btnFocus}

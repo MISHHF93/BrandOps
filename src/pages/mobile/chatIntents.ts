@@ -154,7 +154,8 @@ type IntentRow = BrandOpsChatIntent & { _blob: string };
 const INTENT_INDEX: IntentRow[] = CHAT_INTENT_RAW.map((i) => ({ ...i, _blob: blob(i) }));
 
 function stripRow(i: IntentRow): BrandOpsChatIntent {
-  const { _blob: _b, ...rest } = i;
+  const { _blob, ...rest } = i;
+  void _blob;
   return rest;
 }
 

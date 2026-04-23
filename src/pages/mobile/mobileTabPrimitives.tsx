@@ -48,23 +48,32 @@ export function MobileTabPageHeader({
   subtitle,
   icon: Icon,
   iconWrapperClassName,
-  iconClassName
+  iconClassName,
+  haloTone = 'primary'
 }: {
   title: string;
   subtitle: string;
   icon: LucideIcon;
   iconWrapperClassName: string;
   iconClassName: string;
+  haloTone?: 'primary' | 'info' | 'success';
 }) {
   return (
-    <header className="space-y-1.5">
-      <div className="flex items-center gap-2">
-        <div className={iconWrapperClassName}>
+    <header
+      className={clsx(
+        'bo-section-halo space-y-1.5 pb-1',
+        haloTone === 'info' && 'bo-section-halo--info',
+        haloTone === 'success' && 'bo-section-halo--success',
+        haloTone === 'primary' && 'bo-section-halo--primary'
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div className={clsx('h-10 w-10 shrink-0', iconWrapperClassName)}>
           <Icon className={clsx('h-5 w-5', iconClassName)} aria-hidden />
         </div>
-        <div>
-          <h2 className="text-h2 text-text">{title}</h2>
-          <p className="text-[11px] text-textSoft">{subtitle}</p>
+        <div className="min-w-0">
+          <h2 className="text-h1 text-text">{title}</h2>
+          <p className="mt-0.5 text-label text-textMuted">{subtitle}</p>
         </div>
       </div>
     </header>
@@ -113,7 +122,7 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
                 >
                   <Icon size={18} strokeWidth={active ? 2.25 : 2} />
                 </span>
-                <span className="max-w-full truncate px-0.5 text-[10px] font-semibold leading-none">{tab.label}</span>
+                <span className="max-w-full truncate px-0.5 text-[11px] font-semibold leading-none">{tab.label}</span>
               </button>
             </li>
           );

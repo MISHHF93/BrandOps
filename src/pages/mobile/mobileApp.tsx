@@ -30,7 +30,6 @@ import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocu
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
-import { SHELL_TAB_PURPOSE } from './shellSectionCopy';
 import { runSettingsConfigure } from './runSettingsConfigure';
 import { applyDocumentThemeFromAppSettings } from '../../shared/ui/theme';
 import {
@@ -678,17 +677,12 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         Skip to main content
       </a>
       <header className="bo-mobile-header sticky top-0 z-20">
-        <div className="mx-auto flex max-w-md items-start justify-between gap-3">
+        <div className="mx-auto flex max-w-md items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-micro uppercase tracking-[0.18em] text-textSoft">BrandOps</p>
-            <h1 className="text-h1 text-text">Workspace</h1>
-            <p className="text-[11px] leading-snug text-textSoft">
-              <span className="font-medium text-text">
-                {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? activeTab}
-              </span>
-              <span className="text-textSoft"> — </span>
-              {SHELL_TAB_PURPOSE[activeTab]}
-            </p>
+            <h1 className="text-h1 text-text">
+              {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? 'Workspace'}
+            </h1>
             <OnDeviceTrustLine />
             {dataOpsHint ? <WorkspaceDataHint message={dataOpsHint} /> : null}
           </div>

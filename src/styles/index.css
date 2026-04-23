@@ -43,6 +43,13 @@
   --alpha-focus-ring: 0.42;
   --color-glow: 196 204 218;
   --color-shadow: 0 0 0;
+  /* Accent — the one token that actually pops against the monochrome calm.
+     A muted blue-violet chosen so "primary" buttons can be identified at a glance
+     without breaking the inked/paper identity on either theme. */
+  --color-accent: 142 168 232;
+  --color-accent-hover: 170 190 244;
+  --color-accent-soft: 142 168 232;
+  --alpha-accent-soft: 0.18;
   --duration-fast: 120ms;
   --duration-base: 180ms;
   --duration-slow: 260ms;
@@ -148,6 +155,11 @@
   --alpha-focus-ring: 0.35;
   --color-glow: 120 128 145;
   --color-shadow: 15 18 28;
+  /* Light-mode accent: inkier blue so it reads as a true CTA against paper. */
+  --color-accent: 62 92 176;
+  --color-accent-hover: 38 68 150;
+  --color-accent-soft: 62 92 176;
+  --alpha-accent-soft: 0.14;
   --retro-glow-cyan: 140 148 165;
   --retro-glow-pink: 128 136 152;
   --retro-glow-gold: 155 162 178;
@@ -1693,5 +1705,234 @@ html[data-app-surface="welcome"] body::after {
   transition: none !important;
 }
 
+/* ==========================================================================
+   UX remediation pass (2026-04-23): visual hierarchy + primary affordances
+   ========================================================================== */
+@layer components {
+  /* Ensure mobile shell body copy has a readable baseline. Tailwind `text-[10px]`
+     etc. still wins via specificity; this only sets the inherited default. */
+  .bo-mobile-app {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  /* Primary CTA — filled accent, the only "this will execute something" button. */
+  .bo-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.25rem;
+    padding: 0.5rem 0.95rem;
+    border-radius: 0.65rem;
+    border: 1px solid rgb(var(--color-accent) / 0.7);
+    background: linear-gradient(
+      135deg,
+      rgb(var(--color-accent) / 0.95),
+      rgb(var(--color-accent-hover) / 0.95)
+    );
+    color: rgb(var(--color-text));
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.005em;
+    box-shadow:
+      0 1px 0 rgb(var(--color-text) / 0.08) inset,
+      0 8px 20px rgb(var(--color-accent) / 0.28);
+    transition:
+      transform var(--duration-fast) var(--ease-liquid-out),
+      box-shadow var(--duration-fast) var(--ease-liquid-out),
+      filter var(--duration-fast) var(--ease-liquid-out);
+  }
+
+  :root[data-theme="light"] .bo-btn-primary {
+    color: #fff;
+  }
+
+  .bo-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 0 rgb(var(--color-text) / 0.1) inset,
+      0 12px 26px rgb(var(--color-accent) / 0.36);
+    filter: saturate(1.08);
+  }
+
+  .bo-btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow:
+      0 1px 0 rgb(var(--color-text) / 0.08) inset,
+      0 4px 12px rgb(var(--color-accent) / 0.26);
+  }
+
+  .bo-btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .bo-btn-primary--sm {
+    min-height: 1.85rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 0.55rem;
+  }
+
+  /* Ghost CTA — outline neutral. Secondary navigation / "Review first" etc. */
+  .bo-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 2rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.6rem;
+    border: 1px solid rgb(var(--color-border) / 0.75);
+    background: rgb(var(--color-surface) / 0.55);
+    color: rgb(var(--color-text-muted));
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    transition:
+      border-color var(--duration-fast) var(--ease-liquid-out),
+      background var(--duration-fast) var(--ease-liquid-out),
+      color var(--duration-fast) var(--ease-liquid-out);
+  }
+
+  .bo-btn-ghost:hover:not(:disabled) {
+    border-color: rgb(var(--color-border-strong));
+    color: rgb(var(--color-text));
+    background: rgb(var(--color-surface-active) / 0.85);
+  }
+
+  .bo-btn-ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Visual stat card — the "Workspace at a glance" hero tile. */
+  .bo-stat-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid rgb(var(--color-border) / 0.5);
+    padding: 0.9rem 0.95rem 0.85rem;
+    background:
+      linear-gradient(
+        155deg,
+        rgb(var(--color-bg-elevated) / 0.95),
+        rgb(var(--color-surface) / 0.85)
+      );
+    box-shadow:
+      0 1px 0 rgb(var(--color-text) / 0.04) inset,
+      0 6px 18px rgb(var(--color-shadow) / 0.22);
+  }
+
+  .bo-stat-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      120% 160% at 110% -20%,
+      rgb(var(--stat-card-accent, var(--color-accent)) / 0.2),
+      transparent 60%
+    );
+    opacity: 0.9;
+  }
+
+  .bo-stat-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .bo-stat-card__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: rgb(var(--color-text-soft));
+    text-transform: none;
+  }
+
+  .bo-stat-card__value {
+    margin-top: 0.15rem;
+    font-size: 1.65rem;
+    font-weight: 600;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+    color: rgb(var(--color-text));
+  }
+
+  .bo-stat-card__sub {
+    margin-top: 0.2rem;
+    font-size: 0.75rem;
+    color: rgb(var(--color-text-soft));
+  }
+
+  .bo-stat-card--now {
+    --stat-card-accent: var(--color-accent);
+  }
+  .bo-stat-card--fix {
+    --stat-card-accent: var(--color-warning);
+  }
+  .bo-stat-card--grow {
+    --stat-card-accent: var(--color-success);
+  }
+  .bo-stat-card--ai {
+    --stat-card-accent: var(--color-info);
+  }
+
+  /* Small colored dot used to flag a signal/status in section headings. */
+  .bo-visual-orb {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: rgb(var(--orb-color, var(--color-accent)));
+    box-shadow: 0 0 0 3px rgb(var(--orb-color, var(--color-accent)) / 0.18);
+  }
+  .bo-visual-orb--primary { --orb-color: var(--color-accent); }
+  .bo-visual-orb--warning { --orb-color: var(--color-warning); }
+  .bo-visual-orb--success { --orb-color: var(--color-success); }
+  .bo-visual-orb--info    { --orb-color: var(--color-info); }
+
+  /* One subtle decorative radial behind section headers. */
+  .bo-section-halo {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .bo-section-halo::before {
+    content: "";
+    position: absolute;
+    inset: -1rem -1rem auto auto;
+    width: 9rem;
+    height: 9rem;
+    border-radius: 999px;
+    background: radial-gradient(
+      closest-side,
+      rgb(var(--halo-color, var(--color-accent)) / 0.22),
+      transparent 72%
+    );
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(2px);
+  }
+
+  .bo-section-halo--primary { --halo-color: var(--color-accent); }
+  .bo-section-halo--info    { --halo-color: var(--color-info); }
+  .bo-section-halo--success { --halo-color: var(--color-success); }
+
+  /* Readable section label — replaces the 9–10px uppercase tracked caps everywhere. */
+  .bo-section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: rgb(var(--color-text));
+    letter-spacing: 0;
+    text-transform: none;
+  }
+}
 
 
