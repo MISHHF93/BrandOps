@@ -133,10 +133,17 @@ export const buildAiSettingsPlan = (prompt: string): AiSettingsPlan => {
   const operatorNameMatch = normalized.match(/operator name\s*(?:is|=)\s*["“]?([^"\n”]+)["”]?/i);
   const focusMetricMatch = normalized.match(/focus metric\s*(?:is|=)\s*["“]?([^"\n”]+)["”]?/i);
   const primaryOfferMatch = normalized.match(/primary offer\s*(?:is|=)\s*["“]?([^"\n”]+)["”]?/i);
+  /** Quoted value may span lines; closing `"` must be followed by comma or end (no `"` inside value). */
+  const positioningMatch = normalized.match(/positioning\s*(?:is|=)\s*"([\s\S]*?)"(?=\s*,|\s*$)/i);
+  const brandVoiceMatch =
+    normalized.match(/brand\s+voice\s*(?:is|=)\s*"([\s\S]*?)"(?=\s*,|\s*$)/i) ??
+    normalized.match(/voice\s+guide\s*(?:is|=)\s*"([\s\S]*?)"(?=\s*,|\s*$)/i);
   const brandPayload: Record<string, unknown> = {};
   if (operatorNameMatch?.[1]) brandPayload.operatorName = operatorNameMatch[1].trim();
   if (focusMetricMatch?.[1]) brandPayload.focusMetric = focusMetricMatch[1].trim();
   if (primaryOfferMatch?.[1]) brandPayload.primaryOffer = primaryOfferMatch[1].trim();
+  if (positioningMatch?.[1]?.trim()) brandPayload.positioning = positioningMatch[1].trim();
+  if (brandVoiceMatch?.[1]?.trim()) brandPayload.voiceGuide = brandVoiceMatch[1].trim();
   if (Object.keys(brandPayload).length > 0) {
     nextOperation(operations, 'update-brand-profile', brandPayload);
   }
@@ -266,8 +273,14 @@ export const applyAiSettingsOperations = (
             ...(typeof operation.payload.operatorName === 'string'
               ? { operatorName: operation.payload.operatorName.trim().slice(0, 90) }
               : {}),
+            ...(typeof operation.payload.positioning === 'string'
+              ? { positioning: operation.payload.positioning.trim().slice(0, 400) }
+              : {}),
             ...(typeof operation.payload.primaryOffer === 'string'
               ? { primaryOffer: operation.payload.primaryOffer.trim().slice(0, 180) }
+              : {}),
+            ...(typeof operation.payload.voiceGuide === 'string'
+              ? { voiceGuide: operation.payload.voiceGuide.trim().slice(0, 2000) }
               : {}),
             ...(typeof operation.payload.focusMetric === 'string'
               ? { focusMetric: operation.payload.focusMetric.trim().slice(0, 180) }

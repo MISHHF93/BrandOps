@@ -26,12 +26,14 @@ export function MobileTabSection({
   description?: string;
   children: ReactNode;
 }) {
+  const titleId = `${id}-title`;
   return (
     <section
+      id={id}
       className="rounded-xl border border-border/50 bg-bgSubtle/50 p-3 text-xs text-textMuted"
-      aria-labelledby={id}
+      aria-labelledby={titleId}
     >
-      <h3 id={id} className="text-sm font-semibold text-text">
+      <h3 id={titleId} className="text-sm font-semibold text-text">
         {title}
       </h3>
       {description ? <p className="mt-1.5 text-[11px] leading-relaxed text-textSoft">{description}</p> : null}

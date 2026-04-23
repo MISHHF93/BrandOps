@@ -460,7 +460,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         className={`bo-mobile-main mx-auto w-full max-w-md pt-4 outline-none ${
           activeTab === 'chat'
             ? 'pb-[max(10.5rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
-            : 'pb-[max(7.5rem,calc(6.25rem+env(safe-area-inset-bottom,0px)))]'
+            : 'pb-[max(10rem,calc(8.25rem+env(safe-area-inset-bottom,0px)))]'
         }`}
       >
         {activeTab === 'chat' ? (

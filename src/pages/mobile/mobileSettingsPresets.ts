@@ -16,7 +16,7 @@ export const CONFIG_PRESETS: Array<{ label: string; command: string }> = [
 
 /**
  * One-tap **workspace templates** — compound `configure:` strings for `buildAiSettingsPlan`.
- * Cadence alone is handled in the Workspace card; these bundle several fields for a working style.
+ * Operating mode alone is in Advanced → Preferences; these bundle several fields for a working style.
  */
 export type WorkflowBundlePreset = {
   label: string;

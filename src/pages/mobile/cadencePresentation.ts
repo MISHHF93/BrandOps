@@ -1,6 +1,6 @@
 import type { CadenceFlowMode } from '../../types/domain';
 
-/** Canonical order for segmented cadence UI and Advanced `<select>`. */
+/** Canonical order for Advanced Operating mode `<select>`. */
 export const CADENCE_FLOW_ORDER: readonly CadenceFlowMode[] = [
   'balanced',
   'maker-heavy',

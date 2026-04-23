@@ -1,15 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent } from 'react';
 import clsx from 'clsx';
 import { Layers } from 'lucide-react';
-import type { CadenceFlowMode } from '../../types/domain';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
-import {
-  CADENCE_FLOW_ORDER,
-  cadenceModeSummary,
-  cadenceModeTitle,
-  isCadenceFlowMode
-} from './cadencePresentation';
 import type { ComposerBlankStarter } from './configurationStarters';
 import { CONFIG_PRESETS, OPERATIONAL_PRESETS } from './mobileSettingsPresets';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
@@ -22,82 +15,62 @@ export function SettingsTierAOverview({
   rulesSourceLabel,
   btnFocus,
   onOpenToday,
-  helpHref,
-  activeCadence,
-  onCadenceSelect,
-  cadenceDisabled
+  helpHref
 }: {
   snapshot: MobileWorkspaceSnapshot;
   rulesSourceLabel: string;
   btnFocus: string;
   onOpenToday?: () => void;
   helpHref: string;
-  activeCadence: CadenceFlowMode;
-  onCadenceSelect: (mode: CadenceFlowMode) => void;
-  cadenceDisabled?: boolean;
 }) {
   const seedLine = `${snapshot.seedReadout.source} · v${snapshot.seedReadout.version}`;
   const offerPreview =
     snapshot.primaryOffer.length > 48 ? `${snapshot.primaryOffer.slice(0, 46)}…` : snapshot.primaryOffer;
-  const cadenceTitle = cadenceModeTitle(activeCadence);
+  const oneLine = (s: string) => s.replace(/\s+/g, ' ').trim();
+  const profileSavedSummary = (() => {
+    const o = oneLine(snapshot.operatorName) || '—';
+    const off = oneLine(offerPreview) || '—';
+    const m = oneLine(snapshot.focusMetric) || '—';
+    if (o === '—' && off === '—' && m === '—') return '—';
+    const raw = `${o} · ${off} · ${m}`;
+    return raw.length > 220 ? `${raw.slice(0, 218)}…` : raw;
+  })();
 
   return (
     <section
       className="bo-glass-panel rounded-2xl border border-border/55 p-3.5 shadow-panel"
       aria-labelledby="settings-tier-a-heading"
     >
-      <h2 id="settings-tier-a-heading" className="text-h3 text-text">
-        Workspace
-      </h2>
-      <p className="mt-1 text-[11px] leading-snug text-textSoft">
-        {snapshot.visualMode} · {cadenceTitle} · {snapshot.reminderWindow} · rules: {rulesSourceLabel}
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-border/40 pb-2.5">
+        <h2 id="settings-tier-a-heading" className="text-h3 text-text">
+          Workspace snapshot
+        </h2>
+        <span className="inline-flex shrink-0 items-center rounded-md border border-border/60 bg-bgSubtle/80 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-textSoft">
+          Read-only
+        </span>
+      </div>
+      <p className="mt-2.5 text-[11px] leading-relaxed text-textSoft">
+        {snapshot.visualMode} · {snapshot.reminderWindow} · rules: {rulesSourceLabel}
+      </p>
+      <p className="mt-1.5 text-[10px] leading-relaxed text-textMuted">
+        Name and profile are edited in{' '}
+        <a
+          href="#settings-editable"
+          className={clsx('bo-link bo-link--sm inline !normal-case', btnFocus)}
+        >
+          Preferences
+        </a>
+        <span> below (scroll past Assistant &amp; templates).</span>
       </p>
 
-      <div className="mt-3 border-t border-border/40 pt-3" role="group" aria-label="Cadence mode">
-        <p className="text-micro uppercase tracking-wide text-textSoft">Cadence</p>
-        <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {CADENCE_FLOW_ORDER.map((mode) => {
-            const active = activeCadence === mode;
-            return (
-              <button
-                key={mode}
-                type="button"
-                disabled={cadenceDisabled}
-                title={cadenceModeSummary(mode)}
-                aria-pressed={active}
-                onClick={() => onCadenceSelect(mode)}
-                className={clsx(
-                  'rounded-lg border px-2 py-2 text-center text-[11px] font-semibold leading-tight transition-colors duration-fast',
-                  btnFocus,
-                  cadenceDisabled && 'cursor-not-allowed opacity-50',
-                  active
-                    ? 'border-borderStrong bg-surfaceActive text-text shadow-inner'
-                    : 'border-border/55 bg-surface/40 text-textMuted hover:border-borderStrong hover:text-text'
-                )}
-              >
-                {cadenceModeTitle(mode)}
-              </button>
-            );
-          })}
+      <dl className="mt-3 overflow-hidden rounded-lg border border-border/45 text-[11px] text-textMuted">
+        <div className="border-b border-border/40 px-2.5 py-2.5">
+          <dt className="text-[10px] font-medium uppercase tracking-wide text-textSoft">Profile (saved)</dt>
+          <dd className="mt-1 min-w-0 break-words text-left leading-relaxed text-text">{profileSavedSummary}</dd>
         </div>
-      </div>
-
-      <dl className="mt-3 space-y-2 border-t border-border/40 pt-3 text-[11px] text-textMuted">
-        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-2">
-          <dt className="shrink-0 text-textSoft">Operator</dt>
-          <dd className="min-w-0 font-medium text-text">{snapshot.operatorName || '—'}</dd>
-        </div>
-        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-2">
-          <dt className="shrink-0 text-textSoft">Primary offer</dt>
-          <dd className="min-w-0 text-right text-text sm:text-left">{offerPreview || '—'}</dd>
-        </div>
-        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-2">
-          <dt className="shrink-0 text-textSoft">Focus metric</dt>
-          <dd className="min-w-0 text-right text-text sm:text-left">{snapshot.focusMetric || '—'}</dd>
-        </div>
-        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-2">
-          <dt className="shrink-0 text-textSoft">Seed</dt>
-          <dd className="min-w-0 break-words text-right text-text sm:text-left">{seedLine}</dd>
+        <div className="px-2.5 py-2.5">
+          <dt className="text-[10px] font-medium uppercase tracking-wide text-textSoft">Seed</dt>
+          <dd className="mt-1 min-w-0 break-words text-left text-text leading-relaxed">{seedLine}</dd>
         </div>
       </dl>
       {snapshot.intelligenceRulesReadout.error ? (
@@ -182,7 +155,7 @@ export function SettingsAssistantComposer({
     <MobileTabSection
       id="settings-assistant"
       title="Assistant"
-      description="Starter chips only fill the line below — edit, then Apply. Cadence uses the Workspace card above. On-device configure engine; not a remote model."
+      description="Starter chips only fill the line below — edit, then Apply. Schedule and operating mode are in Preferences below. On-device configure engine; not a remote model."
     >
       <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Fill composer with a starting line">
         {blankStarters.map((s) => (
@@ -209,9 +182,8 @@ export function SettingsAssistantComposer({
           onKeyDown={(e) => {
             if (e.key === 'Enter') void submit();
           }}
-          disabled={applyBusy}
           placeholder="What should we change about how this workspace runs?"
-          className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-text outline-none placeholder:text-textSoft"
+          className="min-w-0 flex-1 touch-manipulation bg-transparent px-2 py-2 text-base text-text outline-none placeholder:text-textSoft sm:text-sm"
         />
         <button
           type="button"
@@ -251,7 +223,7 @@ export function SettingsQuickConfigureScroller({
     <MobileTabSection
       id="settings-quick-tweaks"
       title="Quick tweaks"
-      description="Visual, motion, and ambient — runs in Chat. Cadence is set from the Workspace card."
+      description="Visual, motion, and ambient — runs in Chat. Operating mode is under Advanced → Preferences."
     >
       <div className="-mx-1 mt-2 flex gap-2 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]">
         {CONFIG_PRESETS.map((preset) => (
@@ -375,8 +347,4 @@ export function SettingsDataSafetyBlock({
       </div>
     </MobileTabSection>
   );
-}
-
-export function settingsActiveCadence(snapshot: MobileWorkspaceSnapshot): CadenceFlowMode {
-  return isCadenceFlowMode(snapshot.cadenceMode) ? snapshot.cadenceMode : 'balanced';
 }

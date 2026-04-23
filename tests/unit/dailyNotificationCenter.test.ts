@@ -80,6 +80,8 @@ describe('dailyNotificationCenter', () => {
     expect(digest.promptPreview).toContain('Managerial=65');
     expect(digest.promptPreview).toContain('Technical=35');
     expect(digest.promptPreview).not.toContain('{{');
+    expect(digest.promptPreview).toContain('Operator name (how to address this person):');
+    expect(digest.promptPreview).toContain('Workspace brand (ground truth');
   });
 
   it('skips dataset actions when dataset review is disabled', () => {

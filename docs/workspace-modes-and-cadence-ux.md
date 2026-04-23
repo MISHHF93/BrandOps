@@ -17,9 +17,9 @@ This spec aligns **cadence** (one vocabulary, one primary control), **workspace 
   - `cadenceModeSummary(mode)` — one short line for tooltips / dense UI.
   - `cadenceConfigureFragment(mode)` — text passed to `applySettingsConfigure` / `configure:` (unchanged engine contract).
 
-**Primary control:** A **segmented cadence control** lives in the **Tier A Workspace** card. Changing cadence never requires opening Advanced or Chat.
+**Primary control:** The **Preferences** (Advanced) form — labeled **Operating mode** so users are not tripping over a second “cadence” place in the summary card. The `<select>` uses `cadenceModeTitle` for option labels; **Apply** sends `cadenceConfigureFragment` via the same `configure` engine as Chat.
 
-**Secondary:** Advanced preferences form keeps the same `<select>` for power users; labels use `cadenceModeTitle`.
+**Not in Tier A:** The **Workspace** summary card (Tier A) does **not** show cadence or a cadence control — one clear place to change it.
 
 **Removed from Quick tweaks:** Standalone “Cadence …” chips in `CONFIG_PRESETS` (avoid duplicate paths).
 
@@ -48,14 +48,14 @@ This spec aligns **cadence** (one vocabulary, one primary control), **workspace 
 **Decision:**
 
 - **Composer blank starters:** chips only **fill the assistant field** with a sensible default line (user edits, then **Apply**). Labels are human (“Workday”, “Reminder lead”, …), not raw `configure:` tokens.
-- Cadence is **not** duplicated here—use the segmented control instead.
+- Operating mode (cadence) is **not** duplicated here—use **Preferences → Operating mode**.
 - Motion/visual/ambient/debug remain in **Quick tweaks** (Chat path) or Advanced form.
 
 ---
 
 ## 4. UI polish (Settings shell)
 
-- Tier A summary line uses **titles** from `cadenceModeTitle`, not raw slugs.
+- Tier A summary line is **not** a second cadence surface; it uses visual, reminder, and rules (no “cadence” string).
 - Workflow section uses **grid** + balanced spacing; no oversized chevron list.
 - Assistant section copy states that **starter chips prime the composer** (they do not auto-apply).
 
@@ -68,15 +68,15 @@ This spec aligns **cadence** (one vocabulary, one primary control), **workspace 
 | Cadence copy + configure fragment | `src/pages/mobile/cadencePresentation.ts` |
 | Composer blank starters | `src/pages/mobile/configurationStarters.ts` |
 | Presets (CONFIG without cadence; OPERATIONAL labels + layout) | `mobileSettingsPresets.ts`, `MobileSettingsAISurface.tsx` |
-| Tier A cadence UI | `SettingsTierAOverview` in `MobileSettingsAISurface.tsx` |
+| Tier A workspace summary (no cadence) | `SettingsTierAOverview` in `MobileSettingsAISurface.tsx` |
 | Assistant priming | `SettingsAssistantComposer` in `MobileSettingsAISurface.tsx` |
-| Advanced cadence `<option>` labels | `MobileSettingsView.tsx` (`SettingsEditablePanel`) |
+| Operating mode `<select>` + Apply | `MobileSettingsView.tsx` (`SettingsEditablePanel`) |
 
 ---
 
 ## 6. Acceptance
 
-1. Cadence is changeable from Tier A without opening Advanced.
+1. Operating mode is changeable from **Preferences**; Tier A does not show or duplicate it.
 2. No “Cadence balanced / …” chips in Quick tweaks.
 3. At least three composer starters **prime** only; Apply required.
 4. Four workspace templates render as a **2×2** grid; each bundle still produces ≥2 planner operations (existing unit test).

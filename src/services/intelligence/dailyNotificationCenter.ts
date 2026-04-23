@@ -1,3 +1,4 @@
+import { getBrandTemplateReplacements, LLM_BRAND_TEMPLATE_TOKENS } from '../ai/brandProfileContext';
 import { getIntelligenceRules } from '../../rules/intelligenceRulesRuntime';
 import { BrandOpsData } from '../../types/domain';
 import { localIntelligence } from './localIntelligence';
@@ -46,8 +47,10 @@ const applyPromptTemplate = (
   template: string,
   digest: Omit<DailyNotificationDigest, 'promptPreview'>,
   data: BrandOpsData
-) =>
-  template
+) => {
+  const brandReps = getBrandTemplateReplacements(data.brand);
+  const brandContextBlock = brandReps['{{brand_context}}'];
+  let out = template
     .replaceAll('{{role_context}}', data.settings.notificationCenter.roleContext)
     .replaceAll('{{preferred_model}}', data.settings.notificationCenter.preferredModel || 'not specified')
     .replaceAll('{{managerial_focus_percent}}', String(digest.managerialWeight))
@@ -55,6 +58,14 @@ const applyPromptTemplate = (
     .replaceAll('{{managerial_tasks}}', serializeActions(digest.managerialActions))
     .replaceAll('{{technical_tasks}}', serializeActions(digest.technicalActions))
     .replaceAll('{{dataset_tasks}}', serializeActions(digest.datasetActions));
+  for (const token of LLM_BRAND_TEMPLATE_TOKENS) {
+    out = out.replaceAll(token, brandReps[token]);
+  }
+  if (!template.includes('{{brand_')) {
+    out = `${out.trimEnd()}\n\n---\nWorkspace brand (ground truth — use these labels; do not invent a different operator or offer)\n${brandContextBlock}`;
+  }
+  return out;
+};
 
 const scheduleBlocks = (
   startHour: number,

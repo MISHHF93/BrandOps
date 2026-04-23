@@ -29,6 +29,6 @@ export const SHELL_SECTION_COPY: Record<
   },
   settings: {
     headline: 'Settings — trust & data',
-    body: 'Preferences, configure presets, agent audit, chat session, workspace JSON export/import, reset, and the full read-only workspace model from the codebase below.'
+    body: 'Read-only snapshot at top. Change stored values in Preferences. Assistant and templates are shortcuts; Advanced has dataset lineage, intelligence detail, export/import, and audit.'
   }
 };

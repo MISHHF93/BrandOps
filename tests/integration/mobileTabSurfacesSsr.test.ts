@@ -257,12 +257,16 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     );
     expect(html).toContain('aria-label="Settings"');
     expect(html).toContain('Settings — trust');
+    expect(html).toContain('Read-only snapshot at top');
+    expect(html).toContain('Workspace snapshot');
+    expect(html).toContain('Read-only');
+    expect(html).toContain('Profile (saved)');
+    expect(html).toContain('Snapshot at top (read-only)');
     expect(html).toContain('Workspace model (read-only)');
-    expect(html).toContain('Preferences');
+    expect(html).toContain('Preferences (edit workspace)');
     expect(html).toContain('Quick tweaks');
     expect(html).toContain('Workspace templates');
     expect(html).toContain('Focus');
-    expect(html).toContain('Cadence');
     expect(html).toContain('settings-data-tier-a');
     expect(html).toContain('Export workspace JSON');
     expect(html).toContain('Assistant');

@@ -1,3 +1,8 @@
+/**
+ * Local / stub LLM entrypoint. If you add a real OpenAI-style adapter, pass workspace `BrandProfile`
+ * into the system or user turn using `formatBrandProfileForAi` / `getBrandTemplateReplacements` in
+ * `../ai/brandProfileContext.ts` (plain labeled UTF-8; no embedding or custom model required).
+ */
 import { AiGenerationRequest, AiGenerationResponse, AiProviderAdapter } from '../aiAdapters/types';
 import { isAiProviderEnabled } from '../aiAdapters/runtimePolicy';
 import { agentOrchestrator } from '../agent/orchestrator';

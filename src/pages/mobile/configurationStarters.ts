@@ -8,9 +8,13 @@ export type ComposerBlankStarter = {
 };
 
 /**
- * Sensible defaults to prime the Settings assistant — does not include cadence
- * (use the segmented control in the Workspace card).
+ * Sensible defaults to prime the Settings assistant — does not include operating mode
+ * (use Advanced → Preferences for that).
  */
+function starterSnippet(value: string, max = 100) {
+  return value.replace(/"/g, "'").replace(/\n/g, ' ').trim().slice(0, max);
+}
+
 export function buildComposerBlankStarters(snapshot: MobileWorkspaceSnapshot): ComposerBlankStarter[] {
   return [
     {
@@ -28,6 +32,14 @@ export function buildComposerBlankStarters(snapshot: MobileWorkspaceSnapshot): C
     {
       label: 'Business weight',
       snippet: `${snapshot.managerialWeight}% business`
+    },
+    {
+      label: 'Positioning',
+      snippet: `positioning is "${starterSnippet(snapshot.positioning, 160)}"`
+    },
+    {
+      label: 'Brand voice',
+      snippet: `brand voice is "${starterSnippet(snapshot.voiceGuide, 200)}"`
     }
   ];
 }

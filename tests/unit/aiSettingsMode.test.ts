@@ -28,6 +28,30 @@ describe('aiSettingsMode planner', () => {
     expect(plan.operations).toHaveLength(0);
     expect(plan.unsupportedRequests.length).toBeGreaterThan(0);
   });
+
+  it('parses positioning and brand voice into update-brand-profile', () => {
+    const plan = buildAiSettingsPlan(
+      'positioning is "Helps SMBs ship faster", brand voice is "Direct, warm, no jargon"'
+    );
+    const brand = plan.operations.find((o) => o.kind === 'update-brand-profile');
+    expect(brand?.payload.positioning).toBe('Helps SMBs ship faster');
+    expect(brand?.payload.voiceGuide).toBe('Direct, warm, no jargon');
+  });
+
+  it('accepts voice guide phrasing as alias for brand voice', () => {
+    const plan = buildAiSettingsPlan('voice guide is "Short sentences only"');
+    const brand = plan.operations.find((o) => o.kind === 'update-brand-profile');
+    expect(brand?.payload.voiceGuide).toBe('Short sentences only');
+  });
+
+  it('parses multiline quoted brand voice before next field', () => {
+    const plan = buildAiSettingsPlan(
+      'brand voice is "Line one\nLine two", operator name is "Alex"'
+    );
+    const brand = plan.operations.find((o) => o.kind === 'update-brand-profile');
+    expect(brand?.payload.voiceGuide).toContain('Line one');
+    expect(brand?.payload.operatorName).toBe('Alex');
+  });
 });
 
 describe('aiSettingsMode operation applier', () => {
@@ -56,5 +80,22 @@ describe('aiSettingsMode operation applier', () => {
     expect(result.data.notes[0]?.detail).toContain('Prioritize launch blockers');
     expect(result.applied.length).toBe(3);
     expect(result.failed).toHaveLength(0);
+  });
+
+  it('applies positioning and voiceGuide on update-brand-profile', () => {
+    const source = cloneDemoSampleData();
+    const result = applyAiSettingsOperations(source, [
+      {
+        id: '1',
+        kind: 'update-brand-profile',
+        payload: {
+          positioning: 'New positioning line',
+          voiceGuide: 'Crisp and confident.'
+        }
+      }
+    ]);
+    expect(result.data.brand.positioning).toBe('New positioning line');
+    expect(result.data.brand.voiceGuide).toBe('Crisp and confident.');
+    expect(result.applied).toHaveLength(1);
   });
 });

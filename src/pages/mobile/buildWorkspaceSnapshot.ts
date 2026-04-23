@@ -232,8 +232,12 @@ export interface MobileWorkspaceSnapshot {
   /** 1–24; same as `settings.notificationCenter` for editable workday UIs. */
   workdayEndHour: number;
   operatorName: string;
+  /** One-line who/what (`BrandProfile.positioning`). */
+  positioning: string;
   focusMetric: string;
   primaryOffer: string;
+  /** Tone and vocabulary (`BrandProfile.voiceGuide`). */
+  voiceGuide: string;
   dueTodayTasks: number;
   missedTasks: number;
   recentAudit: AgentAuditEntry[];
@@ -359,8 +363,10 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     workdayStartHour: workspace.settings.notificationCenter.workdayStartHour,
     workdayEndHour: workspace.settings.notificationCenter.workdayEndHour,
     operatorName: workspace.brand.operatorName,
+    positioning: workspace.brand.positioning,
     focusMetric: workspace.brand.focusMetric,
     primaryOffer: workspace.brand.primaryOffer,
+    voiceGuide: workspace.brand.voiceGuide,
     dueTodayTasks: workspace.scheduler.tasks.filter(
       (task) => task.status === 'due' || task.status === 'due-soon'
     ).length,

@@ -15,7 +15,6 @@ import {
   SettingsAssistantComposer,
   SettingsDataSafetyBlock,
   SettingsQuickConfigureScroller,
-  settingsActiveCadence,
   SettingsTierAOverview,
   SettingsWorkflowModesHero
 } from './MobileSettingsAISurface';
@@ -44,7 +43,7 @@ const settingsRunChipClass = (btnFocus: string) =>
   `${mobileChipClass(btnFocus)} disabled:cursor-not-allowed disabled:opacity-50`;
 
 const fieldClass = (btnFocus: string) =>
-  `w-full rounded-lg border border-border/70 bg-bgElevated/90 px-2.5 py-2 text-sm text-text placeholder:text-textSoft focus:border-borderStrong focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
+  `w-full rounded-lg border border-border/70 bg-bgElevated/90 px-2.5 py-2 text-base text-text placeholder:text-textSoft focus:border-borderStrong focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm touch-manipulation ${btnFocus}`;
 
 const primaryBtn = (btnFocus: string) =>
   `mt-2 inline-flex w-full sm:w-auto justify-center rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-xs font-medium text-text hover:bg-surfaceHover disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
@@ -140,7 +139,9 @@ function SettingsEditablePanel({
   const [remindMin, setRemindMin] = useState('');
   const [mWeight, setMWeight] = useState('');
   const [operatorName, setOperatorName] = useState('');
+  const [positioning, setPositioning] = useState('');
   const [primaryOffer, setPrimaryOffer] = useState('');
+  const [voiceGuide, setVoiceGuide] = useState('');
   const [focusMetric, setFocusMetric] = useState('');
   const [cadenceMode, setCadenceMode] = useState<CadenceFlowMode>('balanced');
   const [visualMode, setVisualMode] = useState<VisualMode>('classic');
@@ -154,7 +155,9 @@ function SettingsEditablePanel({
     setRemindMin(String(snapshot.remindBeforeMinutes));
     setMWeight(String(snapshot.managerialWeight));
     setOperatorName(snapshot.operatorName);
+    setPositioning(snapshot.positioning);
     setPrimaryOffer(snapshot.primaryOffer);
+    setVoiceGuide(snapshot.voiceGuide);
     setFocusMetric(snapshot.focusMetric);
     setCadenceMode(snapshot.cadenceMode as CadenceFlowMode);
     setVisualMode(snapshot.visualMode as VisualMode);
@@ -166,7 +169,9 @@ function SettingsEditablePanel({
     snapshot.remindBeforeMinutes,
     snapshot.managerialWeight,
     snapshot.operatorName,
+    snapshot.positioning,
     snapshot.primaryOffer,
+    snapshot.voiceGuide,
     snapshot.focusMetric,
     snapshot.cadenceMode,
     snapshot.visualMode,
@@ -217,29 +222,25 @@ function SettingsEditablePanel({
 
   const onApplyProfile = useCallback(async () => {
     const op = forConfigureQuoting(operatorName);
+    const pos = forConfigureQuoting(positioning);
     const po = forConfigureQuoting(primaryOffer);
+    const vg = forConfigureQuoting(voiceGuide);
     const fm = forConfigureQuoting(focusMetric);
-    if (!op && !po && !fm) {
+    if (!op && !pos && !po && !vg && !fm) {
       void runApply('', 'Enter at least one profile field.');
       return;
     }
     const parts: string[] = [];
     if (op) parts.push(`operator name is "${op}"`);
+    if (pos) parts.push(`positioning is "${pos}"`);
     if (po) parts.push(`primary offer is "${po}"`);
+    if (vg) parts.push(`brand voice is "${vg}"`);
     if (fm) parts.push(`focus metric is "${fm}"`);
     await runApply(parts.join(', '));
-  }, [runApply, operatorName, primaryOffer, focusMetric]);
+  }, [runApply, operatorName, positioning, primaryOffer, voiceGuide, focusMetric]);
 
   const onApplyCadence = useCallback(async () => {
-    const line =
-      cadenceMode === 'launch-day'
-        ? 'cadence launch-day'
-        : cadenceMode === 'maker-heavy'
-          ? 'cadence maker-heavy'
-          : cadenceMode === 'client-heavy'
-            ? 'cadence client-heavy'
-            : 'cadence balanced';
-    await runApply(line);
+    await runApply(cadenceConfigureFragment(cadenceMode));
   }, [runApply, cadenceMode]);
 
   const onApplyVisual = useCallback(async () => {
@@ -271,8 +272,8 @@ function SettingsEditablePanel({
   return (
     <MobileTabSection
       id="settings-editable"
-      title="Preferences"
-      description="Adjust workspace fields stored on this device. Apply uses the same configure engine as Chat, without posting to the chat feed."
+      title="Preferences (edit workspace)"
+      description="These fields update what you see in the snapshot above after Apply. Below templates; same configure engine as Chat, without posting to the chat feed."
     >
       {applyError ? (
         <p className="mb-2 rounded border border-rose-500/30 bg-rose-950/20 px-2 py-1.5 text-[11px] text-rose-200/95" role="alert">
@@ -299,7 +300,6 @@ function SettingsEditablePanel({
             value={wdStart}
             onChange={(e) => setWdStart(e.target.value)}
             className={f}
-            disabled={applyBusy}
           />
         </div>
         <div>
@@ -314,7 +314,6 @@ function SettingsEditablePanel({
             value={wdEnd}
             onChange={(e) => setWdEnd(e.target.value)}
             className={f}
-            disabled={applyBusy}
           />
         </div>
         <div>
@@ -329,7 +328,6 @@ function SettingsEditablePanel({
             value={maxTasks}
             onChange={(e) => setMaxTasks(e.target.value)}
             className={f}
-            disabled={applyBusy}
           />
         </div>
         <div>
@@ -344,7 +342,6 @@ function SettingsEditablePanel({
             value={remindMin}
             onChange={(e) => setRemindMin(e.target.value)}
             className={f}
-            disabled={applyBusy}
           />
         </div>
       </div>
@@ -360,25 +357,23 @@ function SettingsEditablePanel({
           value={mWeight}
           onChange={(e) => setMWeight(e.target.value)}
           className={f}
-          disabled={applyBusy}
         />
       </div>
       <button type="button" onClick={() => void onApplySchedule()} disabled={applyBusy} className={pBtn}>
         Apply workday, tasks, remind &amp; weight
       </button>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Cadence mode</p>
+      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Operating mode</p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="min-w-0 flex-1">
           <label className="text-[11px] text-zinc-500" htmlFor="bo-cadence">
-            Mode
+            Preset
           </label>
           <select
             id="bo-cadence"
             value={cadenceMode}
             onChange={(e) => setCadenceMode(e.target.value as CadenceFlowMode)}
             className={f}
-            disabled={applyBusy}
           >
             <option value="balanced">{cadenceModeTitle('balanced')}</option>
             <option value="maker-heavy">{cadenceModeTitle('maker-heavy')}</option>
@@ -387,11 +382,17 @@ function SettingsEditablePanel({
           </select>
         </div>
         <button type="button" onClick={() => void onApplyCadence()} disabled={applyBusy} className={pBtn}>
-          Apply cadence
+          Apply operating mode
         </button>
       </div>
 
       <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-zinc-500">Profile</p>
+      <p className="mb-2 text-[10px] leading-snug text-zinc-500">
+        Each value is sent to the operating plan / external models with a clear label (operator name, positioning, offer, brand voice, focus metric) so the model does not confuse them. In Notification Center → prompt template, use{' '}
+        <code className="text-[9px] text-textSoft">{'{{brand_context}}'}</code> for the full block, or{' '}
+        <code className="text-[9px] text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
+        <code className="text-[9px] text-textSoft">{'{{brand_positioning}}'}</code>, etc.
+      </p>
       <div className="space-y-2">
         <div>
           <label className="text-[11px] text-zinc-500" htmlFor="bo-op">
@@ -402,8 +403,25 @@ function SettingsEditablePanel({
             value={operatorName}
             onChange={(e) => setOperatorName(e.target.value)}
             className={f}
-            disabled={applyBusy}
+            autoComplete="name"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+        </div>
+        <div>
+          <label className="text-[11px] text-zinc-500" htmlFor="bo-positioning">
+            Positioning
+          </label>
+          <textarea
+            id="bo-positioning"
+            value={positioning}
+            onChange={(e) => setPositioning(e.target.value)}
+            rows={2}
+            placeholder="Who you help, in one sentence."
+            className={`${f} min-h-[3.25rem] resize-y`}
             autoComplete="off"
+            autoCorrect="off"
+            spellCheck={true}
           />
         </div>
         <div>
@@ -415,8 +433,25 @@ function SettingsEditablePanel({
             value={primaryOffer}
             onChange={(e) => setPrimaryOffer(e.target.value)}
             className={f}
-            disabled={applyBusy}
             autoComplete="off"
+            autoCorrect="off"
+            spellCheck={true}
+          />
+        </div>
+        <div>
+          <label className="text-[11px] text-zinc-500" htmlFor="bo-voice">
+            Brand voice
+          </label>
+          <textarea
+            id="bo-voice"
+            value={voiceGuide}
+            onChange={(e) => setVoiceGuide(e.target.value)}
+            rows={4}
+            placeholder="Tone, vocabulary, and things to avoid."
+            className={`${f} min-h-[5.5rem] resize-y`}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={true}
           />
         </div>
         <div>
@@ -428,8 +463,10 @@ function SettingsEditablePanel({
             value={focusMetric}
             onChange={(e) => setFocusMetric(e.target.value)}
             className={f}
-            disabled={applyBusy}
             autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            placeholder="One number or phrase you check weekly."
           />
         </div>
         <button type="button" onClick={() => void onApplyProfile()} disabled={applyBusy} className={pBtn}>
@@ -448,7 +485,6 @@ function SettingsEditablePanel({
             value={visualMode}
             onChange={(e) => setVisualMode(e.target.value as VisualMode)}
             className={f}
-            disabled={applyBusy}
           >
             <option value="classic">Classic</option>
             <option value="retroMagic">Retro</option>
@@ -466,7 +502,6 @@ function SettingsEditablePanel({
             value={motionMode}
             onChange={(e) => setMotionMode(e.target.value as MotionMode)}
             className={f}
-            disabled={applyBusy}
           >
             <option value="off">Off</option>
             <option value="balanced">Balanced</option>
@@ -561,10 +596,10 @@ export const MobileSettingsView = ({
   };
 
   return (
-    <div className="mt-2 space-y-5" aria-label="Settings">
+    <div className="relative z-[1] mt-2 space-y-5 pb-10 pointer-events-auto" aria-label="Settings">
       <MobileTabPageHeader
         title="Settings"
-        subtitle="Assistant-first workspace controls, bundled modes, and backup — classic forms live under Advanced."
+        subtitle="Snapshot at top (read-only). Preferences: forms. Advanced: lineage &amp; audit."
         icon={Settings2}
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12"
         iconClassName="text-info"
@@ -578,9 +613,6 @@ export const MobileSettingsView = ({
         btnFocus={btnFocus}
         onOpenToday={onOpenTodayTab}
         helpHref={hrefHelpPage()}
-        activeCadence={settingsActiveCadence(snapshot)}
-        cadenceDisabled={agentRouteBusy}
-        onCadenceSelect={(mode) => void applySettingsConfigure(cadenceConfigureFragment(mode))}
       />
 
       <SettingsAssistantComposer
@@ -593,6 +625,13 @@ export const MobileSettingsView = ({
       <SettingsQuickConfigureScroller agentRouteBusy={agentRouteBusy} runCommand={runCommand} btnFocus={btnFocus} />
 
       <SettingsWorkflowModesHero agentRouteBusy={agentRouteBusy} runCommand={runCommand} btnFocus={btnFocus} />
+
+      <SettingsEditablePanel
+        snapshot={snapshot}
+        applySettingsConfigure={applySettingsConfigure}
+        applyBusy={applyBusy}
+        btnFocus={btnFocus}
+      />
 
       <SettingsDataSafetyBlock
         btnFocus={btnFocus}
@@ -610,18 +649,11 @@ export const MobileSettingsView = ({
           <span className="inline-flex items-center gap-2">
             Advanced
             <span className="text-[11px] font-normal text-textSoft">
-              — classic preferences, lineage, intelligence detail, vault, audit
+              — dataset lineage, intelligence detail, vault, full model readout, audit
             </span>
           </span>
         </summary>
         <div className="space-y-5 border-t border-border/40 px-3 pb-4 pt-4">
-          <SettingsEditablePanel
-            snapshot={snapshot}
-            applySettingsConfigure={applySettingsConfigure}
-            applyBusy={applyBusy}
-            btnFocus={btnFocus}
-          />
-
           <MobileTabSection
             id="settings-dataset-lineage"
             title="Dataset lineage"

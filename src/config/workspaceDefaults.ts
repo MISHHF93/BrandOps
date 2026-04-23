@@ -78,7 +78,7 @@ export const defaultAppSettings = {
     preferredModel: '',
     roleContext: 'Operator — define your role in Settings → Notification Center.',
     promptTemplate:
-      "You are my AI operating partner. Build today's plan using my tasks, integrations, and workspace state. Keep sequencing practical and end with one review question.",
+      "You are my AI operating partner. Build today's plan using my tasks, integrations, and workspace state. A labeled Workspace brand block (from Settings → Preferences) is appended to this prompt—treat the operator, positioning, offer, voice, and focus metric there as source of truth. Keep sequencing practical and end with one review question.",
     datasetReviewEnabled: true,
     integrationReviewEnabled: true
   },
