@@ -38,7 +38,6 @@ export const CockpitTodayWorkstreamSection = ({
   commandBusy,
   runCommand,
   primeChat,
-  onOpenInAppSettings,
   meta
 }: CockpitTodaySectionProps) => (
   <section
@@ -53,14 +52,6 @@ export const CockpitTodayWorkstreamSection = ({
         <Sparkles className="h-4 w-4 shrink-0 text-warning/80" strokeWidth={2.25} aria-hidden />
         {meta.label}
       </h3>
-      <button
-        type="button"
-        onClick={onOpenInAppSettings}
-        className={`rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] text-textMuted hover:text-text ${btnFocus}`}
-        title="Open Settings for workday, task caps, and reminders"
-      >
-        Settings
-      </button>
     </div>
     <span className="sr-only">
       {meta.description} Lists below are read-only peeks. Buttons open Chat (composer or send) — not
@@ -99,27 +90,14 @@ export const CockpitTodayWorkstreamSection = ({
               <p className="mt-0.5 text-[10px] text-textMuted">
                 {row.status} · {row.sourceType} · due {formatPeekDue(row.dueAt)}
               </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2">
                 <button
                   type="button"
                   disabled={commandBusy}
                   onClick={() => primeChat(`add note: scheduler task — ${row.title}`)}
                   className={rowChip(btnFocus)}
                 >
-                  Open in Chat (draft note)
-                </button>
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() =>
-                    primeChat(
-                      `complete follow up: done — related scheduler task "${row.title.replace(/"/g, "'")}"`
-                    )
-                  }
-                  className={rowChip(btnFocus)}
-                  title="Completes the first incomplete follow-up in the workspace; line ties context in Chat."
-                >
-                  Prime complete follow-up
+                  Review in Chat
                 </button>
               </div>
             </li>
@@ -149,7 +127,7 @@ export const CockpitTodayWorkstreamSection = ({
                 }
                 className={`mt-2 ${rowChip(btnFocus)}`}
               >
-                Open in Chat (extend note)
+                Review in Chat
               </button>
             </li>
           ))}
@@ -171,24 +149,14 @@ export const CockpitTodayWorkstreamSection = ({
                 <span className="font-normal text-textSoft"> · {row.company}</span>
               </p>
               <p className="mt-0.5 text-[10px] text-textMuted">{row.role}</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2">
                 <button
                   type="button"
                   disabled={commandBusy}
                   onClick={() => primeChat(`update contact: ${row.name}, ${row.company}`)}
                   className={rowChip(btnFocus)}
                 >
-                  Open in Chat (contact update)
-                </button>
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() =>
-                    primeChat(`add contact: ${row.name}, ${row.company}, ${row.role || 'Role'}`)
-                  }
-                  className={rowChip(btnFocus)}
-                >
-                  Prime add contact
+                  Review in Chat
                 </button>
               </div>
             </li>

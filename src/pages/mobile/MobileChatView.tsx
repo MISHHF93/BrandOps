@@ -17,6 +17,7 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   text: string;
+  sourceSurface?: 'Pulse' | 'Today' | 'Integrations' | 'Settings' | 'Chat';
   action?: string;
   ok?: boolean;
   resultKind?: 'plain' | 'command-result';
@@ -133,7 +134,14 @@ export const MobileChatView = ({
                 )}
               >
                 {message.role === 'user' ? (
-                  message.text
+                  <div className="space-y-1">
+                    {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
+                      <p className="text-[10px] uppercase tracking-wide text-textSoft">
+                        From {message.sourceSurface}
+                      </p>
+                    ) : null}
+                    <p>{message.text}</p>
+                  </div>
                 ) : message.resultKind === 'command-result' && message.action ? (
                   <div className="space-y-2 rounded-2xl border border-border/50 bg-bgElevated/95 px-3 py-2.5 text-sm shadow-inner">
                     <div className="flex flex-wrap items-center gap-2">
@@ -157,6 +165,11 @@ export const MobileChatView = ({
                       <code className="rounded border border-border/40 bg-bgSubtle/80 px-1.5 py-0.5 text-[11px] text-info">
                         {message.action}
                       </code>
+                      {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
+                        <span className="rounded border border-border/40 bg-bgSubtle/80 px-1.5 py-0.5 text-[10px] text-textSoft">
+                          from {message.sourceSurface}
+                        </span>
+                      ) : null}
                       <button
                         type="button"
                         className={clsx(
@@ -189,7 +202,7 @@ export const MobileChatView = ({
 
       {loading ? <AgentWorkingState /> : null}
 
-      <details className="group rounded-xl border border-border/50 bg-bgSubtle/35 open:bg-bgSubtle/50">
+      <details className="bo-disclosure group">
         <summary
           className={clsx(
             'cursor-pointer list-none px-3 py-2.5 text-xs font-medium text-textMuted transition-colors hover:text-text',
@@ -249,7 +262,7 @@ export const MobileChatView = ({
       </details>
 
       {commandHistory.length > 0 ? (
-        <details className="group rounded-xl border border-border/50 bg-bgSubtle/35 open:bg-bgSubtle/50">
+        <details className="bo-disclosure group">
           <summary
             className={clsx(
               'flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs text-textMuted [&::-webkit-details-marker]:hidden',
@@ -270,7 +283,8 @@ export const MobileChatView = ({
             />
           </summary>
           <div className="border-t border-border/30 px-3 pb-3 pt-2">
-            <div className="mb-2 flex justify-end">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-[10px] text-textSoft">Tap to re-run. Showing latest first.</p>
               <button
                 type="button"
                 className={clsx('text-[10px] text-textSoft hover:text-textMuted', btnFocus)}
@@ -284,7 +298,7 @@ export const MobileChatView = ({
               </button>
             </div>
             <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
-              {commandHistory.map((cmd) => (
+              {commandHistory.slice(0, 8).map((cmd) => (
                 <button
                   key={cmd}
                   type="button"
@@ -299,6 +313,13 @@ export const MobileChatView = ({
                 </button>
               ))}
             </div>
+            {commandHistory.length > 8 ? (
+              <p className="mt-2 text-[10px] text-textSoft">
+                {commandHistory.length - 8} more command
+                {commandHistory.length - 8 === 1 ? '' : 's'} available after you clear or run newer
+                ones.
+              </p>
+            ) : null}
           </div>
         </details>
       ) : null}

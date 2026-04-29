@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent } from 'react';
 import clsx from 'clsx';
-import { Layers } from 'lucide-react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { ComposerBlankStarter } from './configurationStarters';
-import { CONFIG_PRESETS, OPERATIONAL_PRESETS } from './mobileSettingsPresets';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 
 const chipBusy = (btnFocus: string) =>
@@ -40,7 +38,7 @@ export function SettingsTierAOverview({
 
   return (
     <section
-      className="bo-glass-panel rounded-2xl border border-border/55 p-3.5 shadow-panel"
+      className="bo-flagship-surface p-3.5"
       aria-labelledby="settings-tier-a-heading"
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-border/40 pb-2.5">
@@ -223,88 +221,6 @@ export function SettingsAssistantComposer({
         {!applyBusy && applyHint ? <p className="text-[11px] text-success">{applyHint}</p> : null}
       </div>
     </MobileTabSection>
-  );
-}
-
-export function SettingsQuickConfigureScroller({
-  agentRouteBusy,
-  runCommand,
-  btnFocus
-}: {
-  agentRouteBusy: boolean;
-  runCommand: (command: string) => void | Promise<void>;
-  btnFocus: string;
-}) {
-  return (
-    <MobileTabSection
-      id="settings-quick-tweaks"
-      title="Quick tweaks"
-      description="Visual, motion, and ambient — runs in Chat. Operating mode is under Advanced → Preferences."
-      descriptionVisibility="sr-only"
-    >
-      <div className="-mx-1 mt-2 flex gap-2 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]">
-        {CONFIG_PRESETS.map((preset) => (
-          <button
-            key={preset.label}
-            type="button"
-            disabled={agentRouteBusy}
-            onClick={() => void runCommand(preset.command)}
-            className={clsx(chipBusy(btnFocus), 'shrink-0 whitespace-nowrap')}
-          >
-            {preset.label}
-          </button>
-        ))}
-      </div>
-    </MobileTabSection>
-  );
-}
-
-export function SettingsWorkflowModesHero({
-  agentRouteBusy,
-  runCommand,
-  btnFocus
-}: {
-  agentRouteBusy: boolean;
-  runCommand: (command: string) => void | Promise<void>;
-  btnFocus: string;
-}) {
-  return (
-    <section className="space-y-2" aria-labelledby="settings-workflow-modes-heading">
-      <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12">
-          <Layers className="h-4 w-4 text-info" aria-hidden />
-        </div>
-        <h2 id="settings-workflow-modes-heading" className="text-h3 text-text">
-          Workspace templates
-        </h2>
-      </div>
-      <span className="sr-only">
-        One tap applies a bundled setup (still runs through Chat). Pick the closest match, then
-        refine with Assistant.
-      </span>
-      <ul className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {OPERATIONAL_PRESETS.map((preset) => (
-          <li key={preset.label}>
-            <button
-              type="button"
-              disabled={agentRouteBusy}
-              title={preset.description}
-              onClick={() => void runCommand(preset.command)}
-              className={clsx(
-                'flex h-full min-h-[5.5rem] w-full flex-col rounded-xl border border-border/55 bg-surface/45 p-3 text-left transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive/35',
-                btnFocus,
-                'disabled:cursor-not-allowed disabled:opacity-50'
-              )}
-            >
-              <span className="text-sm font-semibold text-text">{preset.label}</span>
-              <span className="mt-1.5 line-clamp-3 text-[11px] leading-snug text-textSoft">
-                {preset.description}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
 

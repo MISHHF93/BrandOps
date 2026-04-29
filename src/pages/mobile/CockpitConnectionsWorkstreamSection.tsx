@@ -1,9 +1,6 @@
 import { PlugZap } from 'lucide-react';
 import { CockpitWorkstreamCommandStrip } from './CockpitWorkstreamCommandStrip';
-import {
-  hrefExtensionIntegrationsPage,
-  hrefPrimaryAppIntegrationsTab
-} from '../../shared/navigation/navigationIntents';
+import { hrefExtensionIntegrationsPage } from '../../shared/navigation/navigationIntents';
 import type { CockpitConnectionsSectionProps } from './cockpitSectionTypes';
 
 const CONNECTIONS_STRIP_ITEMS = [
@@ -47,13 +44,6 @@ export const CockpitConnectionsWorkstreamSection = ({
         {meta.label}
       </h3>
       <span className="inline-flex shrink-0 items-center gap-1.5">
-        <a
-          href={hrefPrimaryAppIntegrationsTab()}
-          className={`rounded-full border border-info/40 bg-surface/70 px-2 py-0.5 text-[10px] font-medium text-info ${btnFocus}`}
-          title="Open Integrations tab"
-        >
-          Integrations
-        </a>
         <a
           href={hrefExtensionIntegrationsPage()}
           className={`rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] font-medium text-textMuted ${btnFocus}`}
@@ -143,7 +133,7 @@ export const CockpitConnectionsWorkstreamSection = ({
                 onClick={() => primeChat(`add note: company ${row.name} — ${row.nextAction}`)}
                 className={`mt-2 ${rowChip(btnFocus)}`}
               >
-                Open in Chat (company note)
+                Review in Chat
               </button>
             </li>
           ))}

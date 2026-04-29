@@ -55,7 +55,7 @@ export const CockpitWorkstreamBar = ({
   );
 
   return (
-    <div className="sticky top-20 z-[12] -mx-1 mb-2 rounded-xl border border-border/40 bg-bgElevated/95 p-2.5 backdrop-blur-sm">
+    <div className="bo-workstream-dock mb-2">
       <p className="bo-section-label">
         <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--info" aria-hidden>
           <LayoutGrid className="h-3.5 w-3.5" strokeWidth={2.25} />

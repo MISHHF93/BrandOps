@@ -98,12 +98,7 @@ function LineList({ items }: { items: TodayFocusLine[] }) {
 }
 
 const panelShell = (role: FocusId) =>
-  clsx(
-    'rounded-xl border border-border/50 bg-bgSubtle/30 p-2.5 border-l-4',
-    role === 'do' && 'border-l-info',
-    role === 'urgent' && 'border-l-warning',
-    role === 'grow' && 'border-l-success'
-  );
+  clsx('bo-focus-panel', `bo-focus-panel--${role}`);
 
 type CockpitFocusEngineProps = {
   snapshot: CockpitDailySnapshot;
@@ -159,7 +154,7 @@ export const CockpitFocusEngine = ({
       <div
         role="tablist"
         aria-label="Focus areas"
-        className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]"
+        className="bo-focus-tabs"
       >
         {focusTabs.map((tab) => {
           const isActive = activeFocus === tab.id;
@@ -175,11 +170,8 @@ export const CockpitFocusEngine = ({
               onClick={() => setActiveFocus(tab.id)}
               title={tab.label}
               className={clsx(
-                'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-label font-medium transition',
-                btnFocus,
-                isActive
-                  ? 'border-accent/60 bg-accent/15 text-text'
-                  : 'border-border/55 bg-surface/55 text-textMuted hover:border-borderStrong hover:text-text'
+                'bo-focus-tab',
+                btnFocus
               )}
             >
               <span
@@ -211,7 +203,7 @@ export const CockpitFocusEngine = ({
       ))}
 
       {focus.quickActions.length > 0 ? (
-        <div className="rounded-xl border border-border/45 bg-surface/40 p-3">
+        <div className="bo-tab-section p-3">
           <p className="bo-section-label">
             <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--primary" aria-hidden>
               <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -252,7 +244,7 @@ export const CockpitFocusEngine = ({
         </div>
       ) : null}
 
-      <details className="group rounded-xl border border-border/45 bg-bgSubtle/30 open:bg-bgSubtle/45">
+      <details className="bo-disclosure group">
         <summary
           className={clsx(
             'flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-label font-medium text-textMuted transition-colors hover:text-text [&::-webkit-details-marker]:hidden',

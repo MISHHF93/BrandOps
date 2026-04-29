@@ -31,7 +31,6 @@ export const CockpitPipelineWorkstreamSection = ({
   commandBusy,
   runCommand,
   primeChat,
-  onOpenPulse,
   meta
 }: CockpitPipelineSectionProps) => (
   <section
@@ -46,16 +45,6 @@ export const CockpitPipelineWorkstreamSection = ({
         <Briefcase className="h-4 w-4 shrink-0 text-success" strokeWidth={2.25} aria-hidden />
         {meta.label}
       </h3>
-      {onOpenPulse ? (
-        <button
-          type="button"
-          onClick={onOpenPulse}
-          className={`rounded-full border border-info/40 bg-surface/70 px-2 py-0.5 text-[10px] font-medium text-info ${btnFocus}`}
-          title="Open Pulse for the chronological mix"
-        >
-          Pulse
-        </button>
-      ) : null}
     </div>
     <span className="sr-only">
       {meta.description} Pipeline lists are read-only digest. Stage changes and outreach run in Chat
@@ -123,14 +112,6 @@ export const CockpitPipelineWorkstreamSection = ({
       <div>
         <div className="flex items-center justify-between gap-2">
           <p className="font-medium text-text">Deal health (heuristic)</p>
-          <button
-            type="button"
-            disabled={commandBusy}
-            onClick={() => void runCommand('pipeline health')}
-            className={`shrink-0 rounded-full border border-success/40 bg-surface/70 px-2 py-0.5 text-[10px] text-success ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`}
-          >
-            Run in Chat
-          </button>
         </div>
         {snapshot.pipelineSignals.length === 0 ? (
           <div className="mt-1 space-y-1">
@@ -195,7 +176,7 @@ export const CockpitPipelineWorkstreamSection = ({
                   }
                   className={`mt-2 ${rowChip(btnFocus)}`}
                 >
-                  Open in Chat (draft note)
+                  Review in Chat
                 </button>
               </li>
             ))}
@@ -232,7 +213,7 @@ export const CockpitPipelineWorkstreamSection = ({
                   }
                   className={`mt-2 ${rowChip(btnFocus)}`}
                 >
-                  Open in Chat (draft note)
+                  Review in Chat
                 </button>
               </li>
             ))}
@@ -261,7 +242,7 @@ export const CockpitPipelineWorkstreamSection = ({
                 {row.status}
                 {row.nextAction ? ` · ${row.nextAction}` : ''}
               </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2">
                 <button
                   type="button"
                   disabled={commandBusy}
@@ -270,29 +251,7 @@ export const CockpitPipelineWorkstreamSection = ({
                   }
                   className={rowChip(btnFocus)}
                 >
-                  Open in Chat (note)
-                </button>
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() =>
-                    primeChat(`draft outreach: follow up on ${row.company} re: ${row.name}`)
-                  }
-                  className={rowChip(btnFocus)}
-                >
-                  Open in Chat (outreach draft)
-                </button>
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() =>
-                    primeChat(
-                      `update opportunity: ${row.name} at ${row.company} — set stage proposal, value and confidence in Chat`
-                    )
-                  }
-                  className={rowChip(btnFocus)}
-                >
-                  Prime stage update
+                  Review in Chat
                 </button>
               </div>
             </li>

@@ -27,7 +27,6 @@ export const CockpitBrandContentWorkstreamSection = ({
   commandBusy,
   runCommand,
   primeChat,
-  onOpenPulse,
   meta
 }: CockpitBrandContentSectionProps) => (
   <section
@@ -42,16 +41,6 @@ export const CockpitBrandContentWorkstreamSection = ({
         <FileText className="h-4 w-4 shrink-0 text-secondary" strokeWidth={2.25} aria-hidden />
         {meta.label}
       </h3>
-      {onOpenPulse ? (
-        <button
-          type="button"
-          onClick={onOpenPulse}
-          className={`rounded-full border border-info/40 bg-surface/70 px-2 py-0.5 text-[10px] font-medium text-info ${btnFocus}`}
-          title="Open Pulse for the full mixed queue"
-        >
-          Pulse
-        </button>
-      ) : null}
     </div>
     <span className="sr-only">
       {meta.description} Brand and publishing rows are read-only digest. Drafts and updates run in
@@ -112,7 +101,7 @@ export const CockpitBrandContentWorkstreamSection = ({
             onClick={() => primeChat('add note: refine brand vault positioning and headlines')}
             className={`mt-2 ${rowChip(btnFocus)}`}
           >
-            Open in Chat (brand note)
+            Review in Chat
           </button>
         </div>
       );
@@ -134,7 +123,7 @@ export const CockpitBrandContentWorkstreamSection = ({
             >
               <p className="font-medium text-text">{row.title}</p>
               <p className="text-[10px] text-textMuted">{row.status}</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2">
                 <button
                   type="button"
                   disabled={commandBusy}
@@ -143,25 +132,7 @@ export const CockpitBrandContentWorkstreamSection = ({
                   }
                   className={rowChip(btnFocus)}
                 >
-                  Open in Chat (content note)
-                </button>
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() => primeChat(`duplicate content: ${row.title.replace(/"/g, "'")}`)}
-                  className={rowChip(btnFocus)}
-                  title="Primes Chat; engine duplicates first active item unless you reorder or refine."
-                >
-                  Prime duplicate
-                </button>
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() => primeChat(`archive content: ${row.title.replace(/"/g, "'")}`)}
-                  className={rowChip(btnFocus)}
-                  title="Primes Chat; engine archives first active item unless you refine."
-                >
-                  Prime archive
+                  Review in Chat
                 </button>
               </div>
             </li>
@@ -188,7 +159,7 @@ export const CockpitBrandContentWorkstreamSection = ({
                 }
                 className={`mt-2 ${rowChip(btnFocus)}`}
               >
-                Open in Chat (publishing command)
+                Review in Chat
               </button>
             </li>
           ))}

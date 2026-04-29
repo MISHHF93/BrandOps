@@ -28,8 +28,7 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toContain('onSelectWorkstream={handleSelectWorkstream}');
   });
 
-  it('threads Pulse → Today workstream navigation and Today → Pulse cross-link', () => {
-    expect(mobileApp).toContain('onOpenCockpitWorkstream={openCockpitWorkstream}');
+  it('keeps Today → Pulse cross-link', () => {
     const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
     expect(cockpitJsx).toContain("onOpenPulseTab={() => commitTab('pulse')}");
   });

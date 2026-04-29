@@ -20,12 +20,9 @@ import {
   Sparkles,
   Sun,
   TriangleAlert,
-  TrendingUp,
-  Workflow
+  TrendingUp
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { DashboardSectionId } from '../../shared/config/dashboardNavigation';
-import type { MobileShellTabId } from './mobileShellQuery';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { PulseTimelineRow } from './pulseTimeline';
 import { MobileTabPageHeader } from './mobileTabPrimitives';
@@ -83,15 +80,7 @@ function lineGlyph(id: string): { Icon: LucideIcon; tone: RowTone } {
 }
 
 const sectionShell = (accent: 'now' | 'fix' | 'grow' | 'ai') => {
-  const border =
-    accent === 'now'
-      ? 'border-l-accent'
-      : accent === 'fix'
-        ? 'border-l-warning'
-        : accent === 'grow'
-          ? 'border-l-success'
-          : 'border-l-info';
-  return clsx('rounded-xl border border-border/50 bg-bgSubtle/40 px-3 py-3 border-l-4', border);
+  return clsx('bo-focus-panel', `bo-focus-panel--${accent}`);
 };
 
 function LineList({ items }: { items: PulseHomeLine[] }) {
@@ -135,8 +124,6 @@ export interface PulseTimelineViewProps {
   commandBusy: boolean;
   runCommand: (command: string) => void | Promise<void>;
   primeChat: (line: string) => void;
-  onNavigateTab: (tab: MobileShellTabId) => void;
-  onOpenCockpitWorkstream: (workstream: DashboardSectionId) => void;
 }
 
 export const PulseTimelineView = ({
@@ -144,9 +131,7 @@ export const PulseTimelineView = ({
   btnFocus,
   commandBusy,
   runCommand,
-  primeChat,
-  onNavigateTab,
-  onOpenCockpitWorkstream
+  primeChat
 }: PulseTimelineViewProps) => {
   const now = new Date();
   const home = buildPulseHomeBoard(snapshot, now);
@@ -259,8 +244,6 @@ export const PulseTimelineView = ({
     );
   };
 
-  const jumpIconBtn = `inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-surface/50 text-textSoft hover:border-borderStrong hover:text-text ${btnFocus}`;
-
   const renderAiSuggestions = () => (
     <ul className="mt-2 space-y-2" role="list">
       {home.recommendedActions.map((a) => (
@@ -318,7 +301,7 @@ export const PulseTimelineView = ({
       <div
         role="tablist"
         aria-label="Pulse focus areas"
-        className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:thin]"
+        className="bo-focus-tabs"
       >
         {focusTabs.map((tab) => {
           const isActive = activeFocus === tab.id;
@@ -334,11 +317,8 @@ export const PulseTimelineView = ({
               onClick={() => setActiveFocus(tab.id)}
               title={tab.srLabel}
               className={clsx(
-                'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-label font-medium transition',
-                btnFocus,
-                isActive
-                  ? 'border-accent/60 bg-accent/15 text-text'
-                  : 'border-border/55 bg-surface/55 text-textMuted hover:border-borderStrong hover:text-text'
+                'bo-focus-tab',
+                btnFocus
               )}
             >
               <span
@@ -408,74 +388,40 @@ export const PulseTimelineView = ({
           <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
           Pipeline health
         </button>
-        <span className="ml-auto inline-flex items-center gap-1.5" aria-label="Jump">
-          <span className="sr-only">Jump</span>
-          <button
-            type="button"
-            onClick={() => onNavigateTab('chat')}
-            className={jumpIconBtn}
-            title="Open Chat"
-            aria-label="Open Chat"
-          >
-            <MessageCircle className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => onNavigateTab('daily')}
-            className={jumpIconBtn}
-            title="Open Today"
-            aria-label="Open Today"
-          >
-            <Sun className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => onOpenCockpitWorkstream('pipeline')}
-            className={jumpIconBtn}
-            title="Open Pipeline workstream"
-            aria-label="Open Pipeline workstream"
-          >
-            <Workflow className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => onOpenCockpitWorkstream('brand-content')}
-            className={jumpIconBtn}
-            title="Open Brand & posts workstream"
-            aria-label="Open Brand & posts workstream"
-          >
-            <FileText className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-          </button>
-        </span>
       </div>
 
       {rows.length === 0 ? (
         <EmptyState
           title="Queue is clear"
-          body="Add a follow-up, a publish slot, or outreach — or open Chat to run a command."
-        >
-          <button
-            type="button"
-            onClick={() => onNavigateTab('chat')}
-            className={`inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-surface/60 px-2.5 py-1.5 text-[11px] font-medium text-text ${btnFocus}`}
-          >
-            <MessageCircle className="h-3 w-3" strokeWidth={2.25} aria-hidden />
-            Open Chat
-          </button>
-        </EmptyState>
+          body="Add a follow-up, a publish slot, or outreach when you are ready."
+        />
       ) : (
-        <>
-          <p className="bo-section-label">
-            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--muted" aria-hidden>
-              <Inbox className="h-3.5 w-3.5" strokeWidth={2.25} />
+        <details className="bo-disclosure group">
+          <summary
+            className={clsx(
+              'cursor-pointer list-none px-3 py-2.5 text-sm font-medium text-text [&::-webkit-details-marker]:hidden',
+              btnFocus
+            )}
+          >
+            <span className="inline-flex w-full items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--muted" aria-hidden>
+                  <Inbox className="h-3.5 w-3.5" strokeWidth={2.25} />
+                </span>
+                <span>Timeline queue</span>
+                <span className="bo-count-pill" aria-hidden>
+                  {rows.length}
+                </span>
+              </span>
+              <span className="text-meta text-textSoft group-open:hidden">Expand</span>
             </span>
-            <span>Up next</span>
-            <span className="sr-only">Up next in order</span>
-          </p>
-          {renderBucket('today', 'Today', Sun)}
-          {renderBucket('thisWeek', 'This week', CalendarClock)}
-          {renderBucket('later', 'Later', Rocket)}
-        </>
+          </summary>
+          <div className="border-t border-border/30 px-3 pb-3 pt-2">
+            {renderBucket('today', 'Today', Sun)}
+            {renderBucket('thisWeek', 'This week', CalendarClock)}
+            {renderBucket('later', 'Later', Rocket)}
+          </div>
+        </details>
       )}
 
       <p className="text-meta text-textSoft/80" title={startOfLocalDay(now).toISOString()}>

@@ -21,12 +21,9 @@ import { buildComposerBlankStarters } from './configurationStarters';
 import {
   SettingsAssistantComposer,
   SettingsDataSafetyBlock,
-  SettingsQuickConfigureScroller,
-  SettingsTierAOverview,
-  SettingsWorkflowModesHero
+  SettingsTierAOverview
 } from './MobileSettingsAISurface';
 import { MobileTabPageHeader, MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
-import { ShellSectionCallout } from './ShellSectionCallout';
 import { SettingsCockpitCapabilityDisclosure } from './SettingsCockpitCapabilityDisclosure';
 import { LocalProductUsageReadout } from './LocalProductUsageReadout';
 
@@ -375,7 +372,7 @@ function SettingsEditablePanel({
     <MobileTabSection
       id="settings-editable"
       title="Preferences (edit workspace)"
-      description="These fields update what you see in the snapshot above after Apply. Below templates; same configure engine as Chat, without posting to the chat feed."
+      description="These fields update the unified workspace after Apply. Same configure engine as Chat, without posting to the chat feed."
       descriptionVisibility="sr-only"
     >
       {applyError ? (
@@ -691,7 +688,7 @@ export interface MobileSettingsViewProps {
   applySettingsConfigure: (configurePayloadOrLine: string) => Promise<AgentWorkspaceResult | null>;
   /** Preferences panel `configure:` apply only. */
   applyBusy: boolean;
-  /** Chat / quick-command in flight (presets, audit re-run, vault chips). */
+  /** Chat / quick-command in flight (audit re-run, vault chips). */
   commandBusy: boolean;
   onRequestClearChat: () => void;
   onExportWorkspace: () => Promise<void>;
@@ -712,7 +709,7 @@ export interface MobileSettingsViewProps {
 }
 
 /**
- * Workspace configuration: editable preferences, optional configure presets, session, and packaged page link.
+ * Workspace configuration: one assistant path, editable preferences, session, and packaged page link.
  */
 export const MobileSettingsView = ({
   snapshot,
@@ -762,17 +759,15 @@ export const MobileSettingsView = ({
     <div className="relative z-[1] mt-2 space-y-5 pb-10 pointer-events-auto" aria-label="Settings">
       <MobileTabPageHeader
         title="Settings"
-        subtitle="Account, trust, cadence, export."
+        subtitle="Account, behavior, and data safety."
         icon={Settings2}
         iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12"
         iconClassName="text-info"
       />
       <span className="sr-only">
-        You and this workspace — account, trust, cadence, export. To wire Notion, OAuth, or sources,
+        You and this workspace: account, behavior, and data safety. For provider wiring and sources,
         use Integrations.
       </span>
-
-      <ShellSectionCallout tab="settings" className="mt-1" />
 
       <SettingsTierAOverview
         snapshot={snapshot}
@@ -794,31 +789,29 @@ export const MobileSettingsView = ({
         onOpenBillingPortal={onOpenBillingPortal}
       />
 
-      <SettingsAssistantComposer
-        applySettingsConfigure={applySettingsConfigure}
-        applyBusy={applyBusy}
-        btnFocus={btnFocus}
-        blankStarters={buildComposerBlankStarters(snapshot)}
-      />
+      <details className="bo-disclosure group">
+        <summary
+          className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+        >
+          Unified workspace
+          <span className="ml-2 text-[11px] font-normal text-textSoft">Assistant and preferences</span>
+        </summary>
+        <div className="space-y-5 border-t border-border/40 px-3 pb-4 pt-4">
+          <SettingsAssistantComposer
+            applySettingsConfigure={applySettingsConfigure}
+            applyBusy={applyBusy}
+            btnFocus={btnFocus}
+            blankStarters={buildComposerBlankStarters(snapshot)}
+          />
 
-      <SettingsQuickConfigureScroller
-        agentRouteBusy={agentRouteBusy}
-        runCommand={runCommand}
-        btnFocus={btnFocus}
-      />
-
-      <SettingsWorkflowModesHero
-        agentRouteBusy={agentRouteBusy}
-        runCommand={runCommand}
-        btnFocus={btnFocus}
-      />
-
-      <SettingsEditablePanel
-        snapshot={snapshot}
-        applySettingsConfigure={applySettingsConfigure}
-        applyBusy={applyBusy}
-        btnFocus={btnFocus}
-      />
+          <SettingsEditablePanel
+            snapshot={snapshot}
+            applySettingsConfigure={applySettingsConfigure}
+            applyBusy={applyBusy}
+            btnFocus={btnFocus}
+          />
+        </div>
+      </details>
 
       <SettingsDataSafetyBlock
         btnFocus={btnFocus}
@@ -829,15 +822,14 @@ export const MobileSettingsView = ({
         importMessage={importMessage}
       />
 
-      <details className="group rounded-xl border border-border/50 bg-bgSubtle/25">
+      <details className="bo-disclosure group">
         <summary
           className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >
           <span className="inline-flex items-center gap-2">
             Advanced
             <span className="text-[11px] font-normal text-textSoft">
-              — local product metrics, dataset lineage, intelligence detail, vault, full model
-              readout, audit
+              — metrics, lineage, intelligence, vault, readout, audit
             </span>
           </span>
         </summary>
@@ -845,7 +837,7 @@ export const MobileSettingsView = ({
           <MobileTabSection
             id="settings-local-product-metrics"
             title="Local product metrics"
-            description="Habit, navigation to Chat, command outcomes, and shell timing — on-device only; maps to the experience roadmap success indicators."
+            description="On-device habit, command outcomes, and shell timing."
             descriptionVisibility="sr-only"
           >
             <LocalProductUsageReadout />
@@ -854,7 +846,7 @@ export const MobileSettingsView = ({
           <MobileTabSection
             id="settings-dataset-lineage"
             title="Dataset lineage"
-            description="Seed metadata for this device (demo vs production-empty, version)."
+            description="Seed metadata for this device."
             descriptionVisibility="sr-only"
           >
             <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
@@ -898,12 +890,11 @@ export const MobileSettingsView = ({
           <MobileTabSection
             id="settings-intelligence-rules"
             title="Intelligence rules (effective)"
-            description="Scoring for Today digests. Refreshes on page load."
+            description="Scoring profile used for Today digests."
           >
             {!snapshot.intelligenceRulesReadout.initRan ? (
               <p className="mt-2 text-[10px] text-textMuted">
-                Load status will refresh after the first rules init (extension background on
-                install/startup, or this document load).
+                Status appears after first rules init.
               </p>
             ) : null}
             <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
@@ -1029,7 +1020,7 @@ export const MobileSettingsView = ({
           <MobileTabSection
             id="settings-audit"
             title="Recent agent activity"
-            description="Commands that touched workspace data, newest first. Re-run repeats the same line in Chat."
+            description="Commands that changed workspace data."
             descriptionVisibility="sr-only"
           >
             {snapshot.recentAudit.length === 0 ? (
@@ -1079,11 +1070,8 @@ export const MobileSettingsView = ({
             </h3>
             {documentSurface === 'integrations' ? (
               <p className="mt-1 text-[11px] text-textMuted">
-                This is the MV3 <strong className="text-textSoft">extension</strong> page (manifest{' '}
-                <code>options_ui</code>
-                ): same <strong className="text-textSoft">BrandOps Mobile</strong> shell as{' '}
-                <code>mobile.html</code>. Use the bottom bar for Integrations vs Settings;
-                preferences above match the main app tab.
+                This is the extension options page using the same shell as{' '}
+                <code>mobile.html</code>.
               </p>
             ) : (
               <>
@@ -1092,8 +1080,7 @@ export const MobileSettingsView = ({
                   <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">
                     integrations.html
                   </code>{' '}
-                  in a new tab—the same UI as Chrome extension options, aligned with the
-                  Integrations tab link there.
+                  in a new tab (same UI as Chrome extension options).
                 </p>
                 <button
                   type="button"

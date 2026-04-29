@@ -38,7 +38,7 @@ export function MobileTabSection({
   return (
     <section
       id={id}
-      className="rounded-xl border border-border/50 bg-bgSubtle/50 p-3 text-xs text-textMuted"
+      className="bo-tab-section p-3 text-xs text-textMuted"
       aria-labelledby={titleId}
     >
       <h3 id={titleId} className="text-sm font-semibold text-text">
@@ -74,7 +74,7 @@ export function MobileTabPageHeader({
   return (
     <header
       className={clsx(
-        'bo-section-halo space-y-1.5 pb-1',
+        'bo-section-halo bo-tab-page-header space-y-1.5',
         haloTone === 'info' && 'bo-section-halo--info',
         haloTone === 'success' && 'bo-section-halo--success',
         haloTone === 'primary' && 'bo-section-halo--primary'

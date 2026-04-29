@@ -243,11 +243,10 @@ export const ChatCommandBar = ({
 
       <div
         className={clsx(
-          'flex items-center gap-1.5 rounded-2xl border p-1.5 shadow-panel backdrop-blur-md sm:gap-2 sm:p-2',
-          commandLoading
-            ? 'border-primary/30 bg-primarySoft/20'
-            : 'border-border/70 bg-bgElevated/95'
+          'bo-command-composer flex items-center gap-1.5 p-1.5 sm:gap-2 sm:p-2',
+          commandLoading && 'bo-command-composer--busy'
         )}
+        data-busy={commandLoading ? 'true' : undefined}
       >
         <input
           ref={fileInputRef}

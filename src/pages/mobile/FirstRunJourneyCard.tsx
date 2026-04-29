@@ -1,7 +1,4 @@
-import { Activity, CalendarCheck2, MessageCircle, Sparkles, X } from 'lucide-react';
-import clsx from 'clsx';
-import type { LucideIcon } from 'lucide-react';
-import type { MobileShellTabId } from './mobileShellQuery';
+import { CheckCircle2, Sparkles, X } from 'lucide-react';
 
 const STORAGE_KEY = 'brandops:firstRunJourneyDismissed';
 
@@ -19,46 +16,17 @@ function writeFirstRunJourneyDismissed() {
   }
 }
 
-function HopChip({
-  icon: Icon,
-  label,
-  onClick,
-  btnFocus
-}: {
-  icon: LucideIcon;
-  label: string;
-  onClick: () => void;
-  btnFocus: string;
-}) {
-  return (
-    <button
-      type="button"
-      className={clsx(
-        'inline-flex items-center gap-1.5 rounded-full border border-border/55 bg-surface/55 px-2.5 py-1 text-label font-medium text-text hover:border-borderStrong hover:bg-surfaceActive/70',
-        btnFocus
-      )}
-      onClick={onClick}
-      title={label}
-    >
-      <Icon className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-      <span>{label}</span>
-    </button>
-  );
-}
-
 /**
- * Dismissible "first 30 seconds" guide. Symbol-first: three hop chips with icons plus one
- * primary CTA — no prose paragraph to decode.
+ * Dismissible "first 30 seconds" guide. Navigation stays in the bottom bar; this card only keeps
+ * the first command CTA and a static orientation checklist.
  */
 export function FirstRunJourneyCard({
   btnFocus,
   onDismiss,
-  onSelectTab,
   onTryCommand
 }: {
   btnFocus: string;
   onDismiss: () => void;
-  onSelectTab: (tab: MobileShellTabId) => void;
   onTryCommand: (line: string) => void;
 }) {
   return (
@@ -73,27 +41,10 @@ export function FirstRunJourneyCard({
           </span>
           <div>
             <p className="text-h3 text-text">Start in 30 seconds</p>
-            <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Jump to a tab">
-              <HopChip
-                icon={Activity}
-                label="Pulse"
-                btnFocus={btnFocus}
-                onClick={() => onSelectTab('pulse')}
-              />
-              <HopChip
-                icon={CalendarCheck2}
-                label="Today"
-                btnFocus={btnFocus}
-                onClick={() => onSelectTab('daily')}
-              />
-              <HopChip
-                icon={MessageCircle}
-                label="Chat"
-                btnFocus={btnFocus}
-                onClick={() => onSelectTab('chat')}
-              />
-            </div>
-            <div className="mt-3">
+            <p className="mt-1 text-meta text-textSoft">
+              Start with one workspace check, then use the bottom tabs to move around.
+            </p>
+            <div className="mt-2">
               <button
                 type="button"
                 className={`bo-btn-primary ${btnFocus}`}
@@ -104,6 +55,16 @@ export function FirstRunJourneyCard({
                 Pipeline health
               </button>
             </div>
+            <ul className="mt-3 space-y-1.5" aria-label="First value checklist">
+              {['Pulse shows urgency', 'Today groups work areas', 'Chat executes commands'].map(
+                (item) => (
+                  <li key={item} className="flex items-center gap-1.5 text-meta text-textSoft">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-success" strokeWidth={2.25} />
+                    <span>{item}</span>
+                  </li>
+                )
+              )}
+            </ul>
           </div>
         </div>
         <button

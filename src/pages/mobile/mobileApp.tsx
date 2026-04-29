@@ -1,6 +1,5 @@
 import { type ChangeEvent, useCallback, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Command as CommandPaletteIcon } from 'lucide-react';
 import {
   executeAgentWorkspaceCommand,
   type AgentWorkspaceResult
@@ -102,6 +101,11 @@ const normalizeStoredMessage = (raw: unknown): ChatMessage | null => {
     role: m.role as 'user' | 'assistant',
     text: m.text,
     ...(typeof m.action === 'string' ? { action: m.action } : {}),
+    ...(typeof m.sourceSurface === 'string'
+      ? {
+          sourceSurface: m.sourceSurface as 'Pulse' | 'Today' | 'Integrations' | 'Settings' | 'Chat'
+        }
+      : {}),
     ...(typeof m.ok === 'boolean' ? { ok: m.ok } : {}),
     ...(m.resultKind === 'plain' || m.resultKind === 'command-result'
       ? { resultKind: m.resultKind }
@@ -192,6 +196,21 @@ const STRIPE_BILLING_PORTAL_URL = import.meta.env.VITE_STRIPE_BILLING_PORTAL_URL
   | string
   | undefined;
 
+function BrandOpsCrownMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden className={className}>
+      <path
+        d="M13 44h38M13 44V24l9.2 9 9.8-18 9.8 18 9.2-9v20"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 type ChatComposerAttachment = {
   name: string;
   size: number;
@@ -224,12 +243,12 @@ function LaunchAuthGate({
   onSignInProvider: (provider: AuthProviderId) => void;
 }) {
   return (
-    <section className="bo-glass-panel rounded-2xl border border-border/60 p-4 text-sm text-textMuted shadow-panel">
+    <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Sign in to continue</h2>
       <p className="mt-1 text-[11px] text-textSoft">
         Launch setup uses one account across mobile and extension. Pick a provider:
       </p>
-      <div className="mt-3 grid gap-2">
+      <div className="bo-auth-actions mt-3">
         <GoogleSignInButton
           onClick={() => onSignInProvider('google')}
           variant="continue"
@@ -270,7 +289,7 @@ function MembershipGate({
   onOpenBillingPortal: () => void;
 }) {
   return (
-    <section className="bo-glass-panel rounded-2xl border border-border/60 p-4 text-sm text-textMuted shadow-panel">
+    <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Activate membership</h2>
       <p className="mt-1 text-[11px] text-textSoft">
         One paid plan unlocks full workspace execution across app and extension.
@@ -487,9 +506,12 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   const agentCommandLock = getAgentCommandLock(launchAccess, activeTab);
   const canExecuteAgentCommandsFromPalette = agentCommandLock === null;
 
-  const executeCommandFlow = async (trimmed: string) => {
+  const executeCommandFlow = async (
+    trimmed: string,
+    sourceSurface: 'Pulse' | 'Today' | 'Integrations' | 'Settings' | 'Chat' = 'Chat'
+  ) => {
     if (!trimmed || commandLoading) return;
-    setMessages((prev) => [...prev, { id: uid(), role: 'user', text: trimmed }]);
+    setMessages((prev) => [...prev, { id: uid(), role: 'user', text: trimmed, sourceSurface }]);
     setCommandLoading(true);
     const t0 = performance.now();
     let commandOk = false;
@@ -510,6 +532,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
           text: result.summary,
           action: result.action,
           ok: result.ok,
+          sourceSurface,
           strip
         }
       ]);
@@ -525,6 +548,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
           resultKind: 'command-result',
           ok: false,
           action: 'error',
+          sourceSurface,
           text: error instanceof Error ? error.message : 'Unknown error while processing command.'
         }
       ]);
@@ -535,13 +559,16 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
     }
   };
 
-  const startSend = (trimmed: string) => {
+  const startSend = (
+    trimmed: string,
+    sourceSurface: 'Pulse' | 'Today' | 'Integrations' | 'Settings' | 'Chat' = 'Chat'
+  ) => {
     if (!trimmed || commandLoading) return;
     if (needsDestructiveConfirm(trimmed)) {
       setPendingDestructive(trimmed);
       return;
     }
-    void executeCommandFlow(trimmed);
+    void executeCommandFlow(trimmed, sourceSurface);
   };
 
   /** Switches to Chat and runs the command immediately (same engine as Send). */
@@ -552,8 +579,26 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
     commitTab('chat');
     setInput('');
     queueMicrotask(() => {
-      startSend(trimmed);
+      startSend(trimmed, 'Chat');
     });
+  };
+
+  /**
+   * Same as {@link sendQuickCommand}, but annotates origin so users can tell why they jumped to
+   * Chat (prevents "button only navigated me" confusion).
+   */
+  const sendQuickCommandFrom = (source: 'Pulse' | 'Today' | 'Integrations' | 'Settings') => {
+    return (command: string) => {
+      const trimmed = command.trim();
+      if (!trimmed || commandLoading) return;
+      setDataOpsHint(`Running from ${source} in Chat...`);
+      setChatAttachment(null);
+      commitTab('chat');
+      setInput('');
+      queueMicrotask(() => {
+        startSend(trimmed, source);
+      });
+    };
   };
 
   const onSignInProvider = useCallback((provider: AuthProviderId) => {
@@ -704,7 +749,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
     if (!line?.trim() || commandLoading) return;
     setInput('');
     setChatAttachment(null);
-    startSend(line.trim());
+    startSend(line.trim(), 'Chat');
   };
 
   return (
@@ -714,29 +759,20 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
       </a>
       <header className="bo-mobile-header sticky top-0 z-20">
         <div className="mx-auto flex max-w-md items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-micro uppercase tracking-[0.18em] text-textSoft">BrandOps</p>
-            <h1 className="text-h1 text-text">
-              {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? 'Workspace'}
-            </h1>
-            <OnDeviceTrustLine />
-            {dataOpsHint ? <WorkspaceDataHint message={dataOpsHint} /> : null}
+          <div className="bo-mobile-brand">
+            <span className="bo-mobile-brand__mark" aria-hidden>
+              <BrandOpsCrownMark className="bo-mobile-brand__logo" />
+            </span>
+            <div className="min-w-0">
+              <p className="bo-mobile-brand__wordmark">BrandOps</p>
+              <h1 className="bo-mobile-brand__title text-h1">
+                {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? 'Workspace'}
+              </h1>
+              <OnDeviceTrustLine />
+              {dataOpsHint ? <WorkspaceDataHint message={dataOpsHint} /> : null}
+            </div>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center">
-            <button
-              type="button"
-              onClick={() => setCommandPaletteOpen(true)}
-              className={`bo-link bo-link--sm !normal-case ${btnFocus}`}
-              title="Command palette (Ctrl+K or ⌘K)"
-              aria-label="Open command palette"
-            >
-              <CommandPaletteIcon
-                className="inline h-3.5 w-3.5 -translate-y-px sm:mr-1"
-                strokeWidth={2}
-                aria-hidden
-              />
-              <span>Commands</span>
-            </button>
             <button
               type="button"
               onClick={() => openExtensionSurface('help')}
@@ -751,7 +787,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
       <main
         id="bo-mobile-main"
         tabIndex={-1}
-        className={`bo-mobile-main mx-auto w-full max-w-md pt-4 outline-none ${
+        className={`bo-mobile-main mx-auto w-full max-w-sm pt-4 outline-none ${
           activeTab === 'chat'
             ? 'pb-[max(10.5rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
             : 'pb-[max(10rem,calc(8.25rem+env(safe-area-inset-bottom,0px)))]'
@@ -787,7 +823,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         ) : (
           <section
             key={activeTab}
-            className="bo-surface-enter bo-glass-panel rounded-2xl border border-border/60 p-4 text-sm text-textMuted shadow-panel"
+            className="bo-surface-enter bo-flagship-surface p-4 text-sm text-textMuted"
             aria-label={`${activeTab} tab`}
           >
             {activeTab === 'pulse' ? (
@@ -796,7 +832,6 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                   <FirstRunJourneyCard
                     btnFocus={btnFocus}
                     onDismiss={() => setFirstRunJourneyVisible(false)}
-                    onSelectTab={commitTab}
                     onTryCommand={(line) => runCommand(line)}
                   />
                 ) : null}
@@ -804,10 +839,8 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                   snapshot={snapshot}
                   btnFocus={btnFocus}
                   commandBusy={commandLoading}
-                  runCommand={runCommand}
+                  runCommand={sendQuickCommandFrom('Pulse')}
                   primeChat={primeChat}
-                  onNavigateTab={commitTab}
-                  onOpenCockpitWorkstream={openCockpitWorkstream}
                 />
               </>
             ) : null}
@@ -817,7 +850,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                 snapshot={snapshot}
                 btnFocus={btnFocus}
                 commandBusy={commandLoading}
-                runCommand={runCommand}
+                runCommand={sendQuickCommandFrom('Today')}
                 primeChat={primeChat}
                 onOpenInAppSettings={() => commitTab('settings')}
                 onOpenPulseTab={() => commitTab('pulse')}
@@ -831,7 +864,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                 snapshot={snapshot}
                 btnFocus={btnFocus}
                 commandBusy={commandLoading}
-                runCommand={runCommand}
+                runCommand={sendQuickCommandFrom('Integrations')}
                 documentSurface={surfaceLabel}
               />
             ) : null}
@@ -840,7 +873,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               <MobileSettingsView
                 snapshot={snapshot}
                 btnFocus={btnFocus}
-                runCommand={runCommand}
+                runCommand={sendQuickCommandFrom('Settings')}
                 applySettingsConfigure={applySettingsConfigure}
                 applyBusy={settingsApplyLoading}
                 commandBusy={commandLoading}
@@ -1057,15 +1090,9 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
           onClick={() => setCommandPaletteOpen(true)}
           aria-label="Open command palette"
           title="Run a command (⌘K / Ctrl+K)"
-          className={clsx(
-            'fixed bottom-20 right-4 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full',
-            'border border-accent/60 bg-accent/15 text-accent shadow-lg shadow-black/30 backdrop-blur-sm',
-            'hover:border-accent hover:bg-accent/25 hover:text-text',
-            'active:scale-95 transition-[transform,background,border-color] duration-150',
-            btnFocus
-          )}
+          className={clsx('bo-command-fab', btnFocus)}
         >
-          <CommandPaletteIcon className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+          <BrandOpsCrownMark className="bo-command-fab__logo" />
         </button>
       ) : null}
 

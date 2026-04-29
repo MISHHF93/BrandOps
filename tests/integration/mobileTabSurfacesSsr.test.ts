@@ -23,16 +23,14 @@ const noop = () => {};
 const asyncNoop = async () => {};
 
 describe('Mobile tab surfaces (SSR integration)', () => {
-  it('Pulse: header, jump row, buckets, and list landmark', () => {
+  it('Pulse: header, focus tabs, buckets, and list landmark', () => {
     const html = renderToString(
       React.createElement(PulseTimelineView, {
         snapshot: buildWorkspaceSnapshot(cloneDemoSampleData()),
         btnFocus: '',
         commandBusy: false,
         runCommand: noop,
-        primeChat: noop,
-        onNavigateTab: noop,
-        onOpenCockpitWorkstream: noop
+        primeChat: noop
       })
     );
     expect(html).toContain('aria-label="Pulse"');
@@ -47,8 +45,6 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('>Attention<');
     expect(html).toContain('>Growing<');
     expect(html).toContain('>AI suggestions<');
-    expect(html).toContain('Jump');
-    expect(html).toContain('Brand &amp; posts');
     expect(html).toContain('Open in Chat');
     expect(html).toContain('bo-icon-chip');
     expect(html).toContain('role="list"');
@@ -147,8 +143,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Northstar Robotics');
     expect(html).toContain('Brand vault (read-only)');
     expect(html).toContain('Connections workstream Chat starters');
-    expect(html).toContain('Integrations tab');
-    expect(html).toContain('Prime duplicate');
+    expect(html).toContain('Review in Chat');
   });
 
   it('Integrations: sources, registered list, provider status, quick add', () => {
@@ -160,14 +155,14 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Integrations"');
-    expect(html).toContain('Integrations — connect the stack');
+    expect(html).toContain('Connections and sync health.');
     expect(html).toContain('Sources');
     expect(html).toContain('Connections');
     expect(html).toContain('Registered sources');
     expect(html).toContain('Open integrations page');
     expect(html).toContain('Provider status');
-    expect(html).toContain('Quick add');
-    expect(html).toContain('Add connection');
+    expect(html).toContain('Add via Chat');
+    expect(html).toContain('Run: Add connection');
     expect(html).toContain('Synced artifacts');
     expect(html).toContain('SSH targets');
   });
@@ -194,7 +189,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         runCommand: noop
       })
     );
-    expect(html).toContain('Open in Chat');
+    expect(html).toContain('Review in Chat');
     expect(html).not.toContain('No sources in this workspace yet');
   });
 
@@ -247,7 +242,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(demo.settingsMessagingVaultPeek.length).toBeGreaterThan(0);
   });
 
-  it('Settings: assistant surface, workflow modes, data/session, advanced block (mobile host shows new-tab CTA)', () => {
+  it('Settings: unified workspace surface, data/session, advanced block (mobile host shows new-tab CTA)', () => {
     const html = renderToString(
       React.createElement(MobileSettingsView, {
         snapshot: snapshot(),
@@ -264,18 +259,19 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Settings"');
-    expect(html).toContain('Settings — you and your workspace');
+    expect(html).toContain('Account, behavior, and data safety.');
     expect(html).toContain(
-      'You and this workspace — account, trust, cadence, export. To wire Notion, OAuth, or sources, use Integrations.'
+      'You and this workspace: account, behavior, and data safety. For provider wiring and sources, use Integrations.'
     );
     expect(html).toContain('Workspace snapshot');
     expect(html).toContain('Read-only');
     expect(html).toContain('Profile (saved)');
     expect(html).toContain('Workspace model (read-only)');
+    expect(html).toContain('Unified workspace');
+    expect(html).toContain('Assistant and preferences');
     expect(html).toContain('Preferences (edit workspace)');
-    expect(html).toContain('Quick tweaks');
-    expect(html).toContain('Workspace templates');
-    expect(html).toContain('Focus');
+    expect(html).not.toContain('Run presets in Chat');
+    expect(html).not.toContain('Workspace templates');
     expect(html).toContain('settings-data-tier-a');
     expect(html).toContain('Export workspace JSON');
     expect(html).toContain('Assistant');
@@ -285,7 +281,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Dataset lineage');
     expect(html).toContain('production-empty');
     expect(html).toContain('Intelligence rules (effective)');
-    expect(html).toContain('Scoring for Today digests');
+    expect(html).toContain('Scoring profile used for Today digests.');
     expect(html).toContain('Sample coefficients');
     expect(html).toContain('Messaging vault');
     expect(html).toContain('No messaging vault entries in this workspace.');
@@ -353,7 +349,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         documentSurface: 'integrations'
       })
     );
-    expect(html).toContain('options_ui');
+    expect(html).toContain('same shell as');
     expect(html).not.toContain('Open integrations page in a new tab');
   });
 });
