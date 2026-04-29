@@ -226,10 +226,6 @@ export interface MobileWorkspaceSnapshot {
   queuedPublishing: number;
   providerStatuses: Array<{ id: string; status: string }>;
   recentIntegrationSources: string[];
-  visualMode: string;
-  motionMode: string;
-  ambientFxEnabled: boolean;
-  debugMode: boolean;
   managerialWeight: number;
   maxDailyTasks: number;
   remindBeforeMinutes: number;
@@ -361,10 +357,6 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     recentIntegrationSources: workspace.integrationHub.sources
       .slice(0, 5)
       .map((source) => source.name),
-    visualMode: workspace.settings.visualMode,
-    motionMode: workspace.settings.motionMode,
-    ambientFxEnabled: workspace.settings.ambientFxEnabled,
-    debugMode: workspace.settings.debugMode,
     managerialWeight: workspace.settings.notificationCenter.managerialWeight,
     maxDailyTasks: workspace.settings.notificationCenter.maxDailyTasks,
     remindBeforeMinutes: workspace.settings.cadenceFlow.remindBeforeMinutes,

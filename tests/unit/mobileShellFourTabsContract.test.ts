@@ -57,7 +57,6 @@ describe('MobileApp shell tab wiring (contract)', () => {
     const settingsJsx = mobileApp.match(/<MobileSettingsView[\s\S]*?\/>/)?.[0] ?? '';
     expect(settingsJsx).toContain('applyBusy={settingsApplyLoading}');
     expect(settingsJsx).toContain('commandBusy={commandLoading}');
-    expect(settingsJsx).toContain("onOpenTodayTab={() => commitTab('daily')}");
     expect(settingsJsx).toContain('membership={launchAccess.membership}');
     expect(settingsJsx).toContain('onStartCheckout={onStartCheckout}');
   });

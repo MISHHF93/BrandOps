@@ -8,8 +8,7 @@ export type ComposerBlankStarter = {
 };
 
 /**
- * Sensible defaults to prime the Settings assistant — does not include operating mode
- * (use Advanced → Preferences for that).
+ * Sensible defaults to prime the Settings assistant — operating mode is handled in Preferences.
  */
 function starterSnippet(value: string, max = 100) {
   return value.replace(/"/g, "'").replace(/\n/g, ' ').trim().slice(0, max);

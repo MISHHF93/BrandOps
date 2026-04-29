@@ -1161,20 +1161,9 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
         : fallback.defaultReminderLeadHours,
     weekStartsOn: candidate.weekStartsOn === 'sunday' ? 'sunday' : 'monday',
     theme: candidate.theme === 'light' ? 'light' : 'dark',
-    visualMode:
-      candidate.visualMode === 'retroMagic' || candidate.visualMode === 'classic'
-        ? candidate.visualMode
-        : fallback.visualMode,
-    motionMode:
-      candidate.motionMode === 'off' ||
-      candidate.motionMode === 'balanced' ||
-      candidate.motionMode === 'wild'
-        ? candidate.motionMode
-        : fallback.motionMode,
-    ambientFxEnabled:
-      typeof candidate.ambientFxEnabled === 'boolean'
-        ? candidate.ambientFxEnabled
-        : fallback.ambientFxEnabled,
+    visualMode: fallback.visualMode,
+    motionMode: fallback.motionMode,
+    ambientFxEnabled: fallback.ambientFxEnabled,
     cockpitLayout: candidate.cockpitLayout === 'unified-scroll' ? 'unified-scroll' : 'sections',
     cockpitDensity: candidate.cockpitDensity === 'compact' ? 'compact' : 'comfortable',
     localModelEnabled: Boolean(candidate.localModelEnabled),
@@ -1182,7 +1171,7 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
       candidate.aiAdapterMode === 'local-only' || candidate.aiAdapterMode === 'external-opt-in'
         ? candidate.aiAdapterMode
         : 'disabled',
-    debugMode: Boolean(candidate.debugMode),
+    debugMode: fallback.debugMode,
     primaryIdentityProvider:
       candidate.primaryIdentityProvider === 'google' ||
       candidate.primaryIdentityProvider === 'github' ||

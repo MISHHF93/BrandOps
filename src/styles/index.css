@@ -50,6 +50,15 @@
   --color-accent-hover: 170 190 244;
   --color-accent-soft: 142 168 232;
   --alpha-accent-soft: 0.18;
+  /* Brand identity: crown authority + command action. Warning/status tokens stay separate. */
+  --brand-gold: 214 188 141;
+  --brand-gold-strong: 232 207 156;
+  --brand-gold-soft: 214 188 141;
+  --alpha-brand-gold-soft: 0.14;
+  --brand-command: 142 168 232;
+  --brand-command-soft: 142 168 232;
+  --alpha-brand-command-soft: 0.16;
+  --brand-ink: 8 9 11;
   --duration-fast: 120ms;
   --duration-base: 180ms;
   --duration-slow: 260ms;
@@ -160,6 +169,14 @@
   --color-accent-hover: 38 68 150;
   --color-accent-soft: 62 92 176;
   --alpha-accent-soft: 0.14;
+  --brand-gold: 140 95 15;
+  --brand-gold-strong: 112 76 12;
+  --brand-gold-soft: 140 95 15;
+  --alpha-brand-gold-soft: 0.12;
+  --brand-command: 62 92 176;
+  --brand-command-soft: 62 92 176;
+  --alpha-brand-command-soft: 0.12;
+  --brand-ink: 17 20 28;
   --retro-glow-cyan: 140 148 165;
   --retro-glow-pink: 128 136 152;
   --retro-glow-gold: 155 162 178;
@@ -277,7 +294,12 @@ html[data-app-surface='welcome'] body::after {
     color: rgb(var(--color-text));
     background:
       linear-gradient(180deg, rgb(var(--color-bg-elevated) / 0.62), transparent 17rem),
-      linear-gradient(146deg, rgb(var(--color-bg)) 0%, rgb(var(--color-bg-subtle)) 58%, rgb(var(--color-bg)) 100%);
+      linear-gradient(
+        146deg,
+        rgb(var(--color-bg)) 0%,
+        rgb(var(--color-bg-subtle)) 58%,
+        rgb(var(--color-bg)) 100%
+      );
   }
 
   .bo-mobile-app::before {
@@ -306,14 +328,24 @@ html[data-app-surface='welcome'] body::after {
     pointer-events: none;
     background:
       linear-gradient(180deg, transparent 0%, rgb(var(--color-shadow) / 0.22) 100%),
-      linear-gradient(90deg, rgb(var(--color-info) / 0.06), transparent 34%, rgb(var(--color-success) / 0.045));
+      linear-gradient(
+        90deg,
+        rgb(var(--color-info) / 0.06),
+        transparent 34%,
+        rgb(var(--color-success) / 0.045)
+      );
     opacity: 0.72;
   }
 
   :root[data-theme='light'] .bo-mobile-app {
     background:
       linear-gradient(180deg, rgb(var(--color-bg-elevated) / 0.94), transparent 18rem),
-      linear-gradient(146deg, rgb(var(--color-bg)) 0%, rgb(var(--color-bg-subtle)) 58%, rgb(var(--color-bg)) 100%);
+      linear-gradient(
+        146deg,
+        rgb(var(--color-bg)) 0%,
+        rgb(var(--color-bg-subtle)) 58%,
+        rgb(var(--color-bg)) 100%
+      );
   }
 
   :root[data-theme='light'] .bo-mobile-app::before {
@@ -327,7 +359,12 @@ html[data-app-surface='welcome'] body::after {
   :root[data-theme='light'] .bo-mobile-app::after {
     background:
       linear-gradient(180deg, transparent 0%, rgb(var(--color-shadow) / 0.08) 100%),
-      linear-gradient(90deg, rgb(var(--color-info) / 0.08), transparent 34%, rgb(var(--color-success) / 0.06));
+      linear-gradient(
+        90deg,
+        rgb(var(--color-info) / 0.08),
+        transparent 34%,
+        rgb(var(--color-success) / 0.06)
+      );
     opacity: 0.55;
   }
 
@@ -400,8 +437,8 @@ html[data-app-surface='welcome'] body::after {
     background: linear-gradient(
       90deg,
       transparent,
-      rgb(var(--color-accent) / 0.55) 18%,
-      rgb(var(--color-success) / 0.32) 52%,
+      rgb(var(--brand-gold) / 0.58) 18%,
+      rgb(var(--brand-command) / 0.36) 58%,
       transparent 88%
     );
     opacity: 0.8;
@@ -435,17 +472,17 @@ html[data-app-surface='welcome'] body::after {
     border-radius: 999px;
     background: linear-gradient(
       90deg,
-      rgb(var(--color-warning) / 0.2),
-      rgb(var(--color-warning) / 0.86),
-      rgb(var(--color-accent) / 0.38)
+      rgb(var(--brand-gold) / 0.2),
+      rgb(var(--brand-gold) / 0.86),
+      rgb(var(--brand-command) / 0.38)
     );
-    box-shadow: 0 0 16px rgb(var(--color-warning) / 0.24);
+    box-shadow: 0 0 16px rgb(var(--brand-gold) / 0.24);
   }
 
   .bo-mobile-nav button[aria-current='page'] > span:first-child {
-    border-color: rgb(var(--color-warning) / 0.5);
+    border-color: rgb(var(--brand-gold) / 0.5);
     background:
-      linear-gradient(180deg, rgb(var(--color-warning) / 0.12), transparent),
+      linear-gradient(180deg, rgb(var(--brand-gold) / 0.12), transparent),
       rgb(var(--color-surface) / 0.9);
     color: rgb(var(--color-text));
   }
@@ -462,46 +499,75 @@ html[data-app-surface='welcome'] body::after {
     gap: 0.7rem;
   }
 
+  .bo-brand-mark,
   .bo-mobile-brand__mark {
     position: relative;
     display: inline-flex;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: var(--brand-mark-size, 2.75rem);
+    height: var(--brand-mark-size, 2.75rem);
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
     border-radius: 0.95rem;
-    border: 1px solid rgb(var(--color-warning) / 0.5);
+    border: 1px solid rgb(var(--brand-gold) / 0.5);
     background:
       linear-gradient(180deg, rgb(var(--color-text) / 0.1), transparent 42%),
-      linear-gradient(145deg, rgb(var(--color-bg-elevated) / 0.98), rgb(var(--color-surface) / 0.82));
+      linear-gradient(
+        145deg,
+        rgb(var(--color-bg-elevated) / 0.98),
+        rgb(var(--color-surface) / 0.82)
+      );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.08),
       0 12px 28px rgb(var(--color-shadow) / 0.34),
-      0 0 0 4px rgb(var(--color-warning) / 0.055);
-    color: rgb(var(--color-warning));
+      0 0 0 4px rgb(var(--brand-gold) / 0.055);
+    color: rgb(var(--brand-gold));
   }
 
+  .bo-brand-mark::after,
   .bo-mobile-brand__mark::after {
     content: '';
     position: absolute;
     inset: 0.35rem;
     border-radius: 0.7rem;
-    border: 1px solid rgb(var(--color-warning) / 0.14);
+    border: 1px solid rgb(var(--brand-gold) / 0.14);
     pointer-events: none;
   }
 
-  .bo-mobile-brand__logo {
-    width: 1.55rem;
-    height: 1.55rem;
+  .bo-brand-mark--sm {
+    --brand-mark-size: 2.25rem;
+    border-radius: 0.75rem;
   }
 
+  .bo-brand-mark--sm::after {
+    inset: 0.3rem;
+    border-radius: 0.55rem;
+  }
+
+  .bo-brand-mark--lg {
+    --brand-mark-size: 3rem;
+  }
+
+  .bo-brand-mark__logo,
+  .bo-mobile-brand__logo {
+    width: calc(var(--brand-mark-size, 2.75rem) * 0.56);
+    height: calc(var(--brand-mark-size, 2.75rem) * 0.56);
+  }
+
+  .bo-brand-lockup {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .bo-brand-kicker,
   .bo-mobile-brand__wordmark {
     font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgb(var(--color-warning) / 0.86);
+    color: rgb(var(--brand-gold) / 0.86);
   }
 
   .bo-mobile-brand__title {
@@ -517,7 +583,12 @@ html[data-app-surface='welcome'] body::after {
     border: 1px solid rgb(var(--color-border) / 0.62);
     background:
       linear-gradient(180deg, rgb(var(--color-text) / 0.035), transparent 9rem),
-      linear-gradient(155deg, rgb(var(--color-surface) / 0.86), rgb(var(--color-bg-elevated) / 0.76) 56%, rgb(var(--color-bg) / 0.72));
+      linear-gradient(
+        155deg,
+        rgb(var(--color-surface) / 0.86),
+        rgb(var(--color-bg-elevated) / 0.76) 56%,
+        rgb(var(--color-bg) / 0.72)
+      );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.055),
       inset 0 -1px 0 rgb(var(--color-shadow) / 0.18),
@@ -533,9 +604,9 @@ html[data-app-surface='welcome'] body::after {
     pointer-events: none;
     background: linear-gradient(
       90deg,
-      rgb(var(--color-accent) / 0.58),
-      rgb(var(--color-info) / 0.34) 46%,
-      rgb(var(--color-success) / 0.28)
+      rgb(var(--brand-gold) / 0.58),
+      rgb(var(--brand-command) / 0.36) 52%,
+      transparent
     );
     opacity: 0.75;
   }
@@ -564,26 +635,45 @@ html[data-app-surface='welcome'] body::after {
     min-width: 0;
   }
 
-  .bo-command-fab {
+  .bo-brand-command-surface {
+    border: 1px solid rgb(var(--brand-gold) / 0.34);
+    background:
+      linear-gradient(180deg, rgb(var(--brand-gold) / 0.11), transparent 56%),
+      linear-gradient(140deg, rgb(var(--color-surface) / 0.86), rgb(var(--color-bg-elevated) / 0.7));
+    box-shadow:
+      inset 0 1px 0 rgb(var(--color-text) / 0.06),
+      0 10px 26px rgb(var(--color-shadow) / 0.18);
+  }
+
+  .bo-command-palette-header {
+    background:
+      linear-gradient(90deg, rgb(var(--brand-gold) / 0.1), transparent 44%),
+      rgb(var(--color-bg-elevated) / 0.78);
+  }
+
+  .bo-command-handle {
     position: fixed;
-    right: max(1rem, env(safe-area-inset-right, 0px));
-    bottom: max(5rem, calc(4.65rem + env(safe-area-inset-bottom, 0px)));
+    right: max(0.55rem, env(safe-area-inset-right, 0px));
+    top: 54%;
     z-index: 40;
     display: inline-flex;
-    width: 3rem;
-    height: 3rem;
+    width: 2.85rem;
+    min-height: 5.35rem;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.35rem;
     border-radius: 999px;
-    border: 1px solid rgb(var(--color-warning) / 0.62);
+    border: 1px solid rgb(var(--brand-gold) / 0.42);
     background:
-      linear-gradient(145deg, rgb(var(--color-warning) / 0.24), rgb(var(--color-surface) / 0.92)),
-      rgb(var(--color-bg-elevated) / 0.92);
+      linear-gradient(180deg, rgb(var(--brand-gold) / 0.15), transparent 42%),
+      rgb(var(--color-bg-elevated) / 0.88);
     color: rgb(var(--color-text));
+    padding: 0.55rem 0.35rem;
     box-shadow:
-      inset 0 1px 0 rgb(var(--color-text) / 0.11),
-      0 12px 30px rgb(var(--color-shadow) / 0.42),
-      0 0 0 4px rgb(var(--color-warning) / 0.08);
+      inset 0 1px 0 rgb(var(--color-text) / 0.08),
+      0 12px 28px rgb(var(--color-shadow) / 0.28),
+      0 0 0 1px rgb(var(--color-text) / 0.03);
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     transition:
       transform var(--duration-fast) var(--ease-liquid-out),
@@ -591,23 +681,34 @@ html[data-app-surface='welcome'] body::after {
       box-shadow var(--duration-fast) var(--ease-liquid-out);
   }
 
-  .bo-command-fab:hover {
-    transform: translateY(-1px);
-    border-color: rgb(var(--color-warning));
+  .bo-command-handle:hover {
+    transform: translateX(-2px);
+    border-color: rgb(var(--brand-gold) / 0.68);
     box-shadow:
-      inset 0 1px 0 rgb(var(--color-text) / 0.12),
-      0 16px 36px rgb(var(--color-shadow) / 0.46),
-      0 0 0 5px rgb(var(--color-warning) / 0.12);
+      inset 0 1px 0 rgb(var(--color-text) / 0.1),
+      0 16px 32px rgb(var(--color-shadow) / 0.34),
+      0 0 0 3px rgb(var(--brand-gold) / 0.08);
   }
 
-  .bo-command-fab:active {
-    transform: translateY(0) scale(0.98);
+  .bo-command-handle:active {
+    transform: translateX(0) scale(0.98);
   }
 
-  .bo-command-fab__logo {
-    width: 1.45rem;
-    height: 1.45rem;
-    color: rgb(var(--color-warning));
+  .bo-command-handle__logo {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: rgb(var(--brand-gold));
+  }
+
+  .bo-command-handle__label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    color: rgb(var(--color-text-soft));
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
   }
 
   .bo-tab-page-header {
@@ -623,7 +724,11 @@ html[data-app-surface='welcome'] body::after {
     border: 1px solid rgb(var(--color-border) / 0.46);
     background:
       linear-gradient(180deg, rgb(var(--color-text) / 0.025), transparent 4.5rem),
-      linear-gradient(160deg, rgb(var(--color-bg-elevated) / 0.58), rgb(var(--color-surface) / 0.38));
+      linear-gradient(
+        160deg,
+        rgb(var(--color-bg-elevated) / 0.58),
+        rgb(var(--color-surface) / 0.38)
+      );
     box-shadow:
       inset 0 1px 0 rgb(var(--color-text) / 0.035),
       0 8px 22px rgb(var(--color-shadow) / 0.16);
@@ -720,7 +825,11 @@ html[data-app-surface='welcome'] body::after {
     border-radius: 0.9rem;
     border: 1px solid rgb(var(--color-border) / 0.5);
     background:
-      linear-gradient(180deg, rgb(var(--focus-panel-tone, var(--color-accent)) / 0.09), transparent 62%),
+      linear-gradient(
+        180deg,
+        rgb(var(--focus-panel-tone, var(--color-accent)) / 0.09),
+        transparent 62%
+      ),
       rgb(var(--color-bg-elevated) / 0.58);
     padding: 0.75rem;
     box-shadow:

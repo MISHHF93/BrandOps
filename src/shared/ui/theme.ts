@@ -38,40 +38,29 @@ export function bootstrapDocumentThemeFromWebStorage(): void {
     if (!raw) return;
     const parsed = JSON.parse(raw) as BrandOpsData;
     if (!parsed?.settings) return;
-    applyDocumentTheme(parsed.settings.theme, {
-      visualMode: parsed.settings.visualMode,
-      motionMode: parsed.settings.motionMode,
-      ambientFxEnabled: parsed.settings.ambientFxEnabled
-    });
+    applyDocumentTheme(parsed.settings.theme);
   } catch {
     // Corrupt or legacy payload — default :root tokens apply until store init.
   }
 }
 
-/** Apply light/dark and motion/visual/ambient from persisted `AppSettings` (e.g. after `storageService.getData`). */
+/** Apply light/dark plus the unified BrandOps appearance contract. */
 export const applyDocumentThemeFromAppSettings = (settings: AppSettings): void => {
-  applyDocumentTheme(settings.theme, {
-    visualMode: settings.visualMode,
-    motionMode: settings.motionMode,
-    ambientFxEnabled: settings.ambientFxEnabled
-  });
+  applyDocumentTheme(settings.theme);
 };
 
-const applyDocumentTheme = (
-  theme: UiTheme,
-  visual?: Pick<BrandOpsData['settings'], 'visualMode' | 'motionMode' | 'ambientFxEnabled'>
-) => {
+const applyDocumentTheme = (theme: UiTheme) => {
   const resolved = theme === 'light' ? 'light' : 'dark';
   const root = document.documentElement;
   root.setAttribute('data-theme', resolved);
   root.style.colorScheme = resolved;
   syncMetaThemeColor(resolved);
-  root.setAttribute('data-visual-mode', visual?.visualMode ?? 'classic');
+  root.setAttribute('data-visual-mode', 'brandops');
   const prefersReducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const effectiveMotionMode = prefersReducedMotion ? 'off' : (visual?.motionMode ?? 'balanced');
+  const effectiveMotionMode = prefersReducedMotion ? 'off' : 'balanced';
   root.setAttribute('data-motion-mode', effectiveMotionMode);
-  root.setAttribute('data-ambient-fx', visual?.ambientFxEnabled ? 'on' : 'off');
+  root.setAttribute('data-ambient-fx', 'off');
 
   try {
     const transitionTarget = window.sessionStorage.getItem('bo:surface-transition');

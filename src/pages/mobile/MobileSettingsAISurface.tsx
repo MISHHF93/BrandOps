@@ -11,15 +11,11 @@ const chipBusy = (btnFocus: string) =>
 export function SettingsTierAOverview({
   snapshot,
   rulesSourceLabel,
-  btnFocus,
-  onOpenToday,
-  helpHref
+  btnFocus
 }: {
   snapshot: MobileWorkspaceSnapshot;
   rulesSourceLabel: string;
   btnFocus: string;
-  onOpenToday?: () => void;
-  helpHref: string;
 }) {
   const seedLine = `${snapshot.seedReadout.source} · v${snapshot.seedReadout.version}`;
   const offerPreview =
@@ -37,30 +33,20 @@ export function SettingsTierAOverview({
   })();
 
   return (
-    <section
-      className="bo-flagship-surface p-3.5"
-      aria-labelledby="settings-tier-a-heading"
-    >
+    <section className="bo-flagship-surface p-3.5" aria-labelledby="settings-tier-a-heading">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-border/40 pb-2.5">
         <h2 id="settings-tier-a-heading" className="text-h3 text-text">
-          Workspace snapshot
+          Workspace
         </h2>
-        <span className="inline-flex shrink-0 items-center rounded-md border border-border/60 bg-bgSubtle/80 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-textSoft">
-          Read-only
-        </span>
-      </div>
-      <p className="mt-2.5 text-[11px] leading-relaxed text-textSoft">
-        {snapshot.visualMode} · {snapshot.reminderWindow} · rules: {rulesSourceLabel}
-      </p>
-      <p className="mt-1.5 text-[10px] leading-relaxed text-textMuted">
-        Edit in{' '}
         <a
           href="#settings-editable"
-          className={clsx('bo-link bo-link--sm inline !normal-case', btnFocus)}
+          className={clsx('bo-link bo-link--sm ml-auto inline !normal-case', btnFocus)}
         >
-          Preferences
+          Edit
         </a>
-        .
+      </div>
+      <p className="mt-2.5 text-[11px] leading-relaxed text-textSoft">
+        Unified appearance · {snapshot.reminderWindow} · rules: {rulesSourceLabel}
       </p>
 
       <dl className="mt-3 overflow-hidden rounded-lg border border-border/45 text-[11px] text-textMuted">
@@ -87,25 +73,6 @@ export function SettingsTierAOverview({
           Rules: {snapshot.intelligenceRulesReadout.error}
         </p>
       ) : null}
-      <div className="mt-3 flex flex-wrap gap-2 border-t border-border/40 pt-3">
-        <a
-          href={helpHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={clsx('bo-link bo-link--sm !normal-case', btnFocus)}
-        >
-          Help &amp; reference
-        </a>
-        {onOpenToday ? (
-          <button
-            type="button"
-            className={clsx('bo-link bo-link--sm !normal-case', btnFocus)}
-            onClick={onOpenToday}
-          >
-            View Today
-          </button>
-        ) : null}
-      </div>
     </section>
   );
 }
@@ -246,49 +213,59 @@ export function SettingsDataSafetyBlock({
   );
 
   return (
-    <MobileTabSection
-      id="settings-data-tier-a"
-      title="Data &amp; session"
-      description="Backup and restore your workspace JSON. Reset replaces all workspace data with the built-in seed. Clear chat only removes this page’s message history."
-      descriptionVisibility="sr-only"
-    >
-      <input
-        ref={importRef}
-        type="file"
-        accept="application/json,.json"
-        className="hidden"
-        onChange={(e) => void onImportPick(e)}
-      />
-      {importMessage ? (
-        <p
-          className="mb-2 rounded border border-border/50 bg-bgSubtle/60 px-2 py-1.5 text-[11px] text-textMuted"
-          role="status"
+    <details className="bo-disclosure group">
+      <summary
+        className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+      >
+        Data &amp; session
+        <span className="ml-2 text-[11px] font-normal text-textSoft">Backup, import, reset</span>
+      </summary>
+      <div className="border-t border-border/40 px-3 pb-4 pt-4">
+        <MobileTabSection
+          id="settings-data-tier-a"
+          title="Data controls"
+          description="Backup and restore your workspace JSON. Reset replaces all workspace data with the built-in seed. Clear chat only removes this page’s message history."
+          descriptionVisibility="sr-only"
         >
-          {importMessage}
-        </p>
-      ) : null}
-      <div className="mt-2 flex flex-col gap-2">
-        <button type="button" onClick={() => void onExportWorkspace()} className={dataBtn}>
-          Export workspace JSON
-        </button>
-        <button type="button" onClick={() => importRef.current?.click()} className={dataBtn}>
-          Import workspace JSON…
-        </button>
-        <button
-          type="button"
-          onClick={onRequestResetWorkspace}
-          className={clsx(dataBtn, 'border-warning/40 text-warning')}
-        >
-          Reset workspace to seed…
-        </button>
-        <button
-          type="button"
-          onClick={onRequestClearChat}
-          className={clsx(mobileChipClass(btnFocus), 'w-full justify-center')}
-        >
-          Clear chat transcript
-        </button>
+          <input
+            ref={importRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => void onImportPick(e)}
+          />
+          {importMessage ? (
+            <p
+              className="mb-2 rounded border border-border/50 bg-bgSubtle/60 px-2 py-1.5 text-[11px] text-textMuted"
+              role="status"
+            >
+              {importMessage}
+            </p>
+          ) : null}
+          <div className="mt-2 flex flex-col gap-2">
+            <button type="button" onClick={() => void onExportWorkspace()} className={dataBtn}>
+              Export workspace JSON
+            </button>
+            <button type="button" onClick={() => importRef.current?.click()} className={dataBtn}>
+              Import workspace JSON…
+            </button>
+            <button
+              type="button"
+              onClick={onRequestResetWorkspace}
+              className={clsx(dataBtn, 'border-warning/40 text-warning')}
+            >
+              Reset workspace to seed…
+            </button>
+            <button
+              type="button"
+              onClick={onRequestClearChat}
+              className={clsx(mobileChipClass(btnFocus), 'w-full justify-center')}
+            >
+              Clear chat transcript
+            </button>
+          </div>
+        </MobileTabSection>
       </div>
-    </MobileTabSection>
+    </details>
   );
 }

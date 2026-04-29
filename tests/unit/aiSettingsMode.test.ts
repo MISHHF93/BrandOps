@@ -8,17 +8,21 @@ import { cloneDemoSampleData } from '../helpers/fixtures';
 
 describe('aiSettingsMode planner', () => {
   it('builds operations from natural-language prompt', () => {
-    const plan = buildAiSettingsPlan(
-      'Set cadence launch day, motion off, 70% business focus, enable debug'
-    );
+    const plan = buildAiSettingsPlan('Set cadence launch day, 70% business focus');
 
     expect(plan.operations.length).toBeGreaterThan(0);
     expect(plan.operations.some((operation) => operation.kind === 'set-cadence-mode')).toBe(true);
-    expect(plan.operations.some((operation) => operation.kind === 'set-motion-mode')).toBe(true);
     expect(plan.operations.some((operation) => operation.kind === 'set-managerial-weight')).toBe(
       true
     );
-    expect(plan.operations.some((operation) => operation.kind === 'set-debug-mode')).toBe(true);
+    expect(plan.operations.some((operation) => operation.kind === 'set-motion-mode')).toBe(false);
+    expect(plan.operations.some((operation) => operation.kind === 'set-debug-mode')).toBe(false);
+  });
+
+  it('warns instead of creating visual or motion operations', () => {
+    const plan = buildAiSettingsPlan('retro, motion wild, enable ambient, enable debug');
+    expect(plan.operations).toHaveLength(0);
+    expect(plan.warnings.join(' ')).toContain('unified');
   });
 
   it('marks unsupported prompt when no operation can be inferred', () => {
@@ -58,26 +62,37 @@ describe('aiSettingsMode operation applier', () => {
     const result = applyAiSettingsOperations(source, [
       {
         id: '1',
-        kind: 'set-motion-mode',
-        payload: { motionMode: 'off' }
-      },
-      {
-        id: '2',
         kind: 'set-cadence-mode',
         payload: { mode: 'launch-day' }
       },
       {
-        id: '3',
+        id: '2',
         kind: 'add-note',
         payload: { title: 'AI run', detail: 'Prioritize launch blockers.' }
       }
     ]);
 
-    expect(result.data.settings.motionMode).toBe('off');
     expect(result.data.settings.cadenceFlow.mode).toBe('launch-day');
     expect(result.data.notes[0]?.detail).toContain('Prioritize launch blockers');
-    expect(result.applied.length).toBe(3);
+    expect(result.applied.length).toBe(2);
     expect(result.failed).toHaveLength(0);
+  });
+
+  it('skips legacy visual and motion operations', () => {
+    const source = cloneDemoSampleData();
+    const result = applyAiSettingsOperations(source, [
+      { id: '1', kind: 'set-visual-mode', payload: { visualMode: 'retroMagic' } },
+      { id: '2', kind: 'set-motion-mode', payload: { motionMode: 'wild' } },
+      { id: '3', kind: 'set-ambient-fx', payload: { ambientFxEnabled: true } },
+      { id: '4', kind: 'set-debug-mode', payload: { debugMode: true } }
+    ]);
+
+    expect(result.data.settings.visualMode).toBe(source.settings.visualMode);
+    expect(result.data.settings.motionMode).toBe(source.settings.motionMode);
+    expect(result.data.settings.ambientFxEnabled).toBe(source.settings.ambientFxEnabled);
+    expect(result.data.settings.debugMode).toBe(source.settings.debugMode);
+    expect(result.applied).toHaveLength(0);
+    expect(result.skipped.length).toBe(4);
   });
 
   it('applies positioning and voiceGuide on update-brand-profile', () => {

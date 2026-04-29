@@ -263,8 +263,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain(
       'You and this workspace: account, behavior, and data safety. For provider wiring and sources, use Integrations.'
     );
-    expect(html).toContain('Workspace snapshot');
-    expect(html).toContain('Read-only');
+    expect(html).toContain('Workspace');
+    expect(html).toContain('Edit');
     expect(html).toContain('Profile (saved)');
     expect(html).toContain('Workspace model (read-only)');
     expect(html).toContain('Unified workspace');
@@ -275,7 +275,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('settings-data-tier-a');
     expect(html).toContain('Export workspace JSON');
     expect(html).toContain('Assistant');
-    expect(html).toContain('Advanced');
+    expect(html).toContain('Diagnostics');
     expect(html).toContain('Extension shell');
     expect(html).toContain('Open integrations page in a new tab');
     expect(html).toContain('Dataset lineage');

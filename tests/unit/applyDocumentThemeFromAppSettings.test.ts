@@ -103,7 +103,7 @@ describe('applyDocumentThemeFromAppSettings', () => {
     expect(themeMeta.content).toBe(THEME_COLOR_HEX.light);
   });
 
-  it('sets data-theme, visual, motion, and ambient on documentElement from settings', () => {
+  it('sets data-theme and the unified visual/motion attributes on documentElement', () => {
     const s: AppSettings = {
       ...defaultAppSettings,
       theme: 'light',
@@ -114,9 +114,9 @@ describe('applyDocumentThemeFromAppSettings', () => {
     applyDocumentThemeFromAppSettings(s);
     expect(attrs['data-theme']).toBe('light');
     expect(mockRoot.style.colorScheme).toBe('light');
-    expect(attrs['data-visual-mode']).toBe('retroMagic');
-    expect(attrs['data-motion-mode']).toBe('off');
-    expect(attrs['data-ambient-fx']).toBe('on');
+    expect(attrs['data-visual-mode']).toBe('brandops');
+    expect(attrs['data-motion-mode']).toBe('balanced');
+    expect(attrs['data-ambient-fx']).toBe('off');
     expect(themeMeta.content).toBe(THEME_COLOR_HEX.light);
   });
 

@@ -2,6 +2,10 @@
 
 BrandOps uses a semantic-token Tailwind foundation so all modules share one operator-grade visual language.
 
+## Brand Identity Layer
+
+The brand system is defined in [`brand-identity-system.md`](./brand-identity-system.md). Treat it as the layer above primitive tokens: the crown, brand gold, command blue, and operator-command vocabulary should guide major surfaces before feature-level styling is added.
+
 ## Token Source
 
 - Tailwind semantic token mapping: `tailwind.config.cjs`
@@ -9,11 +13,12 @@ BrandOps uses a semantic-token Tailwind foundation so all modules share one oper
 
 ## Token Layers
 
-BrandOps uses a 3-layer token model:
+BrandOps uses a 4-layer token model:
 
-1. **Primitive tokens**: raw color/motion values (`--color-*`, `--duration-*`).
-2. **Semantic aliases**: meaning-based mappings (`--bg-page`, `--fg-primary`, `--focus-default`).
-3. **Component contracts**: reusable surface/link/overlay/field tokens (`--card-*`, `--panel-*`, `--sheet-*`, `--field-*`).
+1. **Brand identity tokens**: product-specific meaning (`--brand-gold`, `--brand-command`, crown mark classes).
+2. **Primitive tokens**: raw color/motion values (`--color-*`, `--duration-*`).
+3. **Semantic aliases**: meaning-based mappings (`--bg-page`, `--fg-primary`, `--focus-default`).
+4. **Component contracts**: reusable surface/link/overlay/field tokens (`--card-*`, `--panel-*`, `--sheet-*`, `--field-*`).
 
 ## Semantic Token Rules
 
@@ -23,6 +28,7 @@ BrandOps uses a 3-layer token model:
 4. Use shared radius (`rounded-sm` through `rounded-2xl`) and shadows (`shadow-panel`, `shadow-hover`, `shadow-glow`) for consistency.
 5. Keep motion subtle with the shared duration tokens (`duration-fast`, `duration-base`, `duration-slow`).
 6. Use `bg-signal-grid` only for dashboard/background surfaces, never for dense content containers.
+7. Use `--brand-gold`/`brandGold` for the crown and product identity; keep `warning` for caution states only.
 
 ## Shared Surface Classes
 
@@ -35,6 +41,8 @@ Prefer these reusable classes before composing long utility strings:
 - `bo-link` and `bo-link--sm`: action buttons (standard + compact)
 - `bo-auth-sheet`: welcome auth container
 - `bo-overlay-drawer`: dashboard side overlay shell
+- `bo-brand-mark` / `bo-brand-lockup`: crown identity primitives
+- `bo-brand-command-surface`: first-run and command-centered surfaces
 
 ## Accessibility Baseline
 

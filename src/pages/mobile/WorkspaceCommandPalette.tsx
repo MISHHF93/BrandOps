@@ -5,6 +5,7 @@ import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
 import { MOBILE_BTN_FOCUS } from './mobileTabPrimitives';
 import type { MobileShellTabId } from './mobileShellQuery';
+import { BrandOpsMarkBadge } from '../../shared/ui/brandopsPolish';
 
 const btn = MOBILE_BTN_FOCUS;
 
@@ -119,17 +120,21 @@ export const WorkspaceCommandPalette = ({
           </p>
         </div>
       ) : null}
-      <div className="border-b border-border/50 px-3 py-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-textSoft">
-          Command palette
-        </p>
-        <p className="text-[10px] text-textMuted">Search, jump, or run the agent</p>
+      <div className="bo-command-palette-header border-b border-border/50 px-3 py-2.5">
+        <div className="bo-brand-lockup">
+          <BrandOpsMarkBadge className="bo-brand-mark--sm" />
+          <div className="min-w-0">
+            <p className="bo-brand-kicker">BrandOps</p>
+            <p className="text-sm font-semibold leading-tight text-text">Command center</p>
+            <p className="text-[10px] text-textMuted">Search, jump, or run a workspace command.</p>
+          </div>
+        </div>
         <Command.Input
           autoFocus
           disabled={commandBusy}
           placeholder="Type a command or tab name…"
           className={clsx(
-            'mt-2 w-full rounded-lg border border-border/60 bg-bgSubtle/80 px-3 py-2 text-sm text-text',
+            'mt-2.5 w-full rounded-lg border border-border/60 bg-bgSubtle/80 px-3 py-2 text-sm text-text',
             'placeholder:text-textSoft outline-none',
             'focus:border-borderStrong focus:ring-1 focus:ring-focusRing/80',
             btn

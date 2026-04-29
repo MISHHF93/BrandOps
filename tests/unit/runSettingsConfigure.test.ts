@@ -35,14 +35,14 @@ describe('runSettingsConfigure', () => {
     mocked.mockResolvedValue({
       ok: true,
       action: 'configure-workspace',
-      summary: 'Visual mode set to classic.'
+      summary: 'Workday window set to 9:00-17:00.'
     });
-    const r = await runSettingsConfigure('classic', 'dashboard', false);
+    const r = await runSettingsConfigure('workday 9 to 17', 'dashboard', false);
     expect(r?.ok).toBe(true);
-    expect(r?.summary).toContain('classic');
+    expect(r?.summary).toContain('Workday');
     expect(mocked).toHaveBeenCalledWith(
       expect.objectContaining({
-        text: 'configure: classic',
+        text: 'configure: workday 9 to 17',
         actorName: 'mobile-operator',
         source: 'chatbot-web'
       })
@@ -67,6 +67,8 @@ describe('normalizeConfigureText', () => {
   });
 
   it('leaves line alone when it already has configure', () => {
-    expect(normalizeConfigureText('configure: retro')).toBe('configure: retro');
+    expect(normalizeConfigureText('configure: workday 9 to 17')).toBe(
+      'configure: workday 9 to 17'
+    );
   });
 });

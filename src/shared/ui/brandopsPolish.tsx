@@ -1,8 +1,37 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
-import { AlertCircle, CheckCircle2, Info, Loader2, Shield, Sparkles } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, Loader2, Shield } from 'lucide-react';
 
 type DataOpsFeedbackTone = 'info' | 'success' | 'caution';
+
+export function BrandOpsCrownMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden className={className}>
+      <path
+        d="M13 44h38M13 44V24l9.2 9 9.8-18 9.8 18 9.2-9v20"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function BrandOpsMarkBadge({
+  className,
+  markClassName
+}: {
+  className?: string;
+  markClassName?: string;
+}) {
+  return (
+    <span className={clsx('bo-brand-mark', className)} aria-hidden>
+      <BrandOpsCrownMark className={clsx('bo-brand-mark__logo', markClassName)} />
+    </span>
+  );
+}
 
 /** Map free-form copy to tone for icon and color (keeps setState as string in callers). */
 function parseDataOpsTone(message: string): DataOpsFeedbackTone {
@@ -97,7 +126,7 @@ export function OnDeviceDialogTrustFooter({ className }: { className?: string })
 /**
  * Chat: premium loading state — perception of progress without a fake %.
  */
-export function AgentWorkingState({ label = 'Agent is on it' }: { label?: string }) {
+export function AgentWorkingState({ label = 'BrandOps is working' }: { label?: string }) {
   return (
     <div
       className="bo-agent-working space-y-2 rounded-xl border border-border/50 bg-surface/50 p-3 shadow-sm backdrop-blur-sm"
@@ -106,12 +135,13 @@ export function AgentWorkingState({ label = 'Agent is on it' }: { label?: string
       aria-busy="true"
     >
       <div className="flex items-center gap-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/30 bg-primarySoft/20 text-primary">
+        <span className="bo-brand-mark bo-brand-mark--sm">
           <Loader2
-            className="h-4 w-4 motion-safe:animate-spin [animation-duration:700ms] [animation-timing-function:linear]"
+            className="absolute h-5 w-5 text-brandGold/20 motion-safe:animate-spin [animation-duration:900ms] [animation-timing-function:linear]"
             strokeWidth={2}
             aria-hidden
           />
+          <BrandOpsCrownMark className="bo-brand-mark__logo h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-text">{label}</p>
@@ -119,10 +149,9 @@ export function AgentWorkingState({ label = 'Agent is on it' }: { label?: string
             Running your command and updating the workspace on-device.
           </p>
         </div>
-        <Sparkles className="h-4 w-4 shrink-0 text-primary/70" strokeWidth={2} aria-hidden />
       </div>
       <div className="h-0.5 overflow-hidden rounded-full bg-border/40" aria-hidden>
-        <div className="bo-indeterminate h-full w-1/3 rounded-full bg-primary/60" />
+        <div className="bo-indeterminate h-full w-1/3 rounded-full bg-brandGold/70" />
       </div>
     </div>
   );

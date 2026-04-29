@@ -51,6 +51,7 @@ import { EmailMagicLinkButton } from '../../shared/ui/oauth/EmailMagicLinkButton
 import { GitHubSignInButton } from '../../shared/ui/oauth/GitHubSignInButton';
 import { LinkedInSignInButton } from '../../shared/ui/oauth/LinkedInSignInButton';
 import {
+  BrandOpsCrownMark,
   OnDeviceDialogTrustFooter,
   OnDeviceTrustLine,
   WorkspaceDataHint
@@ -195,21 +196,6 @@ const STRIPE_CHECKOUT_URL = import.meta.env.VITE_STRIPE_CHECKOUT_URL as string |
 const STRIPE_BILLING_PORTAL_URL = import.meta.env.VITE_STRIPE_BILLING_PORTAL_URL as
   | string
   | undefined;
-
-function BrandOpsCrownMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden className={className}>
-      <path
-        d="M13 44h38M13 44V24l9.2 9 9.8-18 9.8 18 9.2-9v20"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="4.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 type ChatComposerAttachment = {
   name: string;
@@ -882,7 +868,6 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                 onImportWorkspace={importWorkspace}
                 onRequestResetWorkspace={() => setPendingResetWorkspace(true)}
                 documentSurface={surfaceLabel}
-                onOpenTodayTab={() => commitTab('daily')}
                 isAuthenticated={launchAccess.auth.isAuthenticated}
                 authProvider={launchAccess.auth.provider}
                 authEmail={launchAccess.auth.email}
@@ -1088,11 +1073,14 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         <button
           type="button"
           onClick={() => setCommandPaletteOpen(true)}
-          aria-label="Open command palette"
-          title="Run a command (⌘K / Ctrl+K)"
-          className={clsx('bo-command-fab', btnFocus)}
+          aria-label="Open command center"
+          title="Command center (⌘K / Ctrl+K)"
+          className={clsx('bo-command-handle', btnFocus)}
         >
-          <BrandOpsCrownMark className="bo-command-fab__logo" />
+          <BrandOpsCrownMark className="bo-command-handle__logo" />
+          <span className="bo-command-handle__label" aria-hidden>
+            Command
+          </span>
         </button>
       ) : null}
 

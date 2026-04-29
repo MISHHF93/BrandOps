@@ -1,4 +1,5 @@
 import { CheckCircle2, Sparkles, X } from 'lucide-react';
+import { BrandOpsMarkBadge } from '../../shared/ui/brandopsPolish';
 
 const STORAGE_KEY = 'brandops:firstRunJourneyDismissed';
 
@@ -31,18 +32,16 @@ export function FirstRunJourneyCard({
 }) {
   return (
     <section
-      className="bo-section-halo bo-section-halo--primary mb-3 rounded-xl border border-accent/40 bg-accentSoft/20 px-3 py-3 text-label text-textMuted shadow-sm"
-      aria-label="Get started in under a minute"
+      className="bo-brand-command-surface bo-section-halo mb-3 rounded-xl px-3 py-3 text-label text-textMuted shadow-sm"
+      aria-label="Start your workspace"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-2.5">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-accent/50 bg-surface/70 text-accent">
-            <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
-          </span>
+          <BrandOpsMarkBadge className="bo-brand-mark--sm mt-0.5" />
           <div>
-            <p className="text-h3 text-text">Start in 30 seconds</p>
+            <p className="text-h3 text-text">Start your workspace</p>
             <p className="mt-1 text-meta text-textSoft">
-              Start with one workspace check, then use the bottom tabs to move around.
+              Run one check, then move through Pulse, Today, and Chat.
             </p>
             <div className="mt-2">
               <button
@@ -56,14 +55,12 @@ export function FirstRunJourneyCard({
               </button>
             </div>
             <ul className="mt-3 space-y-1.5" aria-label="First value checklist">
-              {['Pulse shows urgency', 'Today groups work areas', 'Chat executes commands'].map(
-                (item) => (
-                  <li key={item} className="flex items-center gap-1.5 text-meta text-textSoft">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-success" strokeWidth={2.25} />
-                    <span>{item}</span>
-                  </li>
-                )
-              )}
+              {['Pulse shows signals', 'Today organizes work', 'Chat runs commands'].map((item) => (
+                <li key={item} className="flex items-center gap-1.5 text-meta text-textSoft">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-success" strokeWidth={2.25} />
+                  <span>{item}</span>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

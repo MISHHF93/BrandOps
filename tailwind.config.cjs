@@ -32,7 +32,11 @@ module.exports = {
         glow: 'rgb(var(--color-glow) / <alpha-value>)',
         accent: 'rgb(var(--color-accent) / <alpha-value>)',
         accentHover: 'rgb(var(--color-accent-hover) / <alpha-value>)',
-        accentSoft: 'rgb(var(--color-accent-soft) / var(--alpha-accent-soft))'
+        accentSoft: 'rgb(var(--color-accent-soft) / var(--alpha-accent-soft))',
+        brandGold: 'rgb(var(--brand-gold) / <alpha-value>)',
+        brandGoldSoft: 'rgb(var(--brand-gold-soft) / var(--alpha-brand-gold-soft))',
+        brandCommand: 'rgb(var(--brand-command) / <alpha-value>)',
+        brandCommandSoft: 'rgb(var(--brand-command-soft) / var(--alpha-brand-command-soft))'
       },
       fontSize: {
         display: ['1.75rem', { lineHeight: '2rem', fontWeight: '600' }],

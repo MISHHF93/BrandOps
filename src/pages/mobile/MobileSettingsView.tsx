@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Settings2 } from 'lucide-react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
-import type { CadenceFlowMode, MotionMode, VisualMode } from '../../types/domain';
+import type { CadenceFlowMode } from '../../types/domain';
 import type { AuthProviderId, LaunchMembershipState } from '../../shared/account/launchAccess';
 import { authProviderLabel } from '../../shared/account/launchAccess';
 import { GoogleSignInButton } from '../../shared/ui/oauth/GoogleSignInButton';
@@ -10,7 +10,6 @@ import { AppleSignInButton } from '../../shared/ui/oauth/AppleSignInButton';
 import { EmailMagicLinkButton } from '../../shared/ui/oauth/EmailMagicLinkButton';
 import { LinkedInSignInButton } from '../../shared/ui/oauth/LinkedInSignInButton';
 import { GitHubSignInButton } from '../../shared/ui/oauth/GitHubSignInButton';
-import { hrefHelpPage } from '../../shared/navigation/navigationIntents';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import type { IntelligenceRulesLoadMode } from '../../rules/intelligenceRulesRuntime';
@@ -83,64 +82,91 @@ function AccountMembershipSection({
   onOpenBillingPortal: () => void;
 }) {
   return (
-    <MobileTabSection
-      id="settings-account-membership"
-      title="Account & membership"
-      description="Sign-in provider and membership status for this workspace."
-      descriptionVisibility="sr-only"
-    >
-      <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
-        <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
-          <dt>Signed in</dt>
-          <dd className="text-text">{isAuthenticated ? 'Yes' : 'No'}</dd>
-        </div>
-        <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
-          <dt>Provider</dt>
-          <dd className="text-text">{authProviderLabel(provider)}</dd>
-        </div>
-        <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
-          <dt>Email</dt>
-          <dd className="text-text">{email || '—'}</dd>
-        </div>
-        <div className="flex justify-between gap-2 py-1.5">
-          <dt>Membership</dt>
-          <dd className="text-text">{membershipLabel(membership.status)}</dd>
-        </div>
-      </dl>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {!isAuthenticated ? (
-          <div className="grid w-full gap-2">
-            <GoogleSignInButton onClick={() => onSignInProvider('google')} className={btnFocus} />
-            <AppleSignInButton onClick={() => onSignInProvider('apple')} className={btnFocus} />
-            <EmailMagicLinkButton onClick={() => onSignInProvider('email')} className={btnFocus} />
-            <LinkedInSignInButton
-              onClick={() => onSignInProvider('linkedin')}
-              className={btnFocus}
-            />
-            <GitHubSignInButton onClick={() => onSignInProvider('github')} className={btnFocus} />
+    <details className="bo-disclosure group">
+      <summary
+        className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+      >
+        Account
+        <span className="ml-2 text-[11px] font-normal text-textSoft">
+          {isAuthenticated
+            ? `${authProviderLabel(provider)} · ${membershipLabel(membership.status)}`
+            : 'Sign in'}
+        </span>
+      </summary>
+      <div className="border-t border-border/40 px-3 pb-4 pt-4">
+        <MobileTabSection
+          id="settings-account-membership"
+          title="Account & membership"
+          description="Sign-in provider and membership status for this workspace."
+          descriptionVisibility="sr-only"
+        >
+          <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
+            <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+              <dt>Signed in</dt>
+              <dd className="text-text">{isAuthenticated ? 'Yes' : 'No'}</dd>
+            </div>
+            <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+              <dt>Provider</dt>
+              <dd className="text-text">{authProviderLabel(provider)}</dd>
+            </div>
+            <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
+              <dt>Email</dt>
+              <dd className="text-text">{email || '—'}</dd>
+            </div>
+            <div className="flex justify-between gap-2 py-1.5">
+              <dt>Membership</dt>
+              <dd className="text-text">{membershipLabel(membership.status)}</dd>
+            </div>
+          </dl>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {!isAuthenticated ? (
+              <div className="grid w-full gap-2">
+                <GoogleSignInButton
+                  onClick={() => onSignInProvider('google')}
+                  className={btnFocus}
+                />
+                <AppleSignInButton onClick={() => onSignInProvider('apple')} className={btnFocus} />
+                <EmailMagicLinkButton
+                  onClick={() => onSignInProvider('email')}
+                  className={btnFocus}
+                />
+                <LinkedInSignInButton
+                  onClick={() => onSignInProvider('linkedin')}
+                  className={btnFocus}
+                />
+                <GitHubSignInButton
+                  onClick={() => onSignInProvider('github')}
+                  className={btnFocus}
+                />
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onStartCheckout}
+                  className={mobileChipClass(btnFocus)}
+                >
+                  Start checkout
+                </button>
+                <button
+                  type="button"
+                  onClick={onOpenBillingPortal}
+                  className={mobileChipClass(btnFocus)}
+                >
+                  Manage billing
+                </button>
+                <button type="button" onClick={onSignOut} className={mobileChipClass(btnFocus)}>
+                  Sign out
+                </button>
+              </>
+            )}
           </div>
-        ) : (
-          <>
-            <button type="button" onClick={onStartCheckout} className={mobileChipClass(btnFocus)}>
-              Start checkout
-            </button>
-            <button
-              type="button"
-              onClick={onOpenBillingPortal}
-              className={mobileChipClass(btnFocus)}
-            >
-              Manage billing
-            </button>
-            <button type="button" onClick={onSignOut} className={mobileChipClass(btnFocus)}>
-              Sign out
-            </button>
-          </>
-        )}
+          {membership.renewalDate ? (
+            <p className="mt-2 text-[10px] text-textSoft">Renews: {membership.renewalDate}</p>
+          ) : null}
+        </MobileTabSection>
       </div>
-      {membership.renewalDate ? (
-        <p className="mt-2 text-[10px] text-textSoft">Renews: {membership.renewalDate}</p>
-      ) : null}
-    </MobileTabSection>
+    </details>
   );
 }
 
@@ -243,8 +269,6 @@ function SettingsEditablePanel({
   const [voiceGuide, setVoiceGuide] = useState('');
   const [focusMetric, setFocusMetric] = useState('');
   const [cadenceMode, setCadenceMode] = useState<CadenceFlowMode>('balanced');
-  const [visualMode, setVisualMode] = useState<VisualMode>('classic');
-  const [motionMode, setMotionMode] = useState<MotionMode>('balanced');
   const [applyHint, setApplyHint] = useState<string | null>(null);
 
   useEffect(() => {
@@ -259,8 +283,6 @@ function SettingsEditablePanel({
     setVoiceGuide(snapshot.voiceGuide);
     setFocusMetric(snapshot.focusMetric);
     setCadenceMode(snapshot.cadenceMode as CadenceFlowMode);
-    setVisualMode(snapshot.visualMode as VisualMode);
-    setMotionMode(snapshot.motionMode as MotionMode);
   }, [
     snapshot.workdayStartHour,
     snapshot.workdayEndHour,
@@ -272,9 +294,7 @@ function SettingsEditablePanel({
     snapshot.primaryOffer,
     snapshot.voiceGuide,
     snapshot.focusMetric,
-    snapshot.cadenceMode,
-    snapshot.visualMode,
-    snapshot.motionMode
+    snapshot.cadenceMode
   ]);
 
   useEffect(() => {
@@ -341,30 +361,6 @@ function SettingsEditablePanel({
   const onApplyCadence = useCallback(async () => {
     await runApply(cadenceConfigureFragment(cadenceMode));
   }, [runApply, cadenceMode]);
-
-  const onApplyVisual = useCallback(async () => {
-    const line = visualMode === 'retroMagic' ? 'retro' : 'classic';
-    await runApply(line);
-  }, [runApply, visualMode]);
-
-  const onApplyMotion = useCallback(async () => {
-    const map: Record<MotionMode, string> = {
-      off: 'motion off',
-      balanced: 'motion balanced',
-      wild: 'motion wild'
-    };
-    await runApply(map[motionMode]);
-  }, [runApply, motionMode]);
-
-  const onToggleAmbient = useCallback(async () => {
-    const line = snapshot.ambientFxEnabled ? 'disable ambient' : 'enable ambient';
-    await runApply(line);
-  }, [runApply, snapshot.ambientFxEnabled]);
-
-  const onToggleDebug = useCallback(async () => {
-    const line = snapshot.debugMode ? 'disable debug' : 'enable debug';
-    await runApply(line);
-  }, [runApply, snapshot.debugMode]);
 
   const f = fieldClass(btnFocus);
   const pBtn = primaryBtn(btnFocus);
@@ -604,77 +600,9 @@ function SettingsEditablePanel({
         </button>
       </div>
 
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">
-        Visual &amp; motion
-      </p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-vis">
-            Visual
-          </label>
-          <select
-            id="bo-vis"
-            value={visualMode}
-            onChange={(e) => setVisualMode(e.target.value as VisualMode)}
-            className={f}
-          >
-            <option value="classic">Classic</option>
-            <option value="retroMagic">Retro</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => void onApplyVisual()}
-            disabled={applyBusy}
-            className={pBtn}
-          >
-            Apply visual
-          </button>
-        </div>
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-mot">
-            Motion
-          </label>
-          <select
-            id="bo-mot"
-            value={motionMode}
-            onChange={(e) => setMotionMode(e.target.value as MotionMode)}
-            className={f}
-          >
-            <option value="off">Off</option>
-            <option value="balanced">Balanced</option>
-            <option value="wild">Wild</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => void onApplyMotion()}
-            disabled={applyBusy}
-            className={pBtn}
-          >
-            Apply motion
-          </button>
-        </div>
-      </div>
-
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">
-        Toggles
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => void onToggleAmbient()}
-          disabled={applyBusy}
-          className={mobileChipClass(btnFocus)}
-        >
-          {snapshot.ambientFxEnabled ? 'Turn ambient off' : 'Turn ambient on'}
-        </button>
-        <button
-          type="button"
-          onClick={() => void onToggleDebug()}
-          disabled={applyBusy}
-          className={mobileChipClass(btnFocus)}
-        >
-          {snapshot.debugMode ? 'Turn debug off' : 'Turn debug on'}
-        </button>
+      <div className="mt-4 rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-[11px] leading-relaxed text-textSoft">
+        Appearance is unified across BrandOps. Motion follows the operating system reduced-motion
+        preference, so Settings only exposes workspace behavior and brand configuration.
       </div>
     </MobileTabSection>
   );
@@ -696,8 +624,6 @@ export interface MobileSettingsViewProps {
   onRequestResetWorkspace: () => void;
   /** Host document; avoids offering a duplicate `integrations.html` tab when already there. */
   documentSurface: AppDocumentSurfaceId | 'chatbot';
-  /** Optional: jump to Today after changing workspace behavior (see `docs/ai-powered-settings-revamp.md`). */
-  onOpenTodayTab?: () => void;
   isAuthenticated?: boolean;
   authProvider?: AuthProviderId | null;
   authEmail?: string;
@@ -723,7 +649,6 @@ export const MobileSettingsView = ({
   applySettingsConfigure,
   applyBusy,
   commandBusy,
-  onOpenTodayTab,
   isAuthenticated = false,
   authProvider = null,
   authEmail = '',
@@ -773,8 +698,6 @@ export const MobileSettingsView = ({
         snapshot={snapshot}
         rulesSourceLabel={intelligenceRulesSourceLabel(snapshot.intelligenceRulesReadout.mode)}
         btnFocus={btnFocus}
-        onOpenToday={onOpenTodayTab}
-        helpHref={hrefHelpPage()}
       />
 
       <AccountMembershipSection
@@ -794,7 +717,9 @@ export const MobileSettingsView = ({
           className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >
           Unified workspace
-          <span className="ml-2 text-[11px] font-normal text-textSoft">Assistant and preferences</span>
+          <span className="ml-2 text-[11px] font-normal text-textSoft">
+            Assistant and preferences
+          </span>
         </summary>
         <div className="space-y-5 border-t border-border/40 px-3 pb-4 pt-4">
           <SettingsAssistantComposer
@@ -827,10 +752,8 @@ export const MobileSettingsView = ({
           className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >
           <span className="inline-flex items-center gap-2">
-            Advanced
-            <span className="text-[11px] font-normal text-textSoft">
-              — metrics, lineage, intelligence, vault, readout, audit
-            </span>
+            Diagnostics
+            <span className="text-[11px] font-normal text-textSoft">Advanced readouts</span>
           </span>
         </summary>
         <div className="space-y-5 border-t border-border/40 px-3 pb-4 pt-4">
@@ -1070,8 +993,7 @@ export const MobileSettingsView = ({
             </h3>
             {documentSurface === 'integrations' ? (
               <p className="mt-1 text-[11px] text-textMuted">
-                This is the extension options page using the same shell as{' '}
-                <code>mobile.html</code>.
+                This is the extension options page using the same shell as <code>mobile.html</code>.
               </p>
             ) : (
               <>

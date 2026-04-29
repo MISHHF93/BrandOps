@@ -65,30 +65,14 @@ export const buildAiSettingsPlan = (prompt: string): AiSettingsPlan => {
     };
   }
 
-  if (lower.includes('retro')) {
-    nextOperation(operations, 'set-visual-mode', { visualMode: 'retroMagic' });
-  } else if (lower.includes('classic')) {
-    nextOperation(operations, 'set-visual-mode', { visualMode: 'classic' });
-  }
-
-  if (lower.includes('motion off')) {
-    nextOperation(operations, 'set-motion-mode', { motionMode: 'off' });
-  } else if (lower.includes('motion wild')) {
-    nextOperation(operations, 'set-motion-mode', { motionMode: 'wild' });
-  } else if (lower.includes('motion balanced')) {
-    nextOperation(operations, 'set-motion-mode', { motionMode: 'balanced' });
-  }
-
-  if (lower.includes('enable ambient') || lower.includes('ambient on')) {
-    nextOperation(operations, 'set-ambient-fx', { ambientFxEnabled: true });
-  } else if (lower.includes('disable ambient') || lower.includes('ambient off')) {
-    nextOperation(operations, 'set-ambient-fx', { ambientFxEnabled: false });
-  }
-
-  if (lower.includes('enable debug')) {
-    nextOperation(operations, 'set-debug-mode', { debugMode: true });
-  } else if (lower.includes('disable debug')) {
-    nextOperation(operations, 'set-debug-mode', { debugMode: false });
+  if (
+    lower.includes('retro') ||
+    lower.includes('classic') ||
+    lower.includes('motion ') ||
+    lower.includes('ambient') ||
+    lower.includes('debug')
+  ) {
+    warnings.push('Appearance, motion, ambient effects, and debug controls are unified now.');
   }
 
   const weightMatch = lower.match(/(\d{1,2})\s*%\s*(business|managerial)/);
@@ -186,35 +170,16 @@ export const applyAiSettingsOperations = (
     try {
       switch (operation.kind) {
         case 'set-visual-mode':
-          if (
-            operation.payload.visualMode === 'classic' ||
-            operation.payload.visualMode === 'retroMagic'
-          ) {
-            data.settings.visualMode = operation.payload.visualMode;
-            applied.push(`Visual mode set to ${operation.payload.visualMode}.`);
-          } else {
-            skipped.push('Visual mode request skipped.');
-          }
+          skipped.push('Visual mode is unified and no longer configurable.');
           break;
         case 'set-motion-mode':
-          if (
-            operation.payload.motionMode === 'off' ||
-            operation.payload.motionMode === 'balanced' ||
-            operation.payload.motionMode === 'wild'
-          ) {
-            data.settings.motionMode = operation.payload.motionMode;
-            applied.push(`Motion mode set to ${operation.payload.motionMode}.`);
-          } else {
-            skipped.push('Motion mode request skipped.');
-          }
+          skipped.push('Motion follows the unified BrandOps behavior and reduced-motion setting.');
           break;
         case 'set-ambient-fx':
-          data.settings.ambientFxEnabled = Boolean(operation.payload.ambientFxEnabled);
-          applied.push(`Ambient FX ${data.settings.ambientFxEnabled ? 'enabled' : 'disabled'}.`);
+          skipped.push('Ambient effects are unified and no longer configurable.');
           break;
         case 'set-debug-mode':
-          data.settings.debugMode = Boolean(operation.payload.debugMode);
-          applied.push(`Debug mode ${data.settings.debugMode ? 'enabled' : 'disabled'}.`);
+          skipped.push('Debug mode is not exposed in workspace settings.');
           break;
         case 'set-managerial-weight':
           data.settings.notificationCenter.managerialWeight = clamp(
