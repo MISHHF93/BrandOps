@@ -6,10 +6,13 @@ import type { AppSettings, BrandProfile } from '../types/domain';
  */
 export const defaultBrandProfile = {
   operatorName: 'Your name',
-  positioning: 'Add a one-line positioning statement in Settings or Brand Vault.',
-  primaryOffer: 'Describe your primary offer.',
-  voiceGuide: 'Note tone and vocabulary to keep messaging consistent.',
-  focusMetric: 'Pick one metric that signals progress this quarter.'
+  positioning:
+    'Principal-level AI engineering and generative AI architecture for teams that need enterprise LLM systems, governance, and execution they can trust.',
+  primaryOffer:
+    'Strategic AI architecture, GPT system design, model evaluation, and enterprise LLM deployment advisory packaged into audit, sprint, and implementation offers.',
+  voiceGuide:
+    'High-credibility, precise, strategic, proof-led, commercially relevant. Avoid generic marketing language, shallow AI hype, vague startup cliches, and creator-economy advice.',
+  focusMetric: 'Qualified high-trust AI strategy, architecture, or governance opportunities created per month.'
 } satisfies BrandProfile;
 
 /**
@@ -76,9 +79,10 @@ export const defaultAppSettings = {
     maxDailyTasks: 3,
     aiGuidanceMode: 'hybrid',
     preferredModel: '',
-    roleContext: 'Operator — define your role in Settings → Notification Center.',
+    roleContext:
+      'BrandOps operator — principal-level AI engineering, generative AI architecture, enterprise LLM deployment, AI governance, technical diligence, GPT system design, model evaluation, and founder-level execution.',
     promptTemplate:
-      "You are my AI operating partner. Build today's plan using my tasks, integrations, and workspace state. A labeled Workspace brand block (from Settings → Preferences) is appended to this prompt—treat the operator, positioning, offer, voice, and focus metric there as source of truth. Keep sequencing practical and end with one review question.",
+      "You are BrandOps, my strategic personal brand engine. Build today's plan using my tasks, integrations, and workspace state. A labeled Workspace brand block is appended to this prompt—treat the operator, positioning, offer, voice, and focus metric there as source of truth. Prioritize positioning, proof, offer logic, content angle, commercial relevance, CTA direction, and next actions. Avoid generic marketing language and shallow AI hype. Keep sequencing practical and end with one review question.",
     datasetReviewEnabled: true,
     integrationReviewEnabled: true
   },

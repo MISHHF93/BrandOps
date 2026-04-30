@@ -5,6 +5,12 @@
  * includes this block (see `getBrandTemplateReplacements` + daily notification prompt assembly).
  */
 import type { BrandProfile } from '../../types/domain';
+import {
+  BRANDOPS_FUNCTION_CATALOG,
+  BRANDOPS_OUTPUT_PRIORITY,
+  BRANDOPS_PLATFORM_DOCTRINE,
+  buildBrandOpsFunctionBrief
+} from '../../config/brandOpsFunctions';
 
 const notSet = (s: string) => s || '(not set)';
 
@@ -35,13 +41,20 @@ export function formatBrandProfileForAi(brand: BrandProfile): string {
   const off = escBrandMultiline(brand.primaryOffer) || '(not set)';
   const voice = escBrandMultiline(brand.voiceGuide) || '(not set)';
   const metric = escBrandField(brand.focusMetric) || '(not set)';
+  const doctrine = BRANDOPS_PLATFORM_DOCTRINE.map((line) => `- ${line}`).join('\n');
+  const functions = BRANDOPS_FUNCTION_CATALOG.map(buildBrandOpsFunctionBrief).join('\n\n');
 
   const lines: string[] = [
+    'BrandOps operating doctrine:',
+    doctrine,
+    `Default output priority: ${BRANDOPS_OUTPUT_PRIORITY.join(' -> ')}`,
     `Operator name (how to address this person): ${op}`,
     `Positioning (who they help / how they work): ${pos}`,
     `Primary offer (main product, package, or wedge): ${off}`,
     `Brand voice (tone, style, vocabulary, avoid): ${voice}`,
-    `Focus metric (north-star number or phrase): ${metric}`
+    `Focus metric (north-star number or phrase): ${metric}`,
+    'Reusable BrandOps functions:',
+    functions
   ];
   return lines.join('\n');
 }

@@ -340,6 +340,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
   const [chatAttachment, setChatAttachment] = useState<ChatComposerAttachment | null>(null);
   const [launchAccess, setLaunchAccess] = useState<LaunchAccessState>(() =>
@@ -376,6 +377,28 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
   useEffect(() => {
     void recordLocalSessionDay();
   }, []);
+
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const doc = document.documentElement;
+      const max = Math.max(1, doc.scrollHeight - window.innerHeight);
+      setScrollProgress(Math.min(1, Math.max(0, window.scrollY / max)));
+    };
+    const requestUpdate = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', requestUpdate);
+      window.removeEventListener('resize', requestUpdate);
+    };
+  }, [activeTab]);
 
   useEffect(() => {
     if (prevTabForUsageRef.current === null) {
@@ -744,6 +767,11 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         Skip to main content
       </a>
       <header className="bo-mobile-header sticky top-0 z-20">
+        <div
+          className="bo-scroll-progress"
+          style={{ transform: `scaleX(${scrollProgress})` }}
+          aria-hidden
+        />
         <div className="mx-auto flex max-w-md items-center justify-between gap-3">
           <div className="bo-mobile-brand">
             <span className="bo-mobile-brand__mark" aria-hidden>
@@ -809,7 +837,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         ) : (
           <section
             key={activeTab}
-            className="bo-surface-enter bo-flagship-surface p-4 text-sm text-textMuted"
+            className="bo-surface-enter bo-mobile-tab-shell bo-flagship-surface p-4 text-sm text-textMuted"
             aria-label={`${activeTab} tab`}
           >
             {activeTab === 'pulse' ? (
@@ -902,7 +930,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
       ) : null}
 
       {activeTab === 'settings' && shouldRequireLaunchMembership(launchAccess) ? (
-        <div className="bo-mobile-main fixed inset-x-0 z-30 mx-auto w-full max-w-md px-2 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
+        <div className="bo-mobile-main fixed inset-x-0 bottom-[calc(4.85rem+env(safe-area-inset-bottom,0px))] z-30 mx-auto w-full max-w-md px-2">
           <button
             type="button"
             onClick={onMarkMembershipActive}

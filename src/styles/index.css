@@ -2690,3 +2690,228 @@ html[data-app-surface='welcome'] body::after {
     box-shadow: 0 1px 1px rgb(0 0 0 / 0.05);
   }
 }
+
+/* Unified flagship visual pass: light/dark only, with one BrandOps motion language. */
+:root {
+  --flagship-canvas-a: 10 12 16;
+  --flagship-canvas-b: 18 21 27;
+  --flagship-sheen: 255 255 255;
+  --flagship-line: 214 188 141;
+  --flagship-depth-alpha: 0.46;
+}
+
+:root[data-theme='light'] {
+  --flagship-canvas-a: 247 248 251;
+  --flagship-canvas-b: 232 236 243;
+  --flagship-sheen: 255 255 255;
+  --flagship-line: 140 95 15;
+  --flagship-depth-alpha: 0.14;
+}
+
+@keyframes bo-flagship-canvas-drift {
+  from {
+    background-position:
+      0 0,
+      0 0,
+      0% 0,
+      0% 0;
+  }
+
+  to {
+    background-position:
+      0.9rem 0.5rem,
+      -0.6rem 0.8rem,
+      8% 0,
+      -6% 0;
+  }
+}
+
+@keyframes bo-flagship-sheen {
+  0%,
+  52% {
+    transform: translateX(-42%);
+    opacity: 0;
+  }
+
+  68% {
+    opacity: 0.75;
+  }
+
+  100% {
+    transform: translateX(42%);
+    opacity: 0;
+  }
+}
+
+@keyframes bo-command-breathe {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgb(var(--color-text) / 0.08),
+      0 12px 28px rgb(var(--color-shadow) / 0.28),
+      0 0 0 1px rgb(var(--color-text) / 0.03);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgb(var(--color-text) / 0.1),
+      0 14px 32px rgb(var(--color-shadow) / 0.32),
+      0 0 0 4px rgb(var(--brand-gold) / 0.085);
+  }
+}
+
+@layer components {
+  .bo-mobile-app {
+    background:
+      linear-gradient(180deg, rgb(var(--flagship-sheen) / 0.045), transparent 17rem),
+      linear-gradient(125deg, rgb(var(--brand-gold) / 0.12), transparent 32%),
+      linear-gradient(238deg, transparent 38%, rgb(var(--brand-command) / 0.11), transparent 72%),
+      linear-gradient(
+        146deg,
+        rgb(var(--flagship-canvas-a)) 0%,
+        rgb(var(--flagship-canvas-b)) 58%,
+        rgb(var(--color-bg)) 100%
+      );
+  }
+
+  .bo-mobile-app::before {
+    background:
+      linear-gradient(90deg, rgb(var(--flagship-line) / 0.04) 1px, transparent 1px),
+      linear-gradient(180deg, rgb(var(--color-text) / 0.022) 1px, transparent 1px),
+      linear-gradient(118deg, transparent 0%, rgb(var(--brand-command) / 0.1) 41%, transparent 72%),
+      linear-gradient(72deg, transparent 18%, rgb(var(--brand-gold) / 0.08), transparent 54%);
+    background-size:
+      28px 28px,
+      28px 28px,
+      140% 100%,
+      160% 100%;
+    background-position:
+      0 0,
+      0 0,
+      0 0,
+      0 0;
+    opacity: 0.62;
+    animation: bo-flagship-canvas-drift 18s var(--ease-liquid-in-out) infinite alternate;
+  }
+
+  .bo-mobile-app::after {
+    background:
+      linear-gradient(180deg, transparent 0%, rgb(var(--color-shadow) / var(--flagship-depth-alpha)) 100%),
+      linear-gradient(
+        90deg,
+        rgb(var(--brand-command) / 0.08),
+        transparent 34%,
+        rgb(var(--brand-gold) / 0.055)
+      );
+    opacity: 0.78;
+  }
+
+  :root[data-theme='light'] .bo-mobile-app {
+    background:
+      linear-gradient(180deg, rgb(var(--flagship-sheen) / 0.82), transparent 18rem),
+      linear-gradient(125deg, rgb(var(--brand-gold) / 0.08), transparent 32%),
+      linear-gradient(238deg, transparent 38%, rgb(var(--brand-command) / 0.09), transparent 72%),
+      linear-gradient(
+        146deg,
+        rgb(var(--flagship-canvas-a)) 0%,
+        rgb(var(--flagship-canvas-b)) 58%,
+        rgb(var(--color-bg)) 100%
+      );
+  }
+
+  :root[data-theme='light'] .bo-mobile-app::before {
+    background:
+      linear-gradient(90deg, rgb(var(--flagship-line) / 0.045) 1px, transparent 1px),
+      linear-gradient(180deg, rgb(var(--color-text) / 0.032) 1px, transparent 1px),
+      linear-gradient(118deg, transparent 0%, rgb(var(--brand-command) / 0.11) 41%, transparent 72%);
+    opacity: 0.48;
+  }
+
+  .bo-mobile-header {
+    background: linear-gradient(
+      92deg,
+      rgb(var(--color-surface) / 0.64),
+      rgb(var(--color-bg-elevated) / 0.86) 52%,
+      rgb(var(--brand-gold) / 0.08)
+    );
+    box-shadow:
+      0 10px 28px rgb(var(--color-shadow) / 0.22),
+      inset 0 1px 0 rgb(var(--flagship-sheen) / 0.045);
+  }
+
+  .bo-scroll-progress {
+    position: absolute;
+    inset: auto 0 -1px;
+    height: 2px;
+    transform-origin: left center;
+    background: linear-gradient(
+      90deg,
+      rgb(var(--brand-gold) / 0.88),
+      rgb(var(--brand-command) / 0.72),
+      rgb(var(--brand-gold) / 0.38)
+    );
+    box-shadow: 0 0 18px rgb(var(--brand-gold) / 0.32);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .bo-flagship-surface {
+    border-radius: 1.35rem;
+    border-color: rgb(var(--color-border) / 0.54);
+    background:
+      linear-gradient(180deg, rgb(var(--flagship-sheen) / 0.07), transparent 9rem),
+      linear-gradient(135deg, rgb(var(--brand-gold) / 0.055), transparent 34%),
+      linear-gradient(
+        155deg,
+        rgb(var(--color-surface) / 0.82),
+        rgb(var(--color-bg-elevated) / 0.72) 56%,
+        rgb(var(--color-bg) / 0.66)
+      );
+    box-shadow:
+      inset 0 1px 0 rgb(var(--flagship-sheen) / 0.07),
+      inset 0 -1px 0 rgb(var(--color-shadow) / 0.18),
+      0 20px 60px rgb(var(--color-shadow) / 0.32);
+  }
+
+  .bo-mobile-tab-shell {
+    transform-style: preserve-3d;
+  }
+
+  .bo-mobile-tab-shell > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .bo-mobile-tab-shell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      rgb(var(--flagship-sheen) / 0.05) 30%,
+      transparent 58%
+    );
+    transform: translateX(-34%);
+    animation: bo-flagship-sheen 7s var(--ease-liquid-in-out) infinite;
+    opacity: 0.75;
+  }
+
+  .bo-mobile-nav button[aria-current='page'] > span:first-child {
+    box-shadow: 0 0 0 4px rgb(var(--brand-gold) / 0.055);
+  }
+
+  .bo-command-handle {
+    animation: bo-command-breathe 3.8s var(--ease-liquid-in-out) infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bo-mobile-app::before,
+  .bo-mobile-tab-shell::after,
+  .bo-command-handle {
+    animation: none !important;
+  }
+}

@@ -6,7 +6,7 @@ import { type CommandRoute, parseCommandRoute } from '../../services/agent/inten
  */
 export type BrandOpsChatIntent = {
   id: string;
-  groupId: 'essentials' | 'pipeline' | 'content' | 'connect';
+  groupId: 'strategy' | 'essentials' | 'pipeline' | 'content' | 'connect';
   title: string;
   subtitle: string;
   command: string;
@@ -22,6 +22,33 @@ const blob = (i: BrandOpsChatIntent) =>
   norm([i.title, i.subtitle, i.command, i.id.replace(/-/g, ' ')].join(' '));
 
 const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
+  {
+    id: 'audit-positioning',
+    groupId: 'strategy',
+    title: 'Audit positioning',
+    subtitle: 'Authority, proof, differentiation, and premium clarity',
+    command: 'audit_positioning',
+    pickWeight: 112,
+    showAsChip: true
+  },
+  {
+    id: 'offer-stack',
+    groupId: 'strategy',
+    title: 'Define offer stack',
+    subtitle: 'Package expertise into audit, sprint, advisory, and implementation offers',
+    command: 'define_offer_stack',
+    pickWeight: 108,
+    showAsChip: true
+  },
+  {
+    id: 'brand-narrative',
+    groupId: 'strategy',
+    title: 'Brand narrative',
+    subtitle: 'Connect technical depth, governance, proof, and founder-level execution',
+    command: 'generate_brand_narrative',
+    pickWeight: 104,
+    showAsChip: true
+  },
   {
     id: 'check-pipeline',
     groupId: 'essentials',
@@ -79,10 +106,19 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
   {
     id: 'post',
     groupId: 'content',
-    title: 'Draft a post',
-    subtitle: 'Social copy from a theme',
-    command: 'draft post: weekly insight from the workspace',
+    title: 'Draft LinkedIn post',
+    subtitle: 'Authority-building post with proof and commercial pull',
+    command: 'write_linkedIn_post',
     pickWeight: 60,
+    showAsChip: true
+  },
+  {
+    id: 'content-angles',
+    groupId: 'content',
+    title: 'Content angles',
+    subtitle: 'Turn expertise and proof into strategic angles',
+    command: 'generate_content_angles',
+    pickWeight: 59,
     showAsChip: true
   },
   {
@@ -165,6 +201,11 @@ const BRANDOPS_CHAT_INTENTS: BrandOpsChatIntent[] = CHAT_INTENT_RAW;
 /** Curated example groups (same source as the composer). */
 const CHAT_EXAMPLE_GROUPS: { id: string; label: string; commandIds: string[] }[] = [
   {
+    id: 'strategy',
+    label: 'Strategy engine',
+    commandIds: ['audit-positioning', 'offer-stack', 'brand-narrative']
+  },
+  {
     id: 'essentials',
     label: 'Start fast',
     commandIds: ['check-pipeline', 'jot-note', 'follow-up']
@@ -177,7 +218,7 @@ const CHAT_EXAMPLE_GROUPS: { id: string; label: string; commandIds: string[] }[]
   {
     id: 'content',
     label: 'Content & calendar',
-    commandIds: ['post', 'content-idea', 'reschedule']
+    commandIds: ['content-angles', 'post', 'content-idea']
   },
   { id: 'connect', label: 'Connections', commandIds: ['notion', 'add-source'] }
 ];
@@ -225,7 +266,7 @@ export function suggestIntents(
     const ordered = [...pool].sort((a, b) => score(b) - score(a));
     const seen = new Set<string>();
     const diversified: typeof ordered = [];
-    for (const g of ['essentials', 'pipeline', 'content', 'connect'] as const) {
+    for (const g of ['strategy', 'essentials', 'pipeline', 'content', 'connect'] as const) {
       const next = ordered.find((i) => i.groupId === g && !seen.has(i.id));
       if (next) {
         diversified.push(next);
@@ -255,6 +296,7 @@ export function suggestIntents(
 }
 
 const ROUTE_PLAIN: Record<CommandRoute, string> = {
+  'brand-function': 'Runs a structured BrandOps strategy function',
   'add-note': 'Adds a note to your workspace',
   'reschedule-publishing': 'Reschedules a publishing post',
   'add-integration-source': 'Connects a new source (Notion, etc.)',

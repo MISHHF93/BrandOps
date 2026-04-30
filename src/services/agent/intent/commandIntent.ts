@@ -1,8 +1,11 @@
+import { resolveBrandOpsFunction } from '../../../config/brandOpsFunctions';
+
 /**
  * Deterministic v1 command routing. Maps user text to a route for {@link executeAgentWorkspaceCommand}.
  * Order matches precedence of the previous keyword chain (specific routes before general ones).
  */
 export type CommandRoute =
+  | 'brand-function'
   | 'add-note'
   | 'reschedule-publishing'
   | 'add-integration-source'
@@ -114,6 +117,9 @@ export const parseCommandRoute = (text: string): CommandRoute => {
   }
   if (lower.includes('update opportunity') || lower.includes('set opportunity')) {
     return 'update-opportunity';
+  }
+  if (resolveBrandOpsFunction(text)) {
+    return 'brand-function';
   }
 
   return 'unsupported';

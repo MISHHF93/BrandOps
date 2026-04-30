@@ -25,6 +25,13 @@ describe('parseCommandRoute', () => {
     expect(parseCommandRoute('rank opportunities by priority')).toBe('pipeline-health');
   });
 
+  it('maps BrandOps strategy functions without stealing operational commands', () => {
+    expect(parseCommandRoute('audit_positioning')).toBe('brand-function');
+    expect(parseCommandRoute('weekly market scan')).toBe('brand-function');
+    expect(parseCommandRoute('draft outreach: follow up on warm lead')).toBe('add-outreach-draft');
+    expect(parseCommandRoute('draft post: weekly insight')).toBe('add-publishing-draft');
+  });
+
   it('maps archive / restore opportunity and content duplicate / archive', () => {
     expect(parseCommandRoute('archive opportunity')).toBe('archive-opportunity');
     expect(parseCommandRoute('restore opportunity')).toBe('restore-opportunity');

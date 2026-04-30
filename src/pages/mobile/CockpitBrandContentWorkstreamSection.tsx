@@ -4,15 +4,15 @@ import { signalList } from './cockpitDailyPrimitives';
 import type { CockpitBrandContentSectionProps } from './cockpitSectionTypes';
 
 const BRAND_STRIP_ITEMS = [
-  { kind: 'prime' as const, label: 'Add content', phrase: 'add content: weekly insight memo' },
-  { kind: 'run' as const, label: 'Duplicate first item', phrase: 'duplicate content' },
-  { kind: 'run' as const, label: 'Archive first item', phrase: 'archive content' },
+  { kind: 'run' as const, label: 'Audit positioning', phrase: 'audit_positioning' },
+  { kind: 'run' as const, label: 'Offer stack', phrase: 'define_offer_stack' },
+  { kind: 'run' as const, label: 'Content angles', phrase: 'generate_content_angles' },
   {
     kind: 'run' as const,
-    label: 'Draft post',
-    phrase: 'draft post: weekly insight from the workspace'
+    label: 'LinkedIn post',
+    phrase: 'write_linkedIn_post'
   },
-  { kind: 'run' as const, label: 'Reschedule posts', phrase: 'reschedule posts to friday 11am' }
+  { kind: 'run' as const, label: 'Case study', phrase: 'build_case_study' }
 ] as const;
 
 const rowChip = (btnFocus: string) =>
@@ -43,8 +43,8 @@ export const CockpitBrandContentWorkstreamSection = ({
       </h3>
     </div>
     <span className="sr-only">
-      {meta.description} Brand and publishing rows are read-only digest. Drafts and updates run in
-      Chat — not Settings. Full mixed queue in Pulse.
+      {meta.description} Brand and publishing rows are read-only digest. Strategic BrandOps
+      functions run in Chat — not Settings. Full mixed queue in Pulse.
     </span>
     <p className="mt-2 text-textSoft">
       Queue: <span className="text-text">{snapshot.publishingQueue}</span> ·{' '}
@@ -63,8 +63,8 @@ export const CockpitBrandContentWorkstreamSection = ({
       items={BRAND_STRIP_ITEMS}
     />
     <span className="sr-only">
-      Duplicate and archive in the strip target the first active library item; use row buttons to
-      prime lines that name a specific title.
+      Function buttons return structured objective, diagnosis, gaps, recommendations, and next-step
+      guidance. Use row buttons to prime lines that name a specific title.
     </span>
     {(() => {
       const bv = snapshot.cockpitBrandVaultReadout;

@@ -9,8 +9,13 @@ import { scheduler } from '../scheduling/scheduler';
 import { storageService } from '../storage/storage';
 import { applyAiSettingsOperations, buildAiSettingsPlan } from '../ai/aiSettingsMode';
 import { parseCommandRoute } from './intent/commandIntent';
+import {
+  buildBrandOpsStrategicReadout,
+  resolveBrandOpsFunction
+} from '../../config/brandOpsFunctions';
 
 export type AgentAction =
+  | 'brand-function'
   | 'add-note'
   | 'reschedule-publishing'
   | 'add-integration-source'
@@ -957,6 +962,26 @@ const runPipelineHealth = (workspace: BrandOpsData): AgentWorkspaceResult => {
   return { ok: true, action: 'pipeline-health', summary };
 };
 
+const runBrandOpsFunction = (
+  workspace: BrandOpsData,
+  command: AgentWorkspaceCommand
+): AgentWorkspaceResult => {
+  const fn = resolveBrandOpsFunction(command.text);
+  if (!fn) {
+    return {
+      ok: false,
+      action: 'brand-function',
+      summary:
+        'BrandOps function not recognized. Try audit_positioning, define_offer_stack, generate_content_angles, write_linkedIn_post, build_case_study, weekly_pipeline_review, or monthly_brand_consistency_review.'
+    };
+  }
+  return {
+    ok: true,
+    action: 'brand-function',
+    summary: buildBrandOpsStrategicReadout(fn, workspace)
+  };
+};
+
 const recordCommandAudit = async (result: AgentWorkspaceResult, command: AgentWorkspaceCommand) => {
   try {
     const data = await storageService.getData();
@@ -987,6 +1012,8 @@ const runParsedRoute = async (
 ): Promise<AgentWorkspaceResult> => {
   const lower = command.text.toLowerCase();
   switch (route) {
+    case 'brand-function':
+      return runBrandOpsFunction(workspace, command);
     case 'add-note':
       return addNote(workspace, command);
     case 'reschedule-publishing':
