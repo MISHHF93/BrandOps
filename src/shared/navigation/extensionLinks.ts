@@ -97,7 +97,7 @@ export function buildDashboardUrl(opts?: { section?: DashboardSectionId }): stri
  */
 export function buildMobileShellUrl(
   opts:
-    | { tab: 'pulse' | 'chat' | 'settings' | 'integrations' }
+    | { tab: 'workspace' | 'chat' | 'settings' | 'integrations' }
     | { tab: 'daily' | 'cockpit' }
     | { workstream: DashboardSectionId }
 ): string {

@@ -41,8 +41,8 @@ describe('localProductUsage', () => {
     expect(raw?.activeLocalDays).toContain(localDayKey());
   });
 
-  it('increments navigation when landing on Chat from Pulse or Today', async () => {
-    await recordShellNavigation('pulse', 'chat');
+  it('increments navigation when landing on Assistant from Workspace overview or Today', async () => {
+    await recordShellNavigation('workspace', 'chat');
     await recordShellNavigation('daily', 'chat');
     const s = await getLocalProductUsageSummary();
     expect(s.fromPulseToChat).toBe(1);
@@ -50,7 +50,7 @@ describe('localProductUsage', () => {
   });
 
   it('does not increment when not navigating to Chat', async () => {
-    await recordShellNavigation('pulse', 'daily');
+    await recordShellNavigation('workspace', 'daily');
     const s = await getLocalProductUsageSummary();
     expect(s.fromPulseToChat).toBe(0);
   });

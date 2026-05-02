@@ -55,28 +55,28 @@ export const cockpitNavigationGroups: Array<{
       {
         id: 'nav-overview',
         label: 'Today',
-        description: 'Mission map, execution priorities, and scheduler pulse.',
+        description: 'Mission map and priorities.',
         type: 'section',
         target: 'today'
       },
       {
         id: 'nav-growth',
         label: 'Pipeline',
-        description: 'Outreach execution and CRM pipeline.',
+        description: 'Outreach and pipeline.',
         type: 'section',
         target: 'pipeline'
       },
       {
         id: 'nav-content',
         label: 'Brand & content',
-        description: 'Library, publishing queue, and brand narrative assets.',
+        description: 'Library, queue, narrative assets.',
         type: 'section',
         target: 'brand-content'
       },
       {
         id: 'nav-systems',
         label: 'Connections',
-        description: 'Integrations, sync artifacts, and infrastructure controls.',
+        description: 'Integrations, sync, and controls.',
         type: 'section',
         target: 'connections'
       }

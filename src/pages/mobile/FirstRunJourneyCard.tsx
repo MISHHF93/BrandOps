@@ -1,4 +1,4 @@
-import { CheckCircle2, Sparkles, X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import { BrandOpsMarkBadge } from '../../shared/ui/brandopsPolish';
 
 const STORAGE_KEY = 'brandops:firstRunJourneyDismissed';
@@ -18,8 +18,7 @@ function writeFirstRunJourneyDismissed() {
 }
 
 /**
- * Dismissible "first 30 seconds" guide. Navigation stays in the bottom bar; this card only keeps
- * the first command CTA and a static orientation checklist.
+ * Compact first-session hint shown on the Today tab (planning lanes).
  */
 export function FirstRunJourneyCard({
   btnFocus,
@@ -33,15 +32,15 @@ export function FirstRunJourneyCard({
   return (
     <section
       className="bo-brand-command-surface bo-section-halo mb-3 rounded-xl px-3 py-3 text-label text-textMuted shadow-sm"
-      aria-label="Start your workspace"
+      aria-label="Start here — first session"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-2.5">
           <BrandOpsMarkBadge className="bo-brand-mark--sm mt-0.5" />
           <div>
-            <p className="text-h3 text-text">Start your workspace</p>
+            <p className="text-h3 text-text">Start here</p>
             <p className="mt-1 text-meta text-textSoft">
-              Run one check, then move through Pulse, Today, and Chat.
+              Run pipeline health once. Workspace shows counts + queue; Assistant runs commands; Today is for lanes.
             </p>
             <div className="mt-2">
               <button
@@ -54,14 +53,6 @@ export function FirstRunJourneyCard({
                 Pipeline health
               </button>
             </div>
-            <ul className="mt-3 space-y-1.5" aria-label="First value checklist">
-              {['Pulse shows signals', 'Today organizes work', 'Chat runs commands'].map((item) => (
-                <li key={item} className="flex items-center gap-1.5 text-meta text-textSoft">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-success" strokeWidth={2.25} />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
         <button

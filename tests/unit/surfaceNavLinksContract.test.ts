@@ -17,7 +17,7 @@ describe('SurfaceNavLinks (contract)', () => {
 
   it('includes core shell tab labels', () => {
     const html = renderToString(React.createElement(SurfaceNavLinks));
-    for (const label of ['Pulse', 'Chat', 'Today', 'Settings']) {
+    for (const label of ['Workspace', 'Assistant', 'Today', 'Settings']) {
       expect(html).toContain(`>${label}</a>`);
     }
   });

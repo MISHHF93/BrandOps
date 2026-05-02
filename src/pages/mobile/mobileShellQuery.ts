@@ -5,19 +5,29 @@ import {
 } from '../../shared/config/dashboardNavigation';
 
 /**
- * Primary shell tabs in `MobileApp` (bottom nav). Kept in sync with {@link MOBILE_SHELL_NAV_TABS} in `mobileTabConfig.ts`.
+ * Full-screen panels inside the shell (URL-synced). Dock shows **Assistant** + **Workspace** only;
+ * Today / Integrations / Settings open from Workspace or deep links.
  */
-export type MobileShellTabId = 'pulse' | 'chat' | 'daily' | 'integrations' | 'settings';
+export type MobileShellTabId = 'workspace' | 'chat' | 'daily' | 'integrations' | 'settings';
+
+/**
+ * Bottom dock highlight: everything except Chat rolls up under Workspace.
+ */
+export function dockTabForShellTab(tab: MobileShellTabId): 'chat' | 'workspace' {
+  return tab === 'chat' ? 'chat' : 'workspace';
+}
 
 /**
  * Reserved `?section=` values that select a **tab**, not a Cockpit workstream.
  * `daily` and `cockpit` open the Cockpit tab and default the workstream to `today` for highlight/scroll.
- * `timeline` is an alias for `pulse`.
- * Do not add strings that match {@link DashboardSectionId} for a different meaning.
+ * `pulse` / `timeline` / `home` / `hub` resolve to the Workspace overview (queue lives there — not a separate feed tab).
  */
 const RESERVED_SECTION_TAB = new Set([
   'pulse',
   'timeline',
+  'workspace',
+  'home',
+  'hub',
   'chat',
   'settings',
   'integrations',
@@ -49,8 +59,8 @@ export function parseMobileShellFromSearchParams(
   }
   const lower = raw.toLowerCase();
   if (RESERVED_SECTION_TAB.has(lower)) {
-    if (lower === 'pulse' || lower === 'timeline') {
-      return { tab: 'pulse', workstream: null };
+    if (lower === 'pulse' || lower === 'timeline' || lower === 'workspace' || lower === 'home' || lower === 'hub') {
+      return { tab: 'workspace', workstream: null };
     }
     if (lower === 'chat') {
       return { tab: 'chat', workstream: null };
@@ -80,7 +90,7 @@ export function sectionParamValueForShellState(
   tab: MobileShellTabId,
   workstream: DashboardSectionId
 ): string {
-  if (tab === 'pulse') return 'pulse';
+  if (tab === 'workspace') return 'workspace';
   if (tab === 'chat') return 'chat';
   if (tab === 'settings') return 'settings';
   if (tab === 'integrations') return 'integrations';

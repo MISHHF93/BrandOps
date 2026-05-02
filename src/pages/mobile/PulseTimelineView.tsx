@@ -12,25 +12,10 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
-import type { PulseTimelineRow } from './pulseTimeline';
+import { type PulseTimelineRow, workspaceQueueCommandLine } from './pulseTimeline';
 import { bucketForRow, startOfLocalDay } from './pulseBuckets';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
-
-function primeLineForRow(row: PulseTimelineRow): string {
-  switch (row.kind) {
-    case 'follow-up':
-      return `add note: follow-up — ${row.title.replace(/"/g, "'")}`;
-    case 'publishing':
-      return `update publishing: ${row.title.replace(/"/g, "'")} checklist ready`;
-    case 'scheduler':
-      return `add note: scheduler task — ${row.title.replace(/"/g, "'")}`;
-    case 'outreach':
-      return `draft outreach: follow up with ${row.title.split('·')[0]?.trim() ?? 'contact'}`;
-    default:
-      return `add note: ${row.title.replace(/"/g, "'")}`;
-  }
-}
 
 type RowTone = 'info' | 'warning' | 'success' | 'primary' | 'muted';
 
@@ -124,7 +109,7 @@ export const PulseTimelineView = ({
                       <button
                         type="button"
                         disabled={commandBusy}
-                        onClick={() => primeChat(primeLineForRow(row))}
+                        onClick={() => primeChat(workspaceQueueCommandLine(row))}
                         title="Open in Chat"
                         className={clsx(
                           'bo-btn-ghost',

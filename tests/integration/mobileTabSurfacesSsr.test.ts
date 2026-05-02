@@ -9,7 +9,7 @@ import { CockpitDailyView } from '../../src/pages/mobile/CockpitDailyView';
 import { MobileChatView } from '../../src/pages/mobile/MobileChatView';
 import { MobileIntegrationsView } from '../../src/pages/mobile/MobileIntegrationsView';
 import { MobileSettingsView } from '../../src/pages/mobile/MobileSettingsView';
-import { PulseTimelineView } from '../../src/pages/mobile/PulseTimelineView';
+import { MobileWorkspaceHubView } from '../../src/pages/mobile/MobileWorkspaceHubView';
 import { buildWorkspaceSnapshot } from '../../src/pages/mobile/buildWorkspaceSnapshot';
 import {
   initIntelligenceRulesFromRemote,
@@ -23,27 +23,31 @@ const noop = () => {};
 const asyncNoop = async () => {};
 
 describe('Mobile tab surfaces (SSR integration)', () => {
-  it('Pulse: vitality strip, sparse actions, and chronological queue landmarks', () => {
+  it('Workspace overview: vitality instruments + compact queue table landmarks', () => {
     const html = renderToString(
-      React.createElement(PulseTimelineView, {
+      React.createElement(MobileWorkspaceHubView, {
         snapshot: buildWorkspaceSnapshot(cloneDemoSampleData()),
         btnFocus: '',
         commandBusy: false,
         runCommand: noop,
         primeChat: noop,
-        onOpenToday: noop
+        onOpenToday: noop,
+        onOpenIntegrations: noop,
+        onOpenSettings: noop,
+        onOpenCommandPalette: noop
       })
     );
-    expect(html).toContain('aria-label="Pulse"');
+    expect(html).toContain('aria-label="Workspace overview"');
     expect(html).toContain('Workspace vitality');
-    expect(html).toContain('Due-next counts only — open Today for focus lanes.');
-    expect(html).toContain('Parameters');
+    expect(html).toContain('Live parameters — queue below is soonest-first, not a feed.');
+    expect(html).toContain('Soonest queue');
     expect(html).toContain('Today lanes');
+    expect(html).toContain('Integrations');
+    expect(html).toContain('Settings');
     expect(html).toContain('Pipeline health');
-    expect(html).toContain('aria-label="Pulse queue"');
-    expect(html).toContain('Open in Chat');
+    expect(html).toContain('Commands');
+    expect(html).toContain('<table');
     expect(html).toContain('bo-icon-chip');
-    expect(html).toContain('role="list"');
   });
 
   it('Chat: header, thread, example commands, optional recent commands', () => {
@@ -52,7 +56,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         id: 'w',
         role: 'assistant',
         resultKind: 'plain',
-        text: 'Type a command (try pipeline health) or press ⌘K / Ctrl+K. Pulse: what is due. Today: full digest.'
+        text: 'Type a command (try pipeline health) or press ⌘K / Ctrl+K. Workspace: instruments + queue. Today: full lanes.'
       }
     ];
     const html = renderToString(
@@ -64,10 +68,11 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onClearCommandHistory: noop,
         btnFocus: '',
         onOpenToday: noop,
+        onOpenPlan: noop,
         vitalityMetrics: snapshot()
       })
     );
-    expect(html).toContain('aria-label="Chat"');
+    expect(html).toContain('aria-label="Assistant"');
     expect(html).toContain('Guided examples');
     expect(html).toContain('Today');
     expect(html).toContain('Start fast');

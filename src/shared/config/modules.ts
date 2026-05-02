@@ -4,7 +4,8 @@ import { WorkspaceModule } from '../../types/domain';
  * Logical modules and their home surface (`route`). Workstream ids and nav copy live in
  * `dashboardNavigation.ts` — keep naming aligned when you add or rename areas.
  *
- * The live product uses one five-tab shell (`MobileApp`): Pulse, Chat, Today, Integrations, Settings.
+ * The live product uses a **two-tab dock** on `mobile.html` (`MobileApp`): Assistant (commands) and
+ * Workspace (instruments + queue + shortcuts into Today / Integrations / Settings).
  * HTML entry names (`mobile.html`, `dashboard.html`, `integrations.html`) are packaging only.
  */
 export const workspaceModules: WorkspaceModule[] = [

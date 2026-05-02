@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:mobile": "vite --open /mobile.html",
+    "dev:mobile": "node scripts/dev.mjs --open /mobile.html",
     "bridge:proxy": "node scripts/bridge-proxy.mjs",
     "build": "tsc -b && vite build && node scripts/copy-manifest.mjs",
     "build:mobile": "tsc -b && vite build",

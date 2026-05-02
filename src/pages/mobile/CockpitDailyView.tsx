@@ -22,7 +22,7 @@ export interface CockpitDailyViewProps {
   /** Puts text in the Chat composer (does not send). Use when the agent only targets “first” rows. */
   primeChat: (line: string) => void;
   onOpenInAppSettings: () => void;
-  /** Open Pulse tab (mixed timeline); used for “full queue” cross-links. */
+  /** Open Workspace overview (instruments + queue); used for “full queue” cross-links from Today. */
   onOpenPulseTab: () => void;
   activeWorkstream: DashboardSectionId;
   onSelectWorkstream: (target: DashboardSectionId) => void;

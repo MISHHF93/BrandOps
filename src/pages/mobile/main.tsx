@@ -2,6 +2,6 @@ import { renderChatbotSurface } from '../chatbotWeb/renderChatbotSurface';
 
 renderChatbotSurface({
   surfaceLabel: 'mobile',
-  initialTab: 'pulse',
+  initialTab: 'workspace',
   errorBoundaryLabel: 'BrandOps Mobile'
 });

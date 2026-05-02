@@ -41,10 +41,10 @@ export function HelpKnowledgeRoot() {
             className="flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-medium text-textMuted"
           >
             <a href={pulseHref} className={navLinkClass}>
-              Pulse
+              Workspace
             </a>
             <a href={chatHref} className={navLinkClass}>
-              Chat
+              Assistant
             </a>
             <a href={todayHref} className={navLinkClass}>
               Today

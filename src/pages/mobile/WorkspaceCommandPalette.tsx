@@ -2,7 +2,7 @@ import { Command, useCommandState } from 'cmdk';
 import clsx from 'clsx';
 import { BookOpen, History, Loader2, Sparkles, TriangleAlert } from 'lucide-react';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
-import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
+import { COMMAND_PALETTE_NAV_TARGETS } from './mobileTabConfig';
 import { MOBILE_BTN_FOCUS } from './mobileTabPrimitives';
 import type { MobileShellTabId } from './mobileShellQuery';
 import { BrandOpsMarkBadge } from '../../shared/ui/brandopsPolish';
@@ -158,15 +158,15 @@ export const WorkspaceCommandPalette = ({
             </span>
           }
         >
-          {MOBILE_SHELL_NAV_TABS.map((t) => {
-            const Icon = t.icon;
+          {COMMAND_PALETTE_NAV_TARGETS.map((t) => {
+            const Icon = t.Icon;
             return (
               <Command.Item
-                key={t.id}
+                key={t.tab}
                 className={navItemClass}
-                value={`open tab ${t.label} ${t.id}`}
-                keywords={[t.label, t.id, 'go', 'navigate']}
-                onSelect={() => closeAnd(() => onNavigateTab(t.id))}
+                value={`open tab ${t.label} ${t.tab}`}
+                keywords={[...t.keywords, t.label, t.tab, 'go', 'navigate']}
+                onSelect={() => closeAnd(() => onNavigateTab(t.tab))}
               >
                 <Icon className="h-4 w-4 shrink-0 text-textMuted" strokeWidth={2} aria-hidden />
                 <span>{t.label}</span>

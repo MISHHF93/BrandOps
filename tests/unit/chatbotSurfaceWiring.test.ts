@@ -12,12 +12,12 @@ describe('chatbot surface wiring', () => {
     const welcomeMain = read('src/pages/welcome/main.tsx');
 
     expect(mobileMain).toContain('renderChatbotSurface(');
-    expect(mobileMain).toMatch(/initialTab:\s*'pulse'/);
+    expect(mobileMain).toMatch(/initialTab:\s*'workspace'/);
     expect(mobileMain).toContain("surfaceLabel: 'mobile'");
     expect(dashboardMain).toContain('renderChatbotSurface(');
     expect(integrationsMain).toContain('renderChatbotSurface(');
     expect(welcomeMain).toContain('renderChatbotSurface(');
-    expect(welcomeMain).toMatch(/initialTab:\s*'daily'/);
+    expect(welcomeMain).toMatch(/initialTab:\s*'workspace'/);
   });
 
   it('help entrypoint mounts Knowledge Center root (not MobileApp shell)', () => {
@@ -30,9 +30,9 @@ describe('chatbot surface wiring', () => {
     expect(indexHtml).toContain("new URL('/mobile.html'");
   });
 
-  it('mobile.html entry uses Pulse as the default shell tab', () => {
+  it('mobile.html entry uses Workspace overview as the default shell tab', () => {
     const mobileMain = read('src/pages/mobile/main.tsx');
-    expect(mobileMain).toMatch(/initialTab:\s*'pulse'/);
+    expect(mobileMain).toMatch(/initialTab:\s*'workspace'/);
   });
 
   it('renderChatbotSurface threads document surface into MobileApp (aligned with data-app-surface)', () => {

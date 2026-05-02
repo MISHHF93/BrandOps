@@ -24,8 +24,9 @@ export function hrefPrimaryAppChat(): string {
   return r(buildMobileShellUrl({ tab: 'chat' }));
 }
 
+/** Workspace overview (`?section=workspace`) — queue + instruments on the primary app. */
 export function hrefPrimaryAppPulse(): string {
-  return r(buildMobileShellUrl({ tab: 'pulse' }));
+  return r(buildMobileShellUrl({ tab: 'workspace' }));
 }
 
 /** Today tab with cockpit default scroll (`?section=today`). */
@@ -42,7 +43,7 @@ export function hrefPrimaryAppSettingsTab(): string {
   return r(buildMobileShellUrl({ tab: 'settings' }));
 }
 
-/** Integrations tab on `mobile.html` (`?section=integrations`) — same shell as Chat/Pulse. */
+/** Integrations tab on `mobile.html` (`?section=integrations`) — same shell as Assistant / Workspace. */
 export function hrefPrimaryAppIntegrationsTab(): string {
   return r(buildMobileShellUrl({ tab: 'integrations' }));
 }

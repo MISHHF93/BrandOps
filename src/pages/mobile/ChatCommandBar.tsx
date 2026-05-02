@@ -127,7 +127,7 @@ export const ChatCommandBar = ({
 
   return (
     <div
-      className="bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full max-w-md px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 bottom-[calc(6.15rem+env(safe-area-inset-bottom,0px))]"
+      className="bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full max-w-md px-[max(0.5rem,env(safe-area-inset-left,0px))] pe-[max(0.5rem,env(safe-area-inset-right,0px))] pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1 bottom-[calc(6.15rem+env(safe-area-inset-bottom,0px))]"
       aria-busy={commandLoading}
     >
       {commandLoading ? (
@@ -262,7 +262,7 @@ export const ChatCommandBar = ({
           disabled={commandLoading}
           onClick={() => fileInputRef.current?.click()}
           className={clsx(
-            'shrink-0 rounded-xl border border-border/60 p-2.5 text-textMuted hover:border-borderStrong hover:text-text',
+            'inline-flex h-11 min-h-[44px] w-11 min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border/60 text-textMuted hover:border-borderStrong hover:text-text',
             'disabled:opacity-50',
             btn
           )}
@@ -279,9 +279,9 @@ export const ChatCommandBar = ({
           }}
           onKeyDown={onKeyDown}
           disabled={commandLoading}
-          className="min-w-0 flex-1 bg-transparent px-1 py-2 text-[0.95rem] text-text outline-none placeholder:text-textSoft disabled:cursor-not-allowed disabled:opacity-50"
-          placeholder="What do you want to do?"
-          aria-label="Chat command input"
+          className="min-w-0 flex-1 bg-transparent px-1 py-2 text-base leading-snug text-text outline-none placeholder:text-textSoft disabled:cursor-not-allowed disabled:opacity-50"
+          placeholder="Ask BrandOps anything…"
+          aria-label="Assistant command input"
           aria-autocomplete="list"
           aria-controls={controls}
           aria-expanded={expanded}
@@ -292,7 +292,7 @@ export const ChatCommandBar = ({
           type="button"
           disabled={commandLoading}
           onClick={() => onSubmit()}
-          className={clsx('bo-btn-primary shrink-0 min-w-[5rem]', btn)}
+          className={clsx('bo-btn-primary inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 px-4 sm:min-w-[5.5rem]', btn)}
           title={commandLoading ? 'Working — your command is running' : 'Send (Enter)'}
         >
           {commandLoading ? (

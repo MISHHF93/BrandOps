@@ -1,7 +1,7 @@
 import { renderChatbotSurface } from '../chatbotWeb/renderChatbotSurface';
 
-/** Growth / sales first-run: land on Today cockpit, then use bottom nav to Chat for commands. */
+/** Growth / sales first-run: land on Workspace overview, then Assistant for commands. */
 renderChatbotSurface({
   surfaceLabel: 'welcome',
-  initialTab: 'daily'
+  initialTab: 'workspace'
 });

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import type { LucideIcon } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
-import type { MobileShellTabId } from './mobileShellQuery';
+import { dockTabForShellTab, type MobileShellTabId } from './mobileShellQuery';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
 import { SHELL_TAB_PURPOSE } from './shellSectionCopy';
 
@@ -109,7 +109,8 @@ export interface MobileShellNavProps {
  * Bottom tab dock: symmetric grid, spotlight cell behind the active tab, premium affordances.
  */
 export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNavProps) {
-  const idx = MOBILE_SHELL_NAV_TABS.findIndex((t) => t.id === activeTab);
+  const dockActive = dockTabForShellTab(activeTab);
+  const idx = MOBILE_SHELL_NAV_TABS.findIndex((t) => t.id === dockActive);
   const activeIndex = idx >= 0 ? idx : 0;
 
   return (
@@ -128,7 +129,7 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
             <span
               className="bo-mobile-nav__spotlight col-span-1 min-h-[2.5rem] self-stretch rounded-2xl"
               style={{ gridColumnStart: activeIndex + 1 }}
-              key={`spot-${activeTab}`}
+              key={`spot-${dockActive}`}
             />
           </div>
 
@@ -139,7 +140,7 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
           >
             {MOBILE_SHELL_NAV_TABS.map((tab) => {
               const Icon = tab.icon;
-              const active = activeTab === tab.id;
+              const active = dockActive === tab.id;
               const dock = tab.dockLabel ?? tab.label;
               return (
                 <li key={tab.id} className="min-w-0">

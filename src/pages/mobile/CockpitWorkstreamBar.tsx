@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { LayoutGrid, Network, Palette, Sun, Workflow } from 'lucide-react';
+import { Network, Palette, Sun, Workflow } from 'lucide-react';
 import clsx from 'clsx';
 import {
   cockpitNavigationGroups,
@@ -56,15 +56,10 @@ export const CockpitWorkstreamBar = ({
 
   return (
     <div className="bo-workstream-dock mb-3">
-      <p className="bo-section-label">
-        <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--info" aria-hidden>
-          <LayoutGrid className="h-3.5 w-3.5" strokeWidth={2.25} />
-        </span>
-        <span>Work areas</span>
-      </p>
+      <span className="sr-only">Work areas.</span>
       <nav
-        className="bo-workstream-pill-strip mt-3 max-w-full scroll-smooth overflow-x-auto overflow-y-hidden pb-1 snap-x snap-mandatory [-webkit-overflow-scrolling:touch]"
-        aria-label="Cockpit workstreams"
+        className="bo-workstream-pill-strip mt-1 max-w-full scroll-smooth overflow-x-auto overflow-y-hidden pb-1 snap-x snap-mandatory [-webkit-overflow-scrolling:touch]"
+        aria-label="Work areas"
       >
         <ul className="flex min-w-0 flex-nowrap items-stretch justify-start gap-1.5 px-0">
           {SECTION_ITEMS.map((item) => {

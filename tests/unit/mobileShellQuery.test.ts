@@ -5,15 +5,29 @@ import {
 } from '../../src/pages/mobile/mobileShellQuery';
 
 describe('mobileShellQuery', () => {
-  it('parses pulse and timeline tab tokens', () => {
+  it('maps pulse, timeline, and workspace aliases to the Workspace overview tab', () => {
     expect(parseMobileShellFromSearchParams(new URLSearchParams('section=pulse'), 'chat')).toEqual({
-      tab: 'pulse',
+      tab: 'workspace',
       workstream: null
     });
     expect(
       parseMobileShellFromSearchParams(new URLSearchParams('section=timeline'), 'chat')
     ).toEqual({
-      tab: 'pulse',
+      tab: 'workspace',
+      workstream: null
+    });
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=workspace'), 'chat')
+    ).toEqual({
+      tab: 'workspace',
+      workstream: null
+    });
+    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=home'), 'chat')).toEqual({
+      tab: 'workspace',
+      workstream: null
+    });
+    expect(parseMobileShellFromSearchParams(new URLSearchParams('section=hub'), 'chat')).toEqual({
+      tab: 'workspace',
       workstream: null
     });
   });
@@ -119,15 +133,15 @@ describe('mobileShellQuery', () => {
       workstream: null
     });
     expect(
-      parseMobileShellFromSearchParams(new URLSearchParams('section=not-a-real-token'), 'pulse')
+      parseMobileShellFromSearchParams(new URLSearchParams('section=not-a-real-token'), 'workspace')
     ).toEqual({
-      tab: 'pulse',
+      tab: 'workspace',
       workstream: null
     });
   });
 
   it('sectionParamValueForShellState encodes tab vs workstream', () => {
-    expect(sectionParamValueForShellState('pulse', 'today')).toBe('pulse');
+    expect(sectionParamValueForShellState('workspace', 'today')).toBe('workspace');
     expect(sectionParamValueForShellState('settings', 'today')).toBe('settings');
     expect(sectionParamValueForShellState('chat', 'today')).toBe('chat');
     expect(sectionParamValueForShellState('integrations', 'today')).toBe('integrations');
@@ -138,12 +152,13 @@ describe('mobileShellQuery', () => {
   /** Round-trip: URL param emitted by the shell encoder parses back to the same tab/workstream. */
   it('round-trips section param for every shell tab and cockpit workstream', () => {
     const defaultTab = 'chat' as const;
-    const tabCases: Array<{ tab: 'pulse' | 'chat' | 'integrations' | 'settings'; ws: 'today' }> = [
-      { tab: 'pulse', ws: 'today' },
-      { tab: 'chat', ws: 'today' },
-      { tab: 'integrations', ws: 'today' },
-      { tab: 'settings', ws: 'today' }
-    ];
+    const tabCases: Array<{ tab: 'workspace' | 'chat' | 'integrations' | 'settings'; ws: 'today' }> =
+      [
+        { tab: 'workspace', ws: 'today' },
+        { tab: 'chat', ws: 'today' },
+        { tab: 'integrations', ws: 'today' },
+        { tab: 'settings', ws: 'today' }
+      ];
     for (const { tab, ws } of tabCases) {
       const encoded = sectionParamValueForShellState(tab, ws);
       const parsed = parseMobileShellFromSearchParams(
@@ -173,6 +188,6 @@ describe('mobileShellQuery', () => {
     }
     expect(
       parseMobileShellFromSearchParams(new URLSearchParams('section=timeline'), defaultTab).tab
-    ).toBe('pulse');
+    ).toBe('workspace');
   });
 });

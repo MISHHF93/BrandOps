@@ -20,8 +20,8 @@ describe('mobileShellQuery URL bar sync (jsdom)', () => {
   });
 
   it('replaceMobileShellQueryInUrl writes tab tokens for non-daily tabs', () => {
-    replaceMobileShellQueryInUrl('pulse', 'today');
-    expect(new URL(window.location.href).searchParams.get('section')).toBe('pulse');
+    replaceMobileShellQueryInUrl('workspace', 'today');
+    expect(new URL(window.location.href).searchParams.get('section')).toBe('workspace');
     replaceMobileShellQueryInUrl('chat', 'today');
     expect(new URL(window.location.href).searchParams.get('section')).toBe('chat');
     replaceMobileShellQueryInUrl('settings', 'today');
@@ -34,13 +34,13 @@ describe('mobileShellQuery URL bar sync (jsdom)', () => {
     replaceMobileShellQueryInUrl('daily', 'brand-content');
     const parsed = parseMobileShellFromSearchParams(
       new URL(window.location.href).searchParams,
-      'pulse'
+      'workspace'
     );
     expect(parsed).toEqual({ tab: 'daily', workstream: 'brand-content' });
   });
 
   it('sectionParamValueForShellState matches encoder used by replaceMobileShellQueryInUrl', () => {
-    expect(sectionParamValueForShellState('pulse', 'today')).toBe('pulse');
+    expect(sectionParamValueForShellState('workspace', 'today')).toBe('workspace');
     expect(sectionParamValueForShellState('daily', 'connections')).toBe('connections');
   });
 });

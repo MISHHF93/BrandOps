@@ -30,7 +30,7 @@ describe('navigationIntents', () => {
     expect(hrefPrimaryAppSettingsTab()).toBe(r(buildMobileShellUrl({ tab: 'settings' })));
     expect(hrefPrimaryAppToday()).toBe(r(buildMobileCockpitUrl({ section: 'today' })));
     expect(hrefPrimaryAppPipeline()).toBe(r(buildMobileCockpitUrl({ section: 'pipeline' })));
-    expect(hrefPrimaryAppPulse()).toBe(r(buildMobileShellUrl({ tab: 'pulse' })));
+    expect(hrefPrimaryAppPulse()).toBe(r(buildMobileShellUrl({ tab: 'workspace' })));
     expect(hrefPrimaryAppIntegrationsTab()).toBe(r(buildMobileShellUrl({ tab: 'integrations' })));
   });
 

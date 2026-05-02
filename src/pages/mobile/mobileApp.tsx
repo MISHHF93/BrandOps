@@ -18,7 +18,7 @@ import {
   replaceMobileShellQueryInUrl
 } from './mobileShellQuery';
 import { CockpitDailyView } from './CockpitDailyView';
-import { PulseTimelineView } from './PulseTimelineView';
+import { MobileWorkspaceHubView } from './MobileWorkspaceHubView';
 import { MobileChatView, type ChatMessage } from './MobileChatView';
 import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
@@ -31,8 +31,8 @@ import { WorkspaceCommandPalette } from './WorkspaceCommandPalette';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
-import { CircleHelp } from 'lucide-react';
-import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
+import { CircleHelp, Search } from 'lucide-react';
+import { SHELL_SCREEN_TITLE, SHELL_TAB_SR_SUMMARY } from './shellSectionCopy';
 import { runSettingsConfigure } from './runSettingsConfigure';
 import { applyDocumentThemeFromAppSettings } from '../../shared/ui/theme';
 import {
@@ -81,8 +81,9 @@ const MAX_COMMAND_CHIPS = 24;
 const defaultWelcomeMessage = (
   surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'
 ): ChatMessage => {
-  const mobileLine = 'Try: pipeline health. Or press ⌘K.';
-  const welcomeLine = 'Try: pipeline health. Or press ⌘K. Pulse reads, Chat acts.';
+  const mobileLine = 'Try: pipeline health, or press ⌘K — Workspace shows counts and queue.';
+  const welcomeLine =
+    'Try: pipeline health, or press ⌘K. Workspace is your dashboard; Assistant runs commands.';
   return {
     id: uid(),
     role: 'assistant',
@@ -104,7 +105,12 @@ const normalizeStoredMessage = (raw: unknown): ChatMessage | null => {
     ...(typeof m.action === 'string' ? { action: m.action } : {}),
     ...(typeof m.sourceSurface === 'string'
       ? {
-          sourceSurface: m.sourceSurface as 'Pulse' | 'Today' | 'Integrations' | 'Settings' | 'Chat'
+          sourceSurface: m.sourceSurface as
+            | 'Workspace'
+            | 'Today'
+            | 'Integrations'
+            | 'Settings'
+            | 'Chat'
         }
       : {}),
     ...(typeof m.ok === 'boolean' ? { ok: m.ok } : {}),
@@ -309,7 +315,7 @@ function readInitialShellState(initialTab: MobileShellTabId): {
   return { tab: p.tab, workstream: p.workstream ?? DEFAULT_DASHBOARD_SECTION };
 }
 
-export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: MobileAppProps) => {
+export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }: MobileAppProps) => {
   const dialogDestrId = useId();
   const dialogClearId = useId();
   const dialogResetId = useId();
@@ -508,7 +514,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
 
   const executeCommandFlow = async (
     trimmed: string,
-    sourceSurface: 'Pulse' | 'Today' | 'Integrations' | 'Settings' | 'Chat' = 'Chat'
+    sourceSurface: 'Workspace' | 'Today' | 'Integrations' | 'Settings' | 'Chat' = 'Chat'
   ) => {
     if (!trimmed || commandLoading) return;
     setMessages((prev) => [...prev, { id: uid(), role: 'user', text: trimmed, sourceSurface }]);
@@ -561,7 +567,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
 
   const startSend = (
     trimmed: string,
-    sourceSurface: 'Pulse' | 'Today' | 'Integrations' | 'Settings' | 'Chat' = 'Chat'
+    sourceSurface: 'Workspace' | 'Today' | 'Integrations' | 'Settings' | 'Chat' = 'Chat'
   ) => {
     if (!trimmed || commandLoading) return;
     if (needsDestructiveConfirm(trimmed)) {
@@ -587,7 +593,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
    * Same as {@link sendQuickCommand}, but annotates origin so users can tell why they jumped to
    * Chat (prevents "button only navigated me" confusion).
    */
-  const sendQuickCommandFrom = (source: 'Pulse' | 'Today' | 'Integrations' | 'Settings') => {
+  const sendQuickCommandFrom = (source: 'Workspace' | 'Today' | 'Integrations' | 'Settings') => {
     return (command: string) => {
       const trimmed = command.trim();
       if (!trimmed || commandLoading) return;
@@ -752,7 +758,9 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
     startSend(line.trim(), 'Chat');
   };
 
-  const shellMeta = MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab);
+  const shellTitleDescId = useId();
+  const shellScreenTitle = SHELL_SCREEN_TITLE[activeTab];
+  const shellSrSummary = SHELL_TAB_SR_SUMMARY[activeTab];
 
   return (
     <div className="bo-mobile-app relative isolate min-h-[100dvh] min-h-screen">
@@ -772,23 +780,46 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             </span>
             <div className="min-w-0 flex-1">
               <p className="bo-mobile-brand__wordmark">BrandOps</p>
-              <h1 className="bo-mobile-brand__title text-h1">{shellMeta?.label ?? 'Workspace'}</h1>
-              <p className="bo-mobile-tagline text-label text-textSoft">{shellMeta?.tagline ?? ''}</p>
+              <span id={shellTitleDescId} className="sr-only">
+                {shellSrSummary}
+              </span>
+              <h1
+                className="bo-mobile-brand__title text-h1"
+                aria-describedby={shellTitleDescId}
+              >
+                {shellScreenTitle}
+              </h1>
               {dataOpsHint ? <WorkspaceDataHint message={dataOpsHint} /> : null}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => openExtensionSurface('help')}
-            aria-label="Open Help"
-            title="Knowledge Center — Help"
-            className={clsx(
-              'bo-mobile-help-btn rounded-xl border border-border/45 bg-surface/50 p-2.5 text-textMuted transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive hover:text-text',
-              btnFocus
-            )}
-          >
-            <CircleHelp className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
-          </button>
+          <div className="flex shrink-0 items-start gap-2">
+            {activeTab !== 'chat' && !shouldRequireLaunchAuth(launchAccess) ? (
+              <button
+                type="button"
+                onClick={() => setCommandPaletteOpen(true)}
+                aria-label="Open workspace command palette"
+                title="Commands & search (⌘K / Ctrl+K)"
+                className={clsx(
+                  'bo-mobile-help-btn rounded-xl border border-border/45 bg-surface/50 p-2.5 text-textMuted transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive hover:text-text',
+                  btnFocus
+                )}
+              >
+                <Search className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => openExtensionSurface('help')}
+              aria-label="Open Help"
+              title="Knowledge Center — Help"
+              className={clsx(
+                'bo-mobile-help-btn rounded-xl border border-border/45 bg-surface/50 p-2.5 text-textMuted transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive hover:text-text',
+                btnFocus
+              )}
+            >
+              <CircleHelp className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -817,7 +848,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         ) : activeTab === 'chat' ? (
           <section
             className="bo-shell-page bo-shell-panel-enter space-y-4 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-4 motion-reduce:animate-none"
-            aria-label="Chat conversation"
+            aria-label="Assistant conversation"
             key="shell-chat"
           >
             <MobileChatView
@@ -831,6 +862,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               }}
               btnFocus={btnFocus}
               onOpenToday={() => commitTab('daily')}
+              onOpenPlan={() => commitTab('workspace')}
               vitalityMetrics={snapshot}
             />
           </section>
@@ -840,38 +872,41 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             className="bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-6 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-8 text-sm text-textMuted motion-reduce:animate-none"
             aria-label={`${activeTab} tab`}
           >
-            {activeTab === 'pulse' ? (
+            {activeTab === 'workspace' ? (
+              <MobileWorkspaceHubView
+                snapshot={snapshot}
+                btnFocus={btnFocus}
+                commandBusy={commandLoading}
+                runCommand={sendQuickCommandFrom('Workspace')}
+                primeChat={primeChat}
+                onOpenToday={() => commitTab('daily')}
+                onOpenIntegrations={() => commitTab('integrations')}
+                onOpenSettings={() => commitTab('settings')}
+                onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+              />
+            ) : null}
+
+            {activeTab === 'daily' ? (
               <>
                 {firstRunJourneyVisible ? (
                   <FirstRunJourneyCard
                     btnFocus={btnFocus}
                     onDismiss={() => setFirstRunJourneyVisible(false)}
-                    onTryCommand={(line) => runCommand(line)}
+                    onTryCommand={sendQuickCommandFrom('Today')}
                   />
                 ) : null}
-                <PulseTimelineView
+                <CockpitDailyView
                   snapshot={snapshot}
                   btnFocus={btnFocus}
                   commandBusy={commandLoading}
-                  runCommand={sendQuickCommandFrom('Pulse')}
+                  runCommand={sendQuickCommandFrom('Today')}
                   primeChat={primeChat}
-                  onOpenToday={() => commitTab('daily')}
+                  onOpenInAppSettings={() => commitTab('settings')}
+                  onOpenPulseTab={() => commitTab('workspace')}
+                  activeWorkstream={cockpitWorkstream}
+                  onSelectWorkstream={handleSelectWorkstream}
                 />
               </>
-            ) : null}
-
-            {activeTab === 'daily' ? (
-              <CockpitDailyView
-                snapshot={snapshot}
-                btnFocus={btnFocus}
-                commandBusy={commandLoading}
-                runCommand={sendQuickCommandFrom('Today')}
-                primeChat={primeChat}
-                onOpenInAppSettings={() => commitTab('settings')}
-                onOpenPulseTab={() => commitTab('pulse')}
-                activeWorkstream={cockpitWorkstream}
-                onSelectWorkstream={handleSelectWorkstream}
-              />
             ) : null}
 
             {activeTab === 'integrations' ? (
@@ -1096,18 +1131,6 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
             </div>
           </div>
         </div>
-      ) : null}
-
-      {activeTab !== 'chat' && !shouldRequireLaunchAuth(launchAccess) ? (
-        <button
-          type="button"
-          onClick={() => setCommandPaletteOpen(true)}
-          aria-label="Open workspace command palette"
-          title="Commands & search (⌘K / Ctrl+K)"
-          className={clsx('bo-command-handle', btnFocus)}
-        >
-          <BrandOpsCrownMark className="bo-command-handle__logo" aria-hidden />
-        </button>
       ) : null}
 
       <MobileShellNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />

@@ -221,6 +221,7 @@ function VitalityMetricCell({ m, valueId }: { m: MetricCell; valueId: string }) 
 export type WorkspaceSignalsBoardVariant =
   | 'today'
   | 'pulse'
+  | 'workspace'
   | 'integrations'
   | 'settings'
   | 'chat';
@@ -236,6 +237,8 @@ function vitalitySrId(variant: WorkspaceSignalsBoardVariant) {
   switch (variant) {
     case 'pulse':
       return 'pulse-vitality-sr-title';
+    case 'workspace':
+      return 'workspace-vitality-sr-title';
     case 'integrations':
       return 'integrations-vitality-sr-title';
     case 'settings':
@@ -256,7 +259,7 @@ function vitalitySubtitle(
       case 'integrations':
         return 'Connection-facing counts for this workspace — expand sections below for full lists.';
       case 'settings':
-        return 'Selected counts while you configure behavior — matches Pulse / Today vitality math.';
+        return 'Selected counts while you configure behavior — matches Workspace / Today vitality math.';
       case 'chat':
         return 'Counters from your live snapshot — run commands below to shift these.';
       default:
@@ -266,7 +269,10 @@ function vitalitySubtitle(
   if (variant === 'pulse') {
     return 'Due-next counts only — open Today for focus lanes.';
   }
-  return 'Read-only counters from your workspace snapshot — shared lane across Pulse and Today.';
+  if (variant === 'workspace') {
+    return 'Live parameters — queue below is soonest-first, not a feed.';
+  }
+  return 'Read-only counters from your workspace snapshot — shared across Workspace and Today.';
 }
 
 /**

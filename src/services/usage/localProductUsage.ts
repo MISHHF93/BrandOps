@@ -6,7 +6,7 @@
 import { browserLocalStorage } from '../../shared/storage/browserStorage';
 
 /** Matches {@link MobileShellTabId} — kept local to avoid services importing pages. */
-type ShellTabId = 'pulse' | 'chat' | 'daily' | 'integrations' | 'settings';
+type ShellTabId = 'workspace' | 'chat' | 'daily' | 'integrations' | 'settings';
 
 const STORAGE_KEY = 'product-usage-v1';
 const MAX_DAY_KEYS = 120;
@@ -111,7 +111,7 @@ export async function recordShellNavigation(from: ShellTabId, to: ShellTabId): P
   if (from === to) return;
   if (to !== 'chat') return;
   const u = await read();
-  if (from === 'pulse') u.fromPulseToChat += 1;
+  if (from === 'workspace') u.fromPulseToChat += 1;
   else if (from === 'daily') u.fromTodayToChat += 1;
   else if (from === 'integrations') u.fromIntegrationsToChat += 1;
   else if (from === 'settings') u.fromSettingsToChat += 1;

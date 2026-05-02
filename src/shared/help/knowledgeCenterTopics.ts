@@ -26,15 +26,15 @@ export interface KnowledgeCenterDailyPlaybook {
 export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
   title: 'Every day in BrandOps (mobile shell)',
   intro:
-    'Five tabs, five jobs: **Pulse** = time-ordered “what is coming at you.” **Today** = plan and workstream digests (not a second Pulse). **Chat** = the only place commands run. **Integrations** = connect tools; **Settings** = you, account, and how BrandOps behaves. Fastest loop: orient in Pulse, plan in Today, execute in Chat.',
+    'Two primary dock buttons: **Workspace** = live counts plus a compact soonest-first queue table (not a social-style feed), with shortcuts into Today, Integrations, and Settings. **Assistant** = typed workspace commands. **Today** stays the cockpit for lanes and digests. **Integrations** and **Settings** open full panels from Workspace or ⌘K. Fastest loop: scan Workspace, plan Today, execute in Assistant.',
   steps: [
     {
       title: 'Open Today for the cockpit digest',
       body: 'Use the Today tab (or mobile.html?section=today) for metrics, pipeline signals, publishing peeks, and connection counts. Lists are read-only — actions are buttons that open Chat or run a command immediately.'
     },
     {
-      title: 'Run one command from Chat',
-      body: 'Switch to Chat and type natural-language commands (examples: pipeline health, draft post: …, add note: …). Expand Command starters for role-based chips (sales vs growth). Results appear in the thread.'
+      title: 'Run one command from Assistant',
+      body: 'Switch to Assistant and type natural-language commands (examples: pipeline health, draft post: …, add note: …). Expand Command starters for role-based chips (sales vs growth). Results appear in the thread.'
     },
     {
       title: 'Clear one revenue or follow-up motion',
@@ -56,10 +56,10 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     id: 'surfaces',
     title: 'Where BrandOps runs',
     summary:
-      'Primary UI is mobile.html (five tabs). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
+      'Primary UI is mobile.html (Assistant + Workspace dock; deeper panels for Today / Integrations / Settings). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
     paragraphs: [
-      'The product is a browser extension. **mobile.html** is the primary workspace: Pulse, Chat, Today, Integrations, Settings.',
-      '**welcome.html** uses the same shell with a first-run bias toward the Today tab so new users see the cockpit immediately.',
+      'The product is a browser extension. **mobile.html** is the primary workspace: Workspace overview, Assistant, Today, Integrations, and Settings (workspace overview + Assistant are the dock; other sections open as panels).',
+      '**welcome.html** uses the same shell with a first-run bias toward the Workspace overview so new users see instruments and queue before diving into Today.',
       '**dashboard.html** loads the same shell; legacy ?section= workstream links redirect to mobile.html so deep links stay consistent.',
       '**integrations.html** is the Chrome options_ui entry (Integrations tab by default). **help.html** is this Knowledge Center.',
       'Use ?section= on mobile.html or integrations.html for tabs and cockpit workstreams (today, pipeline, brand-content, connections). See the mobile shell query parser in the codebase for the full token list.'
@@ -70,7 +70,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     title: 'First run and profile',
     summary: 'Welcome uses the mobile shell; sign-in and sign-up share welcome.html.',
     paragraphs: [
-      'After install, **welcome.html** opens the app on **Today** first so you see pipeline and publishing signal before Chat.',
+      'After install, **welcome.html** opens on **Workspace** first so you see instruments and queue before Today lanes.',
       'Sign-in and account creation share welcome.html: default is sign in (no query). Create account: welcome.html?flow=signup. Legacy ?auth= is still accepted where implemented.',
       'Operator and brand fields also surface on Today and in Settings forms; tune cadence and reminders under Settings when you need workspace-level changes.'
     ]
@@ -82,7 +82,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
       'Commands map to deterministic routes (parseCommandRoute) before executeAgentWorkspaceCommand runs.',
     paragraphs: [
       'Examples that match the router: add note:, create follow up:, complete follow up:, draft outreach:, draft post:, reschedule posts …, pipeline health, update opportunity …, archive opportunity, restore opportunity, add contact:, update contact:, add content:, update publishing:, connect … source:, add source:, add integration artifact:, add ssh:, configure: …',
-      'Starters in the Chat tab are curated to these patterns. If a phrase is unsupported, the assistant explains what is available.',
+      'Starters in the Assistant tab are curated to these patterns. If a phrase is unsupported, the assistant explains what is available.',
       'Destructive phrases such as archive opportunity may ask for confirmation before running.'
     ]
   },

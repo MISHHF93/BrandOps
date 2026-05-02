@@ -47,11 +47,11 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       <a className={linkClass} href={signUpHref}>
         Sign up
       </a>
-      <a className={linkClass} href={pulseHref} title="mobile.html?section=pulse">
-        Pulse
+      <a className={linkClass} href={pulseHref} title="mobile.html?section=workspace">
+        Workspace
       </a>
       <a className={linkClass} href={mainAppChatHref}>
-        Chat
+        Assistant
       </a>
       <a className={linkClass} href={todayHref} title="mobile.html?section=today">
         Today

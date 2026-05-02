@@ -1,6 +1,8 @@
 /**
  * Starts Vite on 5173 with strictPort. On Windows, frees any process already listening on 5173
  * (stale `vite` from a closed terminal, Cursor preview, etc.) so `npm run dev` does not fail.
+ *
+ * Forwards extra CLI args to Vite (e.g. `npm run dev:mobile` → `--open /mobile.html`).
  */
 import { execSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -33,8 +35,9 @@ function freePort5173() {
 freePort5173();
 
 const viteCli = join(root, 'node_modules', 'vite', 'bin', 'vite.js');
+const viteArgs = process.argv.slice(2);
 // Port / strictPort / host come from vite.config.ts (`host: true` avoids Windows localhost IPv4 vs IPv6 -102).
-const child = spawn(process.execPath, [viteCli], {
+const child = spawn(process.execPath, [viteCli, ...viteArgs], {
   cwd: root,
   stdio: 'inherit',
   env: process.env

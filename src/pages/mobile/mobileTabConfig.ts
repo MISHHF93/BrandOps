@@ -1,40 +1,60 @@
-import { Activity, CalendarCheck2, MessageCircle, PlugZap, Settings } from 'lucide-react';
+import {
+  CalendarCheck2,
+  LayoutDashboard,
+  MessageCircle,
+  PlugZap,
+  Settings
+} from 'lucide-react';
 import type { MobileShellTabId } from './mobileShellQuery';
 
 /**
- * Bottom navigation for {@link MobileApp}. Order and ids must match URL `section` handling
- * in {@link parseMobileShellFromSearchParams} / {@link sectionParamValueForShellState}.
+ * Bottom dock: **two surfaces** — Assistant (chat) and Workspace (overview + entry to deeper panels).
+ * Full URLs still expose `section=today|integrations|settings|…`.
  */
 export const MOBILE_SHELL_NAV_TABS: ReadonlyArray<{
-  id: MobileShellTabId;
-  /** Title in the sticky shell header — full word where possible. */
+  id: 'chat' | 'workspace';
   label: string;
-  /** Optional shorter dock label — keeps five tabs readable on narrow phones. */
   dockLabel?: string;
-  /** One-line context under the title (launch-grade density). */
-  tagline: string;
   icon: typeof MessageCircle;
 }> = [
-  { id: 'pulse', label: 'Pulse', tagline: 'Mixed queue · due order.', icon: Activity },
-  { id: 'chat', label: 'Chat', tagline: 'Run workspace commands.', icon: MessageCircle },
+  { id: 'chat', label: 'Assistant', dockLabel: 'Ask', icon: MessageCircle },
+  { id: 'workspace', label: 'Workspace', dockLabel: 'Plan', icon: LayoutDashboard }
+];
+
+export const COMMAND_PALETTE_NAV_TARGETS: ReadonlyArray<{
+  tab: MobileShellTabId;
+  label: string;
+  keywords: string[];
+  Icon: typeof MessageCircle;
+}> = [
   {
-    id: 'daily',
-    label: 'Today',
-    tagline: 'Lanes & work areas.',
-    icon: CalendarCheck2
+    tab: 'chat',
+    label: 'Assistant',
+    keywords: ['assistant', 'chat', 'commands', 'ask', 'ai'],
+    Icon: MessageCircle
   },
   {
-    id: 'integrations',
+    tab: 'workspace',
+    label: 'Workspace overview',
+    keywords: ['workspace', 'home', 'overview', 'plan', 'pulse', 'timeline', 'queue', 'hub'],
+    Icon: LayoutDashboard
+  },
+  {
+    tab: 'daily',
+    label: 'Today lanes',
+    keywords: ['today', 'cockpit', 'lanes', 'digest', 'daily'],
+    Icon: CalendarCheck2
+  },
+  {
+    tab: 'integrations',
     label: 'Integrations',
-    dockLabel: 'Sync',
-    tagline: 'Connections & sync.',
-    icon: PlugZap
+    keywords: ['integrations', 'sync', 'sources', 'connect', 'oauth'],
+    Icon: PlugZap
   },
   {
-    id: 'settings',
+    tab: 'settings',
     label: 'Settings',
-    dockLabel: 'Prefs',
-    tagline: 'Account & workspace.',
-    icon: Settings
+    keywords: ['settings', 'preferences', 'account', 'prefs', 'configure'],
+    Icon: Settings
   }
 ];

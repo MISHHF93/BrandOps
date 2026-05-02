@@ -21,14 +21,14 @@ export interface CockpitTodaySectionProps extends CockpitWorkstreamActions {
 export interface CockpitPipelineSectionProps extends CockpitWorkstreamActions {
   snapshot: CockpitDailySnapshot;
   meta: CockpitWorkstreamMeta;
-  /** Open Pulse tab (mixed timeline); optional cross-link. */
+  /** Open Workspace overview (queue table); optional cross-link from Today lanes. */
   onOpenPulse?: () => void;
 }
 
 export interface CockpitBrandContentSectionProps extends CockpitWorkstreamActions {
   snapshot: CockpitDailySnapshot;
   meta: CockpitWorkstreamMeta;
-  /** Open Pulse tab (mixed timeline); optional cross-link. */
+  /** Open Workspace overview (queue table); optional cross-link from Today lanes. */
   onOpenPulse?: () => void;
 }
 
