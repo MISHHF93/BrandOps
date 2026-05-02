@@ -33,7 +33,9 @@ export function SettingsTierAOverview({
   })();
 
   return (
-    <section className="bo-flagship-surface p-3.5" aria-labelledby="settings-tier-a-heading">
+    <section
+      className="bo-tab-section bo-mobile-sheet p-3.5"
+      aria-labelledby="settings-tier-a-heading">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-border/40 pb-2.5">
         <h2 id="settings-tier-a-heading" className="text-h3 text-text">
           Workspace

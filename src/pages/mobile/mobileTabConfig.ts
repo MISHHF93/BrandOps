@@ -15,9 +15,14 @@ export const MOBILE_SHELL_NAV_TABS: ReadonlyArray<{
   tagline: string;
   icon: typeof MessageCircle;
 }> = [
-  { id: 'pulse', label: 'Pulse', tagline: 'What needs you next.', icon: Activity },
+  { id: 'pulse', label: 'Pulse', tagline: 'Mixed queue · due order.', icon: Activity },
   { id: 'chat', label: 'Chat', tagline: 'Run workspace commands.', icon: MessageCircle },
-  { id: 'daily', label: 'Today', tagline: 'Plan, then dive in.', icon: CalendarCheck2 },
+  {
+    id: 'daily',
+    label: 'Today',
+    tagline: 'Lanes & work areas.',
+    icon: CalendarCheck2
+  },
   {
     id: 'integrations',
     label: 'Integrations',

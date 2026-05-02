@@ -23,28 +23,24 @@ const noop = () => {};
 const asyncNoop = async () => {};
 
 describe('Mobile tab surfaces (SSR integration)', () => {
-  it('Pulse: header, focus tabs, buckets, and list landmark', () => {
+  it('Pulse: vitality strip, sparse actions, and chronological queue landmarks', () => {
     const html = renderToString(
       React.createElement(PulseTimelineView, {
         snapshot: buildWorkspaceSnapshot(cloneDemoSampleData()),
         btnFocus: '',
         commandBusy: false,
         runCommand: noop,
-        primeChat: noop
+        primeChat: noop,
+        onOpenToday: noop
       })
     );
     expect(html).toContain('aria-label="Pulse"');
-    // Symbol-first section headers keep the long phrasing inside an sr-only span so screen
-    // readers (and these assertions) still get the full label even though sighted users see
-    // the short keyword next to the icon chip.
-    expect(html).toContain('What matters now');
-    expect(html).toContain('What needs attention');
-    expect(html).toContain('What is growing');
-    expect(html).toContain('AI-recommended next actions');
-    expect(html).toContain('>Now<');
-    expect(html).toContain('>Attention<');
-    expect(html).toContain('>Growing<');
-    expect(html).toContain('>AI suggestions<');
+    expect(html).toContain('Workspace vitality');
+    expect(html).toContain('Due-next counts only — open Today for focus lanes.');
+    expect(html).toContain('Parameters');
+    expect(html).toContain('Today lanes');
+    expect(html).toContain('Pipeline health');
+    expect(html).toContain('aria-label="Pulse queue"');
     expect(html).toContain('Open in Chat');
     expect(html).toContain('bo-icon-chip');
     expect(html).toContain('role="list"');
@@ -67,7 +63,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onQuickCommand: noop,
         onClearCommandHistory: noop,
         btnFocus: '',
-        onOpenToday: noop
+        onOpenToday: noop,
+        vitalityMetrics: snapshot()
       })
     );
     expect(html).toContain('aria-label="Chat"');
@@ -100,8 +97,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('>Do today<');
     expect(html).toContain('>Urgent<');
     expect(html).toContain('>Momentum<');
-    expect(html).toContain('At a glance');
-    expect(html).toContain('Queue');
+    expect(html).toContain('Workspace vitality');
+    expect(html).toContain('Workspace metric instruments');
+    expect(html).toContain('Publish');
     expect(html).toContain('OAuth');
     expect(html).toContain('bo-metric-tile');
     expect(html).toContain('bo-pill-nav');
@@ -110,7 +108,6 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('id="cockpit-brand"');
     expect(html).toContain('id="cockpit-connections"');
     expect(html).toContain('role="group"');
-    expect(html).toContain('Workspace metric counts, read-only');
     expect(html).toContain('Chronological mix');
     expect(html).toContain('Full mixed queue');
     expect(html).toContain('Today workstream Chat starters');
@@ -155,9 +152,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Integrations"');
-    expect(html).toContain('Connections and sync health.');
+    expect(html).toContain('OAuth and sync health for each provider.');
     expect(html).toContain('Sources');
-    expect(html).toContain('Connections');
+    expect(html).toContain('Connect tools and data');
     expect(html).toContain('Registered sources');
     expect(html).toContain('Open integrations page');
     expect(html).toContain('Provider status');
@@ -259,9 +256,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Settings"');
-    expect(html).toContain('Account, behavior, and data safety.');
     expect(html).toContain(
-      'You and this workspace: account, behavior, and data safety. For provider wiring and sources, use Integrations.'
+      'You and this workspace: account, behavior, and data safety. For provider wiring and sources,'
     );
     expect(html).toContain('Workspace');
     expect(html).toContain('Edit');

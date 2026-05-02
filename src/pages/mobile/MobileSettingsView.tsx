@@ -25,6 +25,7 @@ import {
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { SettingsCockpitCapabilityDisclosure } from './SettingsCockpitCapabilityDisclosure';
 import { LocalProductUsageReadout } from './LocalProductUsageReadout';
+import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 
 export type { MobileWorkspaceSnapshot as MobileSettingsSnapshot } from './buildWorkspaceSnapshot';
 
@@ -681,12 +682,19 @@ export const MobileSettingsView = ({
   };
 
   return (
-    <div className="relative z-[1] space-y-5 pb-10 pointer-events-auto" aria-label="Settings">
+    <div className="relative z-[1] space-y-4 pb-10 pointer-events-auto" aria-label="Settings">
       <span className="sr-only">
         You and this workspace: account, behavior, and data safety. For provider wiring and sources,
         use Integrations.
       </span>
 
+      <article className="bo-flagship-surface overflow-hidden">
+        <WorkspaceSignalsBoard
+          metrics={snapshot}
+          variant="settings"
+          includeKeys={['oauth', 'src', 'queue', 'fu']}
+        />
+        <div className="bo-vitality-frame-body space-y-4 px-3 pb-5 pt-3 sm:px-3.5">
       <OnDeviceTrustLine className="text-[10px] normal-case tracking-normal" />
 
       <SettingsTierAOverview
@@ -1011,6 +1019,8 @@ export const MobileSettingsView = ({
           </section>
         </div>
       </details>
+        </div>
+      </article>
     </div>
   );
 };

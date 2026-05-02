@@ -831,6 +831,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
               }}
               btnFocus={btnFocus}
               onOpenToday={() => commitTab('daily')}
+              vitalityMetrics={snapshot}
             />
           </section>
         ) : (
@@ -854,6 +855,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
                   commandBusy={commandLoading}
                   runCommand={sendQuickCommandFrom('Pulse')}
                   primeChat={primeChat}
+                  onOpenToday={() => commitTab('daily')}
                 />
               </>
             ) : null}

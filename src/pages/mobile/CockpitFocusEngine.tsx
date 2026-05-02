@@ -11,9 +11,7 @@ import {
   Database,
   FileText,
   Flame,
-  Gauge,
   Inbox,
-  KeyRound,
   MessageSquare,
   PlugZap,
   Rocket,
@@ -21,7 +19,7 @@ import {
   Sparkles,
   TrendingUp
 } from 'lucide-react';
-import { pulseTile } from './cockpitDailyPrimitives';
+import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 import { buildTodayFocusBoard } from './todayFocusModel';
 import type { TodayFocusLine } from './todayFocusModel';
@@ -87,8 +85,10 @@ function LineList({ items }: { items: TodayFocusLine[] }) {
               <Icon className="h-3 w-3" strokeWidth={2.25} />
             </span>
             <div className="bo-line-row__body">
-              <p className="bo-line-row__title">{item.line}</p>
-              {item.detail ? <p className="bo-line-row__detail">{item.detail}</p> : null}
+              <p className="bo-line-row__title" title={item.detail}>
+                {item.line}
+              </p>
+              {item.detail ? <span className="sr-only">{item.detail}</span> : null}
             </div>
           </li>
         );
@@ -149,8 +149,14 @@ export const CockpitFocusEngine = ({
   ];
 
   return (
-    <div className="space-y-3" aria-label="Today focus engine">
-      <div role="tablist" aria-label="Focus areas" className="bo-focus-tabs">
+    <article
+      className="bo-flagship-surface overflow-hidden"
+      aria-label="Today focus engine"
+    >
+      <WorkspaceSignalsBoard metrics={snapshot} variant="today" />
+
+      <div className="bo-vitality-frame-body space-y-3 px-3 pb-3 pt-3 sm:px-3.5">
+        <div role="tablist" aria-label="Focus areas" className="bo-focus-tabs">
         {focusTabs.map((tab) => {
           const isActive = activeFocus === tab.id;
           const Icon = tab.icon;
@@ -195,7 +201,7 @@ export const CockpitFocusEngine = ({
       ))}
 
       {focus.quickActions.length > 0 ? (
-        <div className="bo-tab-section p-3">
+        <div className="border-t border-border/36 pt-3">
           <p className="bo-section-label">
             <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--primary" aria-hidden>
               <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -235,66 +241,7 @@ export const CockpitFocusEngine = ({
           </ul>
         </div>
       ) : null}
-
-      <details className="bo-disclosure group">
-        <summary
-          className={clsx(
-            'flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-label font-medium text-textMuted transition-colors hover:text-text [&::-webkit-details-marker]:hidden',
-            btnFocus
-          )}
-          aria-controls="cockpit-at-a-glance-body"
-          id="cockpit-at-a-glance-heading"
-        >
-          <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--muted" aria-hidden>
-            <Gauge className="h-3.5 w-3.5" strokeWidth={2.25} />
-          </span>
-          <span>At a glance</span>
-          <span className="ml-auto text-meta text-textSoft group-open:hidden">Show</span>
-          <span className="ml-auto hidden text-meta text-textSoft group-open:inline">Hide</span>
-        </summary>
-        <div
-          id="cockpit-at-a-glance-body"
-          role="group"
-          aria-label="Workspace metric counts, read-only — not buttons"
-          className="-mx-1 flex gap-2 overflow-x-auto px-3 pb-3 pt-1 [scrollbar-width:thin]"
-        >
-          {pulseTile('Follow-ups', snapshot.incompleteFollowUps, 'open', {
-            icon: MessageSquare,
-            tone: 'warning',
-            title: 'Open follow-ups'
-          })}
-          {pulseTile('Queue', snapshot.publishingQueue, 'items', {
-            icon: Inbox,
-            tone: 'info',
-            title: 'Publishing queue items'
-          })}
-          {pulseTile('Opps', snapshot.activeOpportunities, 'active', {
-            icon: Briefcase,
-            tone: 'success',
-            title: 'Active opportunities'
-          })}
-          {pulseTile('Sched', snapshot.dueTodayTasks, 'due / due-soon', {
-            icon: CalendarClock,
-            tone: 'info',
-            title: 'Scheduler tasks due today or due-soon'
-          })}
-          {pulseTile('Missed', snapshot.missedTasks, 'tasks', {
-            icon: Bell,
-            tone: 'warning',
-            title: 'Missed scheduler tasks'
-          })}
-          {pulseTile('OAuth', snapshot.syncProvidersConnected, 'connected', {
-            icon: KeyRound,
-            tone: 'success',
-            title: 'OAuth providers connected'
-          })}
-          {pulseTile('Sources', snapshot.integrationSources, 'integrations', {
-            icon: Database,
-            tone: 'primary',
-            title: 'Registered integration sources'
-          })}
-        </div>
-      </details>
-    </div>
+      </div>
+    </article>
   );
 };

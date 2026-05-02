@@ -11,6 +11,8 @@ import {
 import clsx from 'clsx';
 import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
+import type { WorkspaceSignalsPick } from './WorkspaceSignalsBoard';
+import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { getIntentByCommandLine } from './chatIntents';
 
 export interface ChatMessage {
@@ -52,6 +54,8 @@ export interface MobileChatViewProps {
   btnFocus: string;
   /** Jump to Today for cockpit digests, pipeline rows, and integrations shortcuts. */
   onOpenToday: () => void;
+  /** Live workspace subset — vitality lane above starters and transcript. */
+  vitalityMetrics: WorkspaceSignalsPick;
 }
 
 /**
@@ -65,12 +69,20 @@ export const MobileChatView = ({
   onQuickCommand,
   onClearCommandHistory,
   btnFocus,
-  onOpenToday
+  onOpenToday,
+  vitalityMetrics
 }: MobileChatViewProps) => {
   return (
-    <div className="space-y-4" aria-label="Chat">
+    <div aria-label="Chat">
+      <article className="bo-flagship-surface overflow-hidden">
+        <WorkspaceSignalsBoard
+          metrics={vitalityMetrics}
+          variant="chat"
+          includeKeys={['queue', 'fu', 'missed']}
+        />
+        <div className="bo-vitality-frame-body space-y-3 px-3 pb-3 pt-2 sm:px-3.5">
       <h2 className="sr-only">Chat workspace commands</h2>
-      <p className="-mt-1 mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-textSoft">
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-textSoft">
         <span>Type or tap a starter.</span>
         <button
           type="button"
@@ -314,6 +326,8 @@ export const MobileChatView = ({
           </div>
         </details>
       ) : null}
+        </div>
+      </article>
     </div>
   );
 };

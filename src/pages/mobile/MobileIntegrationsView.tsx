@@ -2,6 +2,7 @@ import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSu
 import { hrefExtensionIntegrationsPage } from '../../shared/navigation/navigationIntents';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
+import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 
 const chipDisabled = 'disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -26,23 +27,20 @@ export const MobileIntegrationsView = ({
   documentSurface = 'mobile'
 }: MobileIntegrationsViewProps) => {
   return (
-    <div className="space-y-5" aria-label="Integrations">
+    <div className="space-y-4" aria-label="Integrations">
       <span className="sr-only">
         Connect tools and data — sources, sync, and provider health. Account and workspace rules
         live in Settings.
       </span>
 
-      <dl className="grid grid-cols-2 gap-2 text-xs">
-        <div className="bo-metric-tile">
-          <dt className="bo-metric-tile__label">Sources</dt>
-          <dd className="bo-metric-tile__value">{snapshot.integrationSources}</dd>
-        </div>
-        <div className="bo-metric-tile">
-          <dt className="bo-metric-tile__label">Connections</dt>
-          <dd className="bo-metric-tile__value">{snapshot.syncProvidersConnected}</dd>
-        </div>
-      </dl>
+      <article className="bo-flagship-surface overflow-hidden">
+        <WorkspaceSignalsBoard
+          metrics={snapshot}
+          variant="integrations"
+          includeKeys={['src', 'oauth']}
+        />
 
+        <div className="bo-vitality-frame-body space-y-3 px-3 pb-3 pt-2 sm:px-3.5">
       {documentSurface !== 'integrations' ? (
         <details className="bo-disclosure px-2.5 py-2 text-[11px] text-textMuted">
           <summary
@@ -344,6 +342,8 @@ export const MobileIntegrationsView = ({
           </div>
         </div>
       </details>
+        </div>
+      </article>
     </div>
   );
 };
