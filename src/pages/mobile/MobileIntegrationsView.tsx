@@ -1,8 +1,7 @@
-import { PlugZap } from 'lucide-react';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { hrefExtensionIntegrationsPage } from '../../shared/navigation/navigationIntents';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
-import { MobileTabPageHeader, MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
+import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 
 const chipDisabled = 'disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -27,14 +26,7 @@ export const MobileIntegrationsView = ({
   documentSurface = 'mobile'
 }: MobileIntegrationsViewProps) => {
   return (
-    <div className="mt-2 space-y-5" aria-label="Integrations">
-      <MobileTabPageHeader
-        title="Integrations"
-        subtitle="Connections and sync health."
-        icon={PlugZap}
-        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-secondary/40 bg-secondarySoft/10"
-        iconClassName="text-secondary"
-      />
+    <div className="space-y-5" aria-label="Integrations">
       <span className="sr-only">
         Connect tools and data — sources, sync, and provider health. Account and workspace rules
         live in Settings.
@@ -303,10 +295,7 @@ export const MobileIntegrationsView = ({
         </div>
       </details>
 
-      <details
-        id="integrations-quick-add"
-        className="bo-disclosure"
-      >
+      <details id="integrations-quick-add" className="bo-disclosure">
         <summary
           className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >

@@ -134,7 +134,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
       'Content priority, outreach urgency, overdue risk, pipeline health, and publishing windows use fixed, explainable math.',
       'When you self-host a preview, maintainers may supply rules JSON or an environment URL so coefficients can be tuned without shipping a new binary.',
       'If no file or URL is provided, defaults stay in effect.',
-      'Repository contributors: see docs/intelligence-rules-remote-layers.md for layering and validation notes.'
+      'Remote intelligence rules use validated defaults plus optional signed remote payloads — keep schemas versioned when extending.'
     ]
   }
 ];

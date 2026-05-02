@@ -12,7 +12,7 @@
       "128": "icons/128.png"
     }
   },
-  "permissions": ["storage", "activeTab", "scripting", "alarms", "notifications", "identity", "tabs"],
+  "permissions": ["storage", "activeTab", "alarms", "notifications", "identity", "tabs"],
   "host_permissions": [
     "https://*.linkedin.com/*",
     "https://www.linkedin.com/oauth/v2/*",

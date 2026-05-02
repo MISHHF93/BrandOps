@@ -3,7 +3,7 @@ import { resolveExtensionUrl } from '../navigation/extensionRuntime';
 
 /**
  * Public HTTPS URL for the privacy policy, set at build time for store compliance and in-app links.
- * @see docs/chrome-web-store-listing.md
+ * Listing/privacy alignment: see repo root `FRONTEND_MARKET_READINESS_PLAN.md` (Chrome Web Store section).
  */
 function getResolvedPrivacyPolicyUrl(): string | undefined {
   const raw = import.meta.env.VITE_PRIVACY_POLICY_URL;

@@ -1,4 +1,3 @@
-import { CalendarCheck2 } from 'lucide-react';
 import {
   cockpitNavigationGroups,
   type DashboardSectionId
@@ -10,7 +9,6 @@ import { CockpitPipelineWorkstreamSection } from './CockpitPipelineWorkstreamSec
 import { CockpitTodayWorkstreamSection } from './CockpitTodayWorkstreamSection';
 import { CockpitWorkstreamBar } from './CockpitWorkstreamBar';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
-import { MobileTabPageHeader } from './mobileTabPrimitives';
 
 const dashboardAreas =
   cockpitNavigationGroups[0]?.items.filter((item) => item.type === 'section') ?? [];
@@ -59,15 +57,7 @@ export const CockpitDailyView = ({
   const actions = { btnFocus, commandBusy, runCommand, primeChat };
 
   return (
-    <div className="mt-1 space-y-5" aria-label="Today">
-      <MobileTabPageHeader
-        title="Today"
-        subtitle="Plan the day. Actions run in Chat."
-        icon={CalendarCheck2}
-        iconWrapperClassName="flex items-center justify-center rounded-xl border border-info/40 bg-infoSoft/25"
-        iconClassName="text-info"
-        haloTone="info"
-      />
+    <div className="space-y-5" aria-label="Today">
       <span className="sr-only">Today — plan and work</span>
 
       <CockpitWorkstreamBar

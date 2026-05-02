@@ -127,7 +127,7 @@ export const ChatCommandBar = ({
 
   return (
     <div
-      className="bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full max-w-md px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]"
+      className="bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full max-w-md px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 bottom-[calc(6.15rem+env(safe-area-inset-bottom,0px))]"
       aria-busy={commandLoading}
     >
       {commandLoading ? (

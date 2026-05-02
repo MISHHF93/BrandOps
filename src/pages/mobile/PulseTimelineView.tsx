@@ -25,7 +25,6 @@ import {
 import clsx from 'clsx';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { PulseTimelineRow } from './pulseTimeline';
-import { MobileTabPageHeader } from './mobileTabPrimitives';
 import { bucketForRow, startOfLocalDay } from './pulseBuckets';
 import { buildPulseHomeBoard, type PulseHomeLine } from './pulseHomeModel';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
@@ -288,21 +287,12 @@ export const PulseTimelineView = ({
   );
 
   return (
-    <div className="mt-1 space-y-5" aria-label="Pulse">
-      <MobileTabPageHeader
-        title="Pulse"
-        subtitle="What is due soonest."
-        icon={Activity}
-        iconWrapperClassName="flex items-center justify-center rounded-xl border border-accent/40 bg-accentSoft/25"
-        iconClassName="text-accent"
-        haloTone="primary"
-      />
+    <div className="space-y-5" aria-label="Pulse">
+      <span className="sr-only">
+        Pulse timeline and focus queues — what is due soonest across your workspace.
+      </span>
 
-      <div
-        role="tablist"
-        aria-label="Pulse focus areas"
-        className="bo-focus-tabs"
-      >
+      <div role="tablist" aria-label="Pulse focus areas" className="bo-focus-tabs">
         {focusTabs.map((tab) => {
           const isActive = activeFocus === tab.id;
           const Icon = tab.icon;
@@ -316,10 +306,7 @@ export const PulseTimelineView = ({
               id={`pulse-focus-tab-${tab.id}`}
               onClick={() => setActiveFocus(tab.id)}
               title={tab.srLabel}
-              className={clsx(
-                'bo-focus-tab',
-                btnFocus
-              )}
+              className={clsx('bo-focus-tab', btnFocus)}
             >
               <span
                 className={clsx('bo-icon-chip bo-icon-chip--xs', `bo-icon-chip--${tab.tone}`)}

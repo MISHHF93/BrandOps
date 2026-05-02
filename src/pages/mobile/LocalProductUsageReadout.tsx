@@ -20,7 +20,7 @@ function fmtRate(r: number | null) {
 }
 
 /**
- * On-device stats aligned with `docs/PRODUCT_EXPERIENCE_ROADMAP.md` §2 — not sent to any server.
+ * On-device stats (habit, navigation to Chat, command outcomes, latency) — not sent to any server.
  * Shown on **Settings → Diagnostics → Local product metrics** (any `MobileApp` host: `mobile.html`, welcome, etc.).
  */
 export function LocalProductUsageReadout() {

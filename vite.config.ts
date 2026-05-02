@@ -17,19 +17,16 @@ export default defineConfig({
     /** Fail fast if 5173 is busy so the app never silently moves to 5174. */
     strictPort: true,
     /**
-     * Bind IPv6 all-interfaces. On Windows, `http://localhost:5173` often resolves to `::1` first; a server
-     * listening *only* on `127.0.0.1` never receives that connection → `ERR_CONNECTION_REFUSED` (-102).
-     * `::` accepts IPv6 loopback; Node typically dual-stacks so `127.0.0.1` still works in the same browser.
+     * Listen on all local addresses (`0.0.0.0` + IPv6). With `dns.setDefaultResultOrder('ipv4first')`, browsers
+     * often hit **`127.0.0.1`** for `localhost`; binding **only** `::` plus passing `--host ::` from `dev.mjs`
+     * can refuse those IPv4 connections on Windows → **`ERR_CONNECTION_REFUSED` (-102)**.
      */
-    host: '::'
+    host: true
   },
   preview: {
     port: 4173,
     strictPort: true,
-    /**
-     * Preview is often opened as localhost; use same dual-stack story as dev (Vite `preview` may map `::` similarly).
-     */
-    host: '::'
+    host: true
   },
   build: {
     outDir: 'dist',

@@ -26,8 +26,11 @@ jobs:
       - name: Run static checks
         run: npm run check
 
-      - name: Run unit tests
-        run: npm run test:unit
+      - name: Verify formatting (Prettier)
+        run: npm run format
+
+      - name: Run tests (unit + integration parity with release)
+        run: npm run test && npm run test:integration
 
       - name: Build extension
         run: npm run build

@@ -69,6 +69,48 @@ describe('mobileShellQuery', () => {
     });
   });
 
+  it('parses workspace module ids to Cockpit workstreams', () => {
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=brand-vault'), 'chat')
+    ).toEqual({
+      tab: 'daily',
+      workstream: 'brand-content'
+    });
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=pipeline-crm'), 'chat')
+    ).toEqual({
+      tab: 'daily',
+      workstream: 'pipeline'
+    });
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=command-center'), 'chat')
+    ).toEqual({
+      tab: 'daily',
+      workstream: 'today'
+    });
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=linkedin-companion'), 'chat')
+    ).toEqual({
+      tab: 'daily',
+      workstream: 'brand-content'
+    });
+  });
+
+  it('parses workstream and workspace module ids case-insensitively', () => {
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=PIPELINE'), 'chat')
+    ).toEqual({
+      tab: 'daily',
+      workstream: 'pipeline'
+    });
+    expect(
+      parseMobileShellFromSearchParams(new URLSearchParams('section=Brand-Vault'), 'chat')
+    ).toEqual({
+      tab: 'daily',
+      workstream: 'brand-content'
+    });
+  });
+
   it('falls back to default tab on invalid section', () => {
     expect(
       parseMobileShellFromSearchParams(new URLSearchParams('section=not-a-real-token'), 'chat')

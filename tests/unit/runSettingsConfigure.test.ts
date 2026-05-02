@@ -67,8 +67,6 @@ describe('normalizeConfigureText', () => {
   });
 
   it('leaves line alone when it already has configure', () => {
-    expect(normalizeConfigureText('configure: workday 9 to 17')).toBe(
-      'configure: workday 9 to 17'
-    );
+    expect(normalizeConfigureText('configure: workday 9 to 17')).toBe('configure: workday 9 to 17');
   });
 });

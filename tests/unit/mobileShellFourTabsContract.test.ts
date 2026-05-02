@@ -71,11 +71,19 @@ describe('MobileApp shell tab wiring (contract)', () => {
   it('exposes bottom nav labels aligned with URL tokens (pulse, chat, today, integrations, settings)', () => {
     expect(mobileApp).toContain('MOBILE_SHELL_NAV_TABS');
     const tabConfig = read('src/pages/mobile/mobileTabConfig.ts');
-    expect(tabConfig).toContain("{ id: 'pulse', label: 'Pulse'");
-    expect(tabConfig).toContain("{ id: 'chat', label: 'Chat'");
-    expect(tabConfig).toContain("{ id: 'daily', label: 'Today'");
-    expect(tabConfig).toContain("{ id: 'integrations', label: 'Integrations'");
-    expect(tabConfig).toContain("{ id: 'settings', label: 'Settings'");
+    expect(tabConfig).toContain("id: 'pulse'");
+    expect(tabConfig).toContain("label: 'Pulse'");
+    expect(tabConfig).toContain("id: 'chat'");
+    expect(tabConfig).toContain("label: 'Chat'");
+    expect(tabConfig).toContain("id: 'daily'");
+    expect(tabConfig).toContain("label: 'Today'");
+    expect(tabConfig).toContain("id: 'integrations'");
+    expect(tabConfig).toContain("label: 'Integrations'");
+    expect(tabConfig).toContain("id: 'settings'");
+    expect(tabConfig).toContain("label: 'Settings'");
+    expect(tabConfig).toContain('dockLabel');
+    expect(tabConfig).toContain("'Sync'");
+    expect(tabConfig).toContain("'Prefs'");
   });
 
   it('keeps Chat composer outside MobileChatView so input stays fixed to viewport', () => {

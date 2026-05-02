@@ -12,13 +12,16 @@ const LEGACY_TO_CANONICAL_DASHBOARD_SECTIONS: Record<string, DashboardSectionId>
   systems: 'connections'
 };
 
-/** Optional link from workspace modules (modules.ts) to consolidated dashboard sections. */
-export const workspaceModuleToDashboardSection: Partial<
-  Record<WorkspaceModuleId, DashboardSectionId>
-> = {
+/**
+ * Workspace modules (`workspaceModules` in `modules.ts`) → Cockpit workstream for `?section=` deep links.
+ * Tab tokens (`settings`, `integrations`, …) are handled first in `parseMobileShellFromSearchParams`.
+ */
+const workspaceModuleToDashboardSection: Partial<Record<WorkspaceModuleId, DashboardSectionId>> = {
+  'command-center': 'today',
   'brand-vault': 'brand-content',
   'content-library': 'brand-content',
   'publishing-queue': 'brand-content',
+  'linkedin-companion': 'brand-content',
   'outreach-workspace': 'pipeline',
   'pipeline-crm': 'pipeline',
   'scheduler-engine': 'today'
@@ -139,6 +142,10 @@ export function canonicalizeDashboardSectionId(
   if (!value) return null;
   const candidate = value.trim();
   if (!candidate) return null;
-  if (isDashboardSectionId(candidate)) return candidate;
-  return LEGACY_TO_CANONICAL_DASHBOARD_SECTIONS[candidate] ?? null;
+  const normalized = candidate.toLowerCase();
+  if (isDashboardSectionId(normalized)) return normalized;
+  const legacy = LEGACY_TO_CANONICAL_DASHBOARD_SECTIONS[normalized];
+  if (legacy) return legacy;
+  const fromModule = workspaceModuleToDashboardSection[normalized as WorkspaceModuleId];
+  return fromModule ?? null;
 }

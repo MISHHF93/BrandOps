@@ -25,10 +25,7 @@ export const CockpitWorkstreamCommandStrip = ({
   primeChat,
   items
 }: CockpitWorkstreamCommandStripProps) => (
-  <details
-    className="bo-disclosure mt-3"
-    aria-label={ariaLabel}
-  >
+  <details className="bo-disclosure mt-3" aria-label={ariaLabel}>
     <summary
       className={`cursor-pointer list-none px-2.5 py-2 text-[10px] font-semibold uppercase tracking-wide text-textSoft ${btnFocus} [&::-webkit-details-marker]:hidden`}
     >

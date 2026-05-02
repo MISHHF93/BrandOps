@@ -31,6 +31,7 @@ import { WorkspaceCommandPalette } from './WorkspaceCommandPalette';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
+import { CircleHelp } from 'lucide-react';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
 import { runSettingsConfigure } from './runSettingsConfigure';
 import { applyDocumentThemeFromAppSettings } from '../../shared/ui/theme';
@@ -53,7 +54,6 @@ import { LinkedInSignInButton } from '../../shared/ui/oauth/LinkedInSignInButton
 import {
   BrandOpsCrownMark,
   OnDeviceDialogTrustFooter,
-  OnDeviceTrustLine,
   WorkspaceDataHint
 } from '../../shared/ui/brandopsPolish';
 import {
@@ -428,15 +428,6 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
     }
   }, []);
 
-  /** Pulse jump bar: open Today with a specific Cockpit workstream (URL + scroll). */
-  const openCockpitWorkstream = useCallback((id: DashboardSectionId) => {
-    setActiveTab('daily');
-    setCockpitWorkstream(id);
-    if (isAppShellWithSectionQuery()) {
-      replaceMobileShellQueryInUrl('daily', id);
-    }
-  }, []);
-
   useEffect(() => {
     if (!isAppShellWithSectionQuery()) return;
     const onPopState = () => {
@@ -761,63 +752,71 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
     startSend(line.trim(), 'Chat');
   };
 
+  const shellMeta = MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab);
+
   return (
     <div className="bo-mobile-app relative isolate min-h-[100dvh] min-h-screen">
       <a href="#bo-mobile-main" className="bo-mobile-skip">
         Skip to main content
       </a>
-      <header className="bo-mobile-header sticky top-0 z-20">
+      <header className="bo-mobile-header bo-mobile-header-bar sticky top-0 z-20 shadow-none">
         <div
           className="bo-scroll-progress"
           style={{ transform: `scaleX(${scrollProgress})` }}
           aria-hidden
         />
-        <div className="mx-auto flex max-w-md items-center justify-between gap-3">
-          <div className="bo-mobile-brand">
-            <span className="bo-mobile-brand__mark" aria-hidden>
+        <div className="mx-auto flex w-full max-w-md items-start justify-between gap-3 px-4">
+          <div className="bo-mobile-brand flex min-w-0 flex-1 gap-3">
+            <span className="bo-mobile-brand__mark bo-mobile-brand__mark--compact shrink-0" aria-hidden>
               <BrandOpsCrownMark className="bo-mobile-brand__logo" />
             </span>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="bo-mobile-brand__wordmark">BrandOps</p>
-              <h1 className="bo-mobile-brand__title text-h1">
-                {MOBILE_SHELL_NAV_TABS.find((t) => t.id === activeTab)?.label ?? 'Workspace'}
-              </h1>
-              <OnDeviceTrustLine />
+              <h1 className="bo-mobile-brand__title text-h1">{shellMeta?.label ?? 'Workspace'}</h1>
+              <p className="bo-mobile-tagline text-label text-textSoft">{shellMeta?.tagline ?? ''}</p>
               {dataOpsHint ? <WorkspaceDataHint message={dataOpsHint} /> : null}
             </div>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center">
-            <button
-              type="button"
-              onClick={() => openExtensionSurface('help')}
-              className={`bo-link bo-link--sm !normal-case ${btnFocus}`}
-            >
-              Help
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => openExtensionSurface('help')}
+            aria-label="Open Help"
+            title="Knowledge Center — Help"
+            className={clsx(
+              'bo-mobile-help-btn rounded-xl border border-border/45 bg-surface/50 p-2.5 text-textMuted transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive hover:text-text',
+              btnFocus
+            )}
+          >
+            <CircleHelp className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+          </button>
         </div>
       </header>
 
       <main
         id="bo-mobile-main"
         tabIndex={-1}
-        className={`bo-mobile-main mx-auto w-full max-w-sm pt-4 outline-none ${
+        className={clsx(
+          'bo-mobile-main mx-auto w-full max-w-md pt-6 outline-none motion-safe:scroll-smooth',
           activeTab === 'chat'
-            ? 'pb-[max(10.5rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
-            : 'pb-[max(10rem,calc(8.25rem+env(safe-area-inset-bottom,0px)))]'
-        }`}
+            ? 'pb-[max(11.25rem,calc(9.5rem+env(safe-area-inset-bottom,0px)))]'
+            : 'pb-[max(11rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
+        )}
       >
         {shouldRequireLaunchAuth(launchAccess) ? (
-          <LaunchAuthGate btnFocus={btnFocus} onSignInProvider={onSignInProvider} />
+          <div className="px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))]">
+            <LaunchAuthGate btnFocus={btnFocus} onSignInProvider={onSignInProvider} />
+          </div>
         ) : shouldRequireLaunchMembership(launchAccess) && activeTab !== 'settings' ? (
-          <MembershipGate
-            btnFocus={btnFocus}
-            onStartCheckout={onStartCheckout}
-            onOpenBillingPortal={onOpenBillingPortal}
-          />
+          <div className="px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))]">
+            <MembershipGate
+              btnFocus={btnFocus}
+              onStartCheckout={onStartCheckout}
+              onOpenBillingPortal={onOpenBillingPortal}
+            />
+          </div>
         ) : activeTab === 'chat' ? (
           <section
-            className="bo-surface-enter space-y-3"
+            className="bo-shell-page bo-shell-panel-enter space-y-4 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-4 motion-reduce:animate-none"
             aria-label="Chat conversation"
             key="shell-chat"
           >
@@ -837,7 +836,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         ) : (
           <section
             key={activeTab}
-            className="bo-surface-enter bo-mobile-tab-shell bo-flagship-surface p-4 text-sm text-textMuted"
+            className="bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-6 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-8 text-sm text-textMuted motion-reduce:animate-none"
             aria-label={`${activeTab} tab`}
           >
             {activeTab === 'pulse' ? (
@@ -930,7 +929,7 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
       ) : null}
 
       {activeTab === 'settings' && shouldRequireLaunchMembership(launchAccess) ? (
-        <div className="bo-mobile-main fixed inset-x-0 bottom-[calc(4.85rem+env(safe-area-inset-bottom,0px))] z-30 mx-auto w-full max-w-md px-2">
+        <div className="bo-mobile-main fixed inset-x-0 bottom-[calc(10.85rem+env(safe-area-inset-bottom,0px))] z-[32] mx-auto w-full max-w-md px-2 pe-14 ps-3">
           <button
             type="button"
             onClick={onMarkMembershipActive}
@@ -1101,14 +1100,11 @@ export const MobileApp = ({ initialTab = 'pulse', surfaceLabel = 'mobile' }: Mob
         <button
           type="button"
           onClick={() => setCommandPaletteOpen(true)}
-          aria-label="Open command center"
-          title="Command center (⌘K / Ctrl+K)"
+          aria-label="Open workspace command palette"
+          title="Commands & search (⌘K / Ctrl+K)"
           className={clsx('bo-command-handle', btnFocus)}
         >
-          <BrandOpsCrownMark className="bo-command-handle__logo" />
-          <span className="bo-command-handle__label" aria-hidden>
-            Command
-          </span>
+          <BrandOpsCrownMark className="bo-command-handle__logo" aria-hidden />
         </button>
       ) : null}
 

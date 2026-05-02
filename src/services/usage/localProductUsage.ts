@@ -1,6 +1,6 @@
 /**
  * On-device, privacy-preserving aggregates for the product experience metrics in
- * `docs/PRODUCT_EXPERIENCE_ROADMAP.md` (habit, command confidence, perceived speed).
+ * Rolling aggregates: habit, command confidence, perceived shell speed — local-only.
  * No network: stored under `product-usage-v1` in extension local storage.
  */
 import { browserLocalStorage } from '../../shared/storage/browserStorage';

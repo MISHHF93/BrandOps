@@ -69,17 +69,20 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'audit_positioning',
     label: 'Audit positioning',
     category: 'positioning',
-    objective: 'Find whether the brand reads as specific, senior, credible, differentiated, and commercially relevant.',
+    objective:
+      'Find whether the brand reads as specific, senior, credible, differentiated, and commercially relevant.',
     inputs: ['Current positioning line', 'Audience segment', 'Proof points', 'Offer context'],
     outputs: ['Diagnosis', 'Gaps', 'Sharper positioning options', 'Proof to add', 'Next action'],
-    nextStep: 'Rewrite the positioning line around buyer, problem, mechanism, proof, and premium outcome.',
+    nextStep:
+      'Rewrite the positioning line around buyer, problem, mechanism, proof, and premium outcome.',
     aliases: ['positioning audit', 'audit positioning', 'review positioning']
   },
   {
     id: 'audit_offers',
     label: 'Audit offers',
     category: 'offers',
-    objective: 'Evaluate whether offers are packaged around urgent buyer problems, proof, scope, and premium value.',
+    objective:
+      'Evaluate whether offers are packaged around urgent buyer problems, proof, scope, and premium value.',
     inputs: ['Current offers', 'Target buyer', 'Delivery constraints', 'Proof assets'],
     outputs: ['Offer gaps', 'Risk flags', 'Packaging recommendations', 'Pricing logic prompts'],
     nextStep: 'Clarify the flagship offer, diagnostic wedge, and expansion path.',
@@ -89,7 +92,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'define_offer_stack',
     label: 'Define offer stack',
     category: 'offers',
-    objective: 'Turn expertise into a ladder of diagnostic, sprint, advisory, and implementation offers.',
+    objective:
+      'Turn expertise into a ladder of diagnostic, sprint, advisory, and implementation offers.',
     inputs: ['Expertise areas', 'Buyer pain', 'Proof points', 'Delivery capacity'],
     outputs: ['Offer ladder', 'Use case for each tier', 'Qualification logic', 'CTA direction'],
     nextStep: 'Create one flagship offer page and one discovery-call question set.',
@@ -99,7 +103,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'generate_brand_narrative',
     label: 'Generate brand narrative',
     category: 'positioning',
-    objective: 'Create a coherent narrative that connects experience, technical judgment, proof, and commercial outcomes.',
+    objective:
+      'Create a coherent narrative that connects experience, technical judgment, proof, and commercial outcomes.',
     inputs: ['Career arc', 'Technical specialties', 'Market belief', 'Proof points'],
     outputs: ['Narrative thesis', 'Short bio', 'About summary', 'Signature themes'],
     nextStep: 'Adapt the narrative into LinkedIn headline, service page hero, and proposal intro.',
@@ -109,7 +114,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'review_brand_clarity',
     label: 'Review brand clarity',
     category: 'positioning',
-    objective: 'Check whether the brand can be understood quickly by a high-trust technical or executive buyer.',
+    objective:
+      'Check whether the brand can be understood quickly by a high-trust technical or executive buyer.',
     inputs: ['Profile copy', 'Service copy', 'Content samples', 'Audience assumptions'],
     outputs: ['Clarity score', 'Ambiguous phrases', 'Credibility gaps', 'Rewrite priorities'],
     nextStep: 'Remove vague language and replace it with buyer-specific outcomes and proof.',
@@ -119,7 +125,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'generate_content_angles',
     label: 'Generate content angles',
     category: 'content',
-    objective: 'Turn expertise and proof into authority-building angles for LinkedIn, articles, talks, and sales assets.',
+    objective:
+      'Turn expertise and proof into authority-building angles for LinkedIn, articles, talks, and sales assets.',
     inputs: ['Topic', 'Audience', 'Proof point', 'Commercial objective'],
     outputs: ['Angles', 'Hooks', 'Proof tie-ins', 'CTA options'],
     nextStep: 'Select one angle and draft a post or case-study fragment.',
@@ -129,7 +136,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'write_linkedIn_post',
     label: 'Write LinkedIn post',
     category: 'content',
-    objective: 'Draft a high-credibility LinkedIn post that teaches, proves, and creates commercial pull.',
+    objective:
+      'Draft a high-credibility LinkedIn post that teaches, proves, and creates commercial pull.',
     inputs: ['Core idea', 'Audience', 'Proof point', 'CTA direction'],
     outputs: ['Hook', 'Post draft', 'Proof insertion point', 'CTA'],
     nextStep: 'Add a concrete delivery detail before publishing.',
@@ -139,7 +147,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'repurpose_content',
     label: 'Repurpose content',
     category: 'content',
-    objective: 'Convert one idea into platform-specific assets without diluting the authority thesis.',
+    objective:
+      'Convert one idea into platform-specific assets without diluting the authority thesis.',
     inputs: ['Source asset', 'Target platform', 'Audience', 'Desired action'],
     outputs: ['Repurposing map', 'Platform variants', 'Proof reuse', 'CTA variants'],
     nextStep: 'Schedule the strongest variant and save the rest as reusable snippets.',
@@ -149,7 +158,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'create_service_page_copy',
     label: 'Create service page copy',
     category: 'offers',
-    objective: 'Write premium service-page copy around buyer pain, mechanism, proof, scope, and fit.',
+    objective:
+      'Write premium service-page copy around buyer pain, mechanism, proof, scope, and fit.',
     inputs: ['Offer', 'Buyer', 'Pain', 'Proof', 'Delivery model'],
     outputs: ['Hero copy', 'Problem section', 'Method section', 'Proof section', 'CTA'],
     nextStep: 'Validate against the offer stack and remove any generic benefit claims.',
@@ -159,7 +169,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'generate_outreach_messages',
     label: 'Generate outreach messages',
     category: 'outreach',
-    objective: 'Create high-trust outreach that opens a relevant executive or founder conversation.',
+    objective:
+      'Create high-trust outreach that opens a relevant executive or founder conversation.',
     inputs: ['Target', 'Context', 'Relevance trigger', 'Offer angle', 'Proof'],
     outputs: ['Message variants', 'Follow-up logic', 'Personalization notes', 'CTA'],
     nextStep: 'Tie the message to a concrete proof point or operating insight.',
@@ -169,10 +180,12 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'build_case_study',
     label: 'Build case study',
     category: 'delivery',
-    objective: 'Turn delivery work into proof that supports authority, trust, and premium positioning.',
+    objective:
+      'Turn delivery work into proof that supports authority, trust, and premium positioning.',
     inputs: ['Client context', 'Problem', 'Intervention', 'Measured result', 'Constraints'],
     outputs: ['Case-study arc', 'Before/after', 'Proof points', 'Reusable snippets'],
-    nextStep: 'Extract one LinkedIn post, one proposal proof block, and one service-page proof row.',
+    nextStep:
+      'Extract one LinkedIn post, one proposal proof block, and one service-page proof row.',
     aliases: ['case study', 'build case study', 'proof asset']
   },
   {
@@ -189,7 +202,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'scope_project',
     label: 'Scope project',
     category: 'delivery',
-    objective: 'Convert a vague opportunity into clear outcomes, boundaries, risks, and delivery phases.',
+    objective:
+      'Convert a vague opportunity into clear outcomes, boundaries, risks, and delivery phases.',
     inputs: ['Client goal', 'Constraints', 'Stakeholders', 'Available proof', 'Timeline'],
     outputs: ['Scope', 'Milestones', 'Risks', 'Assumptions', 'Next decision'],
     nextStep: 'Turn the scope into a proposal outline with explicit acceptance criteria.',
@@ -199,7 +213,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'write_proposal_outline',
     label: 'Write proposal outline',
     category: 'offers',
-    objective: 'Structure a premium proposal around business problem, technical approach, proof, risk controls, and terms.',
+    objective:
+      'Structure a premium proposal around business problem, technical approach, proof, risk controls, and terms.',
     inputs: ['Opportunity', 'Buyer pain', 'Offer', 'Proof', 'Timeline'],
     outputs: ['Proposal outline', 'Scope blocks', 'Proof block', 'Governance/risk section', 'CTA'],
     nextStep: 'Add pricing and delivery assumptions after buyer fit is confirmed.',
@@ -259,7 +274,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'weekly_pipeline_review',
     label: 'Weekly pipeline review',
     category: 'operating-cadence',
-    objective: 'Connect authority work to opportunity quality, next actions, and commercial leverage.',
+    objective:
+      'Connect authority work to opportunity quality, next actions, and commercial leverage.',
     inputs: ['Opportunities', 'Outreach', 'Follow-ups', 'Offer stack'],
     outputs: ['Pipeline diagnosis', 'Stale deals', 'Trust gaps', 'Next actions'],
     nextStep: 'Send or draft the highest-trust next message.',
@@ -289,7 +305,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'monthly_offer_repackaging_review',
     label: 'Monthly offer repackaging review',
     category: 'operating-cadence',
-    objective: 'Repackage offers based on proof, buyer pull, delivery efficiency, and pricing leverage.',
+    objective:
+      'Repackage offers based on proof, buyer pull, delivery efficiency, and pricing leverage.',
     inputs: ['Won/lost deals', 'Delivery lessons', 'Proof assets', 'Capacity'],
     outputs: ['Repackaging decisions', 'Offer copy changes', 'Proof gaps', 'Pricing prompts'],
     nextStep: 'Update the flagship offer and proposal outline.',
@@ -309,7 +326,8 @@ export const BRANDOPS_FUNCTION_CATALOG: BrandOpsFunctionDefinition[] = [
     id: 'monthly_brand_consistency_review',
     label: 'Monthly brand consistency review',
     category: 'operating-cadence',
-    objective: 'Check that LinkedIn, website, proposals, decks, and internal assets tell the same high-trust story.',
+    objective:
+      'Check that LinkedIn, website, proposals, decks, and internal assets tell the same high-trust story.',
     inputs: ['Profile copy', 'Website copy', 'Proposal copy', 'Deck language', 'Content samples'],
     outputs: ['Consistency gaps', 'Conflicting claims', 'Reusable language', 'Update sequence'],
     nextStep: 'Normalize the most visible surface first, then cascade reusable copy blocks.',
@@ -364,8 +382,10 @@ export function buildBrandOpsStrategicReadout(
   const pipelineCount = workspace.opportunities.filter((item) => !item.archivedAt).length;
 
   const missing: string[] = [];
-  if (!brand.positioning || brand.positioning.includes('Add a one-line')) missing.push('specific positioning');
-  if (!brand.primaryOffer || brand.primaryOffer.includes('Describe your')) missing.push('flagship offer');
+  if (!brand.positioning || brand.positioning.includes('Add a one-line'))
+    missing.push('specific positioning');
+  if (!brand.primaryOffer || brand.primaryOffer.includes('Describe your'))
+    missing.push('flagship offer');
   if (proofCount === 0) missing.push('proof points');
   if (offerCount === 0 && fn.category === 'offers') missing.push('service-offering list');
   if (contentCount === 0 && fn.category === 'content') missing.push('content examples');

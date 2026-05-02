@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { Settings2 } from 'lucide-react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import type { CadenceFlowMode } from '../../types/domain';
 import type { AuthProviderId, LaunchMembershipState } from '../../shared/account/launchAccess';
@@ -11,6 +10,7 @@ import { EmailMagicLinkButton } from '../../shared/ui/oauth/EmailMagicLinkButton
 import { LinkedInSignInButton } from '../../shared/ui/oauth/LinkedInSignInButton';
 import { GitHubSignInButton } from '../../shared/ui/oauth/GitHubSignInButton';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
+import { OnDeviceTrustLine } from '../../shared/ui/brandopsPolish';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import type { IntelligenceRulesLoadMode } from '../../rules/intelligenceRulesRuntime';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
@@ -22,7 +22,7 @@ import {
   SettingsDataSafetyBlock,
   SettingsTierAOverview
 } from './MobileSettingsAISurface';
-import { MobileTabPageHeader, MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
+import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { SettingsCockpitCapabilityDisclosure } from './SettingsCockpitCapabilityDisclosure';
 import { LocalProductUsageReadout } from './LocalProductUsageReadout';
 
@@ -681,18 +681,13 @@ export const MobileSettingsView = ({
   };
 
   return (
-    <div className="relative z-[1] mt-2 space-y-5 pb-10 pointer-events-auto" aria-label="Settings">
-      <MobileTabPageHeader
-        title="Settings"
-        subtitle="Account, behavior, and data safety."
-        icon={Settings2}
-        iconWrapperClassName="flex h-9 w-9 items-center justify-center rounded-lg border border-info/35 bg-infoSoft/12"
-        iconClassName="text-info"
-      />
+    <div className="relative z-[1] space-y-5 pb-10 pointer-events-auto" aria-label="Settings">
       <span className="sr-only">
         You and this workspace: account, behavior, and data safety. For provider wiring and sources,
         use Integrations.
       </span>
+
+      <OnDeviceTrustLine className="text-[10px] normal-case tracking-normal" />
 
       <SettingsTierAOverview
         snapshot={snapshot}

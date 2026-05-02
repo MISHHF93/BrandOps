@@ -36,7 +36,8 @@ export type ParsedMobileShellQuery = {
 
 /**
  * Read `?section=` on `mobile.html`: **tab tokens** (chat, settings, …) take precedence, then
- * **workstream** ids (`today` | `pipeline` | … and legacy keys).
+ * **workstream** ids (`today` | `pipeline` | …), legacy aliases (`overview`, …), and
+ * **workspace module** ids (`brand-vault`, `pipeline-crm`, … — resolved via {@link canonicalizeDashboardSectionId}).
  */
 export function parseMobileShellFromSearchParams(
   sp: URLSearchParams,
@@ -64,7 +65,7 @@ export function parseMobileShellFromSearchParams(
       return { tab: 'daily', workstream: 'today' };
     }
   }
-  const workstream = canonicalizeDashboardSectionId(raw);
+  const workstream = canonicalizeDashboardSectionId(lower);
   if (workstream) {
     return { tab: 'daily', workstream };
   }

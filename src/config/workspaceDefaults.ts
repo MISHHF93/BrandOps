@@ -12,7 +12,8 @@ export const defaultBrandProfile = {
     'Strategic AI architecture, GPT system design, model evaluation, and enterprise LLM deployment advisory packaged into audit, sprint, and implementation offers.',
   voiceGuide:
     'High-credibility, precise, strategic, proof-led, commercially relevant. Avoid generic marketing language, shallow AI hype, vague startup cliches, and creator-economy advice.',
-  focusMetric: 'Qualified high-trust AI strategy, architecture, or governance opportunities created per month.'
+  focusMetric:
+    'Qualified high-trust AI strategy, architecture, or governance opportunities created per month.'
 } satisfies BrandProfile;
 
 /**

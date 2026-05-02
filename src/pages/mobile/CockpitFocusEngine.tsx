@@ -97,8 +97,7 @@ function LineList({ items }: { items: TodayFocusLine[] }) {
   );
 }
 
-const panelShell = (role: FocusId) =>
-  clsx('bo-focus-panel', `bo-focus-panel--${role}`);
+const panelShell = (role: FocusId) => clsx('bo-focus-panel', `bo-focus-panel--${role}`);
 
 type CockpitFocusEngineProps = {
   snapshot: CockpitDailySnapshot;
@@ -151,11 +150,7 @@ export const CockpitFocusEngine = ({
 
   return (
     <div className="space-y-3" aria-label="Today focus engine">
-      <div
-        role="tablist"
-        aria-label="Focus areas"
-        className="bo-focus-tabs"
-      >
+      <div role="tablist" aria-label="Focus areas" className="bo-focus-tabs">
         {focusTabs.map((tab) => {
           const isActive = activeFocus === tab.id;
           const Icon = tab.icon;
@@ -169,10 +164,7 @@ export const CockpitFocusEngine = ({
               id={`focus-tab-${tab.id}`}
               onClick={() => setActiveFocus(tab.id)}
               title={tab.label}
-              className={clsx(
-                'bo-focus-tab',
-                btnFocus
-              )}
+              className={clsx('bo-focus-tab', btnFocus)}
             >
               <span
                 className={clsx('bo-icon-chip bo-icon-chip--xs', `bo-icon-chip--${tab.tone}`)}

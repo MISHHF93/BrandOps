@@ -55,7 +55,7 @@ export const CockpitWorkstreamBar = ({
   );
 
   return (
-    <div className="bo-workstream-dock mb-2">
+    <div className="bo-workstream-dock mb-3">
       <p className="bo-section-label">
         <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--info" aria-hidden>
           <LayoutGrid className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -63,10 +63,10 @@ export const CockpitWorkstreamBar = ({
         <span>Work areas</span>
       </p>
       <nav
-        className="mt-2 max-w-full overflow-x-auto border-t border-border/25 pt-2 [scrollbar-width:thin]"
+        className="bo-workstream-pill-strip mt-3 max-w-full scroll-smooth overflow-x-auto overflow-y-hidden pb-1 snap-x snap-mandatory [-webkit-overflow-scrolling:touch]"
         aria-label="Cockpit workstreams"
       >
-        <ul className="flex min-w-0 flex-nowrap items-stretch justify-start gap-1.5 px-0.5">
+        <ul className="flex min-w-0 flex-nowrap items-stretch justify-start gap-1.5 px-0">
           {SECTION_ITEMS.map((item) => {
             const isCurrent = activeWorkstream === item.target;
             const Icon = WORKSTREAM_ICON[item.target];
@@ -77,10 +77,10 @@ export const CockpitWorkstreamBar = ({
                   onClick={() => scrollToSection(item.target)}
                   aria-current={isCurrent ? 'true' : undefined}
                   title={item.description}
-                  className={clsx('bo-pill-nav', btnFocus)}
+                  className={clsx('bo-pill-nav max-w-[10.5rem] snap-start', btnFocus)}
                 >
-                  <Icon className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-                  <span>{item.label}</span>
+                  <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
+                  <span className="bo-pill-nav__label">{item.label}</span>
                 </button>
               </li>
             );

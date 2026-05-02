@@ -69,30 +69,21 @@ export const MobileChatView = ({
 }: MobileChatViewProps) => {
   return (
     <div className="space-y-4" aria-label="Chat">
-      <header className="bo-section-halo bo-section-halo--primary border-b border-border/30 pb-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-accent/40 bg-accentSoft/25">
-            <MessageCircle className="h-5 w-5 text-accent" aria-hidden />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-h1 text-text">Chat</h2>
-            <p className="mt-0.5 text-label text-textMuted">
-              Type or tap.{' '}
-              <button
-                type="button"
-                onClick={onOpenToday}
-                title="Open Today to plan"
-                className={clsx(
-                  'inline-flex items-center gap-1 font-medium text-accent underline-offset-2 hover:underline',
-                  btnFocus
-                )}
-              >
-                Today
-              </button>
-            </p>
-          </div>
-        </div>
-      </header>
+      <h2 className="sr-only">Chat workspace commands</h2>
+      <p className="-mt-1 mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-textSoft">
+        <span>Type or tap a starter.</span>
+        <button
+          type="button"
+          onClick={onOpenToday}
+          title="Open Today to plan"
+          className={clsx(
+            'font-semibold text-accent underline-offset-2 transition-colors hover:underline',
+            btnFocus
+          )}
+        >
+          Go to Today →
+        </button>
+      </p>
 
       <div
         className="flex min-h-[8rem] flex-col gap-2.5"
