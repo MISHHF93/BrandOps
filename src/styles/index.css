@@ -7,28 +7,29 @@
   /* ============================ */
   /* Primitive tokens (dark mode) */
   /* ============================ */
-  /* Monochrome dark token system: black/charcoal surfaces + white/grays. */
-  --color-bg: 8 9 11;
-  --color-bg-elevated: 12 14 17;
-  --color-bg-subtle: 18 21 25;
-  --color-surface: 23 27 32;
-  --color-surface-hover: 30 35 42;
-  --color-surface-active: 39 45 54;
-  --color-border: 68 76 90;
-  --color-border-strong: 96 107 125;
-  --color-text: 237 240 245;
-  --color-text-muted: 186 194 207;
-  --color-text-soft: 142 152 170;
-  --color-primary: 184 190 201;
-  --color-primary-hover: 203 209 220;
-  --color-primary-soft: 184 190 201;
+  /* Cyber / terminal-inspired: charcoal grey-green canvas + mint-white ink + emerald accents.
+     Near-black base keeps OLED-friendly energy use; no animated gradients on the body. */
+  --color-bg: 9 14 12;
+  --color-bg-elevated: 14 19 17;
+  --color-bg-subtle: 20 26 23;
+  --color-surface: 24 31 28;
+  --color-surface-hover: 32 40 36;
+  --color-surface-active: 40 50 45;
+  --color-border: 52 68 60;
+  --color-border-strong: 74 92 82;
+  --color-text: 236 252 245;
+  --color-text-muted: 164 190 176;
+  --color-text-soft: 118 142 130;
+  --color-primary: 154 184 170;
+  --color-primary-hover: 178 210 194;
+  --color-primary-soft: 154 184 170;
   --alpha-primary-soft: 0.14;
-  --color-secondary: 152 160 174;
-  --color-secondary-hover: 172 180 194;
-  --color-secondary-soft: 152 160 174;
+  --color-secondary: 124 148 136;
+  --color-secondary-hover: 146 172 158;
+  --color-secondary-soft: 124 148 136;
   --alpha-secondary-soft: 0.14;
-  --color-success: 139 199 163;
-  --color-success-soft: 139 199 163;
+  --color-success: 94 214 140;
+  --color-success-soft: 94 214 140;
   --alpha-success-soft: 0.14;
   --color-warning: 214 188 141;
   --color-warning-soft: 214 188 141;
@@ -36,29 +37,27 @@
   --color-danger: 216 154 154;
   --color-danger-soft: 216 154 154;
   --alpha-danger-soft: 0.14;
-  --color-info: 157 185 214;
-  --color-info-soft: 157 185 214;
+  --color-info: 130 186 198;
+  --color-info-soft: 130 186 198;
   --alpha-info-soft: 0.14;
-  --color-focus-ring: 220 225 235;
+  --color-focus-ring: 167 243 208;
   --alpha-focus-ring: 0.42;
-  --color-glow: 196 204 218;
+  --color-glow: 132 196 168;
   --color-shadow: 0 0 0;
-  /* Accent — the one token that actually pops against the monochrome calm.
-     A muted blue-violet chosen so "primary" buttons can be identified at a glance
-     without breaking the inked/paper identity on either theme. */
-  --color-accent: 142 168 232;
-  --color-accent-hover: 170 190 244;
-  --color-accent-soft: 142 168 232;
+  /* Accent — emerald CTA / links (replaces cool violet). */
+  --color-accent: 74 222 128;
+  --color-accent-hover: 110 231 164;
+  --color-accent-soft: 74 222 128;
   --alpha-accent-soft: 0.18;
-  /* Brand identity: crown authority + command action. Warning/status tokens stay separate. */
-  --brand-gold: 214 188 141;
-  --brand-gold-strong: 232 207 156;
-  --brand-gold-soft: 214 188 141;
+  /* Brand chrome lines + progress (mint spectrum; `brandGold` Tailwind alias kept for compat). */
+  --brand-gold: 74 222 128;
+  --brand-gold-strong: 134 239 172;
+  --brand-gold-soft: 74 222 128;
   --alpha-brand-gold-soft: 0.14;
-  --brand-command: 142 168 232;
-  --brand-command-soft: 142 168 232;
+  --brand-command: 45 212 191;
+  --brand-command-soft: 45 212 191;
   --alpha-brand-command-soft: 0.16;
-  --brand-ink: 8 9 11;
+  --brand-ink: 9 14 12;
   --duration-fast: 120ms;
   --duration-base: 180ms;
   --duration-slow: 260ms;
@@ -70,9 +69,9 @@
   --duration-liquid-hover: 220ms;
   --ease-retro-springy: cubic-bezier(0.18, 0.9, 0.26, 1.08);
   --ease-retro-elastic: cubic-bezier(0.24, 1.08, 0.32, 1);
-  --retro-glow-cyan: 182 190 206;
-  --retro-glow-pink: 162 172 188;
-  --retro-glow-gold: 202 208 220;
+  --retro-glow-cyan: 94 214 191;
+  --retro-glow-pink: 120 180 160;
+  --retro-glow-gold: 167 243 208;
   --retro-noise-opacity: 0;
   /* Frosted glass: blur + saturation for translucent chrome over the canvas. */
   --glass-blur-soft: 8px;
@@ -114,16 +113,16 @@
   --field-bg: var(--color-bg-elevated);
   --field-border: var(--color-border);
   --field-focus-ring: var(--color-focus-ring);
-  /* Ask / Assistant: AI-style chat tokens (dark) */
-  --bo-chat-canvas: 12 14 18;
-  --bo-chat-hero-bg: 20 23 30;
-  --bo-chat-user-bg: 58 68 92;
-  --bo-chat-user-fg: 248 250 255;
-  --bo-chat-assistant-bg: 26 30 38;
-  --bo-chat-assistant-border: 55 64 78;
-  --bo-chat-thread-bg: 10 12 16;
-  --bo-chat-starter-bg: 30 35 44;
-  --bo-chat-starter-border: 55 64 78;
+  /* Ask / Assistant: AI-style chat tokens (dark) — aligned with cyber canvas */
+  --bo-chat-canvas: 11 15 13;
+  --bo-chat-hero-bg: 18 24 21;
+  --bo-chat-user-bg: 21 94 58;
+  --bo-chat-user-fg: 240 253 248;
+  --bo-chat-assistant-bg: 22 28 25;
+  --bo-chat-assistant-border: 48 62 55;
+  --bo-chat-thread-bg: 9 12 11;
+  --bo-chat-starter-bg: 28 36 32;
+  --bo-chat-starter-border: 52 68 60;
   font-family:
     'Segoe UI Variable Text',
     'Segoe UI',
@@ -134,32 +133,31 @@
     sans-serif;
 }
 
-/* Monochrome light: paper / ink hierarchy (no blue identity). */
+/* Light: paper-white with forest/emerald accents (paired “cyber” twin to dark grey-green). */
 :root[data-theme='light'] {
   color-scheme: light;
   /* Primitive tokens (light mode) */
-  --color-bg: 248 249 251;
+  --color-bg: 248 250 248;
   --color-bg-elevated: 255 255 255;
-  --color-bg-subtle: 241 243 246;
+  --color-bg-subtle: 237 243 239;
   --color-surface: 255 255 255;
-  --color-surface-hover: 243 245 249;
-  --color-surface-active: 235 238 245;
-  /* Stronger stroke + slightly inkier secondary text: reads clearer on white/glass. */
-  --color-border: 204 210 220;
-  --color-border-strong: 175 183 198;
-  --color-text: 17 20 28;
-  --color-text-muted: 68 76 94;
-  --color-text-soft: 106 114 132;
-  --color-primary: 52 58 72;
-  --color-primary-hover: 34 39 52;
-  --color-primary-soft: 52 58 72;
+  --color-surface-hover: 238 246 240;
+  --color-surface-active: 228 238 232;
+  --color-border: 198 214 204;
+  --color-border-strong: 158 182 168;
+  --color-text: 17 36 28;
+  --color-text-muted: 52 78 64;
+  --color-text-soft: 92 118 102;
+  --color-primary: 34 72 54;
+  --color-primary-hover: 22 52 38;
+  --color-primary-soft: 34 72 54;
   --alpha-primary-soft: 0.1;
-  --color-secondary: 88 96 112;
-  --color-secondary-hover: 62 68 82;
-  --color-secondary-soft: 88 96 112;
+  --color-secondary: 72 98 84;
+  --color-secondary-hover: 52 76 62;
+  --color-secondary-soft: 72 98 84;
   --alpha-secondary-soft: 0.1;
-  --color-success: 46 122 78;
-  --color-success-soft: 46 122 78;
+  --color-success: 21 110 68;
+  --color-success-soft: 21 110 68;
   --alpha-success-soft: 0.12;
   --color-warning: 140 95 15;
   --color-warning-soft: 140 95 15;
@@ -167,29 +165,28 @@
   --color-danger: 158 45 45;
   --color-danger-soft: 158 45 45;
   --alpha-danger-soft: 0.12;
-  --color-info: 62 82 118;
-  --color-info-soft: 62 82 118;
+  --color-info: 45 112 96;
+  --color-info-soft: 45 112 96;
   --alpha-info-soft: 0.12;
-  --color-focus-ring: 34 39 52;
+  --color-focus-ring: 21 110 68;
   --alpha-focus-ring: 0.35;
-  --color-glow: 120 128 145;
-  --color-shadow: 15 18 28;
-  /* Light-mode accent: inkier blue so it reads as a true CTA against paper. */
-  --color-accent: 62 92 176;
-  --color-accent-hover: 38 68 150;
-  --color-accent-soft: 62 92 176;
+  --color-glow: 120 150 132;
+  --color-shadow: 15 28 22;
+  --color-accent: 22 101 52;
+  --color-accent-hover: 31 122 62;
+  --color-accent-soft: 22 101 52;
   --alpha-accent-soft: 0.14;
-  --brand-gold: 140 95 15;
-  --brand-gold-strong: 112 76 12;
-  --brand-gold-soft: 140 95 15;
+  --brand-gold: 34 139 72;
+  --brand-gold-strong: 22 101 52;
+  --brand-gold-soft: 34 139 72;
   --alpha-brand-gold-soft: 0.12;
-  --brand-command: 62 92 176;
-  --brand-command-soft: 62 92 176;
+  --brand-command: 13 148 136;
+  --brand-command-soft: 13 148 136;
   --alpha-brand-command-soft: 0.12;
-  --brand-ink: 17 20 28;
-  --retro-glow-cyan: 140 148 165;
-  --retro-glow-pink: 128 136 152;
-  --retro-glow-gold: 155 162 178;
+  --brand-ink: 17 36 28;
+  --retro-glow-cyan: 72 140 124;
+  --retro-glow-pink: 108 138 124;
+  --retro-glow-gold: 96 140 112;
   /* Glass aligned with dark-mode structure (0.82 panel); border/shadow hold separation on paper. */
   --glass-border-alpha: 0.6;
   --glass-panel-alpha: 0.82;
@@ -222,15 +219,15 @@
   --field-bg: var(--color-bg-elevated);
   --field-border: var(--color-border);
   --field-focus-ring: var(--color-focus-ring);
-  --bo-chat-canvas: 234 237 244;
+  --bo-chat-canvas: 242 247 244;
   --bo-chat-hero-bg: 255 255 255;
-  --bo-chat-user-bg: 62 92 176;
+  --bo-chat-user-bg: 22 101 52;
   --bo-chat-user-fg: 255 255 255;
   --bo-chat-assistant-bg: 255 255 255;
-  --bo-chat-assistant-border: 210 216 228;
-  --bo-chat-thread-bg: 244 246 251;
+  --bo-chat-assistant-border: 198 214 204;
+  --bo-chat-thread-bg: 237 244 240;
   --bo-chat-starter-bg: 255 255 255;
-  --bo-chat-starter-border: 216 222 234;
+  --bo-chat-starter-border: 208 222 214;
 }
 
 body {
@@ -238,7 +235,7 @@ body {
   position: relative;
   isolation: isolate;
   overflow-x: hidden;
-  /* Monochrome canvas: subtle depth without colored nebula effects. */
+  /* Cyber-neutral canvas: soft radial lifts; no heavy effects on the body. */
   background:
     radial-gradient(100% 95% at 88% -8%, rgb(var(--color-text) / 0.04), transparent 58%),
     radial-gradient(95% 90% at -12% 108%, rgb(var(--color-text-muted) / 0.035), transparent 62%),
@@ -302,18 +299,18 @@ html[data-app-surface='welcome'] body::after {
 
 /* Flagship canvas tokens referenced by `.bo-mobile-app` (declare before layered rules). */
 :root {
-  --flagship-canvas-a: 10 12 16;
-  --flagship-canvas-b: 18 21 27;
-  --flagship-sheen: 255 255 255;
-  --flagship-line: 214 188 141;
+  --flagship-canvas-a: 11 16 14;
+  --flagship-canvas-b: 17 23 20;
+  --flagship-sheen: 248 252 249;
+  --flagship-line: 74 222 128;
   --flagship-depth-alpha: 0.46;
 }
 
 :root[data-theme='light'] {
-  --flagship-canvas-a: 247 248 251;
-  --flagship-canvas-b: 232 236 243;
+  --flagship-canvas-a: 246 249 247;
+  --flagship-canvas-b: 234 241 237;
   --flagship-sheen: 255 255 255;
-  --flagship-line: 140 95 15;
+  --flagship-line: 34 139 72;
   --flagship-depth-alpha: 0.14;
 }
 
@@ -380,8 +377,20 @@ html[data-app-surface='welcome'] body::after {
       0 0,
       0 0;
     mask-image: linear-gradient(180deg, black 0%, black 56%, transparent 100%);
-    opacity: 0.62;
-    animation: bo-flagship-canvas-drift 18s var(--ease-liquid-in-out) infinite alternate;
+    opacity: 0.52;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bo-mobile-app::before {
+      animation: bo-flagship-canvas-drift 26s var(--ease-liquid-in-out) infinite alternate;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bo-mobile-app::before {
+      animation: none;
+      opacity: 0.38;
+    }
   }
 
   .bo-mobile-app::after {
@@ -569,8 +578,20 @@ html[data-app-surface='welcome'] body::after {
       transparent 74%
     );
     transform: translateX(-38%);
-    animation: bo-flagship-sheen 7s var(--ease-liquid-in-out) infinite;
-    opacity: 0.55;
+    opacity: 0.38;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bo-shell-tab-root::after {
+      animation: bo-flagship-sheen 18s var(--ease-liquid-in-out) infinite;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bo-shell-tab-root::after {
+      animation: none;
+      opacity: 0.22;
+    }
   }
 
   .bo-shell-tab-root > * {

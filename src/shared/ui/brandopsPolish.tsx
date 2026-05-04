@@ -4,16 +4,24 @@ import { AlertCircle, CheckCircle2, Info, Loader2, Shield } from 'lucide-react';
 
 type DataOpsFeedbackTone = 'info' | 'success' | 'caution';
 
+/** System mark — hex core / circuit motif (cyber shell identity; replaces legacy crown glyph). */
 export function BrandOpsCrownMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden className={className}>
       <path
-        d="M13 44h38M13 44V24l9.2 9 9.8-18 9.8 18 9.2-9v20"
+        d="M32 9 52 21v22L32 55 12 43V21L32 9z"
         fill="none"
         stroke="currentColor"
-        strokeWidth="4.5"
-        strokeLinecap="round"
+        strokeWidth="3.25"
         strokeLinejoin="round"
+      />
+      <circle cx="32" cy="32" r="5.5" fill="currentColor" opacity={0.82} />
+      <path
+        d="M32 9v8m23 12h-8m0 13h8M32 55v-8M11 34h8m0-13h-8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.75"
+        strokeLinecap="round"
       />
     </svg>
   );
