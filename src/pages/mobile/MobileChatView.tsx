@@ -83,16 +83,17 @@ export const MobileChatView = ({
 }: MobileChatViewProps) => {
   return (
     <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-2.5">
-      <header className="bo-assistant-hero rounded-2xl border border-border/45 px-3 py-2.5 sm:px-3.5">
+      <header className="bo-assistant-hero bo-dos-hero px-3 py-2.5 sm:px-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-textSoft">
-              Ask
+            <p className="bo-dos-prompt text-[10px] font-semibold uppercase tracking-[0.14em] text-textMuted">
+              <span className="text-accent">C:\BRANDOPS&gt;</span>{' '}
+              <span className="normal-case tracking-normal text-textSoft">ask.exe</span>
             </p>
-            <h2 className="mt-0.5 text-[1.05rem] font-bold leading-tight tracking-tight text-text">
+            <h2 className="bo-dos-hero-title mt-1 text-[1.05rem] font-bold uppercase tracking-[0.06em] leading-tight text-text">
               Assistant
             </h2>
-            <p className="mt-0.5 text-[11px] leading-snug text-textMuted">
+            <p className="mt-0.5 bo-dos-prompt text-[11px] leading-snug text-textMuted">
               On-device · <span className="whitespace-nowrap">⌘K</span> palette
               {onOpenPlan ? (
                 <>

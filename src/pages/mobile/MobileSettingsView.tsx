@@ -602,8 +602,9 @@ function SettingsEditablePanel({
       </div>
 
       <div className="mt-4 rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-[11px] leading-relaxed text-textSoft">
-        Appearance uses a cyber-inspired grey-green palette: charcoal + mint accents in dark mode,
-        white + forest accents in light. Motion follows the operating system reduced-motion
+        Appearance follows a DOS-inspired terminal skin: plain black or plain white canvas with
+        green phosphor accents in dark mode and forest-green ink in light mode. Monospace is used
+        for the shell. Motion follows the operating system reduced-motion
         preference, so Settings only exposes workspace behavior and brand configuration.
       </div>
     </MobileTabSection>

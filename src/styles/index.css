@@ -7,57 +7,55 @@
   /* ============================ */
   /* Primitive tokens (dark mode) */
   /* ============================ */
-  /* Cyber / terminal-inspired: charcoal grey-green canvas + mint-white ink + emerald accents.
-     Near-black base keeps OLED-friendly energy use; no animated gradients on the body. */
-  --color-bg: 9 14 12;
-  --color-bg-elevated: 14 19 17;
-  --color-bg-subtle: 20 26 23;
-  --color-surface: 24 31 28;
-  --color-surface-hover: 32 40 36;
-  --color-surface-active: 40 50 45;
-  --color-border: 52 68 60;
-  --color-border-strong: 74 92 82;
-  --color-text: 236 252 245;
-  --color-text-muted: 164 190 176;
-  --color-text-soft: 118 142 130;
-  --color-primary: 154 184 170;
-  --color-primary-hover: 178 210 194;
-  --color-primary-soft: 154 184 170;
+  /* DOS / CRT-inspired: plain black canvas + phosphor-green hierarchy (readable green, not neon body copy). */
+  --color-bg: 0 0 0;
+  --color-bg-elevated: 10 10 10;
+  --color-bg-subtle: 14 14 14;
+  --color-surface: 18 18 18;
+  --color-surface-hover: 26 26 26;
+  --color-surface-active: 34 34 34;
+  --color-border: 42 72 52;
+  --color-border-strong: 62 102 74;
+  --color-text: 198 255 210;
+  --color-text-muted: 102 158 122;
+  --color-text-soft: 74 118 92;
+  --color-primary: 163 230 180;
+  --color-primary-hover: 206 255 220;
+  --color-primary-soft: 163 230 180;
   --alpha-primary-soft: 0.14;
-  --color-secondary: 124 148 136;
-  --color-secondary-hover: 146 172 158;
-  --color-secondary-soft: 124 148 136;
+  --color-secondary: 120 170 140;
+  --color-secondary-hover: 150 205 168;
+  --color-secondary-soft: 120 170 140;
   --alpha-secondary-soft: 0.14;
-  --color-success: 94 214 140;
-  --color-success-soft: 94 214 140;
+  --color-success: 94 234 148;
+  --color-success-soft: 94 234 148;
   --alpha-success-soft: 0.14;
-  --color-warning: 214 188 141;
-  --color-warning-soft: 214 188 141;
+  --color-warning: 222 200 120;
+  --color-warning-soft: 222 200 120;
   --alpha-warning-soft: 0.14;
-  --color-danger: 216 154 154;
-  --color-danger-soft: 216 154 154;
+  --color-danger: 255 140 140;
+  --color-danger-soft: 255 140 140;
   --alpha-danger-soft: 0.14;
-  --color-info: 130 186 198;
-  --color-info-soft: 130 186 198;
+  --color-info: 120 200 190;
+  --color-info-soft: 120 200 190;
   --alpha-info-soft: 0.14;
-  --color-focus-ring: 167 243 208;
-  --alpha-focus-ring: 0.42;
-  --color-glow: 132 196 168;
+  --color-focus-ring: 94 234 148;
+  --alpha-focus-ring: 0.45;
+  --color-glow: 72 220 130;
   --color-shadow: 0 0 0;
-  /* Accent — emerald CTA / links (replaces cool violet). */
-  --color-accent: 74 222 128;
-  --color-accent-hover: 110 231 164;
-  --color-accent-soft: 74 222 128;
-  --alpha-accent-soft: 0.18;
-  /* Brand chrome lines + progress (mint spectrum; `brandGold` Tailwind alias kept for compat). */
-  --brand-gold: 74 222 128;
-  --brand-gold-strong: 134 239 172;
-  --brand-gold-soft: 74 222 128;
-  --alpha-brand-gold-soft: 0.14;
-  --brand-command: 45 212 191;
-  --brand-command-soft: 45 212 191;
-  --alpha-brand-command-soft: 0.16;
-  --brand-ink: 9 14 12;
+  /* Bright phosphor for CTAs / chrome ticks */
+  --color-accent: 51 255 119;
+  --color-accent-hover: 120 255 170;
+  --color-accent-soft: 51 255 119;
+  --alpha-accent-soft: 0.16;
+  --brand-gold: 51 255 119;
+  --brand-gold-strong: 140 255 180;
+  --brand-gold-soft: 51 255 119;
+  --alpha-brand-gold-soft: 0.12;
+  --brand-command: 45 212 165;
+  --brand-command-soft: 45 212 165;
+  --alpha-brand-command-soft: 0.14;
+  --brand-ink: 0 0 0;
   --duration-fast: 120ms;
   --duration-base: 180ms;
   --duration-slow: 260ms;
@@ -81,9 +79,9 @@
   --glass-border-alpha: 0.68;
   --glass-panel-alpha: 0.82;
   --glass-shadow-alpha: 0.34;
-  /* Body canvas veils: tune per theme to avoid dark-mode opacity feeling muddy in light. */
-  --body-veil-before-opacity: 0.18;
-  --body-veil-after-opacity: 0.52;
+  /* Flat DOS canvas — no radial washes (saves paint cost). */
+  --body-veil-before-opacity: 0;
+  --body-veil-after-opacity: 0;
   /* ============================ */
   /* Semantic aliases             */
   /* ============================ */
@@ -113,48 +111,44 @@
   --field-bg: var(--color-bg-elevated);
   --field-border: var(--color-border);
   --field-focus-ring: var(--color-focus-ring);
-  /* Ask / Assistant: AI-style chat tokens (dark) — aligned with cyber canvas */
-  --bo-chat-canvas: 11 15 13;
-  --bo-chat-hero-bg: 18 24 21;
-  --bo-chat-user-bg: 21 94 58;
-  --bo-chat-user-fg: 240 253 248;
-  --bo-chat-assistant-bg: 22 28 25;
-  --bo-chat-assistant-border: 48 62 55;
-  --bo-chat-thread-bg: 9 12 11;
-  --bo-chat-starter-bg: 28 36 32;
-  --bo-chat-starter-border: 52 68 60;
-  font-family:
-    'Segoe UI Variable Text',
-    'Segoe UI',
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    sans-serif;
+  /* Ask / Assistant — flat panels on absolute black */
+  --bo-chat-canvas: 0 0 0;
+  --bo-chat-hero-bg: 8 10 9;
+  --bo-chat-user-bg: 16 72 40;
+  --bo-chat-user-fg: 220 255 232;
+  --bo-chat-assistant-bg: 12 14 13;
+  --bo-chat-assistant-border: 38 72 52;
+  --bo-chat-thread-bg: 4 6 5;
+  --bo-chat-starter-bg: 14 18 15;
+  --bo-chat-starter-border: 48 78 58;
+  --font-terminal:
+    ui-monospace, 'Cascadia Mono', 'Cascadia Code', 'Segoe UI Mono', 'SFMono-Regular', Menlo, Monaco,
+    Consolas, 'Liberation Mono', monospace;
+  font-family: var(--font-terminal);
 }
 
-/* Light: paper-white with forest/emerald accents (paired “cyber” twin to dark grey-green). */
+/* Light: plain paper white + forest terminal ink + green accents */
 :root[data-theme='light'] {
   color-scheme: light;
   /* Primitive tokens (light mode) */
-  --color-bg: 248 250 248;
+  --color-bg: 255 255 255;
   --color-bg-elevated: 255 255 255;
-  --color-bg-subtle: 237 243 239;
+  --color-bg-subtle: 246 250 247;
   --color-surface: 255 255 255;
   --color-surface-hover: 238 246 240;
   --color-surface-active: 228 238 232;
-  --color-border: 198 214 204;
-  --color-border-strong: 158 182 168;
-  --color-text: 17 36 28;
-  --color-text-muted: 52 78 64;
-  --color-text-soft: 92 118 102;
-  --color-primary: 34 72 54;
-  --color-primary-hover: 22 52 38;
-  --color-primary-soft: 34 72 54;
+  --color-border: 176 204 186;
+  --color-border-strong: 130 168 144;
+  --color-text: 12 42 26;
+  --color-text-muted: 38 92 62;
+  --color-text-soft: 72 118 88;
+  --color-primary: 18 72 44;
+  --color-primary-hover: 12 52 32;
+  --color-primary-soft: 18 72 44;
   --alpha-primary-soft: 0.1;
-  --color-secondary: 72 98 84;
-  --color-secondary-hover: 52 76 62;
-  --color-secondary-soft: 72 98 84;
+  --color-secondary: 52 92 70;
+  --color-secondary-hover: 34 72 52;
+  --color-secondary-soft: 52 92 70;
   --alpha-secondary-soft: 0.1;
   --color-success: 21 110 68;
   --color-success-soft: 21 110 68;
@@ -170,20 +164,20 @@
   --alpha-info-soft: 0.12;
   --color-focus-ring: 21 110 68;
   --alpha-focus-ring: 0.35;
-  --color-glow: 120 150 132;
-  --color-shadow: 15 28 22;
-  --color-accent: 22 101 52;
-  --color-accent-hover: 31 122 62;
-  --color-accent-soft: 22 101 52;
+  --color-glow: 72 140 100;
+  --color-shadow: 12 28 20;
+  --color-accent: 16 120 72;
+  --color-accent-hover: 12 96 58;
+  --color-accent-soft: 16 120 72;
   --alpha-accent-soft: 0.14;
-  --brand-gold: 34 139 72;
-  --brand-gold-strong: 22 101 52;
-  --brand-gold-soft: 34 139 72;
+  --brand-gold: 16 120 72;
+  --brand-gold-strong: 12 88 54;
+  --brand-gold-soft: 16 120 72;
   --alpha-brand-gold-soft: 0.12;
-  --brand-command: 13 148 136;
-  --brand-command-soft: 13 148 136;
+  --brand-command: 13 110 100;
+  --brand-command-soft: 13 110 100;
   --alpha-brand-command-soft: 0.12;
-  --brand-ink: 17 36 28;
+  --brand-ink: 12 42 26;
   --retro-glow-cyan: 72 140 124;
   --retro-glow-pink: 108 138 124;
   --retro-glow-gold: 96 140 112;
@@ -192,8 +186,8 @@
   --glass-panel-alpha: 0.82;
   --glass-shadow-alpha: 0.16;
   --glass-saturate: 105%;
-  --body-veil-before-opacity: 0.1;
-  --body-veil-after-opacity: 0.3;
+  --body-veil-before-opacity: 0;
+  --body-veil-after-opacity: 0;
   /* Semantic aliases */
   --bg-page: var(--color-bg);
   --bg-surface-1: var(--color-bg-elevated);
@@ -219,15 +213,15 @@
   --field-bg: var(--color-bg-elevated);
   --field-border: var(--color-border);
   --field-focus-ring: var(--color-focus-ring);
-  --bo-chat-canvas: 242 247 244;
-  --bo-chat-hero-bg: 255 255 255;
-  --bo-chat-user-bg: 22 101 52;
+  --bo-chat-canvas: 255 255 255;
+  --bo-chat-hero-bg: 252 255 253;
+  --bo-chat-user-bg: 16 110 62;
   --bo-chat-user-fg: 255 255 255;
   --bo-chat-assistant-bg: 255 255 255;
-  --bo-chat-assistant-border: 198 214 204;
-  --bo-chat-thread-bg: 237 244 240;
+  --bo-chat-assistant-border: 184 214 196;
+  --bo-chat-thread-bg: 246 250 247;
   --bo-chat-starter-bg: 255 255 255;
-  --bo-chat-starter-border: 208 222 214;
+  --bo-chat-starter-border: 176 204 186;
 }
 
 body {
@@ -235,29 +229,12 @@ body {
   position: relative;
   isolation: isolate;
   overflow-x: hidden;
-  /* Cyber-neutral canvas: soft radial lifts; no heavy effects on the body. */
-  background:
-    radial-gradient(100% 95% at 88% -8%, rgb(var(--color-text) / 0.04), transparent 58%),
-    radial-gradient(95% 90% at -12% 108%, rgb(var(--color-text-muted) / 0.035), transparent 62%),
-    linear-gradient(
-      168deg,
-      rgb(var(--color-bg-elevated)),
-      rgb(var(--color-bg)) 54%,
-      rgb(var(--color-bg-subtle)) 100%
-    );
+  background: rgb(var(--color-bg));
   color: rgb(var(--color-text));
 }
 
 :root[data-theme='light'] body {
-  background:
-    radial-gradient(100% 95% at 88% -8%, rgb(var(--color-text) / 0.028), transparent 58%),
-    radial-gradient(95% 90% at -12% 108%, rgb(var(--color-text-muted) / 0.024), transparent 62%),
-    linear-gradient(
-      168deg,
-      rgb(var(--color-bg-elevated)),
-      rgb(var(--color-bg)) 54%,
-      rgb(var(--color-bg-subtle)) 100%
-    );
+  background: rgb(var(--color-bg));
 }
 
 body::before,
@@ -299,19 +276,19 @@ html[data-app-surface='welcome'] body::after {
 
 /* Flagship canvas tokens referenced by `.bo-mobile-app` (declare before layered rules). */
 :root {
-  --flagship-canvas-a: 11 16 14;
-  --flagship-canvas-b: 17 23 20;
-  --flagship-sheen: 248 252 249;
-  --flagship-line: 74 222 128;
-  --flagship-depth-alpha: 0.46;
+  --flagship-canvas-a: 0 0 0;
+  --flagship-canvas-b: 10 10 10;
+  --flagship-sheen: 198 255 210;
+  --flagship-line: 51 255 119;
+  --flagship-depth-alpha: 0.35;
 }
 
 :root[data-theme='light'] {
-  --flagship-canvas-a: 246 249 247;
-  --flagship-canvas-b: 234 241 237;
+  --flagship-canvas-a: 255 255 255;
+  --flagship-canvas-b: 248 252 249;
   --flagship-sheen: 255 255 255;
-  --flagship-line: 34 139 72;
-  --flagship-depth-alpha: 0.14;
+  --flagship-line: 16 120 72;
+  --flagship-depth-alpha: 0.08;
 }
 
 @keyframes bo-flagship-canvas-drift {
@@ -337,22 +314,15 @@ html[data-app-surface='welcome'] body::after {
    * Mobile shell (`MobileApp` on mobile.html / integrations.html): token-first chrome, safe areas,
    * and skip-link target. Pairs with `MOBILE_BTN_FOCUS` / `MobileShellNav` in `mobileTabPrimitives.tsx`.
    */
+  /* Plain DOS canvas — optional static phosphor grid only (no color washes). */
   .bo-mobile-app {
     min-height: 100dvh;
     min-height: 100svh;
     position: relative;
     overflow-x: clip;
     color: rgb(var(--color-text));
-    background:
-      linear-gradient(180deg, rgb(var(--flagship-sheen) / 0.045), transparent 17rem),
-      linear-gradient(125deg, rgb(var(--brand-gold) / 0.12), transparent 32%),
-      linear-gradient(238deg, transparent 38%, rgb(var(--brand-command) / 0.11), transparent 72%),
-      linear-gradient(
-        146deg,
-        rgb(var(--flagship-canvas-a)) 0%,
-        rgb(var(--flagship-canvas-b)) 58%,
-        rgb(var(--color-bg)) 100%
-      );
+    background: rgb(var(--color-bg));
+    font-family: var(--font-terminal);
   }
 
   .bo-mobile-app::before {
@@ -362,90 +332,37 @@ html[data-app-surface='welcome'] body::after {
     z-index: -1;
     pointer-events: none;
     background:
-      linear-gradient(90deg, rgb(var(--flagship-line) / 0.04) 1px, transparent 1px),
-      linear-gradient(180deg, rgb(var(--color-text) / 0.022) 1px, transparent 1px),
-      linear-gradient(118deg, transparent 0%, rgb(var(--brand-command) / 0.1) 41%, transparent 72%),
-      linear-gradient(72deg, transparent 18%, rgb(var(--brand-gold) / 0.08), transparent 54%);
-    background-size:
-      28px 28px,
-      28px 28px,
-      140% 100%,
-      160% 100%;
-    background-position:
-      0 0,
-      0 0,
-      0 0,
-      0 0;
-    mask-image: linear-gradient(180deg, black 0%, black 56%, transparent 100%);
-    opacity: 0.52;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .bo-mobile-app::before {
-      animation: bo-flagship-canvas-drift 26s var(--ease-liquid-in-out) infinite alternate;
-    }
+      linear-gradient(90deg, rgb(var(--flagship-line) / 0.045) 1px, transparent 1px),
+      linear-gradient(180deg, rgb(var(--flagship-line) / 0.035) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: 0 0;
+    opacity: 0.22;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .bo-mobile-app::before {
-      animation: none;
-      opacity: 0.38;
+      opacity: 0.12;
     }
   }
 
   .bo-mobile-app::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      linear-gradient(
-        180deg,
-        transparent 0%,
-        rgb(var(--color-shadow) / var(--flagship-depth-alpha)) 100%
-      ),
-      linear-gradient(
-        90deg,
-        rgb(var(--brand-command) / 0.08),
-        transparent 34%,
-        rgb(var(--brand-gold) / 0.055)
-      );
-    opacity: 0.78;
+    display: none;
   }
 
   :root[data-theme='light'] .bo-mobile-app {
-    background:
-      linear-gradient(180deg, rgb(var(--flagship-sheen) / 0.82), transparent 18rem),
-      linear-gradient(125deg, rgb(var(--brand-gold) / 0.08), transparent 32%),
-      linear-gradient(238deg, transparent 38%, rgb(var(--brand-command) / 0.09), transparent 72%),
-      linear-gradient(
-        146deg,
-        rgb(var(--flagship-canvas-a)) 0%,
-        rgb(var(--flagship-canvas-b)) 58%,
-        rgb(var(--color-bg)) 100%
-      );
+    background: rgb(var(--color-bg));
   }
 
   :root[data-theme='light'] .bo-mobile-app::before {
     background:
-      linear-gradient(90deg, rgb(var(--flagship-line) / 0.045) 1px, transparent 1px),
-      linear-gradient(180deg, rgb(var(--color-text) / 0.032) 1px, transparent 1px),
-      linear-gradient(118deg, transparent 0%, rgb(var(--brand-command) / 0.11) 41%, transparent 72%),
-      linear-gradient(72deg, transparent 18%, rgb(var(--brand-gold) / 0.06), transparent 54%);
-    opacity: 0.48;
+      linear-gradient(90deg, rgb(var(--flagship-line) / 0.07) 1px, transparent 1px),
+      linear-gradient(180deg, rgb(var(--flagship-line) / 0.055) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.18;
   }
 
   :root[data-theme='light'] .bo-mobile-app::after {
-    background:
-      linear-gradient(180deg, transparent 0%, rgb(var(--color-shadow) / 0.08) 100%),
-      linear-gradient(
-        90deg,
-        rgb(var(--brand-command) / 0.06),
-        transparent 34%,
-        rgb(var(--brand-gold) / 0.05)
-      );
-    opacity: 0.62;
+    display: none;
   }
 
   :root[data-theme='light'] .bo-mobile-header {
@@ -544,11 +461,16 @@ html[data-app-surface='welcome'] body::after {
 
   .bo-mobile-brand__title {
     margin-top: 0.15rem;
+    font-family: var(--font-terminal);
     color: rgb(var(--color-text));
     transition:
       opacity var(--duration-base) var(--ease-liquid-out),
       transform var(--duration-base) var(--ease-liquid-out),
       color var(--duration-base) var(--ease-liquid-out);
+  }
+
+  :root[data-theme='dark'] .bo-mobile-brand__title {
+    text-shadow: 0 0 22px rgb(var(--color-accent) / 0.14);
   }
 
   .bo-mobile-help-btn {
@@ -756,6 +678,7 @@ html[data-app-surface='welcome'] body::after {
 
   .bo-brand-kicker,
   .bo-mobile-brand__wordmark {
+    font-family: var(--font-terminal);
     font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.18em;
@@ -909,12 +832,20 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-assistant-hero {
-    background:
-      linear-gradient(130deg, rgb(var(--brand-gold) / 0.1) 0%, transparent 48%),
-      linear-gradient(180deg, rgb(var(--bo-chat-hero-bg) / 0.92), rgb(var(--bo-chat-canvas) / 0.55));
+    border-radius: 0.5rem;
+    border: 1px solid rgb(var(--color-accent) / 0.4);
+    background: rgb(var(--bo-chat-hero-bg));
     box-shadow:
-      inset 0 1px 0 rgb(var(--flagship-sheen) / 0.14),
-      0 1px 0 rgb(var(--color-text) / 0.05);
+      inset 0 0 0 1px rgb(var(--color-border) / 0.25),
+      0 0 28px rgb(var(--color-accent) / 0.06);
+  }
+
+  .bo-dos-hero-title {
+    font-family: var(--font-terminal);
+  }
+
+  .bo-dos-prompt {
+    font-family: var(--font-terminal);
   }
 
   .bo-assistant-stat-pill {
@@ -952,35 +883,36 @@ html[data-app-surface='welcome'] body::after {
 
   .bo-chat-bubble-user {
     max-width: min(48vw + 5rem, 18.5rem);
-    border-radius: 1.2rem 1.2rem 0.35rem 1.2rem;
+    border-radius: 0.45rem 0.45rem 0.45rem 0.25rem;
     background: rgb(var(--bo-chat-user-bg) / 1);
     color: rgb(var(--bo-chat-user-fg) / 1);
     padding: 0.5rem 0.8rem;
     font-size: 0.8125rem;
     line-height: 1.45;
-    box-shadow: 0 2px 14px rgb(var(--color-shadow) / 0.22);
+    box-shadow: none;
     text-align: left;
+    border: 1px solid rgb(var(--color-accent) / 0.22);
   }
 
   .bo-chat-bubble-assistant {
     max-width: min(52vw + 6rem, 20rem);
-    border-radius: 1.2rem 1.2rem 1.2rem 0.35rem;
+    border-radius: 0.45rem 0.45rem 0.25rem 0.45rem;
     background: rgb(var(--bo-chat-assistant-bg) / 1);
-    border: 1px solid rgb(var(--bo-chat-assistant-border) / 0.75);
+    border: 1px solid rgb(var(--bo-chat-assistant-border) / 0.85);
     color: rgb(var(--color-text) / 1);
     padding: 0.5rem 0.8rem;
     font-size: 0.8125rem;
     line-height: 1.45;
-    box-shadow: 0 2px 10px rgb(var(--color-shadow) / 0.12);
+    box-shadow: none;
   }
 
   .bo-chat-bubble-meta {
-    border-radius: 1.2rem 1.2rem 1.2rem 0.35rem;
+    border-radius: 0.45rem 0.45rem 0.25rem 0.45rem;
     background: rgb(var(--bo-chat-assistant-bg) / 1);
-    border: 1px solid rgb(var(--bo-chat-assistant-border) / 0.75);
+    border: 1px solid rgb(var(--bo-chat-assistant-border) / 0.85);
     padding: 0.5rem 0.8rem;
     font-size: 0.8125rem;
-    box-shadow: 0 2px 10px rgb(var(--color-shadow) / 0.12);
+    box-shadow: none;
     max-width: min(52vw + 6rem, 20rem);
   }
 
@@ -988,7 +920,7 @@ html[data-app-surface='welcome'] body::after {
     max-width: 11.5rem;
     flex-shrink: 0;
     scroll-snap-align: start;
-    border-radius: 9999px;
+    border-radius: 0.35rem;
     border: 1px solid rgb(var(--bo-chat-starter-border) / 0.75);
     background: rgb(var(--bo-chat-starter-bg) / 0.92);
     padding: 0.45rem 0.8rem;

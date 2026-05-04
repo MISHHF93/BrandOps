@@ -8,10 +8,10 @@ const WEB_LOCAL_DATA_KEY = 'brandops:local:brandops:data';
  * (`:root` dark and `:root[data-theme="light"]`).
  */
 export const THEME_COLOR_HEX: Record<'dark' | 'light', string> = {
-  /** Cyber grey-green canvas (near-black for OLED; aligned with `--color-bg` dark tokens). */
-  dark: '#090e0c',
-  /** Mint-white paper (aligned with `--color-bg` light tokens). */
-  light: '#f8faf8'
+  /** DOS-style phosphor shell: plain black (aligned with `--color-bg`). */
+  dark: '#000000',
+  /** DOS-style paper terminal: plain white. */
+  light: '#ffffff'
 };
 
 /** Keep browser / PWA chrome in sync with `data-theme` (static HTML defaults are dark). */
