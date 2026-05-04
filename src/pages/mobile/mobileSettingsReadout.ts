@@ -31,6 +31,7 @@ export interface MobileSettingsFullReadout {
   automationRuleCount: number;
   automationRulesSummary: string;
   brandVoiceGuidePreview: string;
+  operatorTraceCollectionEnabled: boolean;
 }
 
 const clip = (s: string, max: number) => {
@@ -83,6 +84,7 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
       rules.length === 0
         ? '—'
         : rules.map((r) => (r.enabled ? r.name : `${r.name} (off)`)).join(', '),
-    brandVoiceGuidePreview: clip(workspace.brand.voiceGuide, 100)
+    brandVoiceGuidePreview: clip(workspace.brand.voiceGuide, 100),
+    operatorTraceCollectionEnabled: s.operatorTraceCollectionEnabled
   };
 }

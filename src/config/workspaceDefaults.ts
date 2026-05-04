@@ -33,6 +33,7 @@ export const defaultAppSettings = {
   localModelEnabled: false,
   aiAdapterMode: 'disabled',
   debugMode: false,
+  operatorTraceCollectionEnabled: true,
   primaryIdentityProvider: null,
   overlay: {
     enabled: true,

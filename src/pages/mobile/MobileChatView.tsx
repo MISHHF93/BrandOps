@@ -2,20 +2,17 @@ import {
   AlertCircle,
   Bot,
   CheckCircle2,
-  ChevronDown,
   Copy,
   History,
   LayoutDashboard,
-  MessageCircle,
-  Sparkles,
   User,
+  Sparkles,
   CalendarRange
 } from 'lucide-react';
 import clsx from 'clsx';
 import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
 import type { WorkspaceSignalsPick } from './WorkspaceSignalsBoard';
-import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { getIntentByCommandLine } from './chatIntents';
 
 export interface ChatMessage {
@@ -34,34 +31,27 @@ export interface ChatMessage {
   };
 }
 
-/** Curated horizontal picks — diverse, tap-first (mobile / iOS friendly). */
+const STARTER_CAP = 6;
+
 const ASSISTANT_QUICK_PICKS = (() => {
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const g of CHAT_QUICK_STARTER_GROUPS) {
-    for (const c of g.commands) {
-      if (seen.has(c)) continue;
+  const maxRound = Math.max(...CHAT_QUICK_STARTER_GROUPS.map((g) => g.commands.length), 0);
+  for (let i = 0; i < maxRound && out.length < STARTER_CAP; i += 1) {
+    for (const g of CHAT_QUICK_STARTER_GROUPS) {
+      const c = g.commands[i];
+      if (!c || seen.has(c)) continue;
       seen.add(c);
       out.push(c);
-      if (out.length >= 10) return out;
+      if (out.length >= STARTER_CAP) return out;
     }
   }
   return out;
 })();
 
-function chipClass(btnFocus: string) {
-  return clsx(
-    'min-h-[44px]',
-    'max-w-full rounded-xl border border-border/55 bg-surface/55 px-3 py-2.5 text-left text-label leading-snug text-textMuted transition active:scale-[0.99] hover:border-borderStrong hover:bg-surfaceActive/70 touch-manipulation',
-    btnFocus
-  );
-}
-
 function copyToClipboard(text: string) {
   if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) return;
-  void navigator.clipboard.writeText(text).catch(() => {
-    // ignore
-  });
+  void navigator.clipboard.writeText(text).catch(() => {});
 }
 
 export interface MobileChatViewProps {
@@ -71,17 +61,14 @@ export interface MobileChatViewProps {
   onQuickCommand: (command: string) => void;
   onClearCommandHistory: () => void;
   btnFocus: string;
-  /** Cockpit lanes (Today tab). */
   onOpenToday: () => void;
-  /** Workspace overview (Plan dock). */
   onOpenPlan?: () => void;
-  /** Live workspace subset — full board inside expandable “Parameters”. */
   vitalityMetrics: WorkspaceSignalsPick;
 }
 
 /**
- * **Assistant (Ask)** — transcript-first layout with iOS-friendly scrolling, 44px tap targets,
- * Plan/Today shortcuts, and quick horizontal starters above the thread.
+ * **Assistant (Ask)** — compact AI-style chat: stat chips, starters, transcript.
+ * Appearance (light/dark) is controlled from the shell header.
  */
 export const MobileChatView = ({
   messages,
@@ -94,131 +81,151 @@ export const MobileChatView = ({
   onOpenPlan,
   vitalityMetrics
 }: MobileChatViewProps) => {
-  const metricSummary = `Follow-ups ${vitalityMetrics.incompleteFollowUps} · Publish queue ${vitalityMetrics.publishingQueue} · Missed ${vitalityMetrics.missedTasks}`;
-
   return (
-    <div aria-label="Assistant" className="space-y-3">
-      <header className="rounded-2xl border border-border/45 bg-surface/35 px-3 py-3 shadow-sm backdrop-blur-sm sm:px-3.5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-2.5">
+      <header className="bo-assistant-hero rounded-2xl border border-border/45 px-3 py-2.5 sm:px-3.5">
+        <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-textSoft">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-textSoft">
               Ask
             </p>
-            <h2 className="mt-0.5 text-lg font-bold leading-tight tracking-tight text-text">
-              BrandOps Assistant
+            <h2 className="mt-0.5 text-[1.05rem] font-bold leading-tight tracking-tight text-text">
+              Assistant
             </h2>
-            <p className="mt-1 text-[12px] leading-snug text-textMuted">
-              Commands execute on-device. <span className="whitespace-nowrap">⌘K</span> /{' '}
-              <span className="whitespace-nowrap">Ctrl+K</span> opens the command palette.
+            <p className="mt-0.5 text-[11px] leading-snug text-textMuted">
+              On-device · <span className="whitespace-nowrap">⌘K</span> palette
+              {onOpenPlan ? (
+                <>
+                  {' '}
+                  ·{' '}
+                  <button
+                    type="button"
+                    className="font-semibold text-accent underline decoration-accent/35 underline-offset-2 hover:decoration-accent"
+                    onClick={onOpenPlan}
+                  >
+                    Plan
+                  </button>
+                </>
+              ) : null}
             </p>
           </div>
-          <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex shrink-0 items-center gap-1.5 self-start">
             {onOpenPlan ? (
               <button
                 type="button"
                 onClick={onOpenPlan}
-                title="Open Workspace overview"
-                className={clsx(
-                  'inline-flex min-h-[44px] min-w-[5.5rem] items-center justify-center gap-1.5 rounded-xl border border-border/55 bg-bgSubtle/60 px-3 text-[13px] font-semibold text-text touch-manipulation transition hover:border-borderStrong hover:bg-surfaceActive/80',
-                  btnFocus
-                )}
+                title="Workspace overview"
+                className={clsx('bo-icon-btn-ai', btnFocus)}
               >
-                <LayoutDashboard className="h-4 w-4 text-textSoft" strokeWidth={2.25} aria-hidden />
-                Plan
+                <LayoutDashboard className="h-4 w-4" strokeWidth={2.25} aria-hidden />
               </button>
             ) : null}
             <button
               type="button"
               onClick={onOpenToday}
-              title="Open Today lanes"
-              className={clsx(
-                'inline-flex min-h-[44px] min-w-[5.5rem] items-center justify-center gap-1.5 rounded-xl border border-accent/35 bg-accentSoft/20 px-3 text-[13px] font-semibold text-text touch-manipulation transition hover:border-accent/55 hover:bg-accentSoft/35',
-                btnFocus
-              )}
+              title="Today lanes"
+              className={clsx('bo-icon-btn-ai bo-icon-btn-ai--accent', btnFocus)}
             >
-              <CalendarRange className="h-4 w-4 text-accent" strokeWidth={2.25} aria-hidden />
-              Today
+              <CalendarRange className="h-4 w-4" strokeWidth={2.25} aria-hidden />
             </button>
           </div>
         </div>
+
+        <div
+          className="mt-2.5 flex flex-wrap gap-1.5"
+          role="status"
+          aria-label="Live workspace counts"
+        >
+          <span className="bo-assistant-stat-pill">FU {vitalityMetrics.incompleteFollowUps}</span>
+          <span className="bo-assistant-stat-pill">Q {vitalityMetrics.publishingQueue}</span>
+          <span className="bo-assistant-stat-pill">Missed {vitalityMetrics.missedTasks}</span>
+          {onOpenPlan ? (
+            <button
+              type="button"
+              onClick={onOpenPlan}
+              className={clsx(
+                'bo-assistant-stat-pill bo-assistant-stat-pill--action !px-2 !py-1 text-[10px] font-semibold',
+                btnFocus
+              )}
+            >
+              Queue →
+            </button>
+          ) : null}
+        </div>
       </header>
 
-      <details className="bo-disclosure group overflow-hidden rounded-2xl border border-border/40 bg-bgSubtle/25">
-        <summary
-          className={clsx(
-            'flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-3 text-left [&::-webkit-details-marker]:hidden',
-            btnFocus,
-            'touch-manipulation'
-          )}
-        >
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-textSoft">
-              Parameters
-            </p>
-            <p className="mt-0.5 truncate text-[12px] font-medium text-text">{metricSummary}</p>
-          </div>
-          <ChevronDown
-            size={18}
-            className="shrink-0 text-textSoft transition-transform group-open:rotate-180"
-            aria-hidden
-          />
-        </summary>
-        <div className="border-t border-border/30 px-0 pb-3 pt-1">
-          <WorkspaceSignalsBoard
-            metrics={vitalityMetrics}
-            variant="chat"
-            includeKeys={['queue', 'fu', 'missed']}
-          />
-        </div>
-      </details>
-
-      <section aria-labelledby="assistant-quick-picks-label">
+      <section aria-labelledby="assistant-starters-label" className="min-w-0">
         <div className="flex items-center justify-between gap-2 px-0.5">
-          <p id="assistant-quick-picks-label" className="text-[11px] font-semibold text-textMuted">
-            Quick picks
+          <p id="assistant-starters-label" className="text-[10px] font-bold uppercase text-textSoft">
+            Starters
           </p>
-          <span className="text-[10px] text-textSoft">Swipe · tap to run</span>
         </div>
         <div
-          className="bo-assistant-quick-strip mt-2 flex gap-2 overflow-x-auto pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="bo-assistant-quick-strip mt-1.5 flex gap-2 overflow-x-auto pb-0.5 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {ASSISTANT_QUICK_PICKS.map((command) => {
             const meta = getIntentByCommandLine(command);
+            const label = meta?.title ?? command;
             return (
               <button
                 key={command}
                 type="button"
                 onClick={() => onQuickCommand(command)}
-                title={command}
-                className={clsx(
-                  chipClass(btnFocus),
-                  'max-w-[min(100%,14rem)] shrink-0 snap-start rounded-full border-border/50 px-4 shadow-sm'
-                )}
+                title={meta ? `${meta.title} — ${meta.subtitle}` : command}
+                className={clsx('bo-chat-starter-chip touch-manipulation', btnFocus)}
               >
-                {meta ? (
-                  <span className="block">
-                    <span className="block font-semibold text-text">{meta.title}</span>
-                    <span className="mt-0.5 line-clamp-2 block text-[11px] text-textSoft">
-                      {meta.subtitle}
-                    </span>
-                  </span>
-                ) : (
-                  <span className="line-clamp-2 font-medium text-text">{command}</span>
-                )}
+                <span className="line-clamp-1">{label}</span>
               </button>
             );
           })}
         </div>
       </section>
 
+      {commandHistory.length > 0 ? (
+        <div className="min-w-0 rounded-xl border border-border/35 bg-bgElevated/35 px-2 py-2 backdrop-blur-[2px]">
+          <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-textSoft">
+              <History className="h-3 w-3" strokeWidth={2} aria-hidden />
+              Recent
+            </span>
+            <button
+              type="button"
+              className={clsx(
+                'rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-textSoft hover:bg-surfaceActive/60 hover:text-text',
+                btnFocus
+              )}
+              onClick={onClearCommandHistory}
+            >
+              Clear
+            </button>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {commandHistory.slice(0, 10).map((cmd) => (
+              <button
+                key={cmd}
+                type="button"
+                onClick={() => onQuickCommand(cmd)}
+                className={clsx(
+                  'max-w-[10rem] shrink-0 truncate rounded-full border border-border/45 bg-surface/60 px-3 py-1.5 text-left text-[11px] font-medium text-textMuted transition hover:border-accent/35 hover:bg-accentSoft/15',
+                  btnFocus
+                )}
+                title={cmd}
+              >
+                {cmd.length > 40 ? `${cmd.slice(0, 38)}…` : cmd}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <section
-        className="bo-assistant-thread-scroll flex max-h-[min(52vh,28rem)] flex-col overflow-y-auto overscroll-contain rounded-2xl border border-border/40 bg-bgElevated/40 px-2 py-3 shadow-inner sm:max-h-[min(58vh,34rem)]"
+        className="bo-assistant-thread-scroll bo-assistant-thread-shell flex min-h-[12rem] max-h-[min(56vh,32rem)] flex-col overflow-y-auto overscroll-contain px-2.5 py-2.5 sm:max-h-[min(60vh,36rem)]"
         aria-label="Conversation"
       >
         <h3 className="sr-only">Conversation transcript</h3>
         <div
-          className="flex min-h-0 flex-col gap-3"
+          className="flex min-h-0 flex-col gap-2.5"
           role="log"
           aria-relevant="additions"
           aria-live="polite"
@@ -226,16 +233,18 @@ export const MobileChatView = ({
         >
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 px-3 py-10 text-center">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-accent/30 bg-accentSoft/25 text-accent">
-                <Sparkles className="h-6 w-6" strokeWidth={2} aria-hidden />
+              <span
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-accent/35 text-accent shadow-md"
+                style={{
+                  background:
+                    'linear-gradient(145deg, rgb(var(--color-accent) / 0.2), rgb(var(--bo-chat-canvas) / 0.5))'
+                }}
+              >
+                <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
               </span>
-              <p className="text-sm font-semibold text-text">Nothing here yet</p>
-              <p className="max-w-[18rem] text-[13px] leading-relaxed text-textMuted">
-                Use Quick picks above, type in the bar below, or press{' '}
-                <kbd className="rounded border border-border/50 bg-bgSubtle px-1 py-0.5 font-mono text-[11px] text-textSoft">
-                  ⌘K
-                </kbd>{' '}
-                for every shortcut.
+              <p className="text-sm font-semibold text-text">New chat</p>
+              <p className="max-w-[16rem] text-[12px] leading-snug text-textMuted">
+                Choose a starter or type below — same engine as the rest of BrandOps.
               </p>
             </div>
           ) : (
@@ -243,75 +252,67 @@ export const MobileChatView = ({
               <article
                 key={message.id}
                 className={clsx(
-                  'flex items-end gap-2.5',
-                  message.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto max-w-[min(100%,22rem)]'
+                  'flex gap-2',
+                  message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                 )}
               >
                 <span
                   className={clsx(
-                    'mb-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm',
+                    'mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold',
                     message.role === 'user'
                       ? 'border-borderStrong/50 bg-surfaceActive text-text'
-                      : 'border-accent/35 bg-accentSoft/30 text-accent'
+                      : 'border-accent/35 bg-accentSoft/28 text-accent'
                   )}
                   aria-hidden
                 >
                   {message.role === 'user' ? (
-                    <User className="h-4 w-4" strokeWidth={2.25} />
+                    <User className="h-3.5 w-3.5" strokeWidth={2.25} />
                   ) : (
-                    <Bot className="h-4 w-4" strokeWidth={2.25} />
+                    <Bot className="h-3.5 w-3.5" strokeWidth={2.25} />
                   )}
                 </span>
                 <div
                   className={clsx(
-                    'min-w-0',
-                    message.role === 'user' && 'max-w-[min(100%,18rem)] text-end'
+                    'min-w-0 flex-1',
+                    message.role === 'user' ? 'flex justify-end' : ''
                   )}
                 >
                   {message.role === 'user' ? (
-                    <div className="rounded-[1.15rem] rounded-br-md border border-borderStrong/55 bg-surfaceActive px-3.5 py-2.5 text-left text-[15px] leading-relaxed text-text shadow-md">
+                    <div className="bo-chat-bubble-user">
                       {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
-                        <p className="mb-1 text-start text-[10px] font-semibold uppercase tracking-wide text-textSoft">
-                          From {message.sourceSurface}
+                        <p className="mb-1 text-[9px] font-bold uppercase opacity-80">
+                          {message.sourceSurface}
                         </p>
                       ) : null}
-                      <p className="text-start">{message.text}</p>
+                      <p>{message.text}</p>
                     </div>
                   ) : message.resultKind === 'command-result' && message.action ? (
-                    <div className="space-y-2 rounded-[1.15rem] rounded-bl-md border border-border/50 bg-bgElevated/98 px-3.5 py-3 text-[15px] shadow-md">
-                      <div className="flex flex-wrap items-center gap-2">
+                    <div className="bo-chat-bubble-meta space-y-1.5 text-[13px]">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         {message.ok ? (
-                          <span
-                            className="inline-flex items-center gap-1 rounded-full bg-successSoft px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-success"
-                            title="Command succeeded"
-                          >
-                            <CheckCircle2 size={13} aria-hidden />
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-successSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-success">
+                            <CheckCircle2 size={11} aria-hidden />
                             Ok
                           </span>
                         ) : (
-                          <span
-                            className="inline-flex items-center gap-1 rounded-full bg-warningSoft px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-warning"
-                            title="Command had an issue"
-                          >
-                            <AlertCircle size={13} aria-hidden />
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-warning">
+                            <AlertCircle size={11} aria-hidden />
                             Issue
                           </span>
                         )}
-                        <code className="rounded-md border border-border/40 bg-bgSubtle/90 px-2 py-0.5 text-[11px] text-info">
+                        <code className="rounded-md border border-border/35 bg-bgSubtle/80 px-1.5 py-0.5 text-[10px] text-info">
                           {message.action}
                         </code>
                         {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
-                          <span className="rounded-md border border-border/40 bg-bgSubtle/80 px-2 py-0.5 text-[10px] text-textSoft">
-                            from {message.sourceSurface}
-                          </span>
+                          <span className="text-[9px] text-textSoft">{message.sourceSurface}</span>
                         ) : null}
                         <button
                           type="button"
                           className={clsx(
-                            'ml-auto inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-border/45 text-textSoft hover:bg-surfaceActive/80 hover:text-text',
+                            'ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/40 text-textSoft hover:bg-surfaceActive hover:text-text',
                             btnFocus
                           )}
-                          title="Copy command output"
+                          title="Copy"
                           aria-label="Copy command output"
                           onClick={() =>
                             copyToClipboard(
@@ -319,14 +320,14 @@ export const MobileChatView = ({
                             )
                           }
                         >
-                          <Copy size={16} aria-hidden />
+                          <Copy size={14} aria-hidden />
                         </button>
                       </div>
-                      <p className="leading-relaxed text-text">{message.text}</p>
+                      <p className="leading-snug text-text">{message.text}</p>
                     </div>
                   ) : (
-                    <div className="rounded-[1.15rem] rounded-bl-md border border-border/50 bg-bgElevated/98 px-3.5 py-3 text-[15px] leading-relaxed text-text shadow-md">
-                      {message.text}
+                    <div className="bo-chat-bubble-assistant">
+                      <p className="leading-snug">{message.text}</p>
                     </div>
                   )}
                 </div>
@@ -337,129 +338,9 @@ export const MobileChatView = ({
       </section>
 
       {loading ? (
-        <div className="px-1">
+        <div className="px-0.5">
           <AgentWorkingState />
         </div>
-      ) : null}
-
-      <details className="bo-disclosure group">
-        <summary
-          className={clsx(
-            'flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-textMuted transition-colors hover:text-text touch-manipulation [&::-webkit-details-marker]:hidden',
-            btnFocus
-          )}
-        >
-          <span className="inline-flex items-center gap-2">
-            <MessageCircle size={16} className="text-textSoft" aria-hidden />
-            <span>Guided examples</span>
-          </span>
-          <ChevronDown
-            size={16}
-            className="text-textSoft transition-transform group-open:rotate-180"
-            aria-hidden
-          />
-        </summary>
-        <div className="space-y-4 border-t border-border/30 px-3 pb-3 pt-3">
-          {CHAT_QUICK_STARTER_GROUPS.map((group) => (
-            <div key={group.id}>
-              <p className="bo-section-label">
-                <span className="bo-icon-chip bo-icon-chip--xs bo-icon-chip--muted" aria-hidden>
-                  <MessageCircle className="h-3 w-3" strokeWidth={2.25} />
-                </span>
-                <span>{group.label}</span>
-              </p>
-              <div className="mt-2 flex flex-col gap-2">
-                {group.commands.map((command) => {
-                  const meta = getIntentByCommandLine(command);
-                  return (
-                    <button
-                      key={command}
-                      type="button"
-                      onClick={() => onQuickCommand(command)}
-                      title={command}
-                      className={chipClass(btnFocus)}
-                    >
-                      {meta ? (
-                        <span className="block text-start">
-                          <span className="block font-semibold text-text">{meta.title}</span>
-                          <span className="mt-0.5 line-clamp-2 block text-meta text-textSoft">
-                            {meta.subtitle}
-                          </span>
-                        </span>
-                      ) : (
-                        command
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </details>
-
-      {commandHistory.length > 0 ? (
-        <details className="bo-disclosure group">
-          <summary
-            className={clsx(
-              'flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-[13px] text-textMuted [&::-webkit-details-marker]:hidden touch-manipulation',
-              btnFocus
-            )}
-          >
-            <span className="inline-flex items-center gap-2 font-semibold text-text">
-              <History size={16} className="text-textSoft" aria-hidden />
-              <span>Recent commands</span>
-              <span className="bo-count-pill" aria-hidden>
-                {commandHistory.length}
-              </span>
-            </span>
-            <ChevronDown
-              size={16}
-              className="text-textSoft transition-transform group-open:rotate-180"
-              aria-hidden
-            />
-          </summary>
-          <div className="border-t border-border/30 px-3 pb-3 pt-2">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[11px] text-textSoft">Tap to re-run · newest first.</p>
-              <button
-                type="button"
-                className={clsx(
-                  'min-h-[44px] px-2 text-[11px] font-semibold text-textSoft hover:text-textMuted touch-manipulation',
-                  btnFocus
-                )}
-                title="Clear recent commands"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClearCommandHistory();
-                }}
-              >
-                Clear
-              </button>
-            </div>
-            <div className="flex flex-col gap-2">
-              {commandHistory.slice(0, 8).map((cmd) => (
-                <button
-                  key={cmd}
-                  type="button"
-                  onClick={() => onQuickCommand(cmd)}
-                  className={clsx(
-                    'min-h-[44px] max-w-full rounded-xl border border-border/50 bg-surface/45 px-3 py-2.5 text-start text-[13px] text-textMuted touch-manipulation transition hover:border-borderStrong hover:bg-surfaceActive/60',
-                    btnFocus
-                  )}
-                  title={cmd}
-                >
-                  {cmd.length > 56 ? `${cmd.slice(0, 54)}…` : cmd}
-                </button>
-              ))}
-            </div>
-            {commandHistory.length > 8 ? (
-              <p className="mt-2 text-[11px] text-textSoft">
-                {commandHistory.length - 8} more after you clear or run newer commands.
-              </p>
-            ) : null}
-          </div>
-        </details>
       ) : null}
     </div>
   );

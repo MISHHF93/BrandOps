@@ -593,6 +593,9 @@ Slide 7: CTA to request audit checklist`,
   agentAudit: {
     entries: []
   },
+  operatorTraces: {
+    entries: []
+  },
   seed: {
     seededAt: now.toISOString(),
     source: 'demo-sample',

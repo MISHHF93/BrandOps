@@ -9,7 +9,7 @@ import {
   type MutableRefObject
 } from 'react';
 import clsx from 'clsx';
-import { Lightbulb, Loader2, Paperclip, Sparkles, Wand2, X } from 'lucide-react';
+import { Lightbulb, Loader2, Paperclip, Sparkles, Wand2, X, ArrowUp } from 'lucide-react';
 import { getInputRouteHint, suggestIntents, type BrandOpsChatIntent } from './chatIntents';
 import { MOBILE_BTN_FOCUS } from './mobileTabPrimitives';
 
@@ -37,6 +37,10 @@ type ChatCommandBarProps = {
   fileInputRef: MutableRefObject<HTMLInputElement | null>;
   chatAttachment: ChatAttachment | null;
   onRemoveAttachment: () => void;
+  /** When true, hide the empty-state “Try in one tap” strip (Ask tab already shows starters). */
+  hideSmartChips?: boolean;
+  /** Ask tab: pill composer + circular send (AI chat affordances). */
+  assistantChrome?: boolean;
 };
 
 const CHIP_CAP = 6;
@@ -55,7 +59,9 @@ export const ChatCommandBar = ({
   onFileChange,
   fileInputRef,
   chatAttachment,
-  onRemoveAttachment
+  onRemoveAttachment,
+  hideSmartChips = false,
+  assistantChrome = false
 }: ChatCommandBarProps) => {
   const typingHintId = useId();
   const [highlight, setHighlight] = useState(0);
@@ -139,7 +145,7 @@ export const ChatCommandBar = ({
           Applying your command on-device…
         </p>
       ) : null}
-      {empty && smartChips.length > 0 && !commandLoading ? (
+      {empty && smartChips.length > 0 && !commandLoading && !hideSmartChips ? (
         <div
           className="mb-1.5 rounded-xl border border-border/50 bg-bgElevated/95 px-2 py-2 shadow-sm backdrop-blur-sm"
           id={CHIPS_ID}
@@ -244,7 +250,7 @@ export const ChatCommandBar = ({
       <div
         className={clsx(
           'bo-command-composer flex items-center gap-1.5 p-1.5 sm:gap-2 sm:p-2',
-          commandLoading && 'bo-command-composer--busy'
+          assistantChrome && 'bo-command-composer--assistant'
         )}
         data-busy={commandLoading ? 'true' : undefined}
       >
@@ -262,14 +268,16 @@ export const ChatCommandBar = ({
           disabled={commandLoading}
           onClick={() => fileInputRef.current?.click()}
           className={clsx(
-            'inline-flex h-11 min-h-[44px] w-11 min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border/60 text-textMuted hover:border-borderStrong hover:text-text',
+            assistantChrome
+              ? 'inline-flex h-10 min-h-[40px] w-10 min-w-[40px] shrink-0 items-center justify-center rounded-full border border-border/55 text-textMuted hover:border-borderStrong hover:text-text'
+              : 'inline-flex h-11 min-h-[44px] w-11 min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border/60 text-textMuted hover:border-borderStrong hover:text-text',
             'disabled:opacity-50',
             btn
           )}
           aria-label="Attach file"
           title="Attach file (text files are inlined; other types add a short note to your command)"
         >
-          <Paperclip size={18} strokeWidth={2} aria-hidden />
+          <Paperclip size={assistantChrome ? 17 : 18} strokeWidth={2} aria-hidden />
         </button>
         <input
           value={value}
@@ -279,7 +287,7 @@ export const ChatCommandBar = ({
           }}
           onKeyDown={onKeyDown}
           disabled={commandLoading}
-          className="min-w-0 flex-1 bg-transparent px-1 py-2 text-base leading-snug text-text outline-none placeholder:text-textSoft disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-w-0 flex-1 bg-transparent px-1 py-1.5 text-base leading-snug text-text outline-none placeholder:text-textSoft disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="Ask BrandOps anything…"
           aria-label="Assistant command input"
           aria-autocomplete="list"
@@ -288,29 +296,46 @@ export const ChatCommandBar = ({
           aria-describedby={describedBy || undefined}
           autoComplete="off"
         />
-        <button
-          type="button"
-          disabled={commandLoading}
-          onClick={() => onSubmit()}
-          className={clsx('bo-btn-primary inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 px-4 sm:min-w-[5.5rem]', btn)}
-          title={commandLoading ? 'Working — your command is running' : 'Send (Enter)'}
-        >
-          {commandLoading ? (
-            <>
-              <Loader2
-                className="h-4 w-4 motion-safe:animate-spin"
-                strokeWidth={2.25}
-                aria-hidden
-              />
-              <span>Working</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-              Send
-            </>
-          )}
-        </button>
+        {assistantChrome ? (
+          <button
+            type="button"
+            disabled={commandLoading}
+            onClick={() => onSubmit()}
+            className={clsx('bo-chat-send-fab', btn)}
+            title={commandLoading ? 'Working' : 'Send'}
+            aria-label={commandLoading ? 'Command running' : 'Send message'}
+          >
+            {commandLoading ? (
+              <Loader2 className="h-5 w-5 motion-safe:animate-spin" strokeWidth={2.25} aria-hidden />
+            ) : (
+              <ArrowUp className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+            )}
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={commandLoading}
+            onClick={() => onSubmit()}
+            className={clsx('bo-btn-primary inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 px-4 sm:min-w-[5.5rem]', btn)}
+            title={commandLoading ? 'Working — your command is running' : 'Send (Enter)'}
+          >
+            {commandLoading ? (
+              <>
+                <Loader2
+                  className="h-4 w-4 motion-safe:animate-spin"
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
+                <span>Working</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                Send
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

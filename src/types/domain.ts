@@ -519,6 +519,11 @@ export interface AppSettings {
   localModelEnabled: boolean;
   aiAdapterMode: 'disabled' | 'local-only' | 'external-opt-in';
   debugMode: boolean;
+  /**
+   * When true, record operator traces locally (navigation, commands, selected settings changes).
+   * Stored in workspace only; no automatic network upload.
+   */
+  operatorTraceCollectionEnabled: boolean;
   /** Which linked OAuth profile drives “Signed in as …” in the cockpit. */
   primaryIdentityProvider: IdentityProviderId | null;
   overlay: OverlayPreferences;
@@ -571,6 +576,33 @@ export interface AgentAuditState {
   entries: AgentAuditEntry[];
 }
 
+export type OperatorTraceActor = 'user' | 'assistant' | 'automation' | 'bridge';
+
+export type OperatorTraceReviewStatus = 'pending' | 'approved';
+
+/** Append-only operator behavior traces for local analysis and future annotation (not integration hub artifacts). */
+export interface OperatorTraceEntry {
+  id: string;
+  at: string;
+  source: OperatorTraceActor;
+  verb: string;
+  surface?: string;
+  route?: string;
+  capabilityId?: string;
+  sessionId?: string;
+  entityType?: string;
+  entityId?: string;
+  details?: Record<string, string | number | boolean | null>;
+  outcome?: 'success' | 'failure';
+  labels?: string[];
+  reviewStatus?: OperatorTraceReviewStatus;
+  annotatorNote?: string;
+}
+
+export interface OperatorTracesState {
+  entries: OperatorTraceEntry[];
+}
+
 export interface BrandOpsData {
   brand: BrandProfile;
   brandVault: BrandVault;
@@ -593,4 +625,6 @@ export interface BrandOpsData {
   seed: SeedMetadata;
   /** Command / bridge execution audit (optional; normalized on read). */
   agentAudit?: AgentAuditState;
+  /** Local operator traces for mining / annotation export (optional; normalized on read). */
+  operatorTraces?: OperatorTracesState;
 }

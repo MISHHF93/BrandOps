@@ -5,7 +5,8 @@ import {
   type AgentWorkspaceResult
 } from '../../services/agent/agentWorkspaceEngine';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
-import type { BrandOpsData } from '../../types/domain';
+import { prependOperatorTrace } from '../../services/dataset/operatorTraces';
+import type { BrandOpsData, UiTheme } from '../../types/domain';
 import {
   getCockpitMobileSectionHeadingId,
   type DashboardSectionId
@@ -27,7 +28,9 @@ import { MOBILE_BTN_FOCUS, MobileShellNav } from './mobileTabPrimitives';
 import { FirstRunJourneyCard, readFirstRunJourneyDismissed } from './FirstRunJourneyCard';
 import { getAgentCommandLock } from './agentCommandAccess';
 import { ChatCommandBar } from './ChatCommandBar';
+import { AppearanceToggle } from './AppearanceToggle';
 import { WorkspaceCommandPalette } from './WorkspaceCommandPalette';
+import { requestExtensionSchedulerSync } from '../../services/messaging/requestExtensionSchedulerSync';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
@@ -376,6 +379,29 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
     setCommandHistory(readCommandChips());
   }, []);
 
+  const setAppearanceTheme = useCallback(async (next: UiTheme) => {
+    try {
+      const data = await storageService.getData();
+      if (data.settings.theme === next) return;
+      const updated: BrandOpsData = {
+        ...data,
+        settings: { ...data.settings, theme: next }
+      };
+      const withTrace = prependOperatorTrace(updated, {
+        source: 'user',
+        verb: 'settings.theme_change',
+        surface: 'mobile',
+        outcome: 'success',
+        details: { theme: next }
+      });
+      await storageService.setData(withTrace);
+      applyDocumentThemeFromAppSettings(withTrace.settings);
+      setSnapshot(buildWorkspaceSnapshot(withTrace));
+    } catch (err) {
+      console.error('BrandOps: appearance update failed', err);
+    }
+  }, []);
+
   useEffect(() => {
     void refreshWorkspaceSnapshot();
   }, [refreshWorkspaceSnapshot]);
@@ -559,6 +585,7 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
         }
       ]);
     } finally {
+      requestExtensionSchedulerSync();
       const durationMs = performance.now() - t0;
       void recordCommandOutcome({ ok: commandOk, durationMs });
       setCommandLoading(false);
@@ -719,10 +746,46 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
     }
   }, []);
 
+  const exportOperatorTracesJsonl = useCallback(async () => {
+    try {
+      const raw = await storageService.exportOperatorTracesJsonl();
+      const blob = new Blob([raw], { type: 'application/x-ndjson' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `brandops-operator-traces-${new Date().toISOString().slice(0, 10)}.jsonl`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDataOpsHint('Operator traces export downloaded.');
+    } catch (e) {
+      setDataOpsHint(e instanceof Error ? e.message : 'Export failed.');
+    }
+  }, []);
+
+  const setOperatorTraceCollection = useCallback(
+    async (enabled: boolean) => {
+      try {
+        const data = await storageService.getData();
+        if (data.settings.operatorTraceCollectionEnabled === enabled) return;
+        await storageService.setData({
+          ...data,
+          settings: { ...data.settings, operatorTraceCollectionEnabled: enabled }
+        });
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint(enabled ? 'Operator trace collection on.' : 'Operator trace collection off.');
+      } catch (err) {
+        console.error('BrandOps: operator trace preference update failed', err);
+        setDataOpsHint('Could not update trace setting.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
   const importWorkspace = useCallback(
     async (raw: string) => {
       await storageService.importData(raw);
       await refreshWorkspaceSnapshot();
+      requestExtensionSchedulerSync();
       setDataOpsHint('Workspace imported.');
     },
     [refreshWorkspaceSnapshot]
@@ -738,6 +801,7 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
         const result = await runSettingsConfigure(line, surfaceLabel, false);
         if (result?.ok) {
           await refreshWorkspaceSnapshot();
+          requestExtensionSchedulerSync();
         }
         return result;
       } catch (err) {
@@ -792,7 +856,17 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
               {dataOpsHint ? <WorkspaceDataHint message={dataOpsHint} /> : null}
             </div>
           </div>
-          <div className="flex shrink-0 items-start gap-2">
+          <div className="flex shrink-0 flex-wrap items-start justify-end gap-1.5">
+            {!shouldRequireLaunchAuth(launchAccess) ? (
+              <AppearanceToggle
+                activeTheme={
+                  snapshot.settingsFullReadout.theme === 'light' ? 'light' : 'dark'
+                }
+                onChange={setAppearanceTheme}
+                btnFocus={btnFocus}
+                className="bo-theme-seg--header"
+              />
+            ) : null}
             {activeTab !== 'chat' && !shouldRequireLaunchAuth(launchAccess) ? (
               <button
                 type="button"
@@ -929,8 +1003,10 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
                 commandBusy={commandLoading}
                 onRequestClearChat={() => setPendingClearChat(true)}
                 onExportWorkspace={exportWorkspace}
+                onExportOperatorTraces={exportOperatorTracesJsonl}
                 onImportWorkspace={importWorkspace}
                 onRequestResetWorkspace={() => setPendingResetWorkspace(true)}
+                onOperatorTraceCollectionChange={(enabled) => void setOperatorTraceCollection(enabled)}
                 documentSurface={surfaceLabel}
                 isAuthenticated={launchAccess.auth.isAuthenticated}
                 authProvider={launchAccess.auth.provider}
@@ -962,6 +1038,8 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
           fileInputRef={chatFileInputRef}
           chatAttachment={chatAttachment}
           onRemoveAttachment={() => setChatAttachment(null)}
+          hideSmartChips
+          assistantChrome
         />
       ) : null}
 
@@ -1119,6 +1197,7 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
                     try {
                       await storageService.resetToSeed();
                       await refreshWorkspaceSnapshot();
+                      requestExtensionSchedulerSync();
                       setDataOpsHint('Workspace reset to seed.');
                     } catch (e) {
                       setDataOpsHint(e instanceof Error ? e.message : 'Reset failed.');

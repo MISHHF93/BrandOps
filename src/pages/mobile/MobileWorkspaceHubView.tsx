@@ -55,22 +55,6 @@ export const MobileWorkspaceHubView = ({
 }: MobileWorkspaceHubViewProps) => {
   const sorted = sortRowsSoonestFirst(snapshot.pulseTimelineRows);
 
-  const jump = (tab: 'daily' | 'integrations' | 'settings') => {
-    switch (tab) {
-      case 'daily':
-        onOpenToday();
-        break;
-      case 'integrations':
-        onOpenIntegrations();
-        break;
-      case 'settings':
-        onOpenSettings();
-        break;
-      default:
-        break;
-    }
-  };
-
   return (
     <div className="space-y-4" aria-label="Workspace overview">
       <span className="sr-only">
@@ -82,51 +66,58 @@ export const MobileWorkspaceHubView = ({
       <article className="bo-flagship-surface overflow-hidden">
         <WorkspaceSignalsBoard metrics={snapshot} variant="workspace" />
         <div className="bo-vitality-frame-body space-y-3 px-3 pb-4 pt-2 sm:px-3.5">
-          <div className="flex flex-wrap gap-2 border-b border-border/28 pb-3">
+          <nav
+            className="bo-workspace-nav-rail -mx-0.5 flex snap-x snap-mandatory gap-2 overflow-x-auto border-b border-border/28 pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            aria-label="Workspace shortcuts"
+          >
             <button
               type="button"
-              onClick={() => jump('daily')}
-              className={clsx('bo-btn-ghost inline-flex items-center gap-1.5', btnFocus)}
+              onClick={onOpenToday}
+              title="Today lanes"
+              className={clsx('bo-workspace-quick-btn', btnFocus)}
             >
-              <CalendarCheck2 className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-              Today lanes
+              <CalendarCheck2 className="h-5 w-5 shrink-0 text-textSoft" strokeWidth={2.25} aria-hidden />
+              <span className="bo-workspace-quick-btn__label">Today</span>
             </button>
             <button
               type="button"
-              onClick={() => jump('integrations')}
-              className={clsx('bo-btn-ghost inline-flex items-center gap-1.5', btnFocus)}
+              onClick={onOpenIntegrations}
+              title="Integrations"
+              className={clsx('bo-workspace-quick-btn', btnFocus)}
             >
-              <PlugZap className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-              Integrations
+              <PlugZap className="h-5 w-5 shrink-0 text-textSoft" strokeWidth={2.25} aria-hidden />
+              <span className="bo-workspace-quick-btn__label">Connect</span>
             </button>
             <button
               type="button"
-              onClick={() => jump('settings')}
-              className={clsx('bo-btn-ghost inline-flex items-center gap-1.5', btnFocus)}
+              onClick={onOpenSettings}
+              title="Settings"
+              className={clsx('bo-workspace-quick-btn', btnFocus)}
             >
-              <Settings className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-              Settings
+              <Settings className="h-5 w-5 shrink-0 text-textSoft" strokeWidth={2.25} aria-hidden />
+              <span className="bo-workspace-quick-btn__label">Setup</span>
             </button>
             <button
               type="button"
               disabled={commandBusy}
               onClick={() => void runCommand('pipeline health')}
-              className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
+              title="Pipeline health"
+              className={clsx('bo-workspace-quick-btn bo-workspace-quick-btn--primary', btnFocus)}
             >
-              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-              Pipeline health
+              <Sparkles className="h-5 w-5 shrink-0" strokeWidth={2.25} aria-hidden />
+              <span className="bo-workspace-quick-btn__label">Pipeline</span>
             </button>
             <button
               type="button"
               onClick={() => onOpenCommandPalette()}
+              title="Commands & search (⌘K / Ctrl+K)"
               aria-label="Open workspace command palette"
-              title="Commands & search — jumps, history, run in Assistant (⌘K / Ctrl+K)"
-              className={clsx('bo-btn-ghost inline-flex items-center gap-1.5', btnFocus)}
+              className={clsx('bo-workspace-quick-btn', btnFocus)}
             >
-              <Search className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-              Commands
+              <Search className="h-5 w-5 shrink-0 text-textSoft" strokeWidth={2.25} aria-hidden />
+              <span className="bo-workspace-quick-btn__label">Commands</span>
             </button>
-          </div>
+          </nav>
 
           <div className="rounded-xl border border-border/35 bg-bgSubtle/25 px-2 py-2">
             <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-textMuted">

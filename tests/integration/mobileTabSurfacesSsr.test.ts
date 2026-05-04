@@ -10,6 +10,7 @@ import { MobileChatView } from '../../src/pages/mobile/MobileChatView';
 import { MobileIntegrationsView } from '../../src/pages/mobile/MobileIntegrationsView';
 import { MobileSettingsView } from '../../src/pages/mobile/MobileSettingsView';
 import { MobileWorkspaceHubView } from '../../src/pages/mobile/MobileWorkspaceHubView';
+import { AppearanceToggle } from '../../src/pages/mobile/AppearanceToggle';
 import { buildWorkspaceSnapshot } from '../../src/pages/mobile/buildWorkspaceSnapshot';
 import {
   initIntelligenceRulesFromRemote,
@@ -41,7 +42,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Workspace vitality');
     expect(html).toContain('Live parameters — queue below is soonest-first, not a feed.');
     expect(html).toContain('Soonest queue');
-    expect(html).toContain('Today lanes');
+    expect(html).toContain('bo-workspace-nav-rail');
+    expect(html).toContain('aria-label="Workspace shortcuts"');
     expect(html).toContain('Integrations');
     expect(html).toContain('Settings');
     expect(html).toContain('Pipeline health');
@@ -73,13 +75,24 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Assistant"');
-    expect(html).toContain('Guided examples');
-    expect(html).toContain('Today');
-    expect(html).toContain('Start fast');
-    expect(html).toContain('Recent commands');
+    expect(html).toContain('Starters');
+    expect(html).toContain('Connect Notion');
+    expect(html).toContain('Recent');
     expect(html).toContain('pipeline health');
-    expect(html).toContain('connect notion');
-    expect(html).toContain('details');
+    expect(html).toContain('bo-assistant-hero');
+  });
+
+  it('AppearanceToggle renders sun/moon segment for shell header', () => {
+    const html = renderToString(
+      React.createElement(AppearanceToggle, {
+        activeTheme: 'dark',
+        onChange: noop,
+        btnFocus: ''
+      })
+    );
+    expect(html).toContain('bo-theme-seg');
+    expect(html).toContain('Use light appearance');
+    expect(html).toContain('Use dark appearance');
   });
 
   it('Today (Cockpit): header, workstream bar, at-a-glance metrics, and workstream section ids', () => {
@@ -255,8 +268,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         commandBusy: false,
         onRequestClearChat: noop,
         onExportWorkspace: asyncNoop,
+        onExportOperatorTraces: asyncNoop,
         onImportWorkspace: asyncNoop,
         onRequestResetWorkspace: noop,
+        onOperatorTraceCollectionChange: noop,
         documentSurface: 'mobile'
       })
     );
@@ -275,6 +290,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).not.toContain('Workspace templates');
     expect(html).toContain('settings-data-tier-a');
     expect(html).toContain('Export workspace JSON');
+    expect(html).toContain('Export operator traces');
+    expect(html).toContain('Record operator traces locally');
     expect(html).toContain('Assistant');
     expect(html).toContain('Diagnostics');
     expect(html).toContain('Extension shell');
@@ -305,8 +322,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         commandBusy: false,
         onRequestClearChat: noop,
         onExportWorkspace: asyncNoop,
+        onExportOperatorTraces: asyncNoop,
         onImportWorkspace: asyncNoop,
         onRequestResetWorkspace: noop,
+        onOperatorTraceCollectionChange: noop,
         documentSurface: 'mobile'
       })
     );
@@ -325,8 +344,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         commandBusy: false,
         onRequestClearChat: noop,
         onExportWorkspace: asyncNoop,
+        onExportOperatorTraces: asyncNoop,
         onImportWorkspace: asyncNoop,
         onRequestResetWorkspace: noop,
+        onOperatorTraceCollectionChange: noop,
         documentSurface: 'mobile'
       })
     );
@@ -345,8 +366,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         commandBusy: false,
         onRequestClearChat: noop,
         onExportWorkspace: asyncNoop,
+        onExportOperatorTraces: asyncNoop,
         onImportWorkspace: asyncNoop,
         onRequestResetWorkspace: noop,
+        onOperatorTraceCollectionChange: noop,
         documentSurface: 'integrations'
       })
     );

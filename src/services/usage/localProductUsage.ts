@@ -3,6 +3,7 @@
  * Rolling aggregates: habit, command confidence, perceived shell speed — local-only.
  * No network: stored under `product-usage-v1` in extension local storage.
  */
+import { storageService } from '../storage/storage';
 import { browserLocalStorage } from '../../shared/storage/browserStorage';
 
 /** Matches {@link MobileShellTabId} — kept local to avoid services importing pages. */
@@ -109,6 +110,15 @@ export async function recordLocalSessionDay(): Promise<void> {
 
 export async function recordShellNavigation(from: ShellTabId, to: ShellTabId): Promise<void> {
   if (from === to) return;
+
+  void storageService.appendOperatorTrace({
+    source: 'user',
+    verb: 'nav.tab_change',
+    surface: 'mobile',
+    outcome: 'success',
+    details: { fromTab: from, toTab: to }
+  });
+
   if (to !== 'chat') return;
   const u = await read();
   if (from === 'workspace') u.fromPulseToChat += 1;

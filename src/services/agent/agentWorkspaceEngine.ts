@@ -6,6 +6,7 @@ import {
 } from '../../types/domain';
 import { localIntelligence } from '../intelligence/localIntelligence';
 import { scheduler } from '../scheduling/scheduler';
+import { mapWorkspaceCommandSourceToActor, prependOperatorTrace } from '../dataset/operatorTraces';
 import { storageService } from '../storage/storage';
 import { applyAiSettingsOperations, buildAiSettingsPlan } from '../ai/aiSettingsMode';
 import { parseCommandRoute } from './intent/commandIntent';
@@ -996,10 +997,22 @@ const recordCommandAudit = async (result: AgentWorkspaceResult, command: AgentWo
       commandPreview: command.text.trim().slice(0, 240)
     };
     const prior = data.agentAudit?.entries ?? [];
-    await storageService.setData({
+    let merged: BrandOpsData = {
       ...data,
       agentAudit: { entries: [nextEntry, ...prior].slice(0, MAX_AUDIT) }
+    };
+    merged = prependOperatorTrace(merged, {
+      source: mapWorkspaceCommandSourceToActor(command.source),
+      verb: 'command.execute',
+      surface: 'workspace',
+      route: command.source,
+      outcome: result.ok ? 'success' : 'failure',
+      details: {
+        action: result.action,
+        commandPreview: command.text.trim().slice(0, 120)
+      }
     });
+    await storageService.setData(merged);
   } catch {
     // Audit is best-effort; command side-effects already applied.
   }

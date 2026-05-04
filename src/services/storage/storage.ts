@@ -24,9 +24,15 @@ import {
   PublishChannel,
   SchedulerState,
   SchedulerTask,
+  OperatorTraceEntry,
   SeedDataSource,
   WorkspaceModule
 } from '../../types/domain';
+import {
+  MAX_OPERATOR_TRACE_ENTRIES,
+  prependOperatorTrace,
+  serializeOperatorTracesJsonl
+} from '../dataset/operatorTraces';
 
 const DATA_KEY = 'brandops:data';
 
@@ -1172,6 +1178,10 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
         ? candidate.aiAdapterMode
         : 'disabled',
     debugMode: fallback.debugMode,
+    operatorTraceCollectionEnabled:
+      typeof candidate.operatorTraceCollectionEnabled === 'boolean'
+        ? candidate.operatorTraceCollectionEnabled
+        : fallback.operatorTraceCollectionEnabled,
     primaryIdentityProvider:
       candidate.primaryIdentityProvider === 'google' ||
       candidate.primaryIdentityProvider === 'github' ||
@@ -1246,6 +1256,62 @@ const normalizeAgentAudit = (value: unknown): NonNullable<BrandOpsData['agentAud
   return { entries: entries.slice(-MAX_AGENT_AUDIT_ENTRIES) };
 };
 
+const normalizeOperatorTraces = (value: unknown): NonNullable<BrandOpsData['operatorTraces']> => {
+  if (!value || typeof value !== 'object') {
+    return { entries: [] };
+  }
+  const raw = (value as { entries?: unknown }).entries;
+  if (!Array.isArray(raw)) {
+    return { entries: [] };
+  }
+  const entries: OperatorTraceEntry[] = [];
+  const isActor = (s: string): s is OperatorTraceEntry['source'] =>
+    s === 'user' || s === 'assistant' || s === 'automation' || s === 'bridge';
+  const isOutcome = (s: string): s is NonNullable<OperatorTraceEntry['outcome']> =>
+    s === 'success' || s === 'failure';
+  const isReview = (s: string): s is NonNullable<OperatorTraceEntry['reviewStatus']> =>
+    s === 'pending' || s === 'approved';
+
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const e = item as Record<string, unknown>;
+    if (
+      typeof e.id !== 'string' ||
+      typeof e.at !== 'string' ||
+      typeof e.source !== 'string' ||
+      typeof e.verb !== 'string' ||
+      !isActor(e.source)
+    ) {
+      continue;
+    }
+    const ent: OperatorTraceEntry = {
+      id: e.id,
+      at: e.at,
+      source: e.source,
+      verb: e.verb
+    };
+    if (typeof e.surface === 'string') ent.surface = e.surface;
+    if (typeof e.route === 'string') ent.route = e.route;
+    if (typeof e.capabilityId === 'string') ent.capabilityId = e.capabilityId;
+    if (typeof e.sessionId === 'string') ent.sessionId = e.sessionId;
+    if (typeof e.entityType === 'string') ent.entityType = e.entityType;
+    if (typeof e.entityId === 'string') ent.entityId = e.entityId;
+    if (e.details && typeof e.details === 'object' && !Array.isArray(e.details)) {
+      ent.details = e.details as OperatorTraceEntry['details'];
+    }
+    if (typeof e.outcome === 'string' && isOutcome(e.outcome)) ent.outcome = e.outcome;
+    if (Array.isArray(e.labels)) {
+      ent.labels = e.labels.filter((x): x is string => typeof x === 'string');
+    }
+    if (typeof e.reviewStatus === 'string' && isReview(e.reviewStatus)) {
+      ent.reviewStatus = e.reviewStatus;
+    }
+    if (typeof e.annotatorNote === 'string') ent.annotatorNote = e.annotatorNote;
+    entries.push(ent);
+  }
+  return { entries: entries.slice(0, MAX_OPERATOR_TRACE_ENTRIES) };
+};
+
 const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   seed: {
@@ -1281,6 +1347,7 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   externalSync: normalizeExternalSyncState(base.externalSync),
   integrationHub: normalizeIntegrationHubState(base.integrationHub),
   agentAudit: normalizeAgentAudit(base.agentAudit),
+  operatorTraces: normalizeOperatorTraces(base.operatorTraces),
   scheduler: normalizeSchedulerState(base.scheduler),
   seed: {
     source: normalizeSeedSource(base.seed?.source),
@@ -1364,6 +1431,25 @@ export const storageService = {
   async exportData(): Promise<string> {
     const data = await this.getData();
     return JSON.stringify(data, null, 2);
+  },
+
+  async exportOperatorTracesJsonl(): Promise<string> {
+    const data = await this.getData();
+    return serializeOperatorTracesJsonl(data);
+  },
+
+  /** Best-effort: read, prepend trace, persist. Skips when collection is disabled. */
+  async appendOperatorTrace(
+    input: Parameters<typeof prependOperatorTrace>[1]
+  ): Promise<BrandOpsData | null> {
+    try {
+      const data = await this.getData();
+      const next = prependOperatorTrace(data, input);
+      if (next === data) return null;
+      return await this.setData(next);
+    } catch {
+      return null;
+    }
   },
 
   async importData(raw: string): Promise<BrandOpsData> {

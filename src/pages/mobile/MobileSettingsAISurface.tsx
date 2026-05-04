@@ -196,17 +196,23 @@ export function SettingsAssistantComposer({
 export function SettingsDataSafetyBlock({
   btnFocus,
   onExportWorkspace,
+  onExportOperatorTraces,
   onImportPick,
   onRequestResetWorkspace,
   onRequestClearChat,
-  importMessage
+  importMessage,
+  operatorTraceCollectionEnabled,
+  onOperatorTraceCollectionChange
 }: {
   btnFocus: string;
   onExportWorkspace: () => Promise<void>;
+  onExportOperatorTraces: () => Promise<void>;
   onImportPick: (e: ChangeEvent<HTMLInputElement>) => void;
   onRequestResetWorkspace: () => void;
   onRequestClearChat: () => void;
   importMessage: string | null;
+  operatorTraceCollectionEnabled: boolean;
+  onOperatorTraceCollectionChange: (enabled: boolean) => void;
 }) {
   const importRef = useRef<HTMLInputElement>(null);
   const dataBtn = clsx(
@@ -245,8 +251,27 @@ export function SettingsDataSafetyBlock({
             </p>
           ) : null}
           <div className="mt-2 flex flex-col gap-2">
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-border/50 bg-surface/40 px-2.5 py-2.5 text-left text-body text-text">
+              <input
+                type="checkbox"
+                className="border-border mt-0.5"
+                checked={operatorTraceCollectionEnabled}
+                onChange={(e) => onOperatorTraceCollectionChange(e.target.checked)}
+              />
+              <span>
+                <span className="font-medium">Record operator traces locally</span>
+                <span className="mt-1 block text-[11px] font-normal leading-snug text-textSoft">
+                  Saves navigation, assistant commands, and appearance changes on this device only—no
+                  automatic upload. Turn off anytime. Use export for analysis or training datasets;
+                  files may include business-sensitive metadata.
+                </span>
+              </span>
+            </label>
             <button type="button" onClick={() => void onExportWorkspace()} className={dataBtn}>
               Export workspace JSON
+            </button>
+            <button type="button" onClick={() => void onExportOperatorTraces()} className={dataBtn}>
+              Export operator traces (JSONL)…
             </button>
             <button type="button" onClick={() => importRef.current?.click()} className={dataBtn}>
               Import workspace JSON…

@@ -62,6 +62,9 @@ export const seedData: BrandOpsData = {
   agentAudit: {
     entries: []
   },
+  operatorTraces: {
+    entries: []
+  },
   seed: {
     seededAt: isoNow,
     source: 'production-empty',

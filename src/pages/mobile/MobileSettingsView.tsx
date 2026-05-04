@@ -621,8 +621,10 @@ export interface MobileSettingsViewProps {
   commandBusy: boolean;
   onRequestClearChat: () => void;
   onExportWorkspace: () => Promise<void>;
+  onExportOperatorTraces: () => Promise<void>;
   onImportWorkspace: (raw: string) => Promise<void>;
   onRequestResetWorkspace: () => void;
+  onOperatorTraceCollectionChange: (enabled: boolean) => void | Promise<void>;
   /** Host document; avoids offering a duplicate `integrations.html` tab when already there. */
   documentSurface: AppDocumentSurfaceId | 'chatbot';
   isAuthenticated?: boolean;
@@ -643,8 +645,10 @@ export const MobileSettingsView = ({
   btnFocus,
   onRequestClearChat,
   onExportWorkspace,
+  onExportOperatorTraces,
   onImportWorkspace,
   onRequestResetWorkspace,
+  onOperatorTraceCollectionChange,
   documentSurface,
   runCommand,
   applySettingsConfigure,
@@ -744,10 +748,13 @@ export const MobileSettingsView = ({
       <SettingsDataSafetyBlock
         btnFocus={btnFocus}
         onExportWorkspace={onExportWorkspace}
+        onExportOperatorTraces={onExportOperatorTraces}
         onImportPick={onImportPick}
         onRequestResetWorkspace={onRequestResetWorkspace}
         onRequestClearChat={onRequestClearChat}
         importMessage={importMessage}
+        operatorTraceCollectionEnabled={snapshot.settingsFullReadout.operatorTraceCollectionEnabled}
+        onOperatorTraceCollectionChange={onOperatorTraceCollectionChange}
       />
 
       <details className="bo-disclosure group">
