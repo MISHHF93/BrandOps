@@ -32,6 +32,27 @@ export interface MobileSettingsFullReadout {
   automationRulesSummary: string;
   brandVoiceGuidePreview: string;
   operatorTraceCollectionEnabled: boolean;
+  /** Masked OpenAI-compatible inference root (no secrets). */
+  aiInferenceEndpointPreview: string;
+  /** Masked embeddings root when set, else same as inference preview when embedding URL empty. */
+  aiEmbeddingEndpointPreview: string;
+  aiBridgeChatModelId: string;
+  aiBridgeEmbeddingModelId: string;
+}
+
+/** Safe preview for Settings readout — strips path/query noise beyond host + shortened path. */
+export function maskAiBridgeEndpointPreview(raw: string): string {
+  const t = raw.trim();
+  if (!t.length) return '—';
+  try {
+    const withScheme = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+    const u = new URL(withScheme);
+    const path = u.pathname.replace(/\/+$/, '') || '';
+    const shortPath = path.length > 48 ? `${path.slice(0, 48)}…` : path;
+    return `${u.protocol}//${u.host}${shortPath}`;
+  } catch {
+    return '(unparsable URL)';
+  }
 }
 
 const clip = (s: string, max: number) => {
@@ -51,6 +72,10 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
   const ov = s.overlay;
   const rules = s.automationRules ?? [];
   const primary = s.primaryIdentityProvider;
+  const bridge = s.aiBridge;
+  const embedRaw = bridge.embeddingBaseUrl.trim();
+  const inferPreview = maskAiBridgeEndpointPreview(bridge.inferenceBaseUrl);
+  const embedPreview = embedRaw.length ? maskAiBridgeEndpointPreview(embedRaw) : inferPreview;
 
   return {
     timezone: s.timezone,
@@ -85,6 +110,10 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
         ? '—'
         : rules.map((r) => (r.enabled ? r.name : `${r.name} (off)`)).join(', '),
     brandVoiceGuidePreview: clip(workspace.brand.voiceGuide, 100),
-    operatorTraceCollectionEnabled: s.operatorTraceCollectionEnabled
+    operatorTraceCollectionEnabled: s.operatorTraceCollectionEnabled,
+    aiInferenceEndpointPreview: inferPreview,
+    aiEmbeddingEndpointPreview: embedPreview,
+    aiBridgeChatModelId: bridge.chatModelId || '—',
+    aiBridgeEmbeddingModelId: bridge.embeddingModelId || '—'
   };
 }

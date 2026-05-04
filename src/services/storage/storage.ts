@@ -1152,6 +1152,30 @@ const normalizeIntegrationHubState = (value: unknown): BrandOpsData['integration
   };
 };
 
+const MAX_AI_URL_LEN = 2048;
+const MAX_AI_MODEL_ID_LEN = 128;
+
+const normalizeAiBridgeSettings = (
+  value: unknown,
+  fallback: BrandOpsData['settings']['aiBridge']
+): BrandOpsData['settings']['aiBridge'] => {
+  if (!value || typeof value !== 'object') return fallback;
+  const v = value as Partial<BrandOpsData['settings']['aiBridge']>;
+  const trimUrl = (raw: unknown) =>
+    typeof raw === 'string' ? raw.trim().slice(0, MAX_AI_URL_LEN) : '';
+  const trimModel = (raw: unknown, fb: string) => {
+    if (typeof raw !== 'string') return fb;
+    const t = raw.trim().slice(0, MAX_AI_MODEL_ID_LEN);
+    return t || fb;
+  };
+  return {
+    inferenceBaseUrl: trimUrl(v.inferenceBaseUrl),
+    embeddingBaseUrl: trimUrl(v.embeddingBaseUrl),
+    chatModelId: trimModel(v.chatModelId, fallback.chatModelId),
+    embeddingModelId: trimModel(v.embeddingModelId, fallback.embeddingModelId)
+  };
+};
+
 const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
   const fallback = defaultAppSettings;
   if (!settings || typeof settings !== 'object') {
@@ -1213,7 +1237,8 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
       : fallback.automationRules,
     syncHub: normalizeSyncHubSettings(candidate.syncHub),
     notificationCenter: normalizeNotificationCenterSettings(candidate.notificationCenter),
-    cadenceFlow: normalizeCadenceFlowSettings(candidate.cadenceFlow)
+    cadenceFlow: normalizeCadenceFlowSettings(candidate.cadenceFlow),
+    aiBridge: normalizeAiBridgeSettings(candidate.aiBridge, fallback.aiBridge)
   };
 };
 

@@ -1,4 +1,12 @@
-import type { AppSettings, BrandProfile } from '../types/domain';
+import type { AiBridgeSettings, AppSettings, BrandProfile } from '../types/domain';
+
+/** NLP HTTP bridge defaults — URLs empty until operator configures a provider. */
+export const defaultAiBridgeSettings = {
+  inferenceBaseUrl: '',
+  embeddingBaseUrl: '',
+  chatModelId: 'gpt-4o-mini',
+  embeddingModelId: 'text-embedding-3-small'
+} satisfies AiBridgeSettings;
 
 /**
  * Canonical **production-empty** defaults for `BrandOpsData.brand`.
@@ -98,5 +106,6 @@ export const defaultAppSettings = {
     remindBeforeMinutes: 15,
     calendarSyncEnabled: true,
     artifactSyncEnabled: true
-  }
+  },
+  aiBridge: defaultAiBridgeSettings
 } satisfies AppSettings;

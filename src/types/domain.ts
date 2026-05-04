@@ -506,6 +506,19 @@ export type CockpitLayoutMode = 'sections' | 'unified-scroll';
 /** Today stack: more open panels vs collapsed disclosures by default. */
 export type CockpitDensityMode = 'comfortable' | 'compact';
 
+/**
+ * Optional bridge to hosted NLP / LLM APIs (OpenAI-compatible HTTPS shape).
+ * API secrets MUST NOT live here — use extension storage (see `aiSecretsAccess`).
+ */
+export interface AiBridgeSettings {
+  /** Example: `https://api.openai.com/v1` — trailing slashes tolerated. */
+  inferenceBaseUrl: string;
+  /** Example: same root as inference when provider bundles embeddings under `/v1/embeddings`. */
+  embeddingBaseUrl: string;
+  chatModelId: string;
+  embeddingModelId: string;
+}
+
 export interface AppSettings {
   timezone: string;
   defaultReminderLeadHours: number;
@@ -531,6 +544,7 @@ export interface AppSettings {
   syncHub: SyncHubSettings;
   notificationCenter: NotificationCenterSettings;
   cadenceFlow: CadenceFlowSettings;
+  aiBridge: AiBridgeSettings;
 }
 
 /** Workspace dataset lineage. Legacy `default-demo` is normalized to `demo-sample` on save. */

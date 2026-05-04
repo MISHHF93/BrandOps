@@ -5,6 +5,7 @@ describe('aiRuntimePolicy', () => {
   it('keeps core product independent from external AI providers', () => {
     expect(aiRuntimePolicy.coreRequiresExternalProviders).toBe(false);
     expect(aiRuntimePolicy.externalProvidersEnabled).toBe(false);
+    expect(aiRuntimePolicy.externalNlpHttpEnabled).toBe(true);
     expect(aiRuntimePolicy.enabledProviders).toEqual(['local']);
   });
 
