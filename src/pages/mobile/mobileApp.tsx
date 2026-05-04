@@ -4,6 +4,14 @@ import {
   executeAgentWorkspaceCommand,
   type AgentWorkspaceResult
 } from '../../services/agent/agentWorkspaceEngine';
+import { runChatCompletion } from '../../services/ai/nlpInferenceGateway';
+import { persistChatGatewayTrace } from '../../services/ai/aiGatewayTracing';
+import { buildHostedAskMessages } from '../../services/ai/hostedAskTurn';
+import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
+import {
+  isAllowedForWorker,
+  parseStructuredAiApplyPayload
+} from '../../services/ai/llmStructuredApply';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import { prependOperatorTrace } from '../../services/dataset/operatorTraces';
 import type { BrandOpsData, UiTheme } from '../../types/domain';
@@ -84,9 +92,10 @@ const MAX_COMMAND_CHIPS = 24;
 const defaultWelcomeMessage = (
   surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'
 ): ChatMessage => {
-  const mobileLine = 'Try: pipeline health, or press ⌘K — Workspace shows counts and queue.';
+  const mobileLine =
+    'Try: pipeline health, ask: your question (hosted model), or press ⌘K — Workspace shows counts and queue.';
   const welcomeLine =
-    'Try: pipeline health, or press ⌘K. Workspace is your dashboard; Assistant runs commands.';
+    'Try: pipeline health, ask: … for hosted NLP (configure AI bridge), or press ⌘K. Plain lines run workspace commands.';
   return {
     id: uid(),
     role: 'assistant',
@@ -379,6 +388,25 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
     setCommandHistory(readCommandChips());
   }, []);
 
+  const selectCopilotWorker = useCallback(async (workerId: string) => {
+    try {
+      const data = await storageService.getData();
+      const reg = data.settings.copilotWorkers;
+      if (!reg.workers.some((w) => w.id === workerId)) return;
+      if (reg.activeWorkerId === workerId) return;
+      await storageService.setData({
+        ...data,
+        settings: {
+          ...data.settings,
+          copilotWorkers: { ...reg, activeWorkerId: workerId }
+        }
+      });
+      await refreshWorkspaceSnapshot();
+    } catch (err) {
+      console.error('BrandOps: failed to select copilot worker', err);
+    }
+  }, [refreshWorkspaceSnapshot]);
+
   const setAppearanceTheme = useCallback(async (next: UiTheme) => {
     try {
       const data = await storageService.getData();
@@ -548,29 +576,133 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
     const t0 = performance.now();
     let commandOk = false;
     try {
-      const result = await executeAgentWorkspaceCommand({
-        text: trimmed,
-        actorName: 'mobile-operator',
-        source: mapDocumentSurfaceToAgentSource(surfaceLabel)
-      });
-      const data = await storageService.getData();
-      const strip = buildStripFromWorkspace(data);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: uid(),
-          role: 'assistant',
-          resultKind: 'command-result',
-          text: result.summary,
-          action: result.action,
-          ok: result.ok,
-          sourceSurface,
-          strip
+      const askMatch = trimmed.match(/^ask\s*:\s*([\s\S]*)$/i);
+      if (askMatch) {
+        pushCommandChip(trimmed);
+        const question = askMatch[1].trim();
+        if (!question) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: uid(),
+              role: 'assistant',
+              resultKind: 'ask-result',
+              ok: false,
+              text: 'Add your question after ask: — example: ask: What should I prioritize on the pipeline?'
+            }
+          ]);
+        } else {
+          const data = await storageService.getData();
+          const settings = data.settings;
+          const workerResolved = resolveActiveCopilotWorker(settings);
+          const completionMessages = buildHostedAskMessages(data, question, workerResolved);
+          const tHttp = performance.now();
+          const askModelId =
+            workerResolved?.chatModelId?.trim().length ? workerResolved.chatModelId.trim() : undefined;
+          const maxTok = workerResolved?.maxCompletionTokens;
+          const result = await runChatCompletion(settings, {
+            messages: completionMessages,
+            ...(askModelId ? { model: askModelId } : {}),
+            ...(typeof maxTok === 'number' && maxTok > 0 ? { maxTokens: maxTok } : {})
+          });
+          const durationMs = Math.round(performance.now() - tHttp);
+          const effectiveModel =
+            askModelId ?? settings.aiBridge.chatModelId;
+          await persistChatGatewayTrace(
+            () => storageService.getData(),
+            async (next) => {
+              await storageService.setData(next);
+            },
+            {
+              messages: completionMessages,
+              result,
+              durationMs,
+              modelId: effectiveModel,
+              workerId: workerResolved?.id ?? null,
+              surface: 'chat',
+              route: mapDocumentSurfaceToAgentSource(surfaceLabel)
+            }
+          );
+          if (!result.ok) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: uid(),
+                role: 'assistant',
+                resultKind: 'ask-result',
+                ok: false,
+                text: `Hosted model unavailable (${result.code}): ${result.message}`
+              }
+            ]);
+            commandOk = false;
+          } else {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: uid(),
+                role: 'assistant',
+                resultKind: 'ask-result',
+                ok: true,
+                text: result.text
+              }
+            ]);
+            const structured = parseStructuredAiApplyPayload(result.text);
+            if (
+              structured.kind === 'execute_agent_command' &&
+              isAllowedForWorker(workerResolved, structured.commandText)
+            ) {
+              const cmdResult = await executeAgentWorkspaceCommand({
+                text: structured.commandText,
+                actorName: 'mobile-operator',
+                source: mapDocumentSurfaceToAgentSource(surfaceLabel)
+              });
+              const dataAfter = await storageService.getData();
+              const strip = buildStripFromWorkspace(dataAfter);
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: uid(),
+                  role: 'assistant',
+                  resultKind: 'command-result',
+                  text: `(Auto-run) ${cmdResult.summary}`,
+                  action: cmdResult.action,
+                  ok: cmdResult.ok,
+                  sourceSurface,
+                  strip
+                }
+              ]);
+              commandOk = cmdResult.ok;
+            } else {
+              commandOk = true;
+            }
+          }
         }
-      ]);
-      pushCommandChip(trimmed);
-      await refreshWorkspaceSnapshot();
-      commandOk = result.ok;
+        await refreshWorkspaceSnapshot();
+      } else {
+        const result = await executeAgentWorkspaceCommand({
+          text: trimmed,
+          actorName: 'mobile-operator',
+          source: mapDocumentSurfaceToAgentSource(surfaceLabel)
+        });
+        const data = await storageService.getData();
+        const strip = buildStripFromWorkspace(data);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: uid(),
+            role: 'assistant',
+            resultKind: 'command-result',
+            text: result.summary,
+            action: result.action,
+            ok: result.ok,
+            sourceSurface,
+            strip
+          }
+        ]);
+        pushCommandChip(trimmed);
+        await refreshWorkspaceSnapshot();
+        commandOk = result.ok;
+      }
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -930,6 +1062,8 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
               loading={commandLoading}
               commandHistory={commandHistory}
               onQuickCommand={sendQuickCommand}
+              copilotWorkerRegistry={snapshot.copilotWorkerRegistry}
+              onSelectCopilotWorker={selectCopilotWorker}
               onClearCommandHistory={() => {
                 clearPersistedCommandChips();
                 setCommandHistory([]);

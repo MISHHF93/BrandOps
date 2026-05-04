@@ -67,6 +67,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         loading: false,
         commandHistory: ['pipeline health'],
         onQuickCommand: noop,
+        copilotWorkerRegistry: snapshot().copilotWorkerRegistry,
+        onSelectCopilotWorker: noop,
         onClearCommandHistory: noop,
         btnFocus: '',
         onOpenToday: noop,
@@ -75,6 +77,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Assistant"');
+    expect(html).toContain('Copilot');
     expect(html).toContain('Starters');
     expect(html).toContain('Connect Notion');
     expect(html).toContain('Recent');

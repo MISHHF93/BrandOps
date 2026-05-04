@@ -5,6 +5,7 @@ import type {
   BrandOpsData,
   BrandVault,
   BrandVaultListField,
+  CopilotWorkerRegistrySettings,
   IntegrationSourceKind,
   SchedulerTask,
   SchedulerTaskStatus
@@ -256,6 +257,8 @@ export interface MobileWorkspaceSnapshot {
   sshTargetsCount: number;
   nextPublishingHint: string | null;
   settingsFullReadout: MobileSettingsFullReadout;
+  /** Named hosted Ask copilots + active id — Assistant picker reads this without touching storage. */
+  copilotWorkerRegistry: CopilotWorkerRegistrySettings;
   cockpitOpportunityPeek: CockpitOpportunityPeekRow[];
   cockpitContentPeek: CockpitContentPeekRow[];
   cockpitPublishingPeek: CockpitPublishingPeekRow[];
@@ -377,6 +380,7 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     opportunitiesToClose,
     cadenceHeadline,
     settingsFullReadout: buildMobileSettingsFullReadout(workspace),
+    copilotWorkerRegistry: workspace.settings.copilotWorkers,
     cockpitOpportunityPeek: activeOpportunities.slice(0, 5).map((o) => ({
       id: o.id,
       name: o.name,

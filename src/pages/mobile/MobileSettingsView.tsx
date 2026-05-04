@@ -185,6 +185,8 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
     ['AI bridge · embeddings endpoint', r.aiEmbeddingEndpointPreview],
     ['AI bridge · chat model id', r.aiBridgeChatModelId],
     ['AI bridge · embedding model id', r.aiBridgeEmbeddingModelId],
+    ['Copilot · active worker', r.copilotActiveWorkerPreview],
+    ['Copilot · registry', r.copilotWorkersListPreview],
     ['Primary identity provider', r.primaryIdentityProvider],
     ['Notifications enabled', r.notificationsEnabled ? 'yes' : 'no'],
     ['AI guidance mode', r.aiGuidanceMode],

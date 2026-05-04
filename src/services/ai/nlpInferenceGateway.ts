@@ -21,6 +21,8 @@ export interface ChatCompletionInput {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  /** Provider-dependent; sends OpenAI-style `response_format: { type: 'json_object' }` when true. */
+  responseFormatJsonObject?: boolean;
 }
 
 export type ChatCompletionResult =
@@ -113,7 +115,8 @@ export async function runChatCompletion(
         model,
         messages: input.messages,
         ...(typeof input.temperature === 'number' ? { temperature: input.temperature } : {}),
-        ...(typeof input.maxTokens === 'number' ? { max_tokens: input.maxTokens } : {})
+        ...(typeof input.maxTokens === 'number' ? { max_tokens: input.maxTokens } : {}),
+        ...(input.responseFormatJsonObject ? { response_format: { type: 'json_object' } } : {})
       }),
       signal: controller.signal
     });

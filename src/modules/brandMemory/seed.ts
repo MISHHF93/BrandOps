@@ -65,6 +65,9 @@ export const seedData: BrandOpsData = {
   operatorTraces: {
     entries: []
   },
+  embeddingIndex: {
+    entries: []
+  },
   seed: {
     seededAt: isoNow,
     source: 'production-empty',

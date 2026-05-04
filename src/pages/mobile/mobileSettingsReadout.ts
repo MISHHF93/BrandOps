@@ -1,4 +1,5 @@
 import type { BrandOpsData } from '../../types/domain';
+import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
 
 /** Every `AppSettings` + related field we can show read-only on mobile Settings (traceback / audit). */
 export interface MobileSettingsFullReadout {
@@ -38,6 +39,10 @@ export interface MobileSettingsFullReadout {
   aiEmbeddingEndpointPreview: string;
   aiBridgeChatModelId: string;
   aiBridgeEmbeddingModelId: string;
+  /** Active hosted Ask copilot (name + id). */
+  copilotActiveWorkerPreview: string;
+  /** Short list of configured copilot names. */
+  copilotWorkersListPreview: string;
 }
 
 /** Safe preview for Settings readout — strips path/query noise beyond host + shortened path. */
@@ -77,6 +82,9 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
   const inferPreview = maskAiBridgeEndpointPreview(bridge.inferenceBaseUrl);
   const embedPreview = embedRaw.length ? maskAiBridgeEndpointPreview(embedRaw) : inferPreview;
 
+  const activeCw = resolveActiveCopilotWorker(s);
+  const cwList = s.copilotWorkers.workers.map((w) => w.name).join(', ');
+
   return {
     timezone: s.timezone,
     weekStartsOn: s.weekStartsOn,
@@ -114,6 +122,8 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
     aiInferenceEndpointPreview: inferPreview,
     aiEmbeddingEndpointPreview: embedPreview,
     aiBridgeChatModelId: bridge.chatModelId || '—',
-    aiBridgeEmbeddingModelId: bridge.embeddingModelId || '—'
+    aiBridgeEmbeddingModelId: bridge.embeddingModelId || '—',
+    copilotActiveWorkerPreview: activeCw ? `${activeCw.name} (${activeCw.id})` : '—',
+    copilotWorkersListPreview: clip(cwList, 160)
   };
 }

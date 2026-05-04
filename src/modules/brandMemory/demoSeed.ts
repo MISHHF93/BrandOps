@@ -590,6 +590,9 @@ Slide 7: CTA to request audit checklist`,
     ],
     artifacts: []
   },
+  embeddingIndex: {
+    entries: []
+  },
   agentAudit: {
     entries: []
   },

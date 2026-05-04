@@ -318,12 +318,16 @@ const ROUTE_PLAIN: Record<CommandRoute, string> = {
   'update-publishing': 'Changes publishing / queue',
   'configure-workspace': 'Applies workspace settings',
   'pipeline-health': 'Runs a pipeline check',
+  'sync-content-embeddings': 'Syncs hosted embeddings for content library (batch)',
   'update-opportunity': 'Updates a deal or stage',
   unsupported: 'We will do our best to interpret or guide you to a supported request'
 };
 
 export function getInputRouteHint(text: string): string | null {
   const t = text.trim();
+  if (/^ask\s*:/i.test(t)) {
+    return 'Hosted model (configure AI bridge + external-opt-in mode)';
+  }
   if (t.length < 2) return null;
   const route = parseCommandRoute(t);
   return ROUTE_PLAIN[route] ?? null;

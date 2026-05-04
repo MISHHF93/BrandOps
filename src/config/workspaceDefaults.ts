@@ -1,4 +1,5 @@
 import type { AiBridgeSettings, AppSettings, BrandProfile } from '../types/domain';
+import { defaultCopilotWorkerRegistry } from './copilotWorkerDefaults';
 
 /** NLP HTTP bridge defaults — URLs empty until operator configures a provider. */
 export const defaultAiBridgeSettings = {
@@ -107,5 +108,6 @@ export const defaultAppSettings = {
     calendarSyncEnabled: true,
     artifactSyncEnabled: true
   },
-  aiBridge: defaultAiBridgeSettings
+  aiBridge: defaultAiBridgeSettings,
+  copilotWorkers: defaultCopilotWorkerRegistry
 } satisfies AppSettings;

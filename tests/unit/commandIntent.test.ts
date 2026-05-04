@@ -25,6 +25,11 @@ describe('parseCommandRoute', () => {
     expect(parseCommandRoute('rank opportunities by priority')).toBe('pipeline-health');
   });
 
+  it('maps embedding sync phrases', () => {
+    expect(parseCommandRoute('sync content embeddings')).toBe('sync-content-embeddings');
+    expect(parseCommandRoute('refresh content embeddings for library')).toBe('sync-content-embeddings');
+  });
+
   it('maps BrandOps strategy functions without stealing operational commands', () => {
     expect(parseCommandRoute('audit_positioning')).toBe('brand-function');
     expect(parseCommandRoute('weekly market scan')).toBe('brand-function');

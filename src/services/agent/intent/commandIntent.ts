@@ -27,6 +27,7 @@ export type CommandRoute =
   | 'update-publishing'
   | 'configure-workspace'
   | 'pipeline-health'
+  | 'sync-content-embeddings'
   | 'update-opportunity'
   | 'unsupported';
 
@@ -109,8 +110,13 @@ export const parseCommandRoute = (text: string): CommandRoute => {
     return 'configure-workspace';
   }
   if (
-    lower.includes('pipeline health') ||
-    lower.includes('opportunity health') ||
+    lower.includes('sync content embeddings') ||
+    lower.includes('refresh content embeddings') ||
+    lower.includes('embed content library')
+  ) {
+    return 'sync-content-embeddings';
+  }
+  if (lower.includes('pipeline health') || lower.includes('opportunity health') ||
     (lower.includes('rank') && lower.includes('opportunit'))
   ) {
     return 'pipeline-health';

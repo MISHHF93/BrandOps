@@ -519,6 +519,33 @@ export interface AiBridgeSettings {
   embeddingModelId: string;
 }
 
+/** Optional grounding hints for a named copilot (retrieval / prompt scope). */
+export interface CopilotWorkerContextHints {
+  contentTags?: string[];
+  integrationArtifactKinds?: string[];
+  includeBrandVault?: boolean;
+}
+
+/** Named copilot persona + capability bounds (persisted in workspace settings). */
+export interface CopilotWorker {
+  id: string;
+  name: string;
+  description?: string;
+  /** Layered after global notificationCenter roleContext / promptTemplate in Ask builds. */
+  systemInstructions: string;
+  contextHints?: CopilotWorkerContextHints;
+  /** Compared using normalized tokens against structured JSON suggestions / auto-exec. */
+  allowedAgentCommands?: string[];
+  chatModelId?: string;
+  maxCompletionTokens?: number;
+}
+
+export interface CopilotWorkerRegistrySettings {
+  workers: CopilotWorker[];
+  /** Must match `workers[].id` when set. */
+  activeWorkerId: string | null;
+}
+
 export interface AppSettings {
   timezone: string;
   defaultReminderLeadHours: number;
@@ -545,6 +572,8 @@ export interface AppSettings {
   notificationCenter: NotificationCenterSettings;
   cadenceFlow: CadenceFlowSettings;
   aiBridge: AiBridgeSettings;
+  /** Named hosted Ask copilots + active selection for Assistant. */
+  copilotWorkers: CopilotWorkerRegistrySettings;
 }
 
 /** Workspace dataset lineage. Legacy `default-demo` is normalized to `demo-sample` on save. */
@@ -617,6 +646,22 @@ export interface OperatorTracesState {
   entries: OperatorTraceEntry[];
 }
 
+/** Vector snapshot for a content library item (hosted embedding model). Kept small via normalization caps. */
+export interface ContentItemEmbeddingRecord {
+  id: string;
+  contentLibraryItemId: string;
+  modelId: string;
+  dims: number;
+  vector: number[];
+  /** Fingerprint of normalized source text used for the vector (staleness detection). */
+  textFingerprint: string;
+  updatedAt: string;
+}
+
+export interface AiEmbeddingIndexState {
+  entries: ContentItemEmbeddingRecord[];
+}
+
 export interface BrandOpsData {
   brand: BrandProfile;
   brandVault: BrandVault;
@@ -641,4 +686,6 @@ export interface BrandOpsData {
   agentAudit?: AgentAuditState;
   /** Local operator traces for mining / annotation export (optional; normalized on read). */
   operatorTraces?: OperatorTracesState;
+  /** Hosted embedding vectors keyed by content library item id (optional; normalized on read). */
+  embeddingIndex?: AiEmbeddingIndexState;
 }

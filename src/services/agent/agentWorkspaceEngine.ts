@@ -40,6 +40,7 @@ export type AgentAction =
   | 'update-publishing-item'
   | 'configure-workspace'
   | 'pipeline-health'
+  | 'sync-content-embeddings'
   | 'unsupported';
 
 export interface AgentWorkspaceCommand {
@@ -940,6 +941,22 @@ const MAX_AUDIT = 200;
 
 const MAX_PIPELINE_HEALTH_SUMMARY = 480;
 
+const runSyncContentEmbeddings = async (): Promise<AgentWorkspaceResult> => {
+  const { refreshTopContentLibraryEmbeddings } = await import('../ai/contentEmbeddingsPipeline');
+  const out = await refreshTopContentLibraryEmbeddings(
+    () => storageService.getData(),
+    async (d) => {
+      await storageService.setData(d);
+    },
+    { limit: 16 }
+  );
+  return {
+    ok: out.ok,
+    action: 'sync-content-embeddings',
+    summary: out.message
+  };
+};
+
 const runPipelineHealth = (workspace: BrandOpsData): AgentWorkspaceResult => {
   const active = workspace.opportunities.filter((o) => !o.archivedAt);
   if (active.length === 0) {
@@ -1069,6 +1086,8 @@ const runParsedRoute = async (
       return configureWorkspace(workspace, command);
     case 'pipeline-health':
       return runPipelineHealth(workspace);
+    case 'sync-content-embeddings':
+      return runSyncContentEmbeddings();
     case 'update-opportunity':
       if (
         opportunityUsesRichUpdate(command.text) ||
@@ -1084,7 +1103,7 @@ const runParsedRoute = async (
         ok: false,
         action: 'unsupported',
         summary:
-          'Command not recognized. Try: add note, pipeline health, reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
+          'Command not recognized. Try: add note, pipeline health, sync content embeddings, ask: (hosted question), reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
       };
   }
 };

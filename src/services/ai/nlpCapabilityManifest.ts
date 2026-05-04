@@ -39,8 +39,8 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
   {
     id: 'operator-traces-ai-io',
     label: 'Dataset traces for AI request/response lifecycle',
-    status: 'planned',
-    notes: 'Extend operator traces or AI audit ring buffer when Ask binds to runChatCompletion.'
+    status: 'implemented',
+    notes: 'persistChatGatewayTrace / persistEmbeddingsGatewayTrace write ai.gateway.* verbs when collection enabled.'
   },
   {
     id: 'internal-on-device-nlp',
@@ -51,8 +51,21 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
   {
     id: 'chat-ui-binding',
     label: 'Assistant transcript wired to gateway',
-    status: 'stub',
-    notes: 'Commands remain deterministic; connect Ask composer to runChatCompletion when product-ready.'
+    status: 'implemented',
+    notes: 'Mobile Assistant routes lines prefixed with ask: through runChatCompletion (+ optional structured pipeline-health auto-run).'
+  },
+  {
+    id: 'embedding-index-storage',
+    label: 'Persisted embedding index for content library slices',
+    status: 'implemented',
+    notes: 'BrandOpsData.embeddingIndex normalized in storage; refresh via “sync content embeddings” command.'
+  },
+  {
+    id: 'copilot-worker-registry',
+    label: 'First-class copilot worker registry (personas + picker)',
+    status: 'implemented',
+    notes:
+      'AppSettings.copilotWorkers with normalization; Assistant picker; Ask prompts compose NC + worker; per-worker allow-list + model override.'
   }
 ];
 

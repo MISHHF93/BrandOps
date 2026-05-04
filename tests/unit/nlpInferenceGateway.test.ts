@@ -97,6 +97,30 @@ describe('runChatCompletion', () => {
       })
     );
   });
+
+  it('includes response_format json_object when requested', async () => {
+    vi.mocked(getOpenAiCompatibleApiKey).mockResolvedValue('sk-test');
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: '{}' } }] })
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await runChatCompletion(
+      gatewaySettings({
+        aiAdapterMode: 'external-opt-in',
+        aiBridge: { inferenceBaseUrl: 'https://api.openai.com/v1' }
+      }),
+      {
+        messages: [{ role: 'user', content: 'hi' }],
+        responseFormatJsonObject: true
+      }
+    );
+
+    const init = fetchMock.mock.calls[0][1] as { body?: string };
+    const body = JSON.parse(init.body ?? '{}');
+    expect(body.response_format).toEqual({ type: 'json_object' });
+  });
 });
 
 describe('runEmbeddings', () => {

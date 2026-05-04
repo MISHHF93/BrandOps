@@ -26,7 +26,11 @@ import {
   SchedulerTask,
   OperatorTraceEntry,
   SeedDataSource,
-  WorkspaceModule
+  WorkspaceModule,
+  ContentItemEmbeddingRecord,
+  AiEmbeddingIndexState,
+  CopilotWorker,
+  CopilotWorkerContextHints
 } from '../../types/domain';
 import {
   MAX_OPERATOR_TRACE_ENTRIES,
@@ -1176,6 +1180,117 @@ const normalizeAiBridgeSettings = (
   };
 };
 
+const MAX_COPILOT_WORKERS = 8;
+const MAX_COPILOT_ID_LEN = 64;
+const MAX_COPILOT_NAME_LEN = 80;
+const MAX_COPILOT_DESC_LEN = 280;
+const MAX_COPILOT_INSTRUCTIONS_LEN = 4000;
+const MAX_COPILOT_MODEL_LEN = 128;
+const MAX_ALLOWED_AGENT_COMMAND_TOKENS = 16;
+const MAX_AGENT_COMMAND_TOKEN_LEN = 120;
+
+const normalizeCopilotWorkerRegistry = (
+  value: unknown,
+  fallback: BrandOpsData['settings']['copilotWorkers']
+): BrandOpsData['settings']['copilotWorkers'] => {
+  if (!value || typeof value !== 'object') {
+    return fallback;
+  }
+  const raw = value as Partial<{ workers?: unknown; activeWorkerId?: unknown }>;
+  const activeRaw = typeof raw.activeWorkerId === 'string' ? raw.activeWorkerId.trim() : '';
+  const workersIn = Array.isArray(raw.workers) ? raw.workers : [];
+  const workers: CopilotWorker[] = [];
+
+  for (const item of workersIn) {
+    if (!item || typeof item !== 'object') continue;
+    const w = item as Record<string, unknown>;
+    const id = typeof w.id === 'string' ? w.id.trim().slice(0, MAX_COPILOT_ID_LEN) : '';
+    const name = typeof w.name === 'string' ? w.name.trim().slice(0, MAX_COPILOT_NAME_LEN) : '';
+    const systemInstructions =
+      typeof w.systemInstructions === 'string'
+        ? w.systemInstructions.trim().slice(0, MAX_COPILOT_INSTRUCTIONS_LEN)
+        : '';
+    if (!id || !name || !systemInstructions) continue;
+    if (workers.some((x) => x.id === id)) continue;
+
+    const description =
+      typeof w.description === 'string'
+        ? w.description.trim().slice(0, MAX_COPILOT_DESC_LEN)
+        : undefined;
+
+    let allowedAgentCommands: string[] | undefined;
+    if (Array.isArray(w.allowedAgentCommands)) {
+      allowedAgentCommands = w.allowedAgentCommands
+        .filter((x): x is string => typeof x === 'string')
+        .map((x) => x.trim().slice(0, MAX_AGENT_COMMAND_TOKEN_LEN))
+        .filter(Boolean)
+        .slice(0, MAX_ALLOWED_AGENT_COMMAND_TOKENS);
+      if (allowedAgentCommands.length === 0) allowedAgentCommands = undefined;
+    }
+
+    const chatModelId =
+      typeof w.chatModelId === 'string'
+        ? w.chatModelId.trim().slice(0, MAX_COPILOT_MODEL_LEN)
+        : undefined;
+
+    const maxCompletionTokens =
+      typeof w.maxCompletionTokens === 'number' && Number.isFinite(w.maxCompletionTokens)
+        ? Math.min(Math.max(0, Math.floor(w.maxCompletionTokens)), 8192)
+        : undefined;
+
+    let contextHints: CopilotWorkerContextHints | undefined;
+    if (w.contextHints && typeof w.contextHints === 'object' && !Array.isArray(w.contextHints)) {
+      const ch = w.contextHints as Record<string, unknown>;
+      const tags = Array.isArray(ch.contentTags)
+        ? ch.contentTags
+            .filter((t): t is string => typeof t === 'string')
+            .map((t) => t.trim().slice(0, 64))
+            .filter(Boolean)
+            .slice(0, 24)
+        : undefined;
+      const kinds = Array.isArray(ch.integrationArtifactKinds)
+        ? ch.integrationArtifactKinds
+            .filter((t): t is string => typeof t === 'string')
+            .map((t) => t.trim().slice(0, 64))
+            .filter(Boolean)
+            .slice(0, 24)
+        : undefined;
+      const includeBrandVault =
+        typeof ch.includeBrandVault === 'boolean' ? ch.includeBrandVault : undefined;
+      if ((tags && tags.length) || (kinds && kinds.length) || includeBrandVault !== undefined) {
+        contextHints = {};
+        if (tags?.length) contextHints.contentTags = tags;
+        if (kinds?.length) contextHints.integrationArtifactKinds = kinds;
+        if (includeBrandVault !== undefined) contextHints.includeBrandVault = includeBrandVault;
+      }
+    }
+
+    workers.push({
+      id,
+      name,
+      ...(description ? { description } : {}),
+      systemInstructions,
+      ...(contextHints ? { contextHints } : {}),
+      ...(allowedAgentCommands ? { allowedAgentCommands } : {}),
+      ...(chatModelId ? { chatModelId } : {}),
+      ...(maxCompletionTokens !== undefined && maxCompletionTokens > 0 ? { maxCompletionTokens } : {})
+    });
+
+    if (workers.length >= MAX_COPILOT_WORKERS) break;
+  }
+
+  if (!workers.length) {
+    return fallback;
+  }
+
+  const idSet = new Set(workers.map((x) => x.id));
+  const activeTrimmed = activeRaw.slice(0, MAX_COPILOT_ID_LEN);
+  const activeWorkerId =
+    activeTrimmed && idSet.has(activeTrimmed) ? activeTrimmed : workers[0].id;
+
+  return { workers, activeWorkerId };
+};
+
 const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
   const fallback = defaultAppSettings;
   if (!settings || typeof settings !== 'object') {
@@ -1238,7 +1353,8 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
     syncHub: normalizeSyncHubSettings(candidate.syncHub),
     notificationCenter: normalizeNotificationCenterSettings(candidate.notificationCenter),
     cadenceFlow: normalizeCadenceFlowSettings(candidate.cadenceFlow),
-    aiBridge: normalizeAiBridgeSettings(candidate.aiBridge, fallback.aiBridge)
+    aiBridge: normalizeAiBridgeSettings(candidate.aiBridge, fallback.aiBridge),
+    copilotWorkers: normalizeCopilotWorkerRegistry(candidate.copilotWorkers, fallback.copilotWorkers)
   };
 };
 
@@ -1279,6 +1395,49 @@ const normalizeAgentAudit = (value: unknown): NonNullable<BrandOpsData['agentAud
     if (entries.length >= MAX_AGENT_AUDIT_ENTRIES) break;
   }
   return { entries: entries.slice(-MAX_AGENT_AUDIT_ENTRIES) };
+};
+
+const MAX_EMBEDDING_INDEX_ENTRIES = 48;
+const MAX_EMBEDDING_VECTOR_DIM = 1536;
+
+const normalizeEmbeddingIndex = (value: unknown): AiEmbeddingIndexState => {
+  if (!value || typeof value !== 'object') {
+    return { entries: [] };
+  }
+  const raw = (value as { entries?: unknown }).entries;
+  if (!Array.isArray(raw)) {
+    return { entries: [] };
+  }
+  const entries: ContentItemEmbeddingRecord[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') continue;
+    const r = row as Record<string, unknown>;
+    if (
+      typeof r.id !== 'string' ||
+      typeof r.contentLibraryItemId !== 'string' ||
+      typeof r.modelId !== 'string' ||
+      typeof r.textFingerprint !== 'string' ||
+      typeof r.updatedAt !== 'string'
+    ) {
+      continue;
+    }
+    if (!Array.isArray(r.vector)) continue;
+    const vector = r.vector
+      .filter((x): x is number => typeof x === 'number' && Number.isFinite(x))
+      .slice(0, MAX_EMBEDDING_VECTOR_DIM);
+    if (vector.length === 0) continue;
+    entries.push({
+      id: r.id.slice(0, 160),
+      contentLibraryItemId: r.contentLibraryItemId.slice(0, 160),
+      modelId: r.modelId.slice(0, 128),
+      dims: vector.length,
+      vector,
+      textFingerprint: r.textFingerprint.slice(0, 160),
+      updatedAt: r.updatedAt
+    });
+    if (entries.length >= MAX_EMBEDDING_INDEX_ENTRIES) break;
+  }
+  return { entries };
 };
 
 const normalizeOperatorTraces = (value: unknown): NonNullable<BrandOpsData['operatorTraces']> => {
@@ -1373,6 +1532,7 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   integrationHub: normalizeIntegrationHubState(base.integrationHub),
   agentAudit: normalizeAgentAudit(base.agentAudit),
   operatorTraces: normalizeOperatorTraces(base.operatorTraces),
+  embeddingIndex: normalizeEmbeddingIndex(base.embeddingIndex),
   scheduler: normalizeSchedulerState(base.scheduler),
   seed: {
     source: normalizeSeedSource(base.seed?.source),

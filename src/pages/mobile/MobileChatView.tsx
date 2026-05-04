@@ -14,6 +14,7 @@ import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
 import type { WorkspaceSignalsPick } from './WorkspaceSignalsBoard';
 import { getIntentByCommandLine } from './chatIntents';
+import type { CopilotWorkerRegistrySettings } from '../../types/domain';
 
 export interface ChatMessage {
   id: string;
@@ -22,7 +23,7 @@ export interface ChatMessage {
   sourceSurface?: 'Workspace' | 'Today' | 'Integrations' | 'Settings' | 'Chat';
   action?: string;
   ok?: boolean;
-  resultKind?: 'plain' | 'command-result';
+  resultKind?: 'plain' | 'command-result' | 'ask-result';
   strip?: {
     notes: number;
     queue: number;
@@ -59,6 +60,9 @@ export interface MobileChatViewProps {
   loading: boolean;
   commandHistory: string[];
   onQuickCommand: (command: string) => void;
+  /** Hosted Ask copilot registry + picker (persists via shell). */
+  copilotWorkerRegistry: CopilotWorkerRegistrySettings;
+  onSelectCopilotWorker: (workerId: string) => void;
   onClearCommandHistory: () => void;
   btnFocus: string;
   onOpenToday: () => void;
@@ -75,6 +79,8 @@ export const MobileChatView = ({
   loading,
   commandHistory,
   onQuickCommand,
+  copilotWorkerRegistry,
+  onSelectCopilotWorker,
   onClearCommandHistory,
   btnFocus,
   onOpenToday,
@@ -154,6 +160,34 @@ export const MobileChatView = ({
           ) : null}
         </div>
       </header>
+
+      <section aria-label="Hosted Ask copilot" className="min-w-0 px-2.5 sm:px-3.5">
+        <p className="mb-1 text-[9px] font-bold uppercase tracking-wide text-textMuted">
+          Copilot (ask: …)
+        </p>
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {copilotWorkerRegistry.workers.map((w) => {
+            const active = copilotWorkerRegistry.activeWorkerId === w.id;
+            return (
+              <button
+                key={w.id}
+                type="button"
+                title={w.description ?? w.name}
+                onClick={() => onSelectCopilotWorker(w.id)}
+                className={clsx(
+                  'shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors touch-manipulation',
+                  active
+                    ? 'border-accent/55 bg-accentSoft/35 text-accent'
+                    : 'border-border/45 bg-surface/55 text-textMuted hover:border-accent/35 hover:text-text',
+                  btnFocus
+                )}
+              >
+                {w.name}
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       <section aria-labelledby="assistant-starters-label" className="min-w-0">
         <div className="flex items-center justify-between gap-2 px-0.5">
@@ -286,6 +320,19 @@ export const MobileChatView = ({
                         </p>
                       ) : null}
                       <p>{message.text}</p>
+                    </div>
+                  ) : message.resultKind === 'ask-result' ? (
+                    <div className="bo-chat-bubble-assistant space-y-1">
+                      <p className="text-[9px] font-bold uppercase tracking-wide text-accent">
+                        Hosted model
+                      </p>
+                      {typeof message.ok === 'boolean' && !message.ok ? (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-warning">
+                          <AlertCircle size={11} aria-hidden />
+                          Unavailable
+                        </span>
+                      ) : null}
+                      <p className="leading-snug">{message.text}</p>
                     </div>
                   ) : message.resultKind === 'command-result' && message.action ? (
                     <div className="bo-chat-bubble-meta space-y-1.5 text-[13px]">
