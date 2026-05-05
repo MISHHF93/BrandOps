@@ -44,7 +44,7 @@ export const CockpitBrandContentWorkstreamSection = ({
     </div>
     <span className="sr-only">
       {meta.description} Brand and publishing rows are read-only digest. Strategic BrandOps
-      functions run in Chat — not Settings. Full mixed queue in Pulse.
+      functions run in Chat — not Settings. Full mixed queue on Plan.
     </span>
     <p className="mt-2 text-textSoft">
       Queue: <span className="text-text">{snapshot.publishingQueue}</span> ·{' '}

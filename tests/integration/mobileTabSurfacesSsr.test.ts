@@ -32,10 +32,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         commandBusy: false,
         runCommand: noop,
         primeChat: noop,
-        onOpenToday: noop,
-        onOpenIntegrations: noop,
-        onOpenSettings: noop,
-        onOpenCommandPalette: noop
+        onOpenToday: noop
       })
     );
     expect(html).toContain('aria-label="Plan"');
@@ -50,10 +47,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Jump within Plan');
     expect(html).toContain('Today snapshot');
     expect(html).toContain('Open full Today');
-    expect(html).toContain('Connect');
-    expect(html).toContain('Setup');
+    expect(html).toContain('Integrations &amp; Setup live in ⌘K');
+    expect(html).toContain('>Today<');
     expect(html).toContain('>Pipeline<');
-    expect(html).toContain('Commands');
     expect(html).toContain('<table');
     expect(html).toContain('bo-icon-chip');
   });
@@ -89,6 +85,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Recent');
     expect(html).toContain('pipeline health');
     expect(html).toContain('bo-assistant-hero');
+    expect(html).toContain('Open Plan');
   });
 
   it('AppearanceToggle renders sun/moon segment for shell header', () => {
@@ -112,7 +109,6 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         runCommand: noop,
         primeChat: noop,
         onOpenInAppSettings: noop,
-        onOpenPulseTab: noop,
         activeWorkstream: 'today',
         onSelectWorkstream: noop
       })
@@ -136,7 +132,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('id="cockpit-connections"');
     expect(html).toContain('role="group"');
     expect(html).toContain('Chronological mix');
-    expect(html).toContain('Full mixed queue');
+    expect(html).toContain('Full mixed queue on Plan');
     expect(html).toContain('Today workstream Chat starters');
     expect(html).toContain('Pipeline workstream Chat starters');
     expect(html).toContain('Brand and content Chat starters');
@@ -151,7 +147,6 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         runCommand: noop,
         primeChat: noop,
         onOpenInAppSettings: noop,
-        onOpenPulseTab: noop,
         activeWorkstream: 'today',
         onSelectWorkstream: noop
       })

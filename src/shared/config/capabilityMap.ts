@@ -38,7 +38,7 @@ export const cockpitCapabilities: CockpitCapability[] = [
   {
     id: 'scheduler-cadence',
     label: 'Scheduler and cadence',
-    summary: 'Due work surfaces on Workspace overview and Today; cadence and workday caps in Settings.',
+    summary: 'Due work surfaces on Plan and Today; cadence and workday caps in Settings.',
     primaryTab: 'workspace',
     secondaryTabs: ['daily', 'settings']
   },

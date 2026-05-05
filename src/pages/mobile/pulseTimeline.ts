@@ -40,7 +40,7 @@ function sortTime(iso: string): number {
 }
 
 /**
- * Mixed chronological queue (Workspace overview + Today context): open follow-ups,
+ * Mixed chronological queue (Plan hub + Today context): open follow-ups,
  * attention publishing, active scheduler tasks, and draft/ready outreach — capped for mobile performance.
  */
 export function buildPulseTimeline(workspace: BrandOpsData): PulseTimelineRow[] {

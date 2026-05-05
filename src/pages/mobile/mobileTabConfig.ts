@@ -35,7 +35,7 @@ export const COMMAND_PALETTE_NAV_TARGETS: ReadonlyArray<{
   },
   {
     tab: 'workspace',
-    label: 'Workspace overview',
+    label: 'Plan',
     keywords: ['workspace', 'home', 'overview', 'plan', 'pulse', 'timeline', 'queue', 'hub'],
     Icon: LayoutDashboard
   },

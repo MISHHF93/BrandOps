@@ -1088,9 +1088,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 runCommand={sendQuickCommandFrom('Workspace')}
                 primeChat={primeChat}
                 onOpenToday={() => commitTab('daily')}
-                onOpenIntegrations={() => commitTab('integrations')}
-                onOpenSettings={() => commitTab('settings')}
-                onOpenCommandPalette={() => setCommandPaletteOpen(true)}
               />
             ) : null}
 
@@ -1110,7 +1107,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                   runCommand={sendQuickCommandFrom('Today')}
                   primeChat={primeChat}
                   onOpenInAppSettings={() => commitTab('settings')}
-                  onOpenPulseTab={() => commitTab('workspace')}
                   activeWorkstream={cockpitWorkstream}
                   onSelectWorkstream={handleSelectWorkstream}
                 />

@@ -98,20 +98,8 @@ export const MobileChatView = ({
             </p>
             <h2 className="bo-dos-hero-title text-text">Assistant</h2>
             <p className="mt-0.5 bo-dos-prompt text-[11px] leading-snug text-textMuted">
-              On-device · <span className="whitespace-nowrap">⌘K</span> palette
-              {onOpenPlan ? (
-                <>
-                  {' '}
-                  ·{' '}
-                  <button
-                    type="button"
-                    className="font-semibold text-accent underline decoration-accent/35 underline-offset-2 hover:decoration-accent"
-                    onClick={onOpenPlan}
-                  >
-                    Plan
-                  </button>
-                </>
-              ) : null}
+              On-device · <span className="whitespace-nowrap">⌘K</span> palette — dock switches Ask /
+              Plan
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 self-start">
@@ -119,7 +107,8 @@ export const MobileChatView = ({
               <button
                 type="button"
                 onClick={onOpenPlan}
-                title="Workspace overview"
+                title="Plan — queue and pulse"
+                aria-label="Open Plan"
                 className={clsx('bo-icon-btn-ai', btnFocus)}
               >
                 <LayoutDashboard className="h-4 w-4" strokeWidth={2.25} aria-hidden />
@@ -144,18 +133,6 @@ export const MobileChatView = ({
           <span className="bo-assistant-stat-pill">FU {vitalityMetrics.incompleteFollowUps}</span>
           <span className="bo-assistant-stat-pill">Q {vitalityMetrics.publishingQueue}</span>
           <span className="bo-assistant-stat-pill">Missed {vitalityMetrics.missedTasks}</span>
-          {onOpenPlan ? (
-            <button
-              type="button"
-              onClick={onOpenPlan}
-              className={clsx(
-                'bo-assistant-stat-pill bo-assistant-stat-pill--action !px-2 !py-1 text-[10px] font-semibold',
-                btnFocus
-              )}
-            >
-              Queue →
-            </button>
-          ) : null}
         </div>
       </header>
 

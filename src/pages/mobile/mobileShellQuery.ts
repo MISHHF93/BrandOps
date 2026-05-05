@@ -20,7 +20,7 @@ export function dockTabForShellTab(tab: MobileShellTabId): 'chat' | 'workspace' 
 /**
  * Reserved `?section=` values that select a **tab**, not a Cockpit workstream.
  * `daily` and `cockpit` open the Cockpit tab and default the workstream to `today` for highlight/scroll.
- * `pulse` / `timeline` / `home` / `hub` resolve to the Workspace overview (queue lives there — not a separate feed tab).
+ * `pulse` / `timeline` / `home` / `hub` resolve to the **Plan** hub tab (`workspace`; queue lives there — not a separate feed tab).
  */
 const RESERVED_SECTION_TAB = new Set([
   'pulse',

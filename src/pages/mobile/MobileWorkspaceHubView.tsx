@@ -26,15 +26,11 @@ export interface MobileWorkspaceHubViewProps {
   runCommand: (command: string) => void | Promise<void>;
   primeChat: (line: string) => void;
   onOpenToday: () => void;
-  onOpenIntegrations: () => void;
-  onOpenSettings: () => void;
-  /** Opens the global workspace command palette (same as ⌘K / header search). */
-  onOpenCommandPalette: () => void;
 }
 
 /**
- * Plan hub (`workspace` tab): **destinations first**, jump links, **Pulse** instruments, **Today snapshot**,
- * then soonest-first queue — same capabilities as before, vertically scannable.
+ * Plan hub (`workspace` tab): **Today + Pipeline** shortcuts, jump links, **Pulse**, **Today snapshot**,
+ * then soonest-first queue. Integrations and Setup open via ⌘K palette (dock stays Ask / Plan).
  */
 export const MobileWorkspaceHubView = ({
   snapshot,
@@ -42,10 +38,7 @@ export const MobileWorkspaceHubView = ({
   commandBusy,
   runCommand,
   primeChat,
-  onOpenToday,
-  onOpenIntegrations,
-  onOpenSettings,
-  onOpenCommandPalette
+  onOpenToday
 }: MobileWorkspaceHubViewProps) => {
   const sorted = sortRowsSoonestFirst(snapshot.pulseTimelineRows);
   const todayPreviewTasks = snapshot.cockpitSchedulerTaskPeek.slice(0, 4);
@@ -55,8 +48,8 @@ export const MobileWorkspaceHubView = ({
   return (
     <div className="space-y-4" aria-label="Plan">
       <span className="sr-only">
-        Plan — pick a destination, use jump links for Pulse, Today snapshot, or queue; ⌘K opens commands;
-        Assistant runs chat; Today tab has full lanes.
+        Plan — Today and Pipeline shortcuts below; Integrations and Setup via ⌘K; jump links for Pulse,
+        Today snapshot, and queue; Assistant runs chat.
       </span>
 
       <article className="bo-flagship-surface overflow-hidden">
@@ -64,7 +57,8 @@ export const MobileWorkspaceHubView = ({
           <header className="-mx-0.5 border-b border-border/28 pb-3">
             <h1 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-textMuted">Plan</h1>
             <p className="mt-1 text-[10px] leading-snug text-textSoft">
-              Go somewhere first — then skim Pulse and the soonest-first queue.
+              Open Today or run pipeline health here — Integrations & Setup live in ⌘K — then skim Pulse
+              and the queue.
             </p>
           </header>
 
@@ -73,9 +67,6 @@ export const MobileWorkspaceHubView = ({
             commandBusy={commandBusy}
             runCommand={runCommand}
             onOpenToday={onOpenToday}
-            onOpenIntegrations={onOpenIntegrations}
-            onOpenSettings={onOpenSettings}
-            onOpenCommandPalette={onOpenCommandPalette}
           />
 
           <PlanJumpNav btnFocus={btnFocus} />

@@ -62,7 +62,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     summary:
       'Primary UI is mobile.html (Assistant + Workspace dock; deeper panels for Today / Integrations / Settings). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
     paragraphs: [
-      'The product is a browser extension. **mobile.html** is the primary workspace: Assistant (default), Workspace overview, Today, Integrations, and Settings (Assistant + Workspace overview are the dock; other sections open as panels).',
+      'The product is a browser extension. **mobile.html** is the primary workspace: Assistant (default), Plan (dock), Today, Integrations, and Settings (Assistant + Plan are the dock; other sections open via ⌘K or deep links).',
       '**welcome.html** uses the same shell and lands on **Assistant** first so new users can run commands immediately; open Plan for instruments and queue.',
       '**dashboard.html** loads the same shell; legacy ?section= workstream links redirect to mobile.html so deep links stay consistent.',
       '**integrations.html** is the Chrome options_ui entry (Integrations tab by default). **help.html** is this Knowledge Center.',

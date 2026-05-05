@@ -24,7 +24,7 @@ export function hrefPrimaryAppChat(): string {
   return r(buildMobileShellUrl({ tab: 'chat' }));
 }
 
-/** Workspace overview (`?section=workspace`) — queue + instruments on the primary app. */
+/** Plan hub (`?section=workspace`) — queue + instruments on the primary app. */
 export function hrefPrimaryAppPulse(): string {
   return r(buildMobileShellUrl({ tab: 'workspace' }));
 }

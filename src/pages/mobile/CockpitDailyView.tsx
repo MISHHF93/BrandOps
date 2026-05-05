@@ -22,8 +22,6 @@ export interface CockpitDailyViewProps {
   /** Puts text in the Chat composer (does not send). Use when the agent only targets “first” rows. */
   primeChat: (line: string) => void;
   onOpenInAppSettings: () => void;
-  /** Open Workspace overview (instruments + queue); used for “full queue” cross-links from Today. */
-  onOpenPulseTab: () => void;
   activeWorkstream: DashboardSectionId;
   onSelectWorkstream: (target: DashboardSectionId) => void;
 }
@@ -43,7 +41,6 @@ export const CockpitDailyView = ({
   runCommand,
   primeChat,
   onOpenInAppSettings,
-  onOpenPulseTab,
   activeWorkstream,
   onSelectWorkstream
 }: CockpitDailyViewProps) => {
@@ -94,7 +91,6 @@ export const CockpitDailyView = ({
         <CockpitPipelineWorkstreamSection
           snapshot={snapshot}
           {...actions}
-          onOpenPulse={onOpenPulseTab}
           meta={{
             label: pipelineMeta?.label ?? 'Pipeline',
             description: pipelineMeta?.description ?? ''
@@ -110,7 +106,6 @@ export const CockpitDailyView = ({
         <CockpitBrandContentWorkstreamSection
           snapshot={snapshot}
           {...actions}
-          onOpenPulse={onOpenPulseTab}
           meta={{
             label: brandMeta?.label ?? 'Brand & content',
             description: brandMeta?.description ?? ''

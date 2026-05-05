@@ -5,7 +5,7 @@ import type { MobileShellTabId } from './mobileShellQuery';
  */
 export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
   workspace:
-    'Plan — destination grid, jump links, Pulse counts, Today snapshot, soonest-first queue.',
+    'Plan — Today + Pipeline shortcuts, jump links, Pulse, Today snapshot, queue; ⌘K for Setup & Connect.',
   chat: 'Assistant — workspace commands and hosted Ask; ⌘K jumps anywhere.',
   daily: 'Today lanes and workstreams.',
   integrations: 'Connect tools and sync.',
@@ -17,7 +17,7 @@ export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
  */
 export const SHELL_TAB_SR_SUMMARY: Record<MobileShellTabId, string> = {
   workspace:
-    'Plan — destinations first, jump to Pulse, Today snapshot, or queue; ⌘K for commands.',
+    'Plan — Today and Pipeline tiles; ⌘K opens Integrations, Setup, and commands; jump links below.',
   chat: 'Assistant — command entry and Ask.',
   daily: 'Today plan and work areas.',
   integrations: 'Integrations.',

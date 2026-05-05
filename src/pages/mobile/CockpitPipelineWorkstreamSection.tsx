@@ -48,7 +48,7 @@ export const CockpitPipelineWorkstreamSection = ({
     </div>
     <span className="sr-only">
       {meta.description} Pipeline lists are read-only digest. Stage changes and outreach run in Chat
-      — not the Settings tab. Chronological mix in Pulse.
+      — not the Settings tab. Chronological mix on Plan queue.
     </span>
 
     <CockpitWorkstreamCommandStrip

@@ -41,7 +41,7 @@ describe('localProductUsage', () => {
     expect(raw?.activeLocalDays).toContain(localDayKey());
   });
 
-  it('increments navigation when landing on Assistant from Workspace overview or Today', async () => {
+  it('increments navigation when landing on Assistant from Plan or Today', async () => {
     await recordShellNavigation('workspace', 'chat');
     await recordShellNavigation('daily', 'chat');
     const s = await getLocalProductUsageSummary();

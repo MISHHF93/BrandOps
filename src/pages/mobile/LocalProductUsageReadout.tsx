@@ -128,7 +128,7 @@ export function LocalProductUsageReadout() {
       >
         {(
           [
-            ['Workspace overview', summary.fromPulseToChat],
+            ['Plan', summary.fromPulseToChat],
             ['Today', summary.fromTodayToChat],
             ['Integrations', summary.fromIntegrationsToChat],
             ['Settings', summary.fromSettingsToChat]

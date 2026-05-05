@@ -58,11 +58,11 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
 
 
-  it('keeps Today → Workspace overview cross-link', () => {
+  it('threads CockpitDailyView without obsolete Plan-tab cross-prop', () => {
 
     const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
 
-    expect(cockpitJsx).toContain("onOpenPulseTab={() => commitTab('workspace')}");
+    expect(cockpitJsx).not.toContain('onOpenPulseTab');
 
   });
 

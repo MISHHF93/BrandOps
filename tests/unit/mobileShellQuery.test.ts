@@ -5,7 +5,7 @@ import {
 } from '../../src/pages/mobile/mobileShellQuery';
 
 describe('mobileShellQuery', () => {
-  it('maps pulse, timeline, and workspace aliases to the Workspace overview tab', () => {
+  it('maps pulse, timeline, and workspace aliases to the Plan hub tab', () => {
     expect(parseMobileShellFromSearchParams(new URLSearchParams('section=pulse'), 'chat')).toEqual({
       tab: 'workspace',
       workstream: null
