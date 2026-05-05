@@ -111,16 +111,22 @@
   --field-bg: var(--color-bg-elevated);
   --field-border: var(--color-border);
   --field-focus-ring: var(--color-focus-ring);
-  /* Ask / Assistant — flat panels on absolute black */
-  --bo-chat-canvas: 0 0 0;
-  --bo-chat-hero-bg: 8 10 9;
-  --bo-chat-user-bg: 16 72 40;
-  --bo-chat-user-fg: 220 255 232;
-  --bo-chat-assistant-bg: 12 14 13;
-  --bo-chat-assistant-border: 38 72 52;
-  --bo-chat-thread-bg: 4 6 5;
-  --bo-chat-starter-bg: 14 18 15;
-  --bo-chat-starter-border: 48 78 58;
+  /* Assistant — derives from surface primitives (tracks dark/light with global palette). */
+  --bo-chat-canvas: var(--color-bg);
+  --bo-chat-hero-bg: var(--color-bg-subtle);
+  --bo-chat-user-bg: var(--color-primary);
+  --bo-chat-user-fg: var(--brand-ink);
+  --bo-chat-assistant-bg: var(--color-surface);
+  --bo-chat-assistant-border: var(--color-border);
+  --bo-chat-thread-bg: var(--color-bg-subtle);
+  --bo-chat-starter-bg: var(--color-surface);
+  --bo-chat-starter-border: var(--color-border);
+  /* Flagship — semantic aliases over primitives (mobile shell grid / chrome). */
+  --flagship-canvas-a: var(--color-bg);
+  --flagship-canvas-b: var(--color-bg-elevated);
+  --flagship-sheen: var(--color-text);
+  --flagship-line: var(--color-accent);
+  --flagship-depth-alpha: 0.35;
   --font-terminal:
     ui-monospace, 'Cascadia Mono', 'Cascadia Code', 'Segoe UI Mono', 'SFMono-Regular', Menlo, Monaco,
     Consolas, 'Liberation Mono', monospace;
@@ -213,15 +219,18 @@
   --field-bg: var(--color-bg-elevated);
   --field-border: var(--color-border);
   --field-focus-ring: var(--color-focus-ring);
-  --bo-chat-canvas: 255 255 255;
-  --bo-chat-hero-bg: 252 255 253;
-  --bo-chat-user-bg: 16 110 62;
-  --bo-chat-user-fg: 255 255 255;
-  --bo-chat-assistant-bg: 255 255 255;
-  --bo-chat-assistant-border: 184 214 196;
-  --bo-chat-thread-bg: 246 250 247;
-  --bo-chat-starter-bg: 255 255 255;
-  --bo-chat-starter-border: 176 204 186;
+  --bo-chat-canvas: var(--color-bg);
+  --bo-chat-hero-bg: var(--color-bg-subtle);
+  --bo-chat-user-bg: var(--color-primary);
+  --bo-chat-user-fg: var(--color-bg);
+  --bo-chat-assistant-bg: var(--color-surface);
+  --bo-chat-assistant-border: var(--color-border);
+  --bo-chat-thread-bg: var(--color-bg-subtle);
+  --bo-chat-starter-bg: var(--color-surface);
+  --bo-chat-starter-border: var(--color-border);
+  /* Light: highlight reads as paper wash (same role as former plain white sheen). */
+  --flagship-sheen: var(--color-bg);
+  --flagship-depth-alpha: 0.08;
 }
 
 body {
@@ -272,23 +281,6 @@ html[data-app-surface='welcome'] body {
 html[data-app-surface='welcome'] body::before,
 html[data-app-surface='welcome'] body::after {
   opacity: 0;
-}
-
-/* Flagship canvas tokens referenced by `.bo-mobile-app` (declare before layered rules). */
-:root {
-  --flagship-canvas-a: 0 0 0;
-  --flagship-canvas-b: 10 10 10;
-  --flagship-sheen: 198 255 210;
-  --flagship-line: 51 255 119;
-  --flagship-depth-alpha: 0.35;
-}
-
-:root[data-theme='light'] {
-  --flagship-canvas-a: 255 255 255;
-  --flagship-canvas-b: 248 252 249;
-  --flagship-sheen: 255 255 255;
-  --flagship-line: 16 120 72;
-  --flagship-depth-alpha: 0.08;
 }
 
 @keyframes bo-flagship-canvas-drift {
@@ -1500,17 +1492,6 @@ html[data-app-surface='welcome'] body::after {
     display: none;
   }
 
-  [data-visual-mode='retroMagic'] {
-    --retro-noise-opacity: 0.045;
-    --glass-blur-strong: 20px;
-    --glass-saturate: 115%;
-  }
-
-  [data-motion-mode='wild'] {
-    --duration-liquid-enter: 400ms;
-    --duration-liquid-hover: 260ms;
-  }
-
   [data-motion-mode='off'] {
     --duration-fast: 0ms;
     --duration-base: 0ms;
@@ -1552,20 +1533,6 @@ html[data-app-surface='welcome'] body::after {
       );
     mix-blend-mode: screen;
     opacity: 0.48;
-  }
-
-  /* Light: `screen` sheen on pale surfaces reads as haze; soft-light + lower opacity + subtler scanlines. */
-  :root[data-theme='light'][data-visual-mode='retroMagic'] {
-    --retro-noise-opacity: 0.03;
-  }
-
-  :root[data-theme='light'][data-visual-mode='retroMagic'] .bo-retro-panel::after {
-    mix-blend-mode: soft-light;
-    opacity: 0.28;
-  }
-
-  :root[data-theme='light'][data-visual-mode='retroMagic'] .bo-retro-card:hover::before {
-    opacity: 0.4;
   }
 
   .bo-retro-glow {
@@ -1637,26 +1604,6 @@ html[data-app-surface='welcome'] body::after {
     transition: opacity var(--duration-liquid-hover) var(--ease-liquid-out);
   }
 
-  [data-ambient-fx='on'] .bo-retro-ambient::before {
-    opacity: 0.36;
-    background:
-      radial-gradient(circle at 12% 18%, rgb(var(--retro-glow-cyan) / 0.14), transparent 36%),
-      radial-gradient(circle at 84% 14%, rgb(var(--retro-glow-pink) / 0.1), transparent 32%);
-    animation: bo-retro-float 14s var(--ease-liquid-in-out) infinite alternate;
-  }
-
-  [data-ambient-fx='on'] .bo-retro-ambient::after {
-    opacity: 0.26;
-    background:
-      radial-gradient(circle at 24% 84%, rgb(var(--retro-glow-gold) / 0.08), transparent 34%),
-      repeating-linear-gradient(
-        130deg,
-        rgb(var(--retro-glow-cyan) / 0.04) 0 1px,
-        transparent 1px 26px
-      );
-    animation: bo-retro-drift 22s linear infinite;
-  }
-
   .bo-nav-signal {
     pointer-events: none;
     position: fixed;
@@ -1675,33 +1622,6 @@ html[data-app-surface='welcome'] body::after {
     animation: bo-retro-nav-signal 420ms var(--ease-liquid-out);
   }
 
-  [data-visual-mode='retroMagic'] .bo-card {
-    border-color: rgb(var(--retro-glow-cyan) / 0.28);
-    background:
-      linear-gradient(
-        162deg,
-        rgb(var(--color-surface) / 0.9),
-        rgb(var(--color-bg-elevated) / 0.86) 56%,
-        rgb(var(--color-bg) / 0.88)
-      ),
-      radial-gradient(112% 140% at 96% 4%, rgb(var(--retro-glow-pink) / 0.15), transparent 58%),
-      radial-gradient(112% 140% at 8% 96%, rgb(var(--retro-glow-cyan) / 0.14), transparent 52%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  }
-
-  [data-visual-mode='retroMagic'] .bo-pill {
-    border-color: rgb(var(--retro-glow-cyan) / 0.4);
-    box-shadow:
-      inset 0 1px 0 rgb(var(--color-text) / 0.1),
-      0 0 14px rgb(var(--retro-glow-cyan) / 0.16);
-  }
-
-  [data-visual-mode='retroMagic'] .bo-link:hover {
-    box-shadow:
-      inset 0 1px 0 rgb(var(--color-text) / 0.08),
-      0 10px 22px rgb(var(--color-shadow) / 0.34),
-      0 0 24px rgb(var(--retro-glow-cyan) / 0.24);
-  }
   .bo-system-screen {
     position: relative;
     width: 100%;

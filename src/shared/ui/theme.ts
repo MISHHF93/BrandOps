@@ -46,7 +46,7 @@ export function bootstrapDocumentThemeFromWebStorage(): void {
   }
 }
 
-/** Apply light/dark plus the unified BrandOps appearance contract. */
+/** Apply light/dark and motion hints derived from system reduced-motion preference. */
 export const applyDocumentThemeFromAppSettings = (settings: AppSettings): void => {
   applyDocumentTheme(settings.theme);
 };
@@ -57,12 +57,12 @@ const applyDocumentTheme = (theme: UiTheme) => {
   root.setAttribute('data-theme', resolved);
   root.style.colorScheme = resolved;
   syncMetaThemeColor(resolved);
-  root.setAttribute('data-visual-mode', 'brandops');
   const prefersReducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const effectiveMotionMode = prefersReducedMotion ? 'off' : 'balanced';
-  root.setAttribute('data-motion-mode', effectiveMotionMode);
-  root.setAttribute('data-ambient-fx', 'off');
+  root.setAttribute(
+    'data-motion-mode',
+    prefersReducedMotion ? 'off' : 'balanced'
+  );
 
   try {
     const transitionTarget = window.sessionStorage.getItem('bo:surface-transition');

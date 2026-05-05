@@ -1,9 +1,6 @@
 import { BrandOpsData } from '../../types/domain';
 
 export type AiSettingsOperationKind =
-  | 'set-visual-mode'
-  | 'set-motion-mode'
-  | 'set-ambient-fx'
   | 'set-debug-mode'
   | 'set-managerial-weight'
   | 'set-workday-window'
@@ -169,15 +166,6 @@ export const applyAiSettingsOperations = (
   operations.forEach((operation) => {
     try {
       switch (operation.kind) {
-        case 'set-visual-mode':
-          skipped.push('Visual mode is unified and no longer configurable.');
-          break;
-        case 'set-motion-mode':
-          skipped.push('Motion follows the unified BrandOps behavior and reduced-motion setting.');
-          break;
-        case 'set-ambient-fx':
-          skipped.push('Ambient effects are unified and no longer configurable.');
-          break;
         case 'set-debug-mode':
           skipped.push('Debug mode is not exposed in workspace settings.');
           break;

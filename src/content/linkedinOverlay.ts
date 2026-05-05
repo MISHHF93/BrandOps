@@ -113,26 +113,11 @@ const syncFormWithProfile = () => {
   }
 };
 
-/** Aligns with extension `index.css` liquid durations; respects workspace motion mode when storage is available. */
+/** Aligns with `index.css` liquid durations; mirrors web shell (system reduced-motion only). */
 const applyLiquidMotionToCompanionRoot = async (root: HTMLDivElement) => {
-  try {
-    const data = await storageService.getData();
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const mm = data.settings.motionMode;
-    let hover = '220ms';
-    let enter = '320ms';
-    if (reduced || mm === 'off') {
-      hover = '0ms';
-      enter = '0ms';
-    } else if (mm === 'wild') {
-      hover = '260ms';
-      enter = '400ms';
-    }
-    root.style.setProperty('--duration-liquid-hover', hover);
-    root.style.setProperty('--duration-liquid-enter', enter);
-  } catch {
-    // Keep defaults from injected stylesheet.
-  }
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  root.style.setProperty('--duration-liquid-hover', reduced ? '0ms' : '220ms');
+  root.style.setProperty('--duration-liquid-enter', reduced ? '0ms' : '320ms');
 };
 
 const ensureStyles = () => {

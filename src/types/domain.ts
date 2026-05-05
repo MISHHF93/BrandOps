@@ -405,8 +405,6 @@ export interface CadenceFlowSettings {
 }
 
 export type UiTheme = 'dark' | 'light';
-export type VisualMode = 'classic' | 'retroMagic';
-export type MotionMode = 'off' | 'balanced' | 'wild';
 
 export type ExternalSyncProvider = 'google-calendar' | 'google-tasks';
 
@@ -551,9 +549,6 @@ export interface AppSettings {
   defaultReminderLeadHours: number;
   weekStartsOn: 'monday' | 'sunday';
   theme: UiTheme;
-  visualMode: VisualMode;
-  motionMode: MotionMode;
-  ambientFxEnabled: boolean;
   cockpitLayout: CockpitLayoutMode;
   cockpitDensity: CockpitDensityMode;
   localModelEnabled: boolean;

@@ -15,7 +15,6 @@ describe('aiSettingsMode planner', () => {
     expect(plan.operations.some((operation) => operation.kind === 'set-managerial-weight')).toBe(
       true
     );
-    expect(plan.operations.some((operation) => operation.kind === 'set-motion-mode')).toBe(false);
     expect(plan.operations.some((operation) => operation.kind === 'set-debug-mode')).toBe(false);
   });
 
@@ -78,21 +77,15 @@ describe('aiSettingsMode operation applier', () => {
     expect(result.failed).toHaveLength(0);
   });
 
-  it('skips legacy visual and motion operations', () => {
+  it('skips unsupported debug-mode operation', () => {
     const source = cloneDemoSampleData();
     const result = applyAiSettingsOperations(source, [
-      { id: '1', kind: 'set-visual-mode', payload: { visualMode: 'retroMagic' } },
-      { id: '2', kind: 'set-motion-mode', payload: { motionMode: 'wild' } },
-      { id: '3', kind: 'set-ambient-fx', payload: { ambientFxEnabled: true } },
-      { id: '4', kind: 'set-debug-mode', payload: { debugMode: true } }
+      { id: '1', kind: 'set-debug-mode', payload: { debugMode: true } }
     ]);
 
-    expect(result.data.settings.visualMode).toBe(source.settings.visualMode);
-    expect(result.data.settings.motionMode).toBe(source.settings.motionMode);
-    expect(result.data.settings.ambientFxEnabled).toBe(source.settings.ambientFxEnabled);
     expect(result.data.settings.debugMode).toBe(source.settings.debugMode);
     expect(result.applied).toHaveLength(0);
-    expect(result.skipped.length).toBe(4);
+    expect(result.skipped.length).toBe(1);
   });
 
   it('applies positioning and voiceGuide on update-brand-profile', () => {
