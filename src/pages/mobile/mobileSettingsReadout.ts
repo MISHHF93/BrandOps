@@ -1,7 +1,7 @@
 import type { BrandOpsData } from '../../types/domain';
 import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
 
-/** Every `AppSettings` + related field we can show read-only on mobile Settings (traceback / audit). */
+/** Curated readout for Settings UI and snapshots — not every `AppSettings` scalar is mirrored (e.g. `debugMode`). */
 export interface MobileSettingsFullReadout {
   timezone: string;
   weekStartsOn: string;
@@ -67,8 +67,7 @@ const clip = (s: string, max: number) => {
 };
 
 /**
- * Maps live `BrandOpsData` into a display object so the Settings tab can show the full workspace
- * model alongside the smaller set of fields the `configure:` command can change today.
+ * Maps live `BrandOpsData` into the curated Settings readout (see `MobileSettingsFullReadout`).
  */
 export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileSettingsFullReadout {
   const s = workspace.settings;

@@ -11,6 +11,10 @@ npm run dev
 
 Primary surface in dev: **`mobile.html`** (see `npm run dev:mobile`).
 
+## Workspace appearance & settings
+
+Persisted workspace **`settings.theme`** is **`dark`** or **`light`** and drives document tokens (`data-theme`, `theme-color` meta). Motion timing follows the browser **`prefers-reduced-motion`** preference (`data-motion-mode`: **`off`** or **`balanced`**); there are no separate saved visual/motion/ambient modes. Legacy JSON keys from older builds are ignored on load; normalization is enforced via **`normalizeWorkspaceSettings`** in [`src/services/storage/storage.ts`](src/services/storage/storage.ts).
+
 ## Market readiness & architecture
 
 All evaluation, gaps, phased checklist, and submission notes live in **`FRONTEND_MARKET_READINESS_PLAN.md`**.

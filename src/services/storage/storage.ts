@@ -1355,6 +1355,11 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
   };
 };
 
+/** Normalize raw persisted `settings` (same path as workspace load). Exported for contract tests and tooling. */
+export function normalizeWorkspaceSettings(settings: unknown): BrandOpsData['settings'] {
+  return normalizeSettings(settings);
+}
+
 const MAX_AGENT_AUDIT_ENTRIES = 200;
 
 const normalizeAgentAudit = (value: unknown): NonNullable<BrandOpsData['agentAudit']> => {
