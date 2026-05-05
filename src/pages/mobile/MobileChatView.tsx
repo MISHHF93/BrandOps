@@ -96,9 +96,7 @@ export const MobileChatView = ({
               <span className="text-accent">C:\BRANDOPS&gt;</span>{' '}
               <span className="normal-case tracking-normal text-textSoft">ask.exe</span>
             </p>
-            <h2 className="bo-dos-hero-title mt-1 text-[1.05rem] font-bold uppercase tracking-[0.06em] leading-tight text-text">
-              Assistant
-            </h2>
+            <h2 className="bo-dos-hero-title text-text">Assistant</h2>
             <p className="mt-0.5 bo-dos-prompt text-[11px] leading-snug text-textMuted">
               On-device · <span className="whitespace-nowrap">⌘K</span> palette
               {onOpenPlan ? (
@@ -162,10 +160,8 @@ export const MobileChatView = ({
       </header>
 
       <section aria-label="Hosted Ask copilot" className="min-w-0 px-2.5 sm:px-3.5">
-        <p className="mb-1 text-[9px] font-bold uppercase tracking-wide text-textMuted">
-          Copilot (ask: …)
-        </p>
-        <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <p className="bo-assistant-section-label">Copilot (ask: …)</p>
+        <div className="bo-copilot-rail">
           {copilotWorkerRegistry.workers.map((w) => {
             const active = copilotWorkerRegistry.activeWorkerId === w.id;
             return (
@@ -175,10 +171,8 @@ export const MobileChatView = ({
                 title={w.description ?? w.name}
                 onClick={() => onSelectCopilotWorker(w.id)}
                 className={clsx(
-                  'shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors touch-manipulation',
-                  active
-                    ? 'border-accent/55 bg-accentSoft/35 text-accent'
-                    : 'border-border/45 bg-surface/55 text-textMuted hover:border-accent/35 hover:text-text',
+                  'bo-copilot-chip',
+                  active && 'bo-copilot-chip--active',
                   btnFocus
                 )}
               >
@@ -189,16 +183,11 @@ export const MobileChatView = ({
         </div>
       </section>
 
-      <section aria-labelledby="assistant-starters-label" className="min-w-0">
-        <div className="flex items-center justify-between gap-2 px-0.5">
-          <p id="assistant-starters-label" className="text-[10px] font-bold uppercase text-textSoft">
-            Starters
-          </p>
-        </div>
-        <div
-          className="bo-assistant-quick-strip mt-1.5 flex gap-2 overflow-x-auto pb-0.5 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ WebkitOverflowScrolling: 'touch' }}
-        >
+      <section aria-labelledby="assistant-starters-label" className="min-w-0 px-2.5 sm:px-3.5">
+        <p id="assistant-starters-label" className="bo-assistant-section-label">
+          Starters
+        </p>
+        <div className="bo-assistant-quick-strip mt-1.5">
           {ASSISTANT_QUICK_PICKS.map((command) => {
             const meta = getIntentByCommandLine(command);
             const label = meta?.title ?? command;
@@ -218,40 +207,36 @@ export const MobileChatView = ({
       </section>
 
       {commandHistory.length > 0 ? (
-        <div className="min-w-0 rounded-xl border border-border/35 bg-bgElevated/35 px-2 py-2 backdrop-blur-[2px]">
-          <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-textSoft">
-              <History className="h-3 w-3" strokeWidth={2} aria-hidden />
-              Recent
-            </span>
-            <button
-              type="button"
-              className={clsx(
-                'rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-textSoft hover:bg-surfaceActive/60 hover:text-text',
-                btnFocus
-              )}
-              onClick={onClearCommandHistory}
-            >
-              Clear
-            </button>
-          </div>
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {commandHistory.slice(0, 10).map((cmd) => (
+        <section className="min-w-0 px-2.5 sm:px-3.5">
+          <div className="bo-assistant-recents-panel">
+            <div className="bo-assistant-recents-header">
+              <span className="bo-assistant-recents-label">
+                <History className="h-3 w-3" strokeWidth={2} aria-hidden />
+                Recent
+              </span>
               <button
-                key={cmd}
                 type="button"
-                onClick={() => onQuickCommand(cmd)}
-                className={clsx(
-                  'max-w-[10rem] shrink-0 truncate rounded-full border border-border/45 bg-surface/60 px-3 py-1.5 text-left text-[11px] font-medium text-textMuted transition hover:border-accent/35 hover:bg-accentSoft/15',
-                  btnFocus
-                )}
-                title={cmd}
+                className={clsx('bo-assistant-recents-clear', btnFocus)}
+                onClick={onClearCommandHistory}
               >
-                {cmd.length > 40 ? `${cmd.slice(0, 38)}…` : cmd}
+                Clear
               </button>
-            ))}
+            </div>
+            <div className="bo-copilot-rail">
+              {commandHistory.slice(0, 10).map((cmd) => (
+                <button
+                  key={cmd}
+                  type="button"
+                  onClick={() => onQuickCommand(cmd)}
+                  className={clsx('bo-chat-history-chip', btnFocus)}
+                  title={cmd}
+                >
+                  {cmd.length > 40 ? `${cmd.slice(0, 38)}…` : cmd}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
       ) : null}
 
       <section
@@ -268,13 +253,7 @@ export const MobileChatView = ({
         >
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 px-3 py-10 text-center">
-              <span
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-accent/35 text-accent shadow-md"
-                style={{
-                  background:
-                    'linear-gradient(145deg, rgb(var(--color-accent) / 0.2), rgb(var(--bo-chat-canvas) / 0.5))'
-                }}
-              >
+              <span className="bo-assistant-empty-state-icon">
                 <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
               </span>
               <p className="text-sm font-semibold text-text">New chat</p>
@@ -323,9 +302,7 @@ export const MobileChatView = ({
                     </div>
                   ) : message.resultKind === 'ask-result' ? (
                     <div className="bo-chat-bubble-assistant space-y-1">
-                      <p className="text-[9px] font-bold uppercase tracking-wide text-accent">
-                        Hosted model
-                      </p>
+                      <p className="bo-chat-meta-label">Hosted model</p>
                       {typeof message.ok === 'boolean' && !message.ok ? (
                         <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-warning">
                           <AlertCircle size={11} aria-hidden />
