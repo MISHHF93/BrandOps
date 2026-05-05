@@ -1216,72 +1216,114 @@ html[data-app-surface='welcome'] body::after {
     height: 0.95rem;
   }
 
-  .bo-workspace-nav-rail {
-    scroll-padding-inline: 0.35rem;
-    -webkit-overflow-scrolling: touch;
+  .bo-plan-anchor-scroll {
+    scroll-margin-top: max(5rem, calc(env(safe-area-inset-top, 0px) + 3.25rem));
   }
 
-  .bo-workspace-quick-btn {
-    display: inline-flex;
-    flex-direction: column;
+  .bo-plan-destination-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  @media (min-width: 380px) {
+    .bo-plan-destination-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .bo-plan-destination-card {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.2rem;
-    min-width: 4.35rem;
-    min-height: 3.35rem;
-    flex-shrink: 0;
-    scroll-snap-align: start;
+    gap: 0.55rem;
+    width: 100%;
+    min-height: 3.15rem;
+    text-align: left;
     border-radius: 0.9rem;
-    border: 1px solid rgb(var(--color-border) / 0.52);
-    background: rgb(var(--color-bg-elevated) / 0.78);
-    padding: 0.38rem 0.45rem 0.42rem;
-    font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: rgb(var(--color-text-muted) / 1);
-    line-height: 1.1;
-    box-shadow: 0 1px 3px rgb(var(--color-shadow) / 0.1);
+    border: 1px solid rgb(var(--color-border) / 0.48);
+    background: rgb(var(--color-bg-elevated) / 0.72);
+    padding: 0.52rem 0.55rem 0.52rem 0.62rem;
+    font: inherit;
+    color: rgb(var(--color-text) / 1);
+    box-shadow: 0 1px 3px rgb(var(--color-shadow) / 0.08);
     transition:
       border-color var(--duration-fast) var(--ease-liquid-out),
       background var(--duration-fast) var(--ease-liquid-out),
-      color var(--duration-fast) var(--ease-liquid-out),
       transform var(--duration-fast) var(--ease-liquid-out);
   }
 
-  .bo-workspace-quick-btn:hover:not(:disabled) {
-    border-color: rgb(var(--color-accent) / 0.45);
-    background: rgb(var(--color-accent) / 0.08);
-    color: rgb(var(--color-text) / 1);
+  .bo-plan-destination-card:hover:not(:disabled) {
+    border-color: rgb(var(--color-accent) / 0.42);
+    background: rgb(var(--color-accent) / 0.06);
   }
 
-  .bo-workspace-quick-btn:active:not(:disabled) {
-    transform: scale(0.98);
+  .bo-plan-destination-card:active:not(:disabled) {
+    transform: scale(0.99);
   }
 
-  .bo-workspace-quick-btn:disabled {
+  .bo-plan-destination-card:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 0.52;
   }
 
-  .bo-workspace-quick-btn--primary {
-    border-color: rgb(var(--color-accent) / 0.48);
-    background: rgb(var(--color-accent) / 0.14);
-    color: rgb(var(--color-accent) / 1);
+  .bo-plan-destination-card--accent {
+    border-color: rgb(var(--color-accent) / 0.45);
+    background: rgb(var(--color-accent) / 0.12);
   }
 
-  .bo-workspace-quick-btn--primary:hover:not(:disabled) {
-    background: rgb(var(--color-accent) / 0.22);
-    color: rgb(var(--color-accent-hover) / 1);
+  .bo-plan-destination-card--accent:hover:not(:disabled) {
+    background: rgb(var(--color-accent) / 0.18);
   }
 
-  .bo-workspace-quick-btn__label {
-    display: block;
-    max-width: 5rem;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .bo-plan-destination-card__icon {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .bo-plan-destination-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.06rem;
+    min-width: 0;
+  }
+
+  .bo-plan-destination-card__title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text) / 1);
+    line-height: 1.15;
+  }
+
+  .bo-plan-destination-card__hint {
+    font-size: 0.625rem;
+    line-height: 1.2;
+    color: rgb(var(--color-text-soft) / 1);
+  }
+
+  .bo-plan-destination-card__chevron {
+    width: 1rem;
+    height: 1rem;
+    margin-inline-start: auto;
+  }
+
+  .bo-plan-jump-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.45rem 0.65rem;
+    padding: 0.35rem 0 0.15rem;
+    border-bottom: 1px solid rgb(var(--color-border) / 0.22);
+  }
+
+  .bo-plan-jump-nav__link {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .bo-plan-jump-nav__link:hover {
+    color: rgb(var(--color-text) / 1);
   }
 
   .bo-command-composer--assistant {

@@ -93,9 +93,9 @@ const defaultWelcomeMessage = (
   surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'
 ): ChatMessage => {
   const mobileLine =
-    'Try: pipeline health, ask: your question (hosted model), or press ⌘K — Workspace shows counts and queue.';
+    'Assistant first — run workspace commands or hosted Ask. Press ⌘K to jump anywhere; Plan shows counts and queue.';
   const welcomeLine =
-    'Try: pipeline health, ask: … for hosted NLP (configure AI bridge), or press ⌘K. Plain lines run workspace commands.';
+    'Welcome. Run commands or Ask here; ⌘K opens search and navigation. Plan tab has the overview and queue.';
   return {
     id: uid(),
     role: 'assistant',
@@ -327,7 +327,7 @@ function readInitialShellState(initialTab: MobileShellTabId): {
   return { tab: p.tab, workstream: p.workstream ?? DEFAULT_DASHBOARD_SECTION };
 }
 
-export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }: MobileAppProps) => {
+export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: MobileAppProps) => {
   const dialogDestrId = useId();
   const dialogClearId = useId();
   const dialogResetId = useId();
@@ -999,7 +999,7 @@ export const MobileApp = ({ initialTab = 'workspace', surfaceLabel = 'mobile' }:
                 className="bo-theme-seg--header"
               />
             ) : null}
-            {activeTab !== 'chat' && !shouldRequireLaunchAuth(launchAccess) ? (
+            {!shouldRequireLaunchAuth(launchAccess) ? (
               <button
                 type="button"
                 onClick={() => setCommandPaletteOpen(true)}

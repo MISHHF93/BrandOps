@@ -109,6 +109,68 @@ Use this to agree on what “easy to use” means, score the current product hon
 
 ---
 
+## North star (chosen)
+
+**Chat-first workspace** (Appendix B, option 1) — *I talk to BrandOps on Assistant; Plan shows counts and queue when I need the overview.*
+
+**Structural IA (2026-05):** Cold load defaults to **Assistant** (`chat`) on `mobile.html` and welcome hosts; `?section=workspace` and other deep links override as today. **⌘K / Ctrl+K** opens the same command palette from Assistant as from Plan ([`mobileApp.tsx`](../src/pages/mobile/mobileApp.tsx)). **Plan** adds a compact **Today preview** with **Open full Today** ([`MobileWorkspaceHubView.tsx`](../src/pages/mobile/MobileWorkspaceHubView.tsx)).
+
+---
+
+## Engineering snapshot (2026-05)
+
+### Provisional scores (fill after usability passes)
+
+| Area | Score | Notes |
+|------|-------|-------|
+| §1 First-time clarity | TBD | Single default home = Assistant |
+| §2 Navigation | TBD | Palette visible on Assistant; verify §2 spot checks below |
+| §3 Density / calm | TBD | |
+| §4 Language | TBD | Copy pass aligned to north star |
+| §5 Cross-surface | TBD | |
+| §6 Confidence | TBD | |
+| §7 A11y | TBD | |
+
+### Evidence (code)
+
+| Topic | Location |
+|-------|----------|
+| Dock (Ask / Plan) | [`src/pages/mobile/mobileTabPrimitives.tsx`](../src/pages/mobile/mobileTabPrimitives.tsx), [`mobileTabConfig.ts`](../src/pages/mobile/mobileTabConfig.ts) |
+| Default tab + palette chrome | [`src/pages/mobile/mobileApp.tsx`](../src/pages/mobile/mobileApp.tsx) |
+| `?section=` routing | [`src/pages/mobile/mobileShellQuery.ts`](../src/pages/mobile/mobileShellQuery.ts) |
+| Command palette | [`src/pages/mobile/WorkspaceCommandPalette.tsx`](../src/pages/mobile/WorkspaceCommandPalette.tsx) |
+| First-run card (Today tab) | [`src/pages/mobile/FirstRunJourneyCard.tsx`](../src/pages/mobile/FirstRunJourneyCard.tsx) |
+| Plan hub Today preview | [`src/pages/mobile/MobileWorkspaceHubView.tsx`](../src/pages/mobile/MobileWorkspaceHubView.tsx) |
+| SR / header titles | [`src/pages/mobile/shellSectionCopy.ts`](../src/pages/mobile/shellSectionCopy.ts) |
+
+### Track delivery log (structural)
+
+Measure these in usability passes against §1–§7 above; keep this table as a shipped vs. backlog ledger.
+
+| Track | Intent | Shipped in codebase | Scorecard / QA hook |
+|-------|--------|---------------------|---------------------|
+| **A — Chat-first** | Cold load Assistant; palette from Chat | Default `initialTab: 'chat'`; palette on Assistant tab | §2 Navigation, §1 clarity |
+| **B — Plan “mall”** | Plan hub surfaces Today without replacing Assistant home | Compact Today preview + **Open full Today** on workspace hub | §2 “what’s due soon”, §5 cross-surface |
+
+### Top fixes shipped in this snapshot
+
+1. **Chat-first default** — `MobileApp` default `initialTab`, [`mobile/main.tsx`](../src/pages/mobile/main.tsx), [`welcome/main.tsx`](../src/pages/welcome/main.tsx).
+2. **Palette on Assistant** — Header search opens palette on Chat tab too.
+3. **Copy coherence** — First-run, shell SR summaries, welcome bubble lines align with Chat-first narrative.
+4. **Today preview on Plan hub** — Cadence line, due/missed/FU counts, scheduler + pipeline peek rows, primary CTA to full Today ([`MobileWorkspaceHubView.tsx`](../src/pages/mobile/MobileWorkspaceHubView.tsx)).
+
+### Manual §2 spot checks (not in CI)
+
+Run after deploy; record results in the table.
+
+| Check | Where you should land | Result | Date |
+|-------|------------------------|--------|------|
+| See what’s due soon | Plan → queue / Today | Pending | |
+| Change a setting | ⌘K → Settings or Plan → Setup | Pending | |
+| Run one workspace command | Assistant composer or starter | Pending | |
+
+---
+
 ## How to use this in practice
 
 1. **Solo pass** — Fill scores cold, then redo after one week (memory fades myths).

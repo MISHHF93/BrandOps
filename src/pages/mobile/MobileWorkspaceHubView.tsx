@@ -1,16 +1,10 @@
 import clsx from 'clsx';
-import {
-  CalendarCheck2,
-  MessageCircle,
-  PlugZap,
-  Search,
-  Settings,
-  Sparkles,
-  TableProperties
-} from 'lucide-react';
+import { CalendarCheck2, MessageCircle, TableProperties } from 'lucide-react';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { workspaceQueueCommandLine } from './pulseTimeline';
 import type { PulseTimelineRow } from './pulseTimeline';
+import { PlanDestinationGrid } from './PlanDestinationGrid';
+import { PlanJumpNav } from './PlanJumpNav';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
 import { mobileChipClass } from './mobileTabPrimitives';
@@ -39,8 +33,8 @@ export interface MobileWorkspaceHubViewProps {
 }
 
 /**
- * Single overview for operators: **instruments first**, then a compact soonest-first queue table —
- * not a feed-shaped tab competing with Chat.
+ * Plan hub (`workspace` tab): **destinations first**, jump links, **Pulse** instruments, **Today snapshot**,
+ * then soonest-first queue — same capabilities as before, vertically scannable.
  */
 export const MobileWorkspaceHubView = ({
   snapshot,
@@ -54,79 +48,151 @@ export const MobileWorkspaceHubView = ({
   onOpenCommandPalette
 }: MobileWorkspaceHubViewProps) => {
   const sorted = sortRowsSoonestFirst(snapshot.pulseTimelineRows);
+  const todayPreviewTasks = snapshot.cockpitSchedulerTaskPeek.slice(0, 4);
+  const todayPreviewDeals = snapshot.cockpitOpportunityPeek.slice(0, 2);
+  const hasTodayPeekLists = todayPreviewTasks.length > 0 || todayPreviewDeals.length > 0;
 
   return (
-    <div className="space-y-4" aria-label="Workspace overview">
+    <div className="space-y-4" aria-label="Plan">
       <span className="sr-only">
-        Workspace overview — live counts and a soonest-first task queue. Use Commands for search,
-        navigation jumps, and recent commands; Assistant runs chat commands; open Today for full
-        lanes.
+        Plan — pick a destination, use jump links for Pulse, Today snapshot, or queue; ⌘K opens commands;
+        Assistant runs chat; Today tab has full lanes.
       </span>
 
       <article className="bo-flagship-surface overflow-hidden">
-        <WorkspaceSignalsBoard metrics={snapshot} variant="workspace" />
-        <div className="bo-vitality-frame-body space-y-3 px-3 pb-4 pt-2 sm:px-3.5">
-          <nav
-            className="bo-workspace-nav-rail -mx-0.5 flex snap-x snap-mandatory gap-2 overflow-x-auto border-b border-border/28 pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            aria-label="Workspace shortcuts"
-          >
-            <button
-              type="button"
-              onClick={onOpenToday}
-              title="Today lanes"
-              className={clsx('bo-workspace-quick-btn', btnFocus)}
-            >
-              <CalendarCheck2 className="h-5 w-5 shrink-0 text-textSoft" strokeWidth={2.25} aria-hidden />
-              <span className="bo-workspace-quick-btn__label">Today</span>
-            </button>
-            <button
-              type="button"
-              onClick={onOpenIntegrations}
-              title="Integrations"
-              className={clsx('bo-workspace-quick-btn', btnFocus)}
-            >
-              <PlugZap className="h-5 w-5 shrink-0 text-textSoft" strokeWidth={2.25} aria-hidden />
-              <span className="bo-workspace-quick-btn__label">Connect</span>
-            </button>
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              title="Settings"
-              className={clsx('bo-workspace-quick-btn', btnFocus)}
-            >
-              <Settings className="h-5 w-5 shrink-0 text-textSoft" strokeWidth={2.25} aria-hidden />
-              <span className="bo-workspace-quick-btn__label">Setup</span>
-            </button>
-            <button
-              type="button"
-              disabled={commandBusy}
-              onClick={() => void runCommand('pipeline health')}
-              title="Pipeline health"
-              className={clsx('bo-workspace-quick-btn bo-workspace-quick-btn--primary', btnFocus)}
-            >
-              <Sparkles className="h-5 w-5 shrink-0" strokeWidth={2.25} aria-hidden />
-              <span className="bo-workspace-quick-btn__label">Pipeline</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onOpenCommandPalette()}
-              title="Commands & search (⌘K / Ctrl+K)"
-              aria-label="Open workspace command palette"
-              className={clsx('bo-workspace-quick-btn', btnFocus)}
-            >
-              <Search className="h-5 w-5 shrink-0 text-textSoft" strokeWidth={2.25} aria-hidden />
-              <span className="bo-workspace-quick-btn__label">Commands</span>
-            </button>
-          </nav>
+        <div className="bo-vitality-frame-body space-y-3 px-3 pb-4 pt-3 sm:px-3.5">
+          <header className="-mx-0.5 border-b border-border/28 pb-3">
+            <h1 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-textMuted">Plan</h1>
+            <p className="mt-1 text-[10px] leading-snug text-textSoft">
+              Go somewhere first — then skim Pulse and the soonest-first queue.
+            </p>
+          </header>
 
-          <div className="rounded-xl border border-border/35 bg-bgSubtle/25 px-2 py-2">
-            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-textMuted">
+          <PlanDestinationGrid
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            runCommand={runCommand}
+            onOpenToday={onOpenToday}
+            onOpenIntegrations={onOpenIntegrations}
+            onOpenSettings={onOpenSettings}
+            onOpenCommandPalette={onOpenCommandPalette}
+          />
+
+          <PlanJumpNav btnFocus={btnFocus} />
+
+          <section id="plan-pulse" className="bo-plan-anchor-scroll -mx-3 sm:-mx-3.5">
+            <WorkspaceSignalsBoard
+              metrics={snapshot}
+              variant="workspace"
+              mastHeadline="Pulse"
+            />
+          </section>
+
+          <section
+            id="plan-today"
+            className="bo-plan-anchor-scroll rounded-xl border border-border/35 bg-bgSubtle/20 px-2.5 py-2.5"
+            aria-labelledby="plan-today-heading"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <h2
+                  id="plan-today-heading"
+                  className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-textMuted"
+                >
+                  <CalendarCheck2 className="h-3.5 w-3.5 shrink-0 text-textSoft" aria-hidden />
+                  Today snapshot
+                </h2>
+                <p className="mt-1 text-[11px] leading-snug text-textSoft line-clamp-2">
+                  {snapshot.cadenceHeadline.trim()
+                    ? snapshot.cadenceHeadline
+                    : 'Cadence and peek rows — full cockpit lives on Today.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenToday}
+                className={clsx(
+                  'shrink-0 rounded-lg border border-border/45 bg-bg px-2.5 py-1 text-[11px] font-semibold text-text',
+                  btnFocus
+                )}
+              >
+                Open full Today
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Today snapshot counts">
+              <span className="rounded-md border border-border/35 bg-surface/40 px-2 py-0.5 text-[10px] tabular-nums text-textMuted">
+                Due & soon{' '}
+                <span className="font-semibold text-text">{snapshot.dueTodayTasks}</span>
+              </span>
+              <span className="rounded-md border border-border/35 bg-surface/40 px-2 py-0.5 text-[10px] tabular-nums text-textMuted">
+                Missed{' '}
+                <span className="font-semibold text-text">{snapshot.missedTasks}</span>
+              </span>
+              <span className="rounded-md border border-border/35 bg-surface/40 px-2 py-0.5 text-[10px] tabular-nums text-textMuted">
+                Follow-ups open{' '}
+                <span className="font-semibold text-text">{snapshot.incompleteFollowUps}</span>
+              </span>
+            </div>
+            {hasTodayPeekLists ? (
+              <div className="mt-2 space-y-2 border-t border-border/25 pt-2">
+                {todayPreviewTasks.length > 0 ? (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-textSoft">
+                      Scheduler
+                    </p>
+                    <ul className="mt-1 space-y-1 text-[11px] text-textMuted">
+                      {todayPreviewTasks.map((t) => (
+                        <li key={t.id} className="flex items-start justify-between gap-2">
+                          <span className="min-w-0 flex-1 truncate font-medium text-text">
+                            {t.title}
+                          </span>
+                          <span className="max-w-[45%] shrink-0 text-end text-[10px] text-textSoft">
+                            {t.dueAt ? `${t.dueAt} · ` : ''}
+                            {t.status}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {todayPreviewDeals.length > 0 ? (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-textSoft">
+                      Pipeline
+                    </p>
+                    <ul className="mt-1 space-y-1 text-[11px] text-textMuted">
+                      {todayPreviewDeals.map((d) => (
+                        <li key={d.id} className="flex flex-col gap-0.5">
+                          <span className="truncate font-medium text-text">{d.name}</span>
+                          <span className="truncate text-[10px] text-textSoft">{d.company}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <p className="mt-2 border-t border-border/25 pt-2 text-[10px] text-textSoft">
+                Nothing peeking yet — open Today for scheduler lanes and pipeline detail.
+              </p>
+            )}
+          </section>
+
+          <section
+            id="plan-queue"
+            className="bo-plan-anchor-scroll rounded-xl border border-border/35 bg-bgSubtle/25 px-2 py-2"
+            aria-labelledby="plan-queue-heading"
+          >
+            <h2
+              id="plan-queue-heading"
+              className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-textMuted"
+            >
               <TableProperties className="h-3.5 w-3.5 shrink-0 text-textSoft" aria-hidden />
               Soonest queue
               <span className="tabular-nums text-[10px] font-medium normal-case text-textSoft">
                 {sorted.length} row{sorted.length === 1 ? '' : 's'}
               </span>
-            </p>
+            </h2>
             {sorted.length === 0 ? (
               <div className="mt-2">
                 <EmptyState
@@ -185,7 +251,7 @@ export const MobileWorkspaceHubView = ({
                 ) : null}
               </div>
             )}
-          </div>
+          </section>
         </div>
       </article>
     </div>

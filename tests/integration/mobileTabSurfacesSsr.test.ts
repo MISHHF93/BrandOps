@@ -24,7 +24,7 @@ const noop = () => {};
 const asyncNoop = async () => {};
 
 describe('Mobile tab surfaces (SSR integration)', () => {
-  it('Workspace overview: vitality instruments + compact queue table landmarks', () => {
+  it('Plan hub: destinations, jump links, Pulse, Today snapshot, queue landmarks', () => {
     const html = renderToString(
       React.createElement(MobileWorkspaceHubView, {
         snapshot: buildWorkspaceSnapshot(cloneDemoSampleData()),
@@ -38,15 +38,21 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onOpenCommandPalette: noop
       })
     );
-    expect(html).toContain('aria-label="Workspace overview"');
-    expect(html).toContain('Workspace vitality');
+    expect(html).toContain('aria-label="Plan"');
+    expect(html).toContain('id="plan-pulse"');
+    expect(html).toContain('id="plan-today"');
+    expect(html).toContain('id="plan-queue"');
+    expect(html).toContain('>Pulse<');
     expect(html).toContain('Live parameters — queue below is soonest-first, not a feed.');
     expect(html).toContain('Soonest queue');
-    expect(html).toContain('bo-workspace-nav-rail');
-    expect(html).toContain('aria-label="Workspace shortcuts"');
-    expect(html).toContain('Integrations');
-    expect(html).toContain('Settings');
-    expect(html).toContain('Pipeline health');
+    expect(html).toContain('bo-plan-destination-grid');
+    expect(html).toContain('aria-label="Plan destinations"');
+    expect(html).toContain('Jump within Plan');
+    expect(html).toContain('Today snapshot');
+    expect(html).toContain('Open full Today');
+    expect(html).toContain('Connect');
+    expect(html).toContain('Setup');
+    expect(html).toContain('>Pipeline<');
     expect(html).toContain('Commands');
     expect(html).toContain('<table');
     expect(html).toContain('bo-icon-chip');

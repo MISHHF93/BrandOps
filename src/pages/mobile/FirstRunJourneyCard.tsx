@@ -18,7 +18,7 @@ function writeFirstRunJourneyDismissed() {
 }
 
 /**
- * Compact first-session hint shown on the Today tab (planning lanes).
+ * Compact first-session hint on **Today** — users often arrive via Plan → Today or ⌘K.
  */
 export function FirstRunJourneyCard({
   btnFocus,
@@ -40,7 +40,8 @@ export function FirstRunJourneyCard({
           <div>
             <p className="text-h3 text-text">Start here</p>
             <p className="mt-1 text-meta text-textSoft">
-              Run pipeline health once. Workspace shows counts + queue; Assistant runs commands; Today is for lanes.
+              Assistant runs commands and Ask (home when you open the app). Plan shows counts + queue;
+              Today is for lanes. Try pipeline health or press ⌘K to jump anywhere.
             </p>
             <div className="mt-2">
               <button

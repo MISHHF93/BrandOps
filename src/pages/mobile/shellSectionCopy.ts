@@ -4,8 +4,9 @@ import type { MobileShellTabId } from './mobileShellQuery';
  * Dock button tooltips: short clues only — no duplicating tab labels.
  */
 export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
-  workspace: 'Counts, soonest queue table, and shortcuts — not a separate feed tab.',
-  chat: 'Assistant runs typed workspace commands.',
+  workspace:
+    'Plan — destination grid, jump links, Pulse counts, Today snapshot, soonest-first queue.',
+  chat: 'Assistant — workspace commands and hosted Ask; ⌘K jumps anywhere.',
   daily: 'Today lanes and workstreams.',
   integrations: 'Connect tools and sync.',
   settings: 'Account and workspace prefs.'
@@ -15,8 +16,9 @@ export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
  * Screen reader context for the shell title (hidden from sighted users — keeps chrome minimal).
  */
 export const SHELL_TAB_SR_SUMMARY: Record<MobileShellTabId, string> = {
-  workspace: 'Workspace overview — instruments and queue.',
-  chat: 'Assistant command entry.',
+  workspace:
+    'Plan — destinations first, jump to Pulse, Today snapshot, or queue; ⌘K for commands.',
+  chat: 'Assistant — command entry and Ask.',
   daily: 'Today plan and work areas.',
   integrations: 'Integrations.',
   settings: 'Settings.'
@@ -24,7 +26,7 @@ export const SHELL_TAB_SR_SUMMARY: Record<MobileShellTabId, string> = {
 
 /** Sticky header wordmark — distinct from dock abbreviations. */
 export const SHELL_SCREEN_TITLE: Record<MobileShellTabId, string> = {
-  workspace: 'Workspace',
+  workspace: 'Plan',
   chat: 'Assistant',
   daily: 'Today',
   integrations: 'Integrations',

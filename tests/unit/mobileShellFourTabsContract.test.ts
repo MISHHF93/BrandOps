@@ -236,11 +236,11 @@ describe('Mobile shell query parity (mobile + integrations HTML)', () => {
 
 describe('Surface entrypoints', () => {
 
-  it('mobile.html boots MobileApp with Workspace overview as the default tab', () => {
+  it('mobile.html boots MobileApp with Assistant as the default tab', () => {
 
     const main = read('src/pages/mobile/main.tsx');
 
-    expect(main).toMatch(/initialTab:\s*'workspace'/);
+    expect(main).toMatch(/initialTab:\s*'chat'/);
 
   });
 

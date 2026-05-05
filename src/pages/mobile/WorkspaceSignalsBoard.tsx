@@ -231,6 +231,8 @@ export interface WorkspaceSignalsBoardProps {
   variant?: WorkspaceSignalsBoardVariant;
   /** Omit for the full seven-metric cockpit. */
   includeKeys?: readonly VitalityMetricKey[];
+  /** Overrides mast headline (default: Workspace vitality). */
+  mastHeadline?: string;
 }
 
 function vitalitySrId(variant: WorkspaceSignalsBoardVariant) {
@@ -282,7 +284,8 @@ function vitalitySubtitle(
 export function WorkspaceSignalsBoard({
   metrics,
   variant = 'today',
-  includeKeys
+  includeKeys,
+  mastHeadline
 }: WorkspaceSignalsBoardProps) {
   const all = buildCells(metrics);
   const cells =
@@ -305,7 +308,7 @@ export function WorkspaceSignalsBoard({
         </span>
         <div className="min-w-0">
           <p id={srId} className="text-label font-semibold text-text">
-            Workspace vitality
+            {mastHeadline ?? 'Workspace vitality'}
           </p>
           <p className="text-meta text-textSoft">{vitalitySubtitle(variant, Boolean(includeKeys?.length))}</p>
         </div>
