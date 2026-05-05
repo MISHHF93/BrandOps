@@ -10,6 +10,7 @@ import { MobileChatView } from '../../src/pages/mobile/MobileChatView';
 import { MobileIntegrationsView } from '../../src/pages/mobile/MobileIntegrationsView';
 import { MobileSettingsView } from '../../src/pages/mobile/MobileSettingsView';
 import { MobileWorkspaceHubView } from '../../src/pages/mobile/MobileWorkspaceHubView';
+import { FirstRunJourneyCard } from '../../src/pages/mobile/FirstRunJourneyCard';
 import { AppearanceToggle } from '../../src/pages/mobile/AppearanceToggle';
 import { buildWorkspaceSnapshot } from '../../src/pages/mobile/buildWorkspaceSnapshot';
 import {
@@ -86,6 +87,24 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('pipeline health');
     expect(html).toContain('bo-assistant-hero');
     expect(html).toContain('Open Plan');
+  });
+
+  it('Getting started card: Assistant onboarding landmarks', () => {
+    const html = renderToString(
+      React.createElement(FirstRunJourneyCard, {
+        btnFocus: '',
+        onDismiss: noop,
+        onTryCommand: noop,
+        onOpenPlan: noop,
+        onOpenToday: noop
+      })
+    );
+    expect(html).toContain('aria-label="Start here — first session"');
+    expect(html).toContain('Getting started');
+    expect(html).toContain('Open Plan');
+    expect(html).toContain('Open Today');
+    expect(html).toContain('Pipeline health');
+    expect(html).toContain('Dismiss getting started');
   });
 
   it('AppearanceToggle renders sun/moon segment for shell header', () => {

@@ -26,7 +26,7 @@ export interface KnowledgeCenterDailyPlaybook {
 export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
   title: 'Every day in BrandOps (mobile shell)',
   intro:
-    'Two primary dock buttons: **Assistant** = typed workspace commands and hosted Ask (default when you open **mobile.html** / welcome). **Workspace** (Plan) = live counts plus a compact soonest-first queue table (not a social-style feed), with shortcuts into Today, Integrations, and Settings. **Today** stays the cockpit for lanes and digests. **Integrations** and **Settings** open full panels from Workspace or ⌘K. Fastest loop: execute in Assistant, scan Plan for queue context, plan Today when you need lanes.',
+    'You land on **Assistant**. The dismissible **Getting started** checklist sits above the chat: run **Pipeline health**, open **Plan** (pulse, queue, Today/Pipeline tiles), open **Today** (lanes), and use **⌘K / Ctrl+K** for Integrations & Setup. The dock is **Ask** and **Plan** only — other tabs open from those actions or the palette. Typical loop: Assistant for commands, Plan for queue context, Today when you need cockpit digests.',
   steps: [
     {
       title: 'Run one command from Assistant',
@@ -63,7 +63,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
       'Primary UI is mobile.html (Assistant + Workspace dock; deeper panels for Today / Integrations / Settings). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
     paragraphs: [
       'The product is a browser extension. **mobile.html** is the primary workspace: Assistant (default), Plan (dock), Today, Integrations, and Settings (Assistant + Plan are the dock; other sections open via ⌘K or deep links).',
-      '**welcome.html** uses the same shell and lands on **Assistant** first so new users can run commands immediately; open Plan for instruments and queue.',
+      '**welcome.html** uses the same shell and lands on **Assistant** first — Getting started on that tab walks new users through Plan, Today, and ⌘K.',
       '**dashboard.html** loads the same shell; legacy ?section= workstream links redirect to mobile.html so deep links stay consistent.',
       '**integrations.html** is the Chrome options_ui entry (Integrations tab by default). **help.html** is this Knowledge Center.',
       'Use ?section= on mobile.html or integrations.html for tabs and cockpit workstreams (today, pipeline, brand-content, connections). See the mobile shell query parser in the codebase for the full token list.'
@@ -74,9 +74,10 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     title: 'First run and profile',
     summary: 'Welcome uses the mobile shell; sign-in and sign-up share welcome.html.',
     paragraphs: [
-      'After install, **welcome.html** opens on **Assistant** first; switch to Plan for instruments and queue, or open Today for cockpit lanes.',
+      'On **welcome.html** / **mobile.html** you start on **Assistant**. The **Getting started** card (above the chat until you dismiss it) walks through: a sample command, Plan, Today, and ⌘K for Integrations & Settings.',
       'Sign-in and account creation share welcome.html: default is sign in (no query). Create account: welcome.html?flow=signup. Legacy ?auth= is still accepted where implemented.',
-      'Operator and brand fields also surface on Today and in Settings forms; tune cadence and reminders under Settings when you need workspace-level changes.'
+      'Operator and brand fields also surface on Today and in Settings forms; tune cadence and reminders under Settings when you need workspace-level changes.',
+      'See **ONBOARDING.md** in the repo root for the full onboarding map (engineering reference).'
     ]
   },
   {

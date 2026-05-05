@@ -139,7 +139,7 @@ Use this to agree on what “easy to use” means, score the current product hon
 | Default tab + palette chrome | [`src/pages/mobile/mobileApp.tsx`](../src/pages/mobile/mobileApp.tsx) |
 | `?section=` routing | [`src/pages/mobile/mobileShellQuery.ts`](../src/pages/mobile/mobileShellQuery.ts) |
 | Command palette | [`src/pages/mobile/WorkspaceCommandPalette.tsx`](../src/pages/mobile/WorkspaceCommandPalette.tsx) |
-| First-run card (Today tab) | [`src/pages/mobile/FirstRunJourneyCard.tsx`](../src/pages/mobile/FirstRunJourneyCard.tsx) |
+| First-run checklist (Assistant tab) | [`src/pages/mobile/FirstRunJourneyCard.tsx`](../src/pages/mobile/FirstRunJourneyCard.tsx) |
 | Plan hub Today preview | [`src/pages/mobile/MobileWorkspaceHubView.tsx`](../src/pages/mobile/MobileWorkspaceHubView.tsx) |
 | SR / header titles | [`src/pages/mobile/shellSectionCopy.ts`](../src/pages/mobile/shellSectionCopy.ts) |
 

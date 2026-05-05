@@ -93,9 +93,9 @@ const defaultWelcomeMessage = (
   surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'
 ): ChatMessage => {
   const mobileLine =
-    'Assistant first — run workspace commands or hosted Ask. Press ⌘K to jump anywhere; Plan shows counts and queue.';
+    'Use the Getting started checklist above for Plan, Today, and ⌘K — then type a command or pick a starter below.';
   const welcomeLine =
-    'Welcome. Run commands or Ask here; ⌘K opens search and navigation. Plan tab has the overview and queue.';
+    'Use Getting started above, then run a command here. ⌘K opens the palette; Plan shows pulse and queue.';
   return {
     id: uid(),
     role: 'assistant',
@@ -1057,6 +1057,15 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             aria-label="Assistant conversation"
             key="shell-chat"
           >
+            {firstRunJourneyVisible ? (
+              <FirstRunJourneyCard
+                btnFocus={btnFocus}
+                onDismiss={() => setFirstRunJourneyVisible(false)}
+                onTryCommand={sendQuickCommand}
+                onOpenPlan={() => commitTab('workspace')}
+                onOpenToday={() => commitTab('daily')}
+              />
+            ) : null}
             <MobileChatView
               messages={messages}
               loading={commandLoading}
@@ -1092,25 +1101,16 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             ) : null}
 
             {activeTab === 'daily' ? (
-              <>
-                {firstRunJourneyVisible ? (
-                  <FirstRunJourneyCard
-                    btnFocus={btnFocus}
-                    onDismiss={() => setFirstRunJourneyVisible(false)}
-                    onTryCommand={sendQuickCommandFrom('Today')}
-                  />
-                ) : null}
-                <CockpitDailyView
-                  snapshot={snapshot}
-                  btnFocus={btnFocus}
-                  commandBusy={commandLoading}
-                  runCommand={sendQuickCommandFrom('Today')}
-                  primeChat={primeChat}
-                  onOpenInAppSettings={() => commitTab('settings')}
-                  activeWorkstream={cockpitWorkstream}
-                  onSelectWorkstream={handleSelectWorkstream}
-                />
-              </>
+              <CockpitDailyView
+                snapshot={snapshot}
+                btnFocus={btnFocus}
+                commandBusy={commandLoading}
+                runCommand={sendQuickCommandFrom('Today')}
+                primeChat={primeChat}
+                onOpenInAppSettings={() => commitTab('settings')}
+                activeWorkstream={cockpitWorkstream}
+                onSelectWorkstream={handleSelectWorkstream}
+              />
             ) : null}
 
             {activeTab === 'integrations' ? (

@@ -176,9 +176,9 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
 
 
-  it('embeds a dismissible first-run card on the Today tab', () => {
+  it('embeds a dismissible Getting started card on the Assistant tab', () => {
 
-    expect(mobileApp).toMatch(/activeTab === 'daily'[\s\S]*FirstRunJourneyCard/);
+    expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*FirstRunJourneyCard/);
 
   });
 
