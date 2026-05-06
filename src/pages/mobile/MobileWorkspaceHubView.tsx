@@ -12,6 +12,15 @@ import { PlanPlanningActions } from './PlanPlanningActions';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
 import { mobileChipClass } from './mobileTabPrimitives';
+import {
+  metricToneTextClass,
+  planKpiSnapshotPillClass,
+  pulseQueueBadgeSurfaceClass,
+  pulseTimelineKindTone,
+  toneDueTodayTasks,
+  toneFollowUpsOpen,
+  toneMissedTasks
+} from './workspaceSignalTones';
 
 function sortRowsSoonestFirst(rows: PulseTimelineRow[]): PulseTimelineRow[] {
   return [...rows].sort((a, b) => {
@@ -69,6 +78,9 @@ export const MobileWorkspaceHubView = ({
   const todayPreviewDeals = snapshot.cockpitOpportunityPeek.slice(0, 2);
   const hasTodayPeekLists = todayPreviewTasks.length > 0 || todayPreviewDeals.length > 0;
   const lockHint = planAgentLockCopy(workspaceCommandLockReason);
+  const dueSnapTone = toneDueTodayTasks(snapshot.dueTodayTasks);
+  const missedSnapTone = toneMissedTasks(snapshot.missedTasks);
+  const fuSnapTone = toneFollowUpsOpen(snapshot.incompleteFollowUps);
 
   return (
     <div className="space-y-3" aria-label="Plan">
@@ -176,17 +188,23 @@ export const MobileWorkspaceHubView = ({
             </button>
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Today snapshot counts">
-            <span className="rounded-md border border-border/35 bg-surface/40 px-2 py-0.5 text-[10px] tabular-nums text-textMuted">
+            <span className={planKpiSnapshotPillClass(dueSnapTone)}>
               Due & soon{' '}
-              <span className="font-semibold text-text">{snapshot.dueTodayTasks}</span>
+              <span className={clsx('font-semibold', metricToneTextClass(dueSnapTone))}>
+                {snapshot.dueTodayTasks}
+              </span>
             </span>
-            <span className="rounded-md border border-border/35 bg-surface/40 px-2 py-0.5 text-[10px] tabular-nums text-textMuted">
+            <span className={planKpiSnapshotPillClass(missedSnapTone)}>
               Missed{' '}
-              <span className="font-semibold text-text">{snapshot.missedTasks}</span>
+              <span className={clsx('font-semibold', metricToneTextClass(missedSnapTone))}>
+                {snapshot.missedTasks}
+              </span>
             </span>
-            <span className="rounded-md border border-border/35 bg-surface/40 px-2 py-0.5 text-[10px] tabular-nums text-textMuted">
+            <span className={planKpiSnapshotPillClass(fuSnapTone)}>
               Follow-ups open{' '}
-              <span className="font-semibold text-text">{snapshot.incompleteFollowUps}</span>
+              <span className={clsx('font-semibold', metricToneTextClass(fuSnapTone))}>
+                {snapshot.incompleteFollowUps}
+              </span>
             </span>
           </div>
           {hasTodayPeekLists ? (
@@ -245,7 +263,12 @@ export const MobileWorkspaceHubView = ({
           >
             <TableProperties className="h-3.5 w-3.5 shrink-0 text-textSoft" aria-hidden />
             Soonest queue
-            <span className="tabular-nums text-[10px] font-medium normal-case text-textSoft">
+            <span
+              className={clsx(
+                'tabular-nums text-[10px] font-medium normal-case',
+                sorted.length > 0 ? 'text-info' : 'text-textSoft'
+              )}
+            >
               {sorted.length} row{sorted.length === 1 ? '' : 's'}
             </span>
           </h2>
@@ -275,7 +298,14 @@ export const MobileWorkspaceHubView = ({
                       key={row.id}
                       className="border-b border-border/25 align-top text-textMuted last:border-b-0"
                     >
-                      <td className="py-2 pe-2 font-medium text-text">{row.badge ?? row.kind}</td>
+                      <td className="py-2 pe-2 align-middle">
+                        <span
+                          className={pulseQueueBadgeSurfaceClass(pulseTimelineKindTone(row.kind))}
+                          title={row.badge ?? row.kind}
+                        >
+                          {row.badge ?? row.kind}
+                        </span>
+                      </td>
                       <td className="max-w-[10rem] py-2 pe-2">
                         <span className="line-clamp-2 font-medium text-text" title={row.title}>
                           {row.title}

@@ -11,6 +11,13 @@ import {
   Gauge
 } from 'lucide-react';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
+import {
+  metricToneTextClass,
+  toneDueTodayTasks,
+  toneFollowUpsOpen,
+  toneMissedTasks,
+  type WorkspaceSignalTone
+} from './workspaceSignalTones';
 
 export type WorkspaceSignalsPick = Pick<
   MobileWorkspaceSnapshot,
@@ -32,52 +39,23 @@ export type VitalityMetricKey =
   | 'oauth'
   | 'src';
 
-type Tone = 'danger' | 'warning' | 'info' | 'success' | 'primary' | 'muted';
-
 type MetricCell = {
   key: VitalityMetricKey;
   label: string;
   sub?: string;
   display: string;
   icon: LucideIcon;
-  tone: Tone;
+  tone: WorkspaceSignalTone;
   fillPct: number;
   title: string;
 };
-
-/** Follow-ups open count: at/above → danger (overload); at/above mid → warning. */
-const FOLLOWUPS_OPEN_DANGER = 15;
-const FOLLOWUPS_OPEN_WARNING = 8;
 
 function clampPct(raw: number) {
   if (!Number.isFinite(raw)) return 0;
   return Math.min(100, Math.max(0, Math.round(raw)));
 }
 
-function toneFollowUpsOpen(open: number): Tone {
-  if (open <= 0) return 'muted';
-  if (open >= FOLLOWUPS_OPEN_DANGER) return 'danger';
-  if (open >= FOLLOWUPS_OPEN_WARNING) return 'warning';
-  return 'warning';
-}
-
-function toneMissedTasks(missed: number): Tone {
-  if (missed > 0) return 'danger';
-  return 'muted';
-}
-
-function toneText(tone: Tone) {
-  return clsx(
-    tone === 'danger' && 'text-danger',
-    tone === 'warning' && 'text-warning',
-    tone === 'info' && 'text-info',
-    tone === 'success' && 'text-success',
-    tone === 'primary' && 'text-text',
-    tone === 'muted' && 'text-textSoft'
-  );
-}
-
-function Spark({ fillPct, tone }: { fillPct: number; tone: Tone }) {
+function Spark({ fillPct, tone }: { fillPct: number; tone: WorkspaceSignalTone }) {
   return (
     <div className="bo-vitality-spark-track" aria-hidden>
       <div
@@ -89,7 +67,7 @@ function Spark({ fillPct, tone }: { fillPct: number; tone: Tone }) {
 }
 
 /** Compact SVG arc — fills clockwise from noon; behaves like an odometer bezel. */
-function MiniRing({ fillPct, tone }: { fillPct: number; tone: Tone }) {
+function MiniRing({ fillPct, tone }: { fillPct: number; tone: WorkspaceSignalTone }) {
   const r = 13.5;
   const c = 2 * Math.PI * r;
   const arcLen = (fillPct / 100) * c;
@@ -120,7 +98,7 @@ function MiniRing({ fillPct, tone }: { fillPct: number; tone: Tone }) {
         strokeLinecap="round"
         strokeDasharray={`${arcLen} ${c}`}
         transform="rotate(-90 19 19)"
-        className={toneText(tone)}
+        className={metricToneTextClass(tone)}
       />
     </svg>
   );
@@ -174,7 +152,7 @@ function buildCells(s: WorkspaceSignalsPick): MetricCell[] {
       sub: 'soon',
       display: String(due),
       icon: CalendarClock,
-      tone: 'info',
+      tone: toneDueTodayTasks(due),
       fillPct: capLin(due, 14),
       title: 'Scheduler tasks due today or due-soon'
     },
@@ -224,7 +202,7 @@ function VitalityMetricCell({ m, valueId }: { m: MetricCell; valueId: string }) 
             </span>
             <span className="bo-vitality-cell__label truncate">{m.label}</span>
           </div>
-          <p id={valueId} className="bo-vitality-cell__value">
+          <p id={valueId} className={clsx('bo-vitality-cell__value', metricToneTextClass(m.tone))}>
             {m.display}
           </p>
           <Spark fillPct={m.fillPct} tone={m.tone} />

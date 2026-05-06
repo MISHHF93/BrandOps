@@ -61,7 +61,14 @@ export function PlanDestinationGrid({
               btnFocus
             )}
           >
-            <Icon className="bo-plan-destination-card__icon shrink-0 text-textSoft" strokeWidth={2.25} aria-hidden />
+            <Icon
+              className={clsx(
+                'bo-plan-destination-card__icon shrink-0 stroke-[2.25]',
+                row.key === 'today' && 'text-info',
+                row.key === 'pipeline' && 'text-warning'
+              )}
+              aria-hidden
+            />
             <span className="bo-plan-destination-card__body min-w-0 flex-1">
               <span className="bo-plan-destination-card__title">{row.title}</span>
               <span className="bo-plan-destination-card__hint">{row.hint}</span>

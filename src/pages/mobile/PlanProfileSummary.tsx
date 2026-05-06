@@ -29,6 +29,10 @@ export function PlanProfileSummary({
   const voiceRaw = voiceGuide.trim();
   const voiceDisplay = voiceRaw ? summarizeVoice(voiceRaw, 200) : emptyHint;
   const metricDisplay = focusMetric.trim() || emptyHint;
+  const focusMetricClass =
+    metricDisplay === emptyHint
+      ? 'mt-0.5 text-[11px] leading-snug text-text'
+      : 'mt-0.5 text-[11px] font-medium leading-snug text-info';
 
   return (
     <section
@@ -76,7 +80,7 @@ export function PlanProfileSummary({
           <dt className="text-[10px] font-semibold uppercase tracking-wide text-textMuted">
             Focus metric
           </dt>
-          <dd className="mt-0.5 text-[11px] leading-snug text-text">{metricDisplay}</dd>
+          <dd className={focusMetricClass}>{metricDisplay}</dd>
         </div>
       </dl>
     </section>
