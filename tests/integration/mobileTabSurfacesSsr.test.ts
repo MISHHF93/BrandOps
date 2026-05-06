@@ -42,7 +42,6 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         btnFocus: '',
         commandBusy: false,
         runCommand: noop,
-        primeChat: noop,
         onOpenToday: noop,
         launchAccess: planLaunchFixture,
         onOpenAssistant: noop,
@@ -69,10 +68,12 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('bo-plan-flat-root');
     expect(html).toContain('Today snapshot');
     expect(html).toContain('Open full Today');
-    expect(html).toContain('Integrations &amp; Setup live in ⌘K');
+    expect(html).toContain('stay on this tab');
+    expect(html).toContain('Integrations and Settings stay');
     expect(html).toContain('>Today<');
     expect(html).toContain('>Pipeline<');
     expect(html).toContain('<table');
+    expect(html).toContain('>Run<');
     expect(html).toContain('bo-icon-chip');
     expect(html).toContain('Account &amp; billing');
     expect(html).toContain('Membership active');

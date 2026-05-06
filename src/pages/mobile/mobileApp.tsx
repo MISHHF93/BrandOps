@@ -358,7 +358,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     buildWorkspaceSnapshot(createInMemorySeededWorkspace())
   );
   const [commandHistory, setCommandHistory] = useState<string[]>(() => readCommandChips());
-  const [pendingDestructive, setPendingDestructive] = useState<string | null>(null);
+  const [pendingDestructive, setPendingDestructive] = useState<{
+    command: string;
+    sourceSurface: 'Workspace' | 'Today' | 'Integrations' | 'Settings' | 'Chat';
+  } | null>(null);
   const [pendingClearChat, setPendingClearChat] = useState(false);
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
@@ -778,40 +781,75 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   ) => {
     if (!trimmed || commandLoading) return;
     if (needsDestructiveConfirm(trimmed)) {
-      setPendingDestructive(trimmed);
+      setPendingDestructive({ command: trimmed, sourceSurface });
       return;
     }
     void executeCommandFlow(trimmed, sourceSurface);
   };
 
-  /** Switches to Chat and runs the command immediately (same engine as Send). */
-  const sendQuickCommand = (command: string) => {
+  /**
+   * Enqueue an agent command from quick actions or the palette.
+   * Plan can keep the user on the workspace tab; other surfaces still jump to Assistant for the transcript.
+   */
+  const runAgentQuick = (
+    command: string,
+    source: 'Workspace' | 'Today' | 'Integrations' | 'Settings' | 'Chat',
+    navigateToChat: boolean
+  ) => {
     const trimmed = command.trim();
     if (!trimmed || commandLoading) return;
+
+    const stayOnPlan = source === 'Workspace' && !navigateToChat;
+
+    if (stayOnPlan) {
+      setDataOpsHint('Running from Plan… Open Assistant for the transcript.');
+    } else if (source !== 'Chat') {
+      const surfaceLabel =
+        source === 'Today'
+          ? 'Today'
+          : source === 'Integrations'
+            ? 'Integrations'
+            : source === 'Settings'
+              ? 'Settings'
+              : 'Workspace';
+      setDataOpsHint(`Running from ${surfaceLabel} in Chat…`);
+    }
+
     setChatAttachment(null);
-    commitTab('chat');
-    setInput('');
+
+    if (!stayOnPlan) {
+      commitTab('chat');
+      setInput('');
+    }
+
     queueMicrotask(() => {
-      startSend(trimmed, 'Chat');
+      startSend(trimmed, source);
     });
   };
 
+  /** Switches to Chat and runs the command immediately (same engine as Send). */
+  const sendQuickCommand = (command: string) => {
+    runAgentQuick(command, 'Chat', true);
+  };
+
   /**
-   * Same as {@link sendQuickCommand}, but annotates origin so users can tell why they jumped to
-   * Chat (prevents "button only navigated me" confusion).
+   * Same engine as {@link sendQuickCommand}; by default switches to Chat so the thread is visible.
+   * Use `{ navigateToChat: false }` with source `Workspace` to run from Plan without leaving the tab.
    */
-  const sendQuickCommandFrom = (source: 'Workspace' | 'Today' | 'Integrations' | 'Settings') => {
-    return (command: string) => {
-      const trimmed = command.trim();
-      if (!trimmed || commandLoading) return;
-      setDataOpsHint(`Running from ${source} in Chat...`);
-      setChatAttachment(null);
-      commitTab('chat');
-      setInput('');
-      queueMicrotask(() => {
-        startSend(trimmed, source);
-      });
-    };
+  const sendQuickCommandFrom = (
+    source: 'Workspace' | 'Today' | 'Integrations' | 'Settings',
+    opts?: { navigateToChat?: boolean }
+  ) => {
+    const navigateToChat = opts?.navigateToChat !== false;
+    return (command: string) => runAgentQuick(command, source, navigateToChat);
+  };
+
+  const paletteOnRunCommand = (command: string) => {
+    if (activeTab === 'workspace') {
+      runAgentQuick(command, 'Workspace', false);
+      return;
+    }
+    sendQuickCommand(command);
   };
 
   const onSignInProvider = useCallback((provider: AuthProviderId) => {
@@ -898,9 +936,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       setChatAttachment({ name: file.name, size: file.size, kind: 'binary' });
     }
   };
-
-  /** Same as {@link sendQuickCommand}: Today / Integrations / Settings chips must show Chat + thread results. */
-  const runCommand = sendQuickCommand;
 
   const primeChat = useCallback(
     (line: string) => {
@@ -1144,8 +1179,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 snapshot={snapshot}
                 btnFocus={btnFocus}
                 commandBusy={commandLoading}
-                runCommand={sendQuickCommandFrom('Workspace')}
-                primeChat={primeChat}
+                runCommand={sendQuickCommandFrom('Workspace', { navigateToChat: false })}
                 onOpenToday={() => commitTab('daily')}
                 launchAccess={launchAccess}
                 onOpenAssistant={() => commitTab('chat')}
@@ -1267,7 +1301,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               UI.
             </p>
             <p className="mt-2 rounded-lg border border-border/50 bg-bgSubtle/80 p-2 font-mono text-xs text-textMuted">
-              {pendingDestructive}
+              {pendingDestructive.command}
             </p>
             <OnDeviceDialogTrustFooter />
             <div className="mt-4 flex justify-end gap-2">
@@ -1283,9 +1317,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 type="button"
                 className={`rounded-lg bg-warning px-3 py-2 text-sm font-semibold text-text ${btnFocus}`}
                 onClick={() => {
-                  const cmd = pendingDestructive;
+                  const pending = pendingDestructive;
                   setPendingDestructive(null);
-                  if (cmd) void executeCommandFlow(cmd);
+                  if (pending) void executeCommandFlow(pending.command, pending.sourceSurface);
                 }}
               >
                 Run command
@@ -1409,7 +1443,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         commandBusy={commandLoading}
         commandHistory={commandHistory}
         onNavigateTab={commitTab}
-        onRunCommand={runCommand}
+        onRunCommand={paletteOnRunCommand}
+        commandRunContext={activeTab === 'workspace' ? 'plan' : 'chat'}
         onOpenHelp={() => openExtensionSurface('help')}
       />
     </div>

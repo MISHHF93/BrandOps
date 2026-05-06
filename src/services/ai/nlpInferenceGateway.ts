@@ -44,6 +44,49 @@ export function joinOpenAiCompatibleUrl(base: string, segment: string): string {
   return `${b}/${s}`;
 }
 
+/** Turns bare `HTTP n` into actionable copy when OpenAI-compatible APIs return 401/403/404. */
+function openAiCompatibleHttpDetail(status: number, parsed: unknown): string {
+  const providerSnippet = (): string => {
+    if (!parsed || typeof parsed !== 'object') return '';
+    const o = parsed as Record<string, unknown>;
+    const err = o.error;
+    if (typeof err === 'string') return err;
+    if (err && typeof err === 'object') {
+      const m = (err as Record<string, unknown>).message;
+      if (typeof m === 'string') return m;
+    }
+    const top = o.message;
+    return typeof top === 'string' ? top : '';
+  };
+  const detail = providerSnippet().trim();
+
+  switch (status) {
+    case 401:
+      return [
+        'HTTP 401 — API key rejected or not sent correctly for this endpoint.',
+        detail && `Provider: ${detail}`
+      ]
+        .filter(Boolean)
+        .join(' ');
+    case 403:
+      return [
+        'HTTP 403 — forbidden (check model access, org permissions, VPN/IP allowlists, or key scope).',
+        detail && `Provider: ${detail}`
+      ]
+        .filter(Boolean)
+        .join(' ');
+    case 404:
+      return [
+        'HTTP 404 — wrong base URL or path (expect an OpenAI-compatible root with /v1/…).',
+        detail && `Provider: ${detail}`
+      ]
+        .filter(Boolean)
+        .join(' ');
+    default:
+      return detail ? `HTTP ${status} — ${detail}` : `HTTP ${status}`;
+  }
+}
+
 function resolveChatPolicy(
   settings: AppSettings
 ): { ok: true } | { ok: false; code: NlpGatewayFailureCode; message: string } {
@@ -132,7 +175,7 @@ export async function runChatCompletion(
       return {
         ok: false,
         code: 'http_error',
-        message: `HTTP ${res.status}`,
+        message: openAiCompatibleHttpDetail(res.status, parsed),
         status: res.status,
         raw: parsed
       };
@@ -220,7 +263,7 @@ export async function runEmbeddings(
       return {
         ok: false,
         code: 'http_error',
-        message: `HTTP ${res.status}`,
+        message: openAiCompatibleHttpDetail(res.status, parsed),
         status: res.status,
         raw: parsed
       };

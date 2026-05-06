@@ -76,8 +76,8 @@ export function PlanPlanningActions({
         </button>
       </div>
       <p className="mt-1 text-[11px] leading-snug text-textSoft">
-        Run any action here — behavior matches typing the same line in Assistant or choosing it in the
-        palette. Destructive phrases still follow normal confirmations.
+        Run any action here without leaving Plan — same lines as ⌘K or Assistant. Destructive phrases
+        still use the normal confirmation sheet. Open Ask when you want the full transcript view.
       </p>
       {!agentEnabled && agentLockHint ? (
         <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/15 px-2.5 py-2 text-[11px] text-text">

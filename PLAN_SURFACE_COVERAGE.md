@@ -1,15 +1,17 @@
 # Plan surface — feature coverage audit
 
+See also **[`PLAN_PAGE_NAVIGATION_UX.md`](./PLAN_PAGE_NAVIGATION_UX.md)** (stay-on-Plan command routing and shortcut IA).
+
 This ties **every surfaced Plan affordance** to the real implementation so the hub is actionable, not ornamental.
 
 ## Execution contract
 
 | Surface | Implementation |
 |---------|----------------|
-| Plan action tiles | `runCommand` → `sendQuickCommandFrom('Workspace')` in `mobileApp.tsx` → `executeAgentWorkspaceCommand` |
-| Today / Pipeline cards | Navigation + same `runCommand` for Pipeline health (`PlanDestinationGrid.tsx`) |
-| Queue row Chat | `primeChat(workspaceQueueCommandLine)` → Composer on Assistant tab (`pulseTimeline.ts`) |
-| ⌘K “All commands” | `setCommandPaletteOpen(true)` → `WorkspaceCommandPalette` (same catalogue as `chatIntents` groups) |
+| Plan action tiles | `runCommand` → `sendQuickCommandFrom('Workspace', { navigateToChat: false })` → `executeCommandFlow` (stays on Plan) |
+| Today / Pipeline cards | **Today** navigates in place; **Pipeline** runs `pipeline health` via same stay-on-Plan `runCommand` |
+| Queue row Run | `runCommand(workspaceQueueCommandLine)` stay on Plan (`pulseTimeline.ts`) |
+| ⌘K “All commands” | `paletteOnRunCommand` + `commandRunContext='plan'` while `activeTab === 'workspace'` (palette copy: “Run from Plan”) |
 
 ## Intent catalogue wired on Plan (`getIntentsForPlanPage`)
 

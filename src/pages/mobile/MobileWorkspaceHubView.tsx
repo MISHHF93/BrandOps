@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import {
   CalendarCheck2,
-  MessageCircle,
+  CirclePlay,
   MessageSquare,
   PlugZap,
   Settings,
@@ -47,7 +47,6 @@ export interface MobileWorkspaceHubViewProps {
   btnFocus: string;
   commandBusy: boolean;
   runCommand: (command: string) => void | Promise<void>;
-  primeChat: (line: string) => void;
   onOpenToday: () => void;
   launchAccess: LaunchAccessState;
   onOpenAssistant: () => void;
@@ -66,7 +65,6 @@ export const MobileWorkspaceHubView = ({
   btnFocus,
   commandBusy,
   runCommand,
-  primeChat,
   onOpenToday,
   launchAccess,
   onOpenAssistant,
@@ -85,8 +83,8 @@ export const MobileWorkspaceHubView = ({
   return (
     <div className="space-y-4" aria-label="Plan">
       <span className="sr-only">
-        Plan — workspace command center. Planning actions run the same agent as Assistant. Jump
-        links: plan actions, Pulse, Today snapshot, queue.
+        Plan — workspace command center. Planning actions and queue runs stay on this tab; Assistant
+        opens Ask. Jump links: plan actions, Pulse, Today snapshot, queue.
       </span>
 
       <div className={SHEET}>
@@ -107,8 +105,9 @@ export const MobileWorkspaceHubView = ({
               Plan
             </h1>
             <p className="mt-2 text-[12px] leading-relaxed text-textMuted">
-              Run the week from here — pipeline health stays one tap away. Integrations & Setup live
-              in ⌘K plus the shortcuts below.
+              Run the week from here — Pipeline health and planning actions stay on this tab when you tap
+              them. Use the shortcuts below: Integrations and Settings open in place; Assistant opens Ask.
+              ⌘K runs commands the same way.
             </p>
           </header>
 
@@ -120,19 +119,6 @@ export const MobileWorkspaceHubView = ({
           />
 
           <nav className="flex flex-wrap gap-2" aria-label="Plan shortcuts">
-            <button
-              type="button"
-              onClick={onOpenAssistant}
-              className={clsx(
-                'inline-flex touch-manipulation items-center gap-1.5 rounded-full border border-border/55 bg-surfaceActive/60 px-3 py-2 text-[11px] font-semibold text-text shadow-sm hover:border-borderStrong',
-                btnFocus
-              )}
-            >
-              <span className="bo-icon-chip bo-icon-chip--xs bo-icon-chip--info" aria-hidden>
-                <MessageSquare className="h-3 w-3" strokeWidth={2.25} />
-              </span>
-              Assistant
-            </button>
             <button
               type="button"
               onClick={onOpenIntegrations}
@@ -159,7 +145,25 @@ export const MobileWorkspaceHubView = ({
               </span>
               Settings
             </button>
+            <button
+              type="button"
+              onClick={onOpenAssistant}
+              title="Open Assistant (Ask tab)"
+              aria-label="Open Assistant (Ask tab)"
+              className={clsx(
+                'inline-flex touch-manipulation items-center gap-1.5 rounded-full border border-dashed border-accent/45 bg-accentSoft/12 px-3 py-2 text-[11px] font-semibold text-accent shadow-sm hover:border-accent/60',
+                btnFocus
+              )}
+            >
+              <span className="bo-icon-chip bo-icon-chip--xs bo-icon-chip--info" aria-hidden>
+                <MessageSquare className="h-3 w-3" strokeWidth={2.25} />
+              </span>
+              Assistant
+            </button>
           </nav>
+          <p className="text-[10px] leading-snug text-textSoft">
+            Integrations and Settings stay on this screen. Assistant switches to the Ask tab.
+          </p>
 
           <PlanJumpNav btnFocus={btnFocus} />
         </div>
@@ -319,11 +323,12 @@ export const MobileWorkspaceHubView = ({
                         <button
                           type="button"
                           disabled={commandBusy}
-                          onClick={() => primeChat(workspaceQueueCommandLine(row))}
+                          title="Run this queue line on device (stay on Plan)"
+                          onClick={() => runCommand(workspaceQueueCommandLine(row))}
                           className={clsx(mobileChipClass(btnFocus), 'text-[10px]')}
                         >
-                          <MessageCircle className="me-1 inline h-3 w-3 align-text-bottom" />
-                          Chat
+                          <CirclePlay className="me-1 inline h-3 w-3 align-text-bottom" />
+                          Run
                         </button>
                       </td>
                     </tr>

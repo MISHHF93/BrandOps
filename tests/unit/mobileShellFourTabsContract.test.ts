@@ -68,11 +68,15 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
 
 
-  it('threads primeChat into Today and workspace data handlers into Settings', () => {
+  it('threads primeChat into Today only (Plan hub stays on tab for queue + tiles)', () => {
 
     const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
 
     expect(cockpitJsx).toContain('primeChat={primeChat}');
+
+    const workspaceJsx = mobileApp.match(/<MobileWorkspaceHubView[\s\S]*?\/>/)?.[0] ?? '';
+
+    expect(workspaceJsx).not.toContain('primeChat');
 
     expect(mobileApp).toContain('onExportWorkspace={exportWorkspace}');
 
@@ -84,11 +88,15 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
 
 
-  it('aliases runCommand to sendQuickCommand so shell chips use the same Chat-visible path as quick sends', () => {
+  it('keeps Plan + palette commands on workspace tab until user opens Assistant', () => {
 
-    expect(mobileApp).toMatch(/const runCommand = sendQuickCommand/);
+    expect(mobileApp).toContain("sendQuickCommandFrom('Workspace', { navigateToChat: false })");
 
-    expect(mobileApp).toMatch(/const sendQuickCommand[\s\S]*?commitTab\('chat'\)/);
+    expect(mobileApp).toContain('paletteOnRunCommand');
+
+    expect(mobileApp).toContain("commandRunContext={activeTab === 'workspace' ? 'plan' : 'chat'}");
+
+    expect(mobileApp).toMatch(/const sendQuickCommand[\s\S]*?runAgentQuick\(command,\s*'Chat',\s*true\)/);
 
   });
 

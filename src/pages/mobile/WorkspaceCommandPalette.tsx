@@ -18,10 +18,12 @@ const cmdItemClass = clsx(
 
 function FreeformRunItem({
   onRun,
-  disabled
+  disabled,
+  runLeadIn
 }: {
   onRun: (line: string) => void;
   disabled: boolean;
+  runLeadIn: string;
 }) {
   const search = useCommandState((s) => s.search);
   const t = search.trim();
@@ -33,7 +35,7 @@ function FreeformRunItem({
       keywords={['run', 'chat', 'agent', 'send', t]}
       onSelect={() => onRun(t)}
     >
-      <span className="text-text">Run in Chat</span>
+      <span className="text-text">{runLeadIn}</span>
       <span className="ml-2 min-w-0 flex-1 truncate font-mono text-[11px] text-textSoft" title={t}>
         {t}
       </span>
@@ -59,11 +61,14 @@ export interface WorkspaceCommandPaletteProps {
   commandHistory: string[];
   onNavigateTab: (tab: MobileShellTabId) => void;
   onRunCommand: (command: string) => void;
+  /** `plan` adjusts run copy + footer when commands keep the Plan tab active. */
+  commandRunContext?: 'chat' | 'plan';
   onOpenHelp: () => void;
 }
 
 /**
- * Global command menu (cmdk) — all runs go through the same path as Chat Send: {@link executeAgentWorkspaceCommand}.
+ * Global command menu (cmdk). Runs go through the same path as Chat Send; when `commandRunContext`
+ * is `plan`, copy matches stays-on-Plan routing (parent `onRunCommand` handles navigation).
  */
 export const WorkspaceCommandPalette = ({
   open,
@@ -74,9 +79,11 @@ export const WorkspaceCommandPalette = ({
   commandHistory,
   onNavigateTab,
   onRunCommand,
+  commandRunContext = 'chat',
   onOpenHelp
 }: WorkspaceCommandPaletteProps) => {
   const agentDisabled = !canExecuteAgentCommands || commandBusy;
+  const runLeadIn = commandRunContext === 'plan' ? 'Run from Plan' : 'Run in Chat';
   const lockHint =
     agentLockReason === 'auth'
       ? 'Sign in from Settings to run workspace commands. Tab navigation and Help stay open.'
@@ -224,6 +231,7 @@ export const WorkspaceCommandPalette = ({
             >
               <FreeformRunItem
                 disabled={agentDisabled}
+                runLeadIn={runLeadIn}
                 onRun={(line) => {
                   if (agentDisabled) return;
                   closeAnd(() => onRunCommand(line));
@@ -280,6 +288,11 @@ export const WorkspaceCommandPalette = ({
         ) : null}
       </Command.List>
       <p className="border-t border-border/40 px-3 py-2 text-[10px] text-textSoft">
+        {commandRunContext === 'plan' ? (
+          <>
+            Commands run on device while you stay on Plan. Open Ask for the full transcript thread.{' '}
+          </>
+        ) : null}
         <kbd className="rounded border border-border/60 bg-bgSubtle/80 px-1 font-mono">⌘K</kbd> or{' '}
         <kbd className="rounded border border-border/60 bg-bgSubtle/80 px-1 font-mono">Ctrl+K</kbd>{' '}
         to toggle

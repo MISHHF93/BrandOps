@@ -6,7 +6,7 @@ This pass aligns **Plan** (`workspace`) and **Ask / Assistant** (`chat`) so the 
 
 | Capability | Entry | Code |
 |-------------|-------|------|
-| On-device workspace commands | Plan tiles, ⌘K, Assistant starters / composer | `executeAgentWorkspaceCommand` via `mobileApp.sendQuickCommand` / `sendQuickCommandFrom` |
+| On-device workspace commands | Plan tiles, ⌘K, Assistant starters / composer | `executeAgentWorkspaceCommand` via `runAgentQuick`; Plan uses `sendQuickCommandFrom('Workspace', { navigateToChat: false })` and palette `paletteOnRunCommand` so the tab can stay on Plan |
 | Hosted answers | `ask:` prefix | `runChatCompletion` + `buildHostedAskMessages` |
 | Model → auto command | Structured JSON (`brandOpsStructuredApply`, `brandOpsActionPipeline`) | `parseAiExecutablePayload`, `llmStructuredApply` + `actionPipeline`; allow-list |
 | NLP trace artifact | Hosted round-trips | `persistChatGatewayTrace` |

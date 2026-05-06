@@ -18,6 +18,7 @@ const requiredFiles = [
   'dist/help.html',
   'dist/privacy-policy.html',
   'dist/brandops-oauth-public.json',
+  'dist/brandops-intelligence-rules.json',
   'dist/oauth/google-brandops.html',
   'dist/oauth/github-brandops.html',
   'dist/oauth/linkedin-brandops.html'
