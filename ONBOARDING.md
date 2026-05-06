@@ -25,7 +25,7 @@ Engineering and product reference for the first-session experience (`mobile.html
 |------|----------------|---------------|
 | Auth / membership | Full-width gate | [`mobileApp.tsx`](src/pages/mobile/mobileApp.tsx) (`LaunchAuthGate`, `MembershipGate`) |
 | Getting started checklist | **Assistant** (`chat`) | [`FirstRunJourneyCard.tsx`](src/pages/mobile/FirstRunJourneyCard.tsx), rendered in `mobileApp.tsx` above `MobileChatView` |
-| Plan hub | `workspace` | [`MobileWorkspaceHubView.tsx`](src/pages/mobile/MobileWorkspaceHubView.tsx) |
+| Plan hub | `workspace` | [`MobileWorkspaceHubView.tsx`](src/pages/mobile/MobileWorkspaceHubView.tsx) — identity + **read-only workspace profile** ([`PlanProfileSummary.tsx`](src/pages/mobile/PlanProfileSummary.tsx)), Plan destinations (**Today** / **Pipeline**), Pulse/queue; **⌘K** / dock for Integrations, Settings, Assistant (no duplicate shortcut chips). |
 | Today cockpit | `daily` | [`CockpitDailyView.tsx`](src/pages/mobile/CockpitDailyView.tsx) |
 | Palette | Any (when unlocked) | [`WorkspaceCommandPalette.tsx`](src/pages/mobile/WorkspaceCommandPalette.tsx), [`mobileTabConfig.ts`](src/pages/mobile/mobileTabConfig.ts) |
 | Help | New tab / window | `openExtensionSurface('help')` in `mobileApp.tsx` |

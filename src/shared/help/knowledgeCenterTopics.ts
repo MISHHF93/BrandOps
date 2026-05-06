@@ -26,7 +26,7 @@ export interface KnowledgeCenterDailyPlaybook {
 export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
   title: 'Every day in BrandOps (mobile shell)',
   intro:
-    'You land on **Assistant**. The dismissible **Getting started** checklist sits above the chat: run **Pipeline health**, open **Plan** (pulse, queue, Today/Pipeline tiles), open **Today** (lanes), and use **⌘K / Ctrl+K** for Integrations & Setup. The dock is **Ask** and **Plan** only — other tabs open from those actions or the palette. Typical loop: Assistant for commands, Plan for queue context, Today when you need cockpit digests.',
+    'You land on **Assistant**. The dismissible **Getting started** checklist sits above the chat: run **Pipeline health**, open **Plan** (profile summary, pulse, queue, Today/Pipeline tiles), open **Today** (lanes), and use **⌘K / Ctrl+K** for Integrations & Setup. The dock is **Ask** and **Plan** only — deeper tabs open from the palette or Plan tiles, without duplicate chip rows on Plan.',
   steps: [
     {
       title: 'Run one command from Assistant',
@@ -62,7 +62,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     summary:
       'Primary UI is mobile.html (Assistant + Workspace dock; deeper panels for Today / Integrations / Settings). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
     paragraphs: [
-      'The product is a browser extension. **mobile.html** is the primary workspace: Assistant (default), Plan (dock), Today, Integrations, and Settings (Assistant + Plan are the dock; other sections open via ⌘K or deep links).',
+      'The product is a browser extension. **mobile.html** is the primary workspace: Assistant (default), Plan (dock), Today, Integrations, and Settings (Assistant + Plan are the dock; Plan surfaces a read-only **workspace profile** — edits live under Settings → Preferences). Deeper tabs use ⌘K or actions from Plan.',
       '**welcome.html** uses the same shell and lands on **Assistant** first — Getting started on that tab walks new users through Plan, Today, and ⌘K.',
       '**dashboard.html** loads the same shell; legacy ?section= workstream links redirect to mobile.html so deep links stay consistent.',
       '**integrations.html** is the Chrome options_ui entry (Integrations tab by default). **help.html** is this Knowledge Center.',

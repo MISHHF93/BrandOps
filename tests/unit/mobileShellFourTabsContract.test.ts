@@ -192,6 +192,18 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
 
 
+  it('does not duplicate dock tabs on Plan hub (workspace hub omits Assistant / Integrations callbacks)', () => {
+
+    const workspaceJsx = mobileApp.match(/<MobileWorkspaceHubView[\s\S]*?\/>/)?.[0] ?? '';
+
+    expect(workspaceJsx).not.toContain('onOpenAssistant');
+
+    expect(workspaceJsx).not.toContain('onOpenIntegrations');
+
+  });
+
+
+
   it('does not render Getting started on Today-only branch (checklist lives on Assistant)', () => {
 
     expect(mobileApp).not.toMatch(/activeTab === 'daily'[\s\S]*FirstRunJourneyCard/);

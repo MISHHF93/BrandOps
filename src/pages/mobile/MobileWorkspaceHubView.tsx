@@ -1,12 +1,5 @@
 import clsx from 'clsx';
-import {
-  CalendarCheck2,
-  CirclePlay,
-  MessageSquare,
-  PlugZap,
-  Settings,
-  TableProperties
-} from 'lucide-react';
+import { CalendarCheck2, CirclePlay, TableProperties } from 'lucide-react';
 import type { LaunchAccessState } from '../../shared/account/launchAccess';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { workspaceQueueCommandLine } from './pulseTimeline';
@@ -14,6 +7,7 @@ import type { PulseTimelineRow } from './pulseTimeline';
 import { PlanDestinationGrid } from './PlanDestinationGrid';
 import { PlanIdentityHeader } from './PlanIdentityHeader';
 import { PlanJumpNav } from './PlanJumpNav';
+import { PlanProfileSummary } from './PlanProfileSummary';
 import { PlanPlanningActions } from './PlanPlanningActions';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
@@ -49,8 +43,6 @@ export interface MobileWorkspaceHubViewProps {
   runCommand: (command: string) => void | Promise<void>;
   onOpenToday: () => void;
   launchAccess: LaunchAccessState;
-  onOpenAssistant: () => void;
-  onOpenIntegrations: () => void;
   onOpenSettings: () => void;
   onOpenCommandPalette: () => void;
   canRunWorkspaceCommands: boolean;
@@ -67,8 +59,6 @@ export const MobileWorkspaceHubView = ({
   runCommand,
   onOpenToday,
   launchAccess,
-  onOpenAssistant,
-  onOpenIntegrations,
   onOpenSettings,
   onOpenCommandPalette,
   canRunWorkspaceCommands,
@@ -83,8 +73,8 @@ export const MobileWorkspaceHubView = ({
   return (
     <div className="space-y-3" aria-label="Plan">
       <span className="sr-only">
-        Plan — workspace command center. Planning actions and queue runs stay on this tab; Assistant
-        opens Ask. Jump links: plan actions, Pulse, Today snapshot, queue.
+        Plan — workspace command center; profile summary and Account actions above; pulse, quick picks,
+        Today snapshot, and queue below. Cross-tab destinations use the dock or ⌘K palette.
       </span>
 
       <div className={SHEET}>
@@ -99,14 +89,32 @@ export const MobileWorkspaceHubView = ({
           />
         </div>
 
+        <div className={ROW}>
+          <PlanProfileSummary
+            btnFocus={btnFocus}
+            primaryOffer={snapshot.primaryOffer}
+            voiceGuide={snapshot.voiceGuide}
+            focusMetric={snapshot.focusMetric}
+            onEditProfile={onOpenSettings}
+          />
+        </div>
+
         <div className={clsx(ROW, 'space-y-3')}>
           <header>
             <h1 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-textMuted">
               Plan
             </h1>
             <p className="mt-1.5 text-[11px] leading-snug text-textMuted">
-              Pipeline and quick picks run on this tab. Integrations and Settings stay here; Assistant
-              opens Ask. Full catalogue: ⌘K.
+              Pipeline health, quick picks, and queue runs stay on this tab. Integrations, Settings,
+              and Assistant are on the dock or press{' '}
+              <kbd className="rounded border border-border/45 bg-bgSubtle px-1 py-px font-mono text-[10px] text-text">
+                ⌘K
+              </kbd>{' '}
+              /{' '}
+              <kbd className="rounded border border-border/45 bg-bgSubtle px-1 py-px font-mono text-[10px] text-text">
+                Ctrl+K
+              </kbd>{' '}
+              for the full catalogue.
             </p>
           </header>
 
@@ -117,49 +125,10 @@ export const MobileWorkspaceHubView = ({
             onOpenToday={onOpenToday}
           />
 
-          <nav className="flex flex-wrap gap-2" aria-label="Plan shortcuts">
-            <button
-              type="button"
-              onClick={onOpenIntegrations}
-              className={clsx(
-                'inline-flex touch-manipulation items-center gap-1.5 rounded-full border border-border/55 bg-surfaceActive/60 px-3 py-2 text-[11px] font-semibold text-text shadow-sm hover:border-borderStrong',
-                btnFocus
-              )}
-            >
-              <span className="bo-icon-chip bo-icon-chip--xs bo-icon-chip--muted" aria-hidden>
-                <PlugZap className="h-3 w-3" strokeWidth={2.25} />
-              </span>
-              Integrations
-            </button>
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              className={clsx(
-                'inline-flex touch-manipulation items-center gap-1.5 rounded-full border border-border/55 bg-surfaceActive/60 px-3 py-2 text-[11px] font-semibold text-text shadow-sm hover:border-borderStrong',
-                btnFocus
-              )}
-            >
-              <span className="bo-icon-chip bo-icon-chip--xs bo-icon-chip--muted" aria-hidden>
-                <Settings className="h-3 w-3" strokeWidth={2.25} />
-              </span>
-              Settings
-            </button>
-            <button
-              type="button"
-              onClick={onOpenAssistant}
-              title="Open Assistant (Ask tab)"
-              aria-label="Open Assistant (Ask tab)"
-              className={clsx(
-                'inline-flex touch-manipulation items-center gap-1.5 rounded-full border border-dashed border-accent/45 bg-accentSoft/12 px-3 py-2 text-[11px] font-semibold text-accent shadow-sm hover:border-accent/60',
-                btnFocus
-              )}
-            >
-              <span className="bo-icon-chip bo-icon-chip--xs bo-icon-chip--info" aria-hidden>
-                <MessageSquare className="h-3 w-3" strokeWidth={2.25} />
-              </span>
-              Assistant
-            </button>
-          </nav>
+          <p className="text-[11px] leading-snug text-textMuted">
+            <span className="font-medium text-textSoft">Other tabs:</span> palette lists Integrations,
+            Settings, Today lanes, and jump targets — no duplicate shortcuts needed here.
+          </p>
 
           <PlanJumpNav btnFocus={btnFocus} />
         </div>

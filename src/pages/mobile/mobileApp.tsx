@@ -1185,8 +1185,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 runCommand={sendQuickCommandFrom('Workspace', { navigateToChat: false })}
                 onOpenToday={() => commitTab('daily')}
                 launchAccess={launchAccess}
-                onOpenAssistant={() => commitTab('chat')}
-                onOpenIntegrations={() => commitTab('integrations')}
                 onOpenSettings={() => commitTab('settings')}
                 onOpenCommandPalette={() => setCommandPaletteOpen(true)}
                 canRunWorkspaceCommands={agentCommandLock === null}

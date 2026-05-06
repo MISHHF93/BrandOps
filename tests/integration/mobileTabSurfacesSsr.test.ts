@@ -44,8 +44,6 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         runCommand: noop,
         onOpenToday: noop,
         launchAccess: planLaunchFixture,
-        onOpenAssistant: noop,
-        onOpenIntegrations: noop,
         onOpenSettings: noop,
         onOpenCommandPalette: noop,
         canRunWorkspaceCommands: true,
@@ -68,7 +66,13 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('bo-plan-flat-root');
     expect(html).toContain('Today snapshot');
     expect(html).toContain('Open full Today');
-    expect(html).toContain('stay here');
+    expect(html).toContain('stay on this tab');
+    expect(html).toContain('id="plan-profile-summary"');
+    expect(html).toContain('Workspace profile');
+    expect(html).toContain('Edit profile');
+    expect(html).toContain('Primary offer');
+    expect(html).toContain('Voice guide');
+    expect(html).toContain('Focus metric');
     expect(html).toContain('>Today<');
     expect(html).toContain('>Pipeline<');
     expect(html).toContain('<table');
