@@ -32,7 +32,7 @@ export type VitalityMetricKey =
   | 'oauth'
   | 'src';
 
-type Tone = 'warning' | 'info' | 'success' | 'primary' | 'muted';
+type Tone = 'danger' | 'warning' | 'info' | 'success' | 'primary' | 'muted';
 
 type MetricCell = {
   key: VitalityMetricKey;
@@ -45,13 +45,30 @@ type MetricCell = {
   title: string;
 };
 
+/** Follow-ups open count: at/above → danger (overload); at/above mid → warning. */
+const FOLLOWUPS_OPEN_DANGER = 15;
+const FOLLOWUPS_OPEN_WARNING = 8;
+
 function clampPct(raw: number) {
   if (!Number.isFinite(raw)) return 0;
   return Math.min(100, Math.max(0, Math.round(raw)));
 }
 
+function toneFollowUpsOpen(open: number): Tone {
+  if (open <= 0) return 'muted';
+  if (open >= FOLLOWUPS_OPEN_DANGER) return 'danger';
+  if (open >= FOLLOWUPS_OPEN_WARNING) return 'warning';
+  return 'warning';
+}
+
+function toneMissedTasks(missed: number): Tone {
+  if (missed > 0) return 'danger';
+  return 'muted';
+}
+
 function toneText(tone: Tone) {
   return clsx(
+    tone === 'danger' && 'text-danger',
     tone === 'warning' && 'text-warning',
     tone === 'info' && 'text-info',
     tone === 'success' && 'text-success',
@@ -127,7 +144,7 @@ function buildCells(s: WorkspaceSignalsPick): MetricCell[] {
       sub: 'open',
       display: String(fu),
       icon: MessageSquare,
-      tone: 'warning',
+      tone: toneFollowUpsOpen(fu),
       fillPct: capLin(fu, 18),
       title: 'Open follow-ups across the workspace'
     },
@@ -167,7 +184,7 @@ function buildCells(s: WorkspaceSignalsPick): MetricCell[] {
       sub: 'tasks',
       display: String(miss),
       icon: Bell,
-      tone: 'warning',
+      tone: toneMissedTasks(miss),
       fillPct: capLin(miss, 10),
       title: 'Missed scheduler tasks'
     },
