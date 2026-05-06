@@ -36,7 +36,11 @@ import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
 import { buildWorkspaceSnapshot, type MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { MOBILE_BTN_FOCUS, MobileShellNav } from './mobileTabPrimitives';
-import { FirstRunJourneyCard, readFirstRunJourneyDismissed } from './FirstRunJourneyCard';
+import {
+  FirstRunJourneyCard,
+  GETTING_STARTED_CONTENT_VERSION,
+  readFirstRunJourneyDismissed
+} from './FirstRunJourneyCard';
 import { getAgentCommandLock } from './agentCommandAccess';
 import { ChatCommandBar } from './ChatCommandBar';
 import { AppearanceToggle } from './AppearanceToggle';
@@ -399,6 +403,26 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     }
     setCommandHistory(readCommandChips());
   }, []);
+
+  /** Records first Getting-started dismissal on workspace seed (Settings diagnostics + exports). */
+  const persistGettingStartedCompletionToWorkspace = useCallback(async () => {
+    try {
+      const data = await storageService.getData();
+      const now = new Date().toISOString();
+      const prevWelcome = data.seed.welcomeCompletedAt?.trim();
+      await storageService.setData({
+        ...data,
+        seed: {
+          ...data.seed,
+          welcomeCompletedAt: prevWelcome && prevWelcome.length > 0 ? prevWelcome : now,
+          onboardingVersion: GETTING_STARTED_CONTENT_VERSION
+        }
+      });
+      await refreshWorkspaceSnapshot();
+    } catch (err) {
+      console.error('BrandOps: failed to persist getting-started workspace completion', err);
+    }
+  }, [refreshWorkspaceSnapshot]);
 
   const selectCopilotWorker = useCallback(async (workerId: string) => {
     try {
@@ -1146,7 +1170,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             {firstRunJourneyVisible ? (
               <FirstRunJourneyCard
                 btnFocus={btnFocus}
-                onDismiss={() => setFirstRunJourneyVisible(false)}
+                onDismiss={() => {
+                  setFirstRunJourneyVisible(false);
+                  void persistGettingStartedCompletionToWorkspace();
+                }}
                 onTryCommand={sendQuickCommand}
                 onOpenPlan={() => commitTab('workspace')}
                 onOpenToday={() => commitTab('daily')}

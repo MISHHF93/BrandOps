@@ -38,9 +38,9 @@ Engineering and product reference for the first-session experience (`mobile.html
 | `brandops:gettingStartedDismissed:v3` | Current: user dismissed the **Assistant** getting-started card. Value `1` = dismissed. |
 | `brandops:firstRunJourneyDismissed` | **Legacy** (Today-only card). No longer read; documented so migrations know why some users already saw an older hint. |
 
-**When to bump version:** Change the suffix (`v4`, …) if the checklist content or placement changes materially so returning users see the update once.
+**When to bump version:** Change the suffix (`v4`, …) if the checklist content or placement changes materially so returning users see the update once. Bump **`GETTING_STARTED_CONTENT_VERSION`** in [`FirstRunJourneyCard.tsx`](src/pages/mobile/FirstRunJourneyCard.tsx) to match that suffix.
 
-**Not wired today:** `seed.welcomeCompletedAt` / `onboardingVersion` in workspace data are unrelated to this card (Settings diagnostics only). Optional follow-up: set `welcomeCompletedAt` when the user dismiss completion of onboarding.
+**Workspace seed:** On dismiss, `mobileApp` writes **`seed.welcomeCompletedAt`** (ISO timestamp, first completion only) and **`seed.onboardingVersion`** (matches checklist generation). Visible under Settings → Diagnostics and included in workspace export.
 
 ## Out of scope (this design)
 

@@ -5,6 +5,12 @@ import { BrandOpsMarkBadge } from '../../shared/ui/brandopsPolish';
 /** Current dismissal flag — bump suffix when checklist content/placement changes materially. */
 export const GETTING_STARTED_STORAGE_KEY = 'brandops:gettingStartedDismissed:v3';
 
+/**
+ * Persisted on workspace `seed.onboardingVersion` when the user dismisses Getting started.
+ * Keep in sync with the suffix on {@link GETTING_STARTED_STORAGE_KEY}.
+ */
+export const GETTING_STARTED_CONTENT_VERSION = '3';
+
 /** Legacy key (Today-tab only card). No longer read; see ONBOARDING.md. */
 export const LEGACY_FIRST_RUN_STORAGE_KEY = 'brandops:firstRunJourneyDismissed';
 

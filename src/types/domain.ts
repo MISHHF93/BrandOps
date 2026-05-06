@@ -578,9 +578,9 @@ export interface SeedMetadata {
   seededAt: string;
   source: SeedDataSource;
   version: string;
-  /** Set when the user finishes Welcome onboarding (Continue to Dashboard or skip). */
+  /** First completion of in-shell Getting started (Assistant checklist dismiss). ISO timestamp. */
   welcomeCompletedAt?: string;
-  /** Bump when onboarding content changes and you want returning users to see new copy. */
+  /** Checklist generation the user last dismissed; aligns with `GETTING_STARTED_CONTENT_VERSION`. */
   onboardingVersion?: string;
   /**
    * User explicitly chose local-only use without federated sign-in (guest mode).
