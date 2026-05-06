@@ -11,8 +11,8 @@ const TODAY_STRIP_ITEMS = [
   },
   {
     kind: 'run' as const,
-    label: 'Balanced cadence',
-    phrase: 'configure: cadence balanced, remind before 20 min'
+    label: '20 min reminders',
+    phrase: 'configure: remind before 20 min'
   },
   {
     kind: 'run' as const,
@@ -59,7 +59,7 @@ export const CockpitTodayWorkstreamSection = ({
     </span>
     <p className="mt-2 text-textSoft">{snapshot.cadenceHeadline}</p>
     <p className="mt-1 text-textMuted">
-      <span className="text-textSoft">Cadence:</span> {snapshot.cadenceMode} ·{' '}
+      <span className="text-textSoft">Schedule:</span> BrandOps daily cadence ·{' '}
       <span className="text-textSoft">Operator:</span> {snapshot.operatorName || '—'} ·{' '}
       <span className="text-textSoft">Offer:</span> {snapshot.primaryOffer || '—'} ·{' '}
       <span className="text-textSoft">Focus:</span> {snapshot.focusMetric || '—'}

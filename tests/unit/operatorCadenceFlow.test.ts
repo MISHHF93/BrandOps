@@ -22,7 +22,7 @@ describe('operatorCadenceFlow', () => {
 
     const digest = operatorCadenceFlow.build(data, new Date('2026-04-11T12:00:00.000Z'));
 
-    expect(digest.headline).toContain('Balanced operator cadence');
+    expect(digest.headline).toContain('BrandOps daily cadence');
     expect(digest.blocks.some((block) => block.category === 'startup')).toBe(true);
     expect(digest.blocks.filter((block) => block.category === 'deep-work')).toHaveLength(2);
     expect(digest.blocks.at(-1)?.category).toBe('shutdown');

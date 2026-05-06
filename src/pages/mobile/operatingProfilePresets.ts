@@ -26,7 +26,6 @@ export function inferOperatingPresetId(snapshot: MobileWorkspaceSnapshot): Opera
 }
 
 function matchesPreset(p: OperatingPresetDefinition, snapshot: MobileWorkspaceSnapshot): boolean {
-  if (snapshot.cadenceMode !== p.cadence) return false;
   const r = snapshot.settingsFullReadout;
   if (r.cockpitLayout !== p.cockpitLayout) return false;
   if (r.cockpitDensity !== p.cockpitDensity) return false;

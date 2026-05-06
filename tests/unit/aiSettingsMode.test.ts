@@ -68,10 +68,10 @@ describe('aiSettingsMode planner', () => {
     expect(plan.operations.some((o) => o.kind === 'set-ai-guidance-mode')).toBe(true);
   });
 
-  it('expands operating preset into nested configure operations', () => {
+  it('expands operating preset into cockpit + AI configure operations', () => {
     const plan = buildAiSettingsPlan('operating preset offline-local-first');
     const kinds = plan.operations.map((o) => o.kind);
-    expect(kinds).toContain('set-cadence-mode');
+    expect(kinds).not.toContain('set-cadence-mode');
     expect(kinds).toContain('set-cockpit-layout');
     expect(kinds).toContain('set-cockpit-density');
     expect(kinds).toContain('set-ai-adapter-mode');
@@ -80,7 +80,8 @@ describe('aiSettingsMode planner', () => {
 
   it('accepts legacy operating preset slug balanced', () => {
     const plan = buildAiSettingsPlan('operating preset balanced');
-    expect(plan.operations.some((o) => o.kind === 'set-cadence-mode')).toBe(true);
+    expect(plan.operations.some((o) => o.kind === 'set-cadence-mode')).toBe(false);
+    expect(plan.operations.some((o) => o.kind === 'set-cockpit-layout')).toBe(true);
   });
 });
 
@@ -100,7 +101,7 @@ describe('aiSettingsMode operation applier', () => {
       }
     ]);
 
-    expect(result.data.settings.cadenceFlow.mode).toBe('launch-day');
+    expect(result.data.settings.cadenceFlow.mode).toBe('balanced');
     expect(result.data.notes[0]?.detail).toContain('Prioritize launch blockers');
     expect(result.applied.length).toBe(2);
     expect(result.failed).toHaveLength(0);

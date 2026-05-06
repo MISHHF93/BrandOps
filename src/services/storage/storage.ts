@@ -884,13 +884,7 @@ const normalizeCadenceFlowSettings = (value: unknown): BrandOpsData['settings'][
   const candidate = value as Partial<BrandOpsData['settings']['cadenceFlow']>;
 
   return {
-    mode:
-      candidate.mode === 'balanced' ||
-      candidate.mode === 'maker-heavy' ||
-      candidate.mode === 'client-heavy' ||
-      candidate.mode === 'launch-day'
-        ? candidate.mode
-        : fallback.mode,
+    mode: 'balanced',
     deepWorkBlockCount:
       typeof candidate.deepWorkBlockCount === 'number'
         ? Math.max(1, Math.min(3, Math.round(candidate.deepWorkBlockCount)))
@@ -1311,8 +1305,12 @@ function normalizeOperatingProfile(
   if (id === undefined) return fallback;
   if (id === null) return { lastAppliedPresetId: null };
   if (id === 'custom') return { lastAppliedPresetId: 'custom' };
-  if (typeof id === 'string' && VALID_OPERATING_PRESET_IDS.has(id as OperatingPresetId)) {
-    return { lastAppliedPresetId: id as OperatingPresetId };
+  if (typeof id === 'string') {
+    const token = id as string;
+    const migrated = token === 'focused-builder' ? 'balanced-ops' : token;
+    if (VALID_OPERATING_PRESET_IDS.has(migrated as OperatingPresetId)) {
+      return { lastAppliedPresetId: migrated as OperatingPresetId };
+    }
   }
   return fallback;
 }

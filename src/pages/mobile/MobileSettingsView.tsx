@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
-import type { CadenceFlowMode, OperatingPresetId } from '../../types/domain';
+import type { OperatingPresetId } from '../../types/domain';
 import type { AuthProviderId, LaunchMembershipState } from '../../shared/account/launchAccess';
 import { authProviderLabel } from '../../shared/account/launchAccess';
 import { GoogleSignInButton } from '../../shared/ui/oauth/GoogleSignInButton';
@@ -16,13 +16,16 @@ import type { IntelligenceRulesLoadMode } from '../../rules/intelligenceRulesRun
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { MobileSettingsFullReadout } from './mobileSettingsReadout';
 import { SETTINGS_RESUME_PHASE_SECTION_ID } from './mobileShellQuery';
-import { cadenceConfigureFragment, cadenceModeTitle } from './cadencePresentation';
 import { buildComposerBlankStarters } from './configurationStarters';
 import {
   OPERATING_PRESETS,
   buildOperatingPresetConfigureLine,
   inferOperatingPresetId
 } from './operatingProfilePresets';
+import {
+  buildUnifiedOperationalModeSummary,
+  type UnifiedOperationalModeSummary
+} from './unifiedOperationalMode';
 import {
   SettingsAssistantComposer,
   SettingsDataSafetyBlock,
@@ -220,6 +223,40 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
   ];
 }
 
+function OperationalModeSummaryCard({
+  summary,
+  btnFocus
+}: {
+  summary: UnifiedOperationalModeSummary;
+  btnFocus: string;
+}) {
+  return (
+    <div
+      id="settings-operational-mode"
+      className="rounded-xl border border-primary/20 bg-surface/40 px-2.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+    >
+      <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">
+        Operational mode
+      </p>
+      <p className="mt-1 text-base font-semibold text-text">{summary.headline}</p>
+      <p className="mt-1 text-[11px] leading-snug text-textSoft">{summary.subhead}</p>
+      <ul className="mt-2 list-disc space-y-1 pl-4 text-[11px] leading-snug text-text marker:text-textMuted">
+        {summary.facets.map((line, idx) => (
+          <li key={`${idx}-${line.slice(0, 48)}`}>{line}</li>
+        ))}
+      </ul>
+      {summary.driftNote ? (
+        <p
+          className={`mt-2 rounded border border-amber-500/25 bg-amber-950/15 px-2 py-1.5 text-[11px] text-amber-100/90 ${btnFocus}`}
+          role="status"
+        >
+          {summary.driftNote}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function WorkspaceModelReadout({
   readout,
   btnFocus
@@ -286,9 +323,16 @@ function SettingsEditablePanel({
   const [primaryOffer, setPrimaryOffer] = useState('');
   const [voiceGuide, setVoiceGuide] = useState('');
   const [focusMetric, setFocusMetric] = useState('');
-  const [cadenceMode, setCadenceMode] = useState<CadenceFlowMode>('balanced');
   const [applyHint, setApplyHint] = useState<string | null>(null);
   const inferredOperatingPreset = inferOperatingPresetId(snapshot);
+  const operationalModeSummary = useMemo(
+    () =>
+      buildUnifiedOperationalModeSummary({
+        readout: snapshot.settingsFullReadout,
+        inferredPresetId: inferredOperatingPreset
+      }),
+    [snapshot.settingsFullReadout, inferredOperatingPreset]
+  );
   const [presetToApply, setPresetToApply] = useState<OperatingPresetId>('balanced-ops');
 
   useEffect(() => {
@@ -308,7 +352,6 @@ function SettingsEditablePanel({
     setPrimaryOffer(snapshot.primaryOffer);
     setVoiceGuide(snapshot.voiceGuide);
     setFocusMetric(snapshot.focusMetric);
-    setCadenceMode(snapshot.cadenceMode as CadenceFlowMode);
   }, [
     snapshot.workdayStartHour,
     snapshot.workdayEndHour,
@@ -319,8 +362,7 @@ function SettingsEditablePanel({
     snapshot.positioning,
     snapshot.primaryOffer,
     snapshot.voiceGuide,
-    snapshot.focusMetric,
-    snapshot.cadenceMode
+    snapshot.focusMetric
   ]);
 
   useEffect(() => {
@@ -397,12 +439,6 @@ function SettingsEditablePanel({
     onOperatingProfileApplied
   ]);
 
-  const onApplyCadence = useCallback(async () => {
-    await runApply(cadenceConfigureFragment(cadenceMode), undefined, () =>
-      onOperatingProfileApplied?.('custom')
-    );
-  }, [runApply, cadenceMode, onOperatingProfileApplied]);
-
   const onApplyOperatingProfile = useCallback(async () => {
     await runApply(
       buildOperatingPresetConfigureLine(presetToApply),
@@ -434,20 +470,16 @@ function SettingsEditablePanel({
         </p>
       ) : null}
 
+      <OperationalModeSummaryCard summary={operationalModeSummary} btnFocus={btnFocus} />
+
       <div className="rounded-xl border border-border/40 bg-surface/35 px-2.5 py-3">
         <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">
           Operating profile
         </p>
         <p className="mt-1 text-[11px] leading-snug text-textSoft">
-          One apply updates cadence, Today cockpit layout/density, and (for some presets) AI adapter /
-          guidance. Advanced controls stay available below.
-        </p>
-        <p className="mt-2 text-[11px] text-text">
-          <span className="text-textMuted">Detected match:</span>{' '}
-          {inferredOperatingPreset === 'custom'
-            ? 'Custom mix'
-            : OPERATING_PRESETS.find((p) => p.id === inferredOperatingPreset)?.title ??
-              inferredOperatingPreset}
+          One apply updates Today cockpit layout/density and (when the preset lists them) AI adapter /
+          guidance. Daily cadence is fixed to BrandOps daily cadence. Advanced controls stay in the
+          disclosure below.
         </p>
         <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1">
@@ -487,7 +519,7 @@ function SettingsEditablePanel({
         >
           Advanced operating controls
           <span className="ml-2 text-[10px] font-normal text-textSoft">
-            Workday, cadence only, profile &amp; appearance notes
+            Workday, reminders, profile &amp; appearance notes
           </span>
         </summary>
         <div className="mt-3 space-y-4 border-t border-border/25 pt-3">
@@ -574,36 +606,6 @@ function SettingsEditablePanel({
           >
             Apply workday, tasks, remind &amp; weight
           </button>
-
-          <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-textMuted">
-            Cadence only (advanced)
-          </p>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-            <div className="min-w-0 flex-1">
-              <label className="text-[11px] text-textMuted" htmlFor="bo-cadence">
-                Preset
-              </label>
-              <select
-                id="bo-cadence"
-                value={cadenceMode}
-                onChange={(e) => setCadenceMode(e.target.value as CadenceFlowMode)}
-                className={f}
-              >
-                <option value="balanced">{cadenceModeTitle('balanced')}</option>
-                <option value="maker-heavy">{cadenceModeTitle('maker-heavy')}</option>
-                <option value="client-heavy">{cadenceModeTitle('client-heavy')}</option>
-                <option value="launch-day">{cadenceModeTitle('launch-day')}</option>
-              </select>
-            </div>
-            <button
-              type="button"
-              onClick={() => void onApplyCadence()}
-              disabled={applyBusy}
-              className={pBtn}
-            >
-              Apply cadence only
-            </button>
-          </div>
 
           <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-textMuted">
             Profile

@@ -102,13 +102,13 @@ export const buildAiSettingsPlan = (prompt: string): AiSettingsPlan => {
     });
   }
 
-  if (lower.includes('cadence launch-day') || lower.includes('cadence launch day')) {
-    nextOperation(operations, 'set-cadence-mode', { mode: 'launch-day' });
-  } else if (lower.includes('cadence maker-heavy') || lower.includes('cadence maker heavy')) {
-    nextOperation(operations, 'set-cadence-mode', { mode: 'maker-heavy' });
-  } else if (lower.includes('cadence client-heavy') || lower.includes('cadence client heavy')) {
-    nextOperation(operations, 'set-cadence-mode', { mode: 'client-heavy' });
-  } else if (lower.includes('cadence balanced')) {
+  /** Legacy Chat/configure phrases — all map to unified BrandOps daily cadence at apply time. */
+  if (
+    /\bcadence\s+(?:launch-day|launch\s+day)\b/.test(lower) ||
+    /\bcadence\s+(?:maker-heavy|maker\s+heavy)\b/.test(lower) ||
+    /\bcadence\s+(?:client-heavy|client\s+heavy)\b/.test(lower) ||
+    /\bcadence\s+balanced\b/.test(lower)
+  ) {
     nextOperation(operations, 'set-cadence-mode', { mode: 'balanced' });
   }
 
@@ -269,17 +269,8 @@ export const applyAiSettingsOperations = (
           applied.push('Max daily tasks updated.');
           break;
         case 'set-cadence-mode':
-          if (
-            operation.payload.mode === 'balanced' ||
-            operation.payload.mode === 'maker-heavy' ||
-            operation.payload.mode === 'client-heavy' ||
-            operation.payload.mode === 'launch-day'
-          ) {
-            data.settings.cadenceFlow.mode = operation.payload.mode;
-            applied.push(`Cadence mode set to ${operation.payload.mode}.`);
-          } else {
-            skipped.push('Cadence mode request skipped.');
-          }
+          data.settings.cadenceFlow.mode = 'balanced';
+          applied.push('Daily cadence is unified — BrandOps daily cadence schedule.');
           break;
         case 'set-cadence-reminder-minutes':
           data.settings.cadenceFlow.remindBeforeMinutes = clamp(

@@ -20,7 +20,7 @@ export type TodayFocusAction = {
 };
 
 export type TodayFocusBoard = {
-  /** Clear “do this today” cues (cadence, queue, publishing, deals) */
+  /** Clear “do this today” cues (daily rhythm, queue, publishing, deals) */
   doToday: TodayFocusLine[];
   /** Time pressure, risk, hygiene */
   urgent: TodayFocusLine[];
@@ -37,7 +37,7 @@ export function buildTodayFocusBoard(snapshot: CockpitDailySnapshot): TodayFocus
   const doToday: TodayFocusLine[] = [];
 
   if (snapshot.cadenceHeadline.trim()) {
-    doToday.push({ id: 'cadence', line: 'Operator cadence', detail: snapshot.cadenceHeadline });
+    doToday.push({ id: 'cadence', line: 'Daily schedule', detail: snapshot.cadenceHeadline });
   }
 
   for (const t of snapshot.cockpitSchedulerTaskPeek.slice(0, 3)) {

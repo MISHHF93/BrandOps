@@ -51,6 +51,14 @@ interface PresetShape {
   bufferUnits: number;
 }
 
+/** Single public cadence shape — legacy `cadenceFlow.mode` values normalize to this on load. */
+const BRANDOPS_DAILY_CADENCE: PresetShape = {
+  label: 'BrandOps daily cadence',
+  businessUnits: 2,
+  deliveryUnits: 2,
+  bufferUnits: 2
+};
+
 interface DraftBlock {
   id: string;
   title: string;
@@ -62,33 +70,6 @@ interface DraftBlock {
   objective: string;
   syncTargets: CadenceFlowBlock['syncTargets'];
 }
-
-const MODE_PRESETS: Record<CadenceFlowMode, PresetShape> = {
-  balanced: {
-    label: 'Balanced operator cadence',
-    businessUnits: 2,
-    deliveryUnits: 2,
-    bufferUnits: 2
-  },
-  'maker-heavy': {
-    label: 'Maker-heavy cadence',
-    businessUnits: 2,
-    deliveryUnits: 1,
-    bufferUnits: 1
-  },
-  'client-heavy': {
-    label: 'Client-heavy cadence',
-    businessUnits: 3,
-    deliveryUnits: 3,
-    bufferUnits: 1
-  },
-  'launch-day': {
-    label: 'Launch-day cadence',
-    businessUnits: 3,
-    deliveryUnits: 4,
-    bufferUnits: 1
-  }
-};
 
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, Math.round(value)));
@@ -141,12 +122,10 @@ const isoForHour = (baseDate: Date, hour: number) => {
   return result.toISOString();
 };
 
-const humanModeLabel = (mode: CadenceFlowMode) => MODE_PRESETS[mode].label;
-
 const buildDraftBlocks = (data: BrandOpsData): DraftBlock[] => {
   const digest = dailyNotificationCenter.build(data);
   const cadence = data.settings.cadenceFlow;
-  const preset = MODE_PRESETS[cadence.mode];
+  const preset = BRANDOPS_DAILY_CADENCE;
   const deepWorkBlockCount = clamp(cadence.deepWorkBlockCount, 1, 3);
   const deepWorkUnits = hoursToUnits(Math.max(1, cadence.deepWorkBlockHours));
   const businessObjective =
@@ -206,7 +185,7 @@ const buildDraftBlocks = (data: BrandOpsData): DraftBlock[] => {
 
   blocks.push({
     id: 'delivery-window',
-    title: cadence.mode === 'client-heavy' ? 'Client delivery window' : 'Delivery + comms',
+    title: 'Delivery + comms',
     category: 'delivery',
     units: preset.deliveryUnits,
     minUnits: 1,
@@ -232,7 +211,7 @@ const buildDraftBlocks = (data: BrandOpsData): DraftBlock[] => {
 
   blocks.push({
     id: 'buffer-window',
-    title: cadence.mode === 'launch-day' ? 'Launch buffer' : 'Operator buffer',
+    title: 'Operator buffer',
     category: 'buffer',
     units: preset.bufferUnits,
     minUnits: 0,
@@ -389,7 +368,7 @@ export const buildCadenceSourceId = (dateKey: string, blockTitle: string) =>
 
 export const operatorCadenceFlow = {
   build(data: BrandOpsData, baseDate = new Date()): OperatorCadenceDigest {
-    const preset = MODE_PRESETS[data.settings.cadenceFlow.mode];
+    const preset = BRANDOPS_DAILY_CADENCE;
     const startHour = data.settings.notificationCenter.workdayStartHour;
     const endHour = data.settings.notificationCenter.workdayEndHour;
     const totalUnits = Math.max(2, Math.round((endHour - startHour) * 2));
@@ -420,7 +399,7 @@ export const operatorCadenceFlow = {
         from: 'Execution Center',
         to: 'Cadence blocks',
         kind: 'reminder',
-        detail: `${humanModeLabel(data.settings.cadenceFlow.mode)} turns today’s priorities into protected time blocks.`
+        detail: `${preset.label} turns today’s priorities into protected time blocks.`
       },
       {
         id: 'cadence-to-calendar',
@@ -451,7 +430,7 @@ export const operatorCadenceFlow = {
     ];
 
     return {
-      mode: data.settings.cadenceFlow.mode,
+      mode: 'balanced',
       headline: `${preset.label} · ${blocks.filter((block) => block.category === 'deep-work').length} deep work blocks`,
       blocks,
       edges,

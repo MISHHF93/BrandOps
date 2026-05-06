@@ -395,7 +395,8 @@ export interface NotificationCenterSettings {
   resumeNeuralPhaseContext: string;
 }
 
-export type CadenceFlowMode = 'balanced' | 'maker-heavy' | 'client-heavy' | 'launch-day';
+/** Canonical schedule only — legacy JSON variants normalize to balanced on load. */
+export type CadenceFlowMode = 'balanced';
 
 export interface CadenceFlowSettings {
   mode: CadenceFlowMode;
@@ -509,11 +510,10 @@ export type CockpitLayoutMode = 'sections' | 'unified-scroll';
 /** Today stack: more open panels vs collapsed disclosures by default. */
 export type CockpitDensityMode = 'comfortable' | 'compact';
 
-/** Unified Settings operating profile (cadence + Today chrome + optional AI hints). */
+/** Unified Settings operating profile (Today chrome + optional AI hints). Daily cadence is fixed in-product. */
 export type OperatingPresetId =
   | 'offline-local-first'
   | 'launch-sprint'
-  | 'focused-builder'
   | 'client-heavy-ops'
   | 'balanced-ops';
 
