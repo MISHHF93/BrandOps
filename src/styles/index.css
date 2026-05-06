@@ -58,7 +58,8 @@
   --brand-ink: 0 0 0;
   /* ANSI-inspired accent RGB triplets (dark chrome only — not literal VGA). */
   --ansi-cyan: 72 220 255;
-  --ansi-magenta: 242 92 255;
+  /* Legacy slot: keep neutral (no purple/magenta in chrome — semantic reds/ambers stay on status tokens). */
+  --ansi-magenta: 62 102 74;
   --ansi-yellow: 255 216 72;
   --ansi-blue: 132 172 255;
   --ansi-red: 255 96 108;
@@ -75,7 +76,7 @@
   --ease-retro-springy: cubic-bezier(0.18, 0.9, 0.26, 1.08);
   --ease-retro-elastic: cubic-bezier(0.24, 1.08, 0.32, 1);
   --retro-glow-cyan: 72 220 255;
-  --retro-glow-pink: 242 92 255;
+  --retro-glow-pink: 72 220 130;
   --retro-glow-gold: 255 216 72;
   --retro-noise-opacity: 0;
   /* Frosted glass: blur + saturation for translucent chrome over the canvas. */
@@ -2526,21 +2527,21 @@ html[data-app-surface='welcome'] body::after {
    * so scoped selectors beat plain utilities on shared components (plan sheet, dock).
    */
   :root:not([data-theme='light']) .bo-plan-flat-root {
-    border-color: rgb(var(--ansi-magenta) / 0.38);
+    border-color: rgb(var(--color-border) / 0.92);
     box-shadow:
-      inset 0 1px 0 rgb(var(--ansi-magenta) / 0.1),
+      inset 0 1px 0 rgb(var(--color-text) / 0.05),
       0 12px 36px rgb(0 0 0 / 0.32),
-      0 0 32px rgb(var(--ansi-cyan) / 0.06);
+      0 0 28px rgb(var(--ansi-cyan) / 0.045);
   }
 
   :root:not([data-theme='light']) .bo-brand-command-surface {
-    border-color: rgb(var(--ansi-magenta) / 0.42);
+    border-color: rgb(var(--brand-gold) / 0.32);
     background:
-      linear-gradient(180deg, rgb(var(--ansi-magenta) / 0.14), transparent 58%),
-      linear-gradient(120deg, rgb(var(--ansi-yellow) / 0.06), transparent 46%),
+      linear-gradient(180deg, rgb(var(--brand-gold) / 0.09), transparent 58%),
+      linear-gradient(120deg, rgb(var(--ansi-yellow) / 0.05), transparent 46%),
       linear-gradient(140deg, rgb(var(--color-surface) / 0.86), rgb(var(--color-bg-elevated) / 0.7));
     box-shadow:
-      inset 0 1px 0 rgb(var(--ansi-cyan) / 0.1),
+      inset 0 1px 0 rgb(var(--color-text) / 0.07),
       0 10px 26px rgb(var(--color-shadow) / 0.22);
   }
 
@@ -2564,7 +2565,7 @@ html[data-app-surface='welcome'] body::after {
   :root:not([data-theme='light']) .bo-mobile-nav__dock {
     border-color: rgb(var(--ansi-cyan) / 0.38);
     box-shadow:
-      inset 0 1px 0 rgb(var(--ansi-magenta) / 0.12),
+      inset 0 1px 0 rgb(var(--color-text) / 0.06),
       0 20px 42px rgb(0 0 0 / 0.4),
       0 0 2px rgb(var(--ansi-yellow) / 0.18);
   }
@@ -2573,14 +2574,14 @@ html[data-app-surface='welcome'] body::after {
     background:
       linear-gradient(
         125deg,
-        rgb(var(--ansi-cyan) / 0.16),
-        rgb(var(--ansi-magenta) / 0.13) 45%,
-        rgb(var(--ansi-yellow) / 0.1) 100%
+        rgb(var(--ansi-cyan) / 0.12),
+        rgb(var(--color-bg-elevated) / 0.72) 45%,
+        rgb(var(--ansi-yellow) / 0.08) 100%
       );
     border: 1px solid rgb(var(--ansi-green-bright) / 0.35);
     box-shadow:
-      inset 0 1px 0 rgb(var(--ansi-cyan) / 0.26),
-      0 8px 26px rgb(var(--ansi-magenta) / 0.14);
+      inset 0 1px 0 rgb(var(--ansi-cyan) / 0.22),
+      0 8px 26px rgb(0 0 0 / 0.26);
   }
 
   :root:not([data-theme='light']) .bo-assistant-hero .bo-assistant-stat-pill:nth-child(1) {
@@ -2589,8 +2590,8 @@ html[data-app-surface='welcome'] body::after {
   }
 
   :root:not([data-theme='light']) .bo-assistant-hero .bo-assistant-stat-pill:nth-child(2) {
-    border-color: rgb(var(--ansi-magenta) / 0.4);
-    box-shadow: inset 0 0 12px rgb(var(--ansi-magenta) / 0.06);
+    border-color: rgb(var(--color-info) / 0.38);
+    box-shadow: inset 0 0 12px rgb(var(--color-info) / 0.06);
   }
 
   :root:not([data-theme='light']) .bo-assistant-hero .bo-assistant-stat-pill:nth-child(3) {
