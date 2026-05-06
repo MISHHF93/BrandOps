@@ -11,6 +11,12 @@ import {
 export type MobileShellTabId = 'workspace' | 'chat' | 'daily' | 'integrations' | 'settings';
 
 /**
+ * Stable `id` on Settings → Résumé grounding (`MobileTabSection`). Deep-link after navigating:
+ * `mobile.html?section=settings#settings-resume-neural-phase`.
+ */
+export const SETTINGS_RESUME_PHASE_SECTION_ID = 'settings-resume-neural-phase';
+
+/**
  * Bottom dock highlight: everything except Chat rolls up under Workspace.
  */
 export function dockTabForShellTab(tab: MobileShellTabId): 'chat' | 'workspace' {

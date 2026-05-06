@@ -23,6 +23,7 @@ import {
   type DashboardSectionId
 } from '../../shared/config/dashboardNavigation';
 import {
+  SETTINGS_RESUME_PHASE_SECTION_ID,
   DEFAULT_DASHBOARD_SECTION,
   isAppShellWithSectionQuery,
   type MobileShellTabId,
@@ -373,6 +374,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  /** Opens Unified workspace + scroll to Résumé grounding when incremented (Assistant link / URL hash). */
+  const [resumePhaseRevealKey, setResumePhaseRevealKey] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
@@ -517,6 +520,16 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     [cockpitWorkstream]
   );
 
+  const openSettingsResumePhase = useCallback(() => {
+    setResumePhaseRevealKey((k) => k + 1);
+    commitTab('settings');
+    if (isAppShellWithSectionQuery()) {
+      const url = new URL(window.location.href);
+      url.hash = SETTINGS_RESUME_PHASE_SECTION_ID;
+      window.history.replaceState(null, '', url.toString());
+    }
+  }, [commitTab]);
+
   const handleSelectWorkstream = useCallback((id: DashboardSectionId) => {
     setCockpitWorkstream(id);
     if (isAppShellWithSectionQuery()) {
@@ -564,6 +577,16 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }, [activeTab, cockpitWorkstream]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!isAppShellWithSectionQuery()) return;
+    if (window.location.hash.slice(1) !== SETTINGS_RESUME_PHASE_SECTION_ID) return;
+    const p = parseMobileShellFromSearchParams(new URLSearchParams(window.location.search), initialTab);
+    if (p.tab !== 'settings') return;
+    setResumePhaseRevealKey((k) => k + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bookmark deep-link once per mount
+  }, []);
 
   useEffect(() => {
     writeChatThread(messages);
@@ -1244,6 +1267,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               vitalityMetrics={snapshot}
               transcriptEndRef={transcriptEndRef}
               onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+              onOpenResumeGrounding={openSettingsResumePhase}
             />
           </section>
         ) : (
@@ -1315,6 +1339,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onOpenBillingPortal={onOpenBillingPortal}
                 onOperatingProfileApplied={persistOperatingProfileApply}
                 onPersistResumeNeuralPhaseContext={persistResumeNeuralPhaseContext}
+                resumePhaseRevealKey={resumePhaseRevealKey}
               />
             ) : null}
           </section>

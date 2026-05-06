@@ -309,7 +309,9 @@ export function SettingsResumeNeuralPhasePanel({
   applyBusy: boolean;
   onPersistResumeNeuralPhaseContext: (compressed: string) => void | Promise<void>;
 }) {
+  const MAX_RESUME_PLAINTEXT_BYTES = 196608;
   const statusId = useId();
+  const resumeFileInputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState('');
   const [panelBusy, setPanelBusy] = useState(false);
   const [banner, setBanner] = useState<{ msg: string; tone: 'success' | 'danger' } | null>(null);
@@ -362,6 +364,23 @@ export function SettingsResumeNeuralPhasePanel({
 
   const chip = clsx(mobileChipClass(btnFocus), 'disabled:cursor-not-allowed disabled:opacity-50');
 
+  const onResumeFilePicked = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || disabled) return;
+    if (file.size > MAX_RESUME_PLAINTEXT_BYTES) {
+      setBanner({ msg: 'File too large — use plain text under 192 KB.', tone: 'danger' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setDraft(String(reader.result ?? ''));
+      setBanner(null);
+    };
+    reader.onerror = () => setBanner({ msg: 'Could not read file.', tone: 'danger' });
+    reader.readAsText(file);
+  };
+
   return (
     <MobileTabSection
       id="settings-resume-neural-phase"
@@ -394,7 +413,22 @@ export function SettingsResumeNeuralPhasePanel({
         placeholder="Paste résumé or CV as plain text…"
         className="mt-3 w-full resize-y rounded-lg border border-border/55 bg-surface/55 px-2.5 py-2 text-sm text-text outline-none placeholder:text-textSoft disabled:opacity-60"
       />
+      <input
+        ref={resumeFileInputRef}
+        type="file"
+        accept=".txt,.text,.md,text/plain,text/markdown"
+        className="hidden"
+        onChange={onResumeFilePicked}
+      />
       <div className="mt-2 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => resumeFileInputRef.current?.click()}
+          className={chip}
+        >
+          Load plain-text file…
+        </button>
         <button
           type="button"
           disabled={disabled || !draft.trim()}

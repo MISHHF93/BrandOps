@@ -14,6 +14,7 @@ function asTrim(s: string): string {
 export function normalizeResumeNeuralInput(raw: string): string {
   return String(raw ?? '')
     .replace(/\r\n/g, '\n')
+    // eslint-disable-next-line no-control-regex -- strip C0 controls except \t and \n
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '')
     .trim();
 }

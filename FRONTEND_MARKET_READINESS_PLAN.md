@@ -39,6 +39,21 @@ Deep linking: `mobile.html` / `integrations.html` honor `?section=` (tab tokens,
 | **LinkedIn companion**      | Narrow host permission; overlay UX and compliance still reviewer-sensitive.                                     | Manual QA + conservative copy in listing.           |
 | **Docs removed**            | Prior markdown specs were deleted intentionally; spot-check remaining **user-visible** copy for stale promises. | Phase 3 walkthrough + editorial pass.               |
 
+### Launch scorecard (rolling)
+
+_Use this as a one-glance readiness snapshot; update dates when gates move._
+
+| Dimension | Score (1–5) | Notes |
+| --------- | ----------- | ----- |
+| Engineering / CI | 5 | `release` ↔ CI parity; `verify-dist` enforces artifacts. |
+| Frontend shell / UX | 4 | Flagship chrome + contracts tested; **§5 manual QA** still required for sign-off. |
+| Extension runtime | 4 | MV3 stack solid; OAuth / LinkedIn justification is reviewer-facing work. |
+| Platform services | 3 | Local-first + BYO hosted NLP — no mandatory BrandOps cloud API for core loops. |
+| Security / privacy prep | 4 | Privacy HTML + local defaults; align listing with actual network behavior. |
+| Chrome Web Store GTM | 3 | Draft copy in §6; **screenshots**, **version bumps**, OAuth consoles outstanding. |
+
+**Next engineering-adjacent actions:** tick **§5 Extension fidelity QA**; finish **Phase 2** screenshot + manifest version discipline; decide **`VITE_ENFORCE_MEMBERSHIP_GATE`** for production builds.
+
 ---
 
 ## 3. Execution phases
@@ -74,6 +89,7 @@ See **Production test findings** below for the latest automated run record.
 - [x] Sweep codebase for broken `docs/*` path references after markdown removal (comments + `.env.example`).
 - [ ] Manual walkthrough: cold install → welcome → Pulse → Chat command → Today workstreams → Integrations → Settings → Help _(checkboxes under **§5 Extension fidelity QA**)_.
 - [x] Regression pass on **`?section=` + URL bar sync** — automated via [`tests/unit/mobileShellQuery.test.ts`](tests/unit/mobileShellQuery.test.ts), [`tests/unit/workspaceModuleRoutingContract.test.ts`](tests/unit/workspaceModuleRoutingContract.test.ts), [`tests/unit/mobileShellUrlBarSync.test.ts`](tests/unit/mobileShellUrlBarSync.test.ts), plus [`tests/unit/mobileShellFourTabsContract.test.ts`](tests/unit/mobileShellFourTabsContract.test.ts) _(popstate wiring contract)_; optional manual spot-check in §5.
+- [x] **Résumé Phase R (hosted Ask)** — Settings capture, Assistant shortcut, `#settings-resume-neural-phase` deep link, plain-text file load, native CLI profile parity (`extractNativeProfileFromWorkspaceExport`, `run-native-model.mjs`); tracker [`RESUME_AND_PHASE_R_SCORECARD.md`](RESUME_AND_PHASE_R_SCORECARD.md).
 - [x] **Capacitor/Android/iOS scope for v1:** ship **Chrome extension first**; Capacitor deps remain for optional native experiments—not blocking extension launch _(see Decision log)_.
 
 ### Phase 4 — Post-launch

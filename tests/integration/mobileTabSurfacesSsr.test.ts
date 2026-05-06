@@ -105,7 +105,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onOpenToday: noop,
         onOpenPlan: noop,
         vitalityMetrics: snapshot(),
-        onOpenCommandPalette: noop
+        onOpenCommandPalette: noop,
+        onOpenResumeGrounding: noop
       })
     );
     expect(html).toContain('aria-label="Assistant"');
@@ -123,6 +124,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('bo-assistant-hero');
     expect(html).toContain('Open Plan');
     expect(html).toContain('⌘K');
+    expect(html).toContain('Résumé grounding for Ask');
   });
 
   it('Getting started card: Assistant onboarding landmarks', () => {

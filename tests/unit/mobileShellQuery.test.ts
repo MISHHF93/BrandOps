@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseMobileShellFromSearchParams,
-  sectionParamValueForShellState
+  sectionParamValueForShellState,
+  SETTINGS_RESUME_PHASE_SECTION_ID
 } from '../../src/pages/mobile/mobileShellQuery';
 
 describe('mobileShellQuery', () => {
+  it('exposes stable Phase R settings section id for deep links', () => {
+    expect(SETTINGS_RESUME_PHASE_SECTION_ID).toBe('settings-resume-neural-phase');
+  });
+
   it('maps pulse, timeline, and workspace aliases to the Plan hub tab', () => {
     expect(parseMobileShellFromSearchParams(new URLSearchParams('section=pulse'), 'chat')).toEqual({
       tab: 'workspace',

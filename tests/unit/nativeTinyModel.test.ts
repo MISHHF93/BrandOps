@@ -218,6 +218,36 @@ Built Python NLP pipelines for production.
     expect(blob).toContain('role:Staff AI engineer');
   });
 
+  it('workspace export merges resumeNeuralPhaseContext when no explicit resumeArtifact arg', () => {
+    const blob = extractNativeProfileFromWorkspaceExport({
+      brand: { operatorName: 'Riley', positioning: 'ML' },
+      settings: {
+        notificationCenter: {
+          resumeNeuralPhaseContext: 'sections:a | skills:python'
+        }
+      }
+    });
+    expect(blob).toContain('operator:Riley');
+    expect(blob).toContain('resume:sections:a');
+    expect(blob.toLowerCase()).toContain('python');
+  });
+
+  it('explicit resumeArtifact overrides resumeNeuralPhaseContext', () => {
+    const blob = extractNativeProfileFromWorkspaceExport(
+      {
+        brand: { operatorName: 'Riley', positioning: 'ML' },
+        settings: {
+          notificationCenter: {
+            resumeNeuralPhaseContext: 'sections:stored-only'
+          }
+        }
+      },
+      'sections:from-arg'
+    );
+    expect(blob).toContain('resume:sections:from-arg');
+    expect(blob).not.toContain('stored-only');
+  });
+
   it('extractWorkContextSegments captures pipeline, publishing, follow-ups, traces', () => {
     const segs = extractWorkContextSegments({
       opportunities: [

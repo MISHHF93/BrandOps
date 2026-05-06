@@ -61,7 +61,10 @@ export function extractNativeProfileFromWorkspaceExport(data, resumeArtifact = '
       ? data.settings.notificationCenter
       : {};
   const pt = asNonNullStr(nc.promptTemplate).slice(0, 160);
+  /** Workspace Phase R (extension Settings); `--resume` file artifact wins when both exist. */
+  const storedPhaseR = asNonNullStr(nc.resumeNeuralPhaseContext).slice(0, 1200);
   const ra = asNonNullStr(resumeArtifact).slice(0, 1200);
+  const resumeMerged = ra || storedPhaseR;
   return buildNativeProfileBlob({
     operatorName: brand.operatorName,
     positioning: brand.positioning,
@@ -70,7 +73,7 @@ export function extractNativeProfileFromWorkspaceExport(data, resumeArtifact = '
     focusMetric: brand.focusMetric,
     roleContext: nc.roleContext,
     promptTemplateHint: pt || undefined,
-    resumeArtifact: ra || undefined
+    resumeArtifact: resumeMerged || undefined
   });
 }
 

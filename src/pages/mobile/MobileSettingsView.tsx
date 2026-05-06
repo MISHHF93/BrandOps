@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import type { CadenceFlowMode, OperatingPresetId } from '../../types/domain';
@@ -15,6 +15,7 @@ import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSu
 import type { IntelligenceRulesLoadMode } from '../../rules/intelligenceRulesRuntime';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { MobileSettingsFullReadout } from './mobileSettingsReadout';
+import { SETTINGS_RESUME_PHASE_SECTION_ID } from './mobileShellQuery';
 import { cadenceConfigureFragment, cadenceModeTitle } from './cadencePresentation';
 import { buildComposerBlankStarters } from './configurationStarters';
 import {
@@ -747,6 +748,8 @@ export interface MobileSettingsViewProps {
   onOperatingProfileApplied?: (presetId: OperatingPresetId | 'custom') => void | Promise<void>;
   /** Persist compressed résumé artifact for hosted Ask Phase R (empty clears). */
   onPersistResumeNeuralPhaseContext?: (compressed: string) => void | Promise<void>;
+  /** Bump to open Unified workspace + scroll to Résumé grounding (Assistant shortcut / deep link). */
+  resumePhaseRevealKey?: number;
 }
 
 /**
@@ -775,9 +778,25 @@ export const MobileSettingsView = ({
   onStartCheckout = () => {},
   onOpenBillingPortal = () => {},
   onOperatingProfileApplied,
-  onPersistResumeNeuralPhaseContext = async () => {}
+  onPersistResumeNeuralPhaseContext = async () => {},
+  resumePhaseRevealKey = 0
 }: MobileSettingsViewProps) => {
+  const unifiedWorkspaceDetailsRef = useRef<HTMLDetailsElement>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!resumePhaseRevealKey) return;
+    const details = unifiedWorkspaceDetailsRef.current;
+    if (details) details.open = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.getElementById(SETTINGS_RESUME_PHASE_SECTION_ID)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      });
+    });
+  }, [resumePhaseRevealKey]);
   /** Any agent route (settings apply or chat quick command) — avoid parallel `executeAgentWorkspaceCommand`. */
   const agentRouteBusy = commandBusy || applyBusy;
 
@@ -833,7 +852,7 @@ export const MobileSettingsView = ({
         onOpenBillingPortal={onOpenBillingPortal}
       />
 
-      <details className="bo-disclosure group">
+      <details ref={unifiedWorkspaceDetailsRef} className="bo-disclosure group">
         <summary
           className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >

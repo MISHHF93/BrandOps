@@ -50,7 +50,7 @@ export function FirstRunJourneyCard({
 }) {
   return (
     <section
-      className="bo-brand-command-surface bo-section-halo mb-3 rounded-xl px-3 py-3 text-label text-textMuted shadow-sm"
+      className="bo-brand-command-surface mb-3 rounded-xl px-3 py-3 text-label text-textMuted shadow-sm"
       aria-label="Start here — first session"
     >
       <div className="flex items-start justify-between gap-2">

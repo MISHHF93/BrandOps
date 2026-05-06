@@ -69,6 +69,8 @@ npm run native:model:run -- --workspace path/to/export.json --structured-json --
 
 Resume still merges through resume fused text; raw resume bytes feed **`resumeRaw`** inside structured builders when passed from the runner.
 
+**Hosted Ask (Phase R):** The extension can persist a compressed résumé artifact (`notificationCenter.resumeNeuralPhaseContext`) and inject it into hosted **`ask:`** system prompts. That path is **UI + TS extraction + prompt layering**, not the native MLP CLI — scope and scorecard live in [`RESUME_AND_PHASE_R_SCORECARD.md`](RESUME_AND_PHASE_R_SCORECARD.md). Offline **`run-native-model.mjs --workspace export.json`** merges that same stored field into the native profile blob when `--resume` is omitted.
+
 ## Roadmap (beyond current repo scope)
 
 | Item | Notes |

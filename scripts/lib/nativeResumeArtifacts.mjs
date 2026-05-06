@@ -9,7 +9,12 @@ const SECTION_HINT =
   /^(summary|objective|profile|experience|work history|employment|education|skills|technical skills|projects|certifications|languages|interests)\s*:?\s*$/i;
 
 export function normalizeResumeText(raw) {
-  return asNonNullStr(String(raw ?? '').replace(/\r\n/g, '\n').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, ''));
+  return asNonNullStr(
+    String(raw ?? '')
+      .replace(/\r\n/g, '\n')
+      // eslint-disable-next-line no-control-regex -- strip C0 controls except \t and \n
+      .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '')
+  );
 }
 
 /** Structured resume fields for JSON artifact packages (parallel to fused text). */

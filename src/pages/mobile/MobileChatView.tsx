@@ -109,6 +109,8 @@ export interface MobileChatViewProps {
   transcriptEndRef?: RefObject<HTMLDivElement>;
   /** Open global command palette — same catalogue as Plan and ⌘K */
   onOpenCommandPalette?: () => void;
+  /** Jump to Settings → Résumé grounding (hosted Ask Phase R). */
+  onOpenResumeGrounding?: () => void;
 }
 
 /**
@@ -128,7 +130,8 @@ export const MobileChatView = ({
   onOpenPlan,
   vitalityMetrics,
   transcriptEndRef,
-  onOpenCommandPalette
+  onOpenCommandPalette,
+  onOpenResumeGrounding
 }: MobileChatViewProps) => {
   const assistantPlanPicks = getAssistantQuickPlanPicks(ASSISTANT_STARTER_COMMAND_SET);
   return (
@@ -205,6 +208,20 @@ export const MobileChatView = ({
           <span className="bo-assistant-stat-pill">Missed {vitalityMetrics.missedTasks}</span>
         </div>
         {assistantInPageAnchors(btnFocus)}
+        {onOpenResumeGrounding ? (
+          <p className="mt-2 text-[10px] leading-snug text-textSoft">
+            <button
+              type="button"
+              onClick={onOpenResumeGrounding}
+              className={clsx('bo-link bo-link--sm font-semibold !normal-case', btnFocus)}
+            >
+              Résumé grounding for Ask (Phase R)
+            </button>
+            <span className="text-textMuted"> — compress CV in Settings; improves hosted </span>
+            <span className="whitespace-nowrap font-mono text-[10px] text-textSoft">ask:</span>
+            <span className="text-textMuted"> answers.</span>
+          </p>
+        ) : null}
       </header>
 
       <section
