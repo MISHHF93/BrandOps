@@ -81,7 +81,7 @@ export const MobileWorkspaceHubView = ({
   const lockHint = planAgentLockCopy(workspaceCommandLockReason);
 
   return (
-    <div className="space-y-4" aria-label="Plan">
+    <div className="space-y-3" aria-label="Plan">
       <span className="sr-only">
         Plan — workspace command center. Planning actions and queue runs stay on this tab; Assistant
         opens Ask. Jump links: plan actions, Pulse, Today snapshot, queue.
@@ -99,15 +99,14 @@ export const MobileWorkspaceHubView = ({
           />
         </div>
 
-        <div className={clsx(ROW, 'space-y-4')}>
+        <div className={clsx(ROW, 'space-y-3')}>
           <header>
             <h1 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-textMuted">
               Plan
             </h1>
-            <p className="mt-2 text-[12px] leading-relaxed text-textMuted">
-              Run the week from here — Pipeline health and planning actions stay on this tab when you tap
-              them. Use the shortcuts below: Integrations and Settings open in place; Assistant opens Ask.
-              ⌘K runs commands the same way.
+            <p className="mt-1.5 text-[11px] leading-snug text-textMuted">
+              Pipeline and quick picks run on this tab. Integrations and Settings stay here; Assistant
+              opens Ask. Full catalogue: ⌘K.
             </p>
           </header>
 
@@ -161,12 +160,13 @@ export const MobileWorkspaceHubView = ({
               Assistant
             </button>
           </nav>
-          <p className="text-[10px] leading-snug text-textSoft">
-            Integrations and Settings stay on this screen. Assistant switches to the Ask tab.
-          </p>
 
           <PlanJumpNav btnFocus={btnFocus} />
         </div>
+
+        <section id="plan-pulse" className={ROW}>
+          <WorkspaceSignalsBoard metrics={snapshot} variant="workspace" mastHeadline="Pulse" />
+        </section>
 
         <div className={ROW}>
           <PlanPlanningActions
@@ -178,10 +178,6 @@ export const MobileWorkspaceHubView = ({
             onOpenCommandPalette={onOpenCommandPalette}
           />
         </div>
-
-        <section id="plan-pulse" className={ROW}>
-          <WorkspaceSignalsBoard metrics={snapshot} variant="workspace" mastHeadline="Pulse" />
-        </section>
 
         <section id="plan-today" className={ROW} aria-labelledby="plan-today-heading">
           <div className="flex flex-wrap items-start justify-between gap-2">

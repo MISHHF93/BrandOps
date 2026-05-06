@@ -3,6 +3,7 @@ import {
   suggestIntents,
   getInputRouteHint,
   getIntentsForPlanPage,
+  getIntentsForPlanHub,
   getAssistantQuickPlanPicks
 } from '../../src/pages/mobile/chatIntents';
 
@@ -35,6 +36,13 @@ describe('chatIntents', () => {
     expect(intents.some((i) => i.command === 'sync content embeddings')).toBe(true);
     expect(intents.map((i) => i.groupId)).toContain('strategy');
     expect(intents[0]?.command.toLowerCase()).toContain('pipeline');
+  });
+
+  it('getIntentsForPlanHub returns first slice of canonical Plan order', () => {
+    const full = getIntentsForPlanPage();
+    expect(getIntentsForPlanHub()).toHaveLength(8);
+    expect(getIntentsForPlanHub(3)).toHaveLength(3);
+    expect(getIntentsForPlanHub().every((x, i) => x.command === full[i]?.command)).toBe(true);
   });
 
   it('getAssistantQuickPlanPicks dedupes planning essentials against excluded commands', () => {

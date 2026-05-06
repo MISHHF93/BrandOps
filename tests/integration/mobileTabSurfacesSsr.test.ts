@@ -63,13 +63,12 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('aria-label="Plan destinations"');
     expect(html).toContain('Jump within Plan');
     expect(html).toContain('id="plan-actions"');
-    expect(html).toContain('Planning basics');
+    expect(html).toContain('Quick picks');
     expect(html).toContain('Sync embeddings');
     expect(html).toContain('bo-plan-flat-root');
     expect(html).toContain('Today snapshot');
     expect(html).toContain('Open full Today');
-    expect(html).toContain('stay on this tab');
-    expect(html).toContain('Integrations and Settings stay');
+    expect(html).toContain('stay here');
     expect(html).toContain('>Today<');
     expect(html).toContain('>Pipeline<');
     expect(html).toContain('<table');

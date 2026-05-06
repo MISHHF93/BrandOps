@@ -61,26 +61,24 @@ const ASSISTANT_STARTER_COMMAND_SET = new Set(
   ASSISTANT_QUICK_PICKS.map((c) => normalizeCommandDedupe(c))
 );
 
-function AssistantJumpNav({ btnFocus }: { btnFocus: string }) {
+function assistantInPageAnchors(btnFocus: string) {
   const links: ReadonlyArray<{ href: string; label: string }> = [
     { href: '#assistant-copilot', label: 'Copilot' },
     { href: '#assistant-commands', label: 'Commands' },
     { href: '#assistant-thread', label: 'Transcript' }
   ];
   return (
-    <nav className="bo-plan-jump-nav px-0.5" aria-label="Jump within Assistant">
-      <span className="bo-plan-jump-nav__kicker text-[10px] font-semibold uppercase tracking-wide text-textSoft">
-        Jump to
-      </span>
-      <div className="bo-plan-jump-nav__links flex flex-wrap gap-x-2 gap-y-1">
+    <nav
+      className="mt-2 border-t border-border/35 pt-2"
+      aria-label="Jump within Assistant"
+    >
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="text-[9px] font-bold uppercase tracking-wide text-textSoft">On page</span>
         {links.map(({ href, label }) => (
           <a
             key={href}
             href={href}
-            className={clsx(
-              'bo-plan-jump-nav__link text-[11px] font-semibold text-textMuted',
-              btnFocus
-            )}
+            className={clsx('text-[10px] font-semibold text-textMuted hover:text-text', btnFocus)}
           >
             {label}
           </a>
@@ -134,7 +132,7 @@ export const MobileChatView = ({
 }: MobileChatViewProps) => {
   const assistantPlanPicks = getAssistantQuickPlanPicks(ASSISTANT_STARTER_COMMAND_SET);
   return (
-    <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-3">
+    <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-2">
       <header className="bo-assistant-hero bo-dos-hero rounded-2xl px-3 py-3 sm:px-3.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -146,13 +144,9 @@ export const MobileChatView = ({
                 <h2 className="text-base font-semibold leading-tight tracking-tight text-text">
                   Assistant
                 </h2>
-                <p className="mt-0.5 text-[12px] leading-snug text-textMuted">
-                  Workspace commands and{' '}
-                  <span className="whitespace-nowrap font-mono text-[11px] text-textSoft">
-                    ask: …
-                  </span>{' '}
-                  hosted answers. Copilot may append allow-listed JSON so the app auto-runs workspace
-                  commands. Full command grid on Plan; palette matches ⌘K everywhere.
+                <p className="mt-0.5 text-[11px] leading-snug text-textMuted">
+                  <span className="whitespace-nowrap font-mono text-[10px] text-textSoft">ask: …</span>{' '}
+                  for hosted answers; other lines use the workspace engine. ⌘K is the full command list.
                 </p>
               </div>
             </div>
@@ -202,7 +196,7 @@ export const MobileChatView = ({
         </div>
 
         <div
-          className="mt-3 flex flex-wrap gap-1.5"
+          className="mt-2.5 flex flex-wrap gap-1.5"
           role="status"
           aria-label="Live workspace counts"
         >
@@ -210,9 +204,8 @@ export const MobileChatView = ({
           <span className="bo-assistant-stat-pill">Q {vitalityMetrics.publishingQueue}</span>
           <span className="bo-assistant-stat-pill">Missed {vitalityMetrics.missedTasks}</span>
         </div>
+        {assistantInPageAnchors(btnFocus)}
       </header>
-
-      <AssistantJumpNav btnFocus={btnFocus} />
 
       <section
         id="assistant-copilot"

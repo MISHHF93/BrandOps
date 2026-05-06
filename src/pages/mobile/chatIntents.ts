@@ -261,6 +261,12 @@ export function getIntentsForPlanPage(): BrandOpsChatIntent[] {
   return PLAN_PAGE_INTENT_IDS.map((id) => byId.get(id)).filter((x): x is BrandOpsChatIntent => Boolean(x));
 }
 
+/** Curated Plan hub tiles — first N in canonical Plan order; full catalogue remains in ⌘K / palette. */
+export function getIntentsForPlanHub(limit = 8): BrandOpsChatIntent[] {
+  const n = Math.min(Math.max(1, limit), PLAN_PAGE_INTENT_IDS.length);
+  return getIntentsForPlanPage().slice(0, n);
+}
+
 /** Essentials-only shortcuts for Assistant — dedupe against diversified starter commands. */
 export function getAssistantQuickPlanPicks(
   excludeNormalizedCommands: ReadonlySet<string>

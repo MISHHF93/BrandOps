@@ -21,6 +21,27 @@ Trailing slashes on the base URL are fine.
 
 In **Assistant (mobile shell)**, prefix natural questions with **`ask:`** to route them through the hosted model. Plain lines without that prefix still use the deterministic workspace command engine.
 
+## Chrome extension (`manifest.json`)
+
+Extension HTML pages (`mobile.html`, `integrations.html`, …) send `fetch()` to your inference URLs. **`host_permissions`** in [`public/manifest.template.json`](../public/manifest.template.json) must include hosts you call; the template already allows **LinkedIn/GitHub/Google OAuth**, **OpenAI** (`api.openai.com`), and **Azure OpenAI** (`*.openai.azure.com`).
+
+Using **LiteLLM**, **Groq**, **Together**, **OpenRouter**, etc.? Add matching `https://your-host/*` patterns to `host_permissions`, rebuild (`npm run build`), and reload the unpacked extension — otherwise Chrome can block requests before TLS (shown as **`net::ERR_BLOCKED_BY_CLIENT`** or **`TypeError: Failed to fetch`**), independent of HTTP 403.
+
+## Hosted web (Vite/`mobile.html`)
+
+The browser applies **normal CORS** rules. Calls from `localhost:5173` or your deploy origin straight to proprietary APIs often fail with CORS (not BrandOps routing). Prefer the **Chrome extension** shell for external NLP, or run a **same-origin proxy** (e.g. your own small backend) so the client only talks to your origin.
+
+## HTTP 403 vs 401 (inference)
+
+- **401**: invalid or missing Bearer key for that endpoint / org header.
+- **403**: authenticated but **not allowed** (model not enabled for the key, org policy, IP allowlist, or regional restriction). The NLP gateway tries to paste the provider’s JSON `error.message` into the in-app banner when possible.
+
+GitHub **`raw.githubusercontent.com`** for `VITE_INTELLIGENCE_RULES_URL` can respond **403** (rate limiting, referrer rules, private repo without token). Prefer a CDN URL or omit the env var so the app uses the bundled `brandops-intelligence-rules.json`.
+
+## Intelligence rules bootstrap
+
+On load, BrandOps tries `VITE_INTELLIGENCE_RULES_URL` then same-origin **`{BASE_URL}brandops-intelligence-rules.json`** (`import.meta.env.BASE_URL` supports GitHub Pages-style subpaths). In **dev**, a non-OK response logs a **`[BrandOps] …`** hint in the JavaScript console with the attempted URL.
+
 ## Limitations (current client)
 
 - Bearer token only; no provider OAuth in-app.

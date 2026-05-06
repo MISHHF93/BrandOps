@@ -1116,7 +1116,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         id="bo-mobile-main"
         tabIndex={-1}
         className={clsx(
-          'bo-mobile-main mx-auto w-full max-w-md pt-6 outline-none motion-safe:scroll-smooth',
+          'bo-mobile-main mx-auto w-full max-w-md pt-4 outline-none motion-safe:scroll-smooth',
           activeTab === 'chat'
             ? 'pb-[max(11.25rem,calc(9.5rem+env(safe-area-inset-bottom,0px)))]'
             : 'pb-[max(11rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
@@ -1171,7 +1171,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         ) : (
           <section
             key={activeTab}
-            className="bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-6 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-8 text-sm text-textMuted motion-reduce:animate-none"
+            className="bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-4 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-6 text-sm text-textMuted motion-reduce:animate-none"
             aria-label={`${activeTab} tab`}
           >
             {activeTab === 'workspace' ? (

@@ -1,23 +1,6 @@
 import clsx from 'clsx';
 import { Search } from 'lucide-react';
-import type { BrandOpsChatIntent } from './chatIntents';
-import { getIntentsForPlanPage } from './chatIntents';
-
-const GROUP_ORDER: BrandOpsChatIntent['groupId'][] = [
-  'essentials',
-  'pipeline',
-  'content',
-  'connect',
-  'strategy'
-];
-
-const GROUP_LABEL: Record<BrandOpsChatIntent['groupId'], string> = {
-  essentials: 'Planning basics',
-  pipeline: 'Pipeline & people',
-  content: 'Content & calendar',
-  connect: 'Connections',
-  strategy: 'Strategy engine'
-};
+import { getIntentsForPlanHub } from './chatIntents';
 
 export interface PlanPlanningActionsProps {
   btnFocus: string;
@@ -29,7 +12,7 @@ export interface PlanPlanningActionsProps {
 }
 
 /**
- * One-tap planning — same command lines as ⌘K palette and Assistant (via {@link runCommand}).
+ * Compact Plan hub — curated picks in canonical Plan order; full list in ⌘K only.
  */
 export function PlanPlanningActions({
   btnFocus,
@@ -39,15 +22,7 @@ export function PlanPlanningActions({
   runCommand,
   onOpenCommandPalette
 }: PlanPlanningActionsProps) {
-  const intents = getIntentsForPlanPage();
-  const byGroup = new Map<BrandOpsChatIntent['groupId'], BrandOpsChatIntent[]>();
-  for (const g of GROUP_ORDER) byGroup.set(g, []);
-  for (const intent of intents) {
-    const bucket = byGroup.get(intent.groupId) ?? [];
-    bucket.push(intent);
-    byGroup.set(intent.groupId, bucket);
-  }
-
+  const intents = getIntentsForPlanHub(8);
   const disabled = !agentEnabled || commandBusy;
 
   return (
@@ -61,7 +36,7 @@ export function PlanPlanningActions({
           id="plan-actions-heading"
           className="text-[11px] font-semibold uppercase tracking-wide text-textMuted"
         >
-          Plan actions
+          Quick picks
         </h2>
         <button
           type="button"
@@ -75,9 +50,8 @@ export function PlanPlanningActions({
           All commands ⌘K
         </button>
       </div>
-      <p className="mt-1 text-[11px] leading-snug text-textSoft">
-        Run any action here without leaving Plan — same lines as ⌘K or Assistant. Destructive phrases
-        still use the normal confirmation sheet. Open Ask when you want the full transcript view.
+      <p className="mt-1 text-[10px] leading-snug text-textSoft">
+        Eight high-use lines; every other command is in the palette. Destructive phrases still confirm.
       </p>
       {!agentEnabled && agentLockHint ? (
         <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/15 px-2.5 py-2 text-[11px] text-text">
@@ -85,41 +59,32 @@ export function PlanPlanningActions({
         </p>
       ) : null}
 
-      <div className="mt-3 space-y-4">
-        {GROUP_ORDER.map((gid) => {
-          const items = byGroup.get(gid) ?? [];
-          if (items.length === 0) return null;
-          return (
-            <div key={gid}>
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.08em] text-textSoft">
-                {GROUP_LABEL[gid]}
-              </h3>
-              <ul className="mt-2 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2" role="list">
-                {items.map((intent) => (
-                  <li key={intent.id}>
-                    <button
-                      type="button"
-                      disabled={disabled}
-                      title={intent.command}
-                      onClick={() => runCommand(intent.command)}
-                      className={clsx(
-                        'flex min-h-[3.25rem] w-full touch-manipulation flex-col items-start rounded-xl border border-border/45 bg-bgSubtle/55 px-3 py-2.5 text-start text-text transition hover:border-borderStrong hover:bg-surfaceActive/50',
-                        disabled && 'cursor-not-allowed opacity-45 hover:border-border/45 hover:bg-bgSubtle/55',
-                        btnFocus
-                      )}
-                    >
-                      <span className="text-[12px] font-semibold leading-tight">{intent.title}</span>
-                      <span className="mt-0.5 text-[10px] leading-snug text-textSoft line-clamp-2">
-                        {intent.subtitle}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
+      <ul
+        className="mt-2.5 grid list-none grid-cols-1 gap-1.5 p-0 sm:grid-cols-2"
+        role="list"
+        aria-label="Curated planning commands"
+      >
+        {intents.map((intent) => (
+          <li key={intent.id}>
+            <button
+              type="button"
+              disabled={disabled}
+              title={intent.command}
+              onClick={() => runCommand(intent.command)}
+              className={clsx(
+                'flex min-h-[2.6rem] w-full touch-manipulation flex-col items-start rounded-lg border border-border/45 bg-bgSubtle/55 px-2.5 py-2 text-start text-text transition hover:border-borderStrong hover:bg-surfaceActive/50',
+                disabled && 'cursor-not-allowed opacity-45 hover:border-border/45 hover:bg-bgSubtle/55',
+                btnFocus
+              )}
+            >
+              <span className="text-[11px] font-semibold leading-tight">{intent.title}</span>
+              <span className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-textSoft">
+                {intent.subtitle}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

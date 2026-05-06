@@ -21,7 +21,9 @@
     "https://oauth2.googleapis.com/*",
     "https://openidconnect.googleapis.com/*",
     "https://github.com/*",
-    "https://api.github.com/*"
+    "https://api.github.com/*",
+    "https://api.openai.com/*",
+    "https://*.openai.azure.com/*"
   ],
   "options_ui": {
     "page": "integrations.html",

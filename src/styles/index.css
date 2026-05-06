@@ -880,9 +880,9 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-assistant-surface {
-    border-radius: 1.35rem;
-    padding: 0.45rem 0.3rem 0.6rem;
-    margin-inline: -0.18rem;
+    border-radius: 1.2rem;
+    padding: 0.35rem 0.22rem 0.45rem;
+    margin-inline: -0.12rem;
     border: 1px solid rgb(var(--bo-chat-assistant-border) / 0.4);
     background:
       linear-gradient(165deg, rgb(var(--bo-chat-hero-bg) / 0.38) 0%, transparent 46%),

@@ -37,8 +37,16 @@ function bundledJsonFetchUrl(): string {
   if (typeof chrome !== 'undefined' && typeof chrome.runtime?.getURL === 'function') {
     return chrome.runtime.getURL('brandops-intelligence-rules.json');
   }
-  return '/brandops-intelligence-rules.json';
+  const rawBase = import.meta.env.BASE_URL ?? '/';
+  const base = rawBase === '/' ? '' : rawBase.replace(/\/+$/, '');
+  return base ? `${base}/brandops-intelligence-rules.json` : '/brandops-intelligence-rules.json';
 }
+
+const rulesFetchInit: RequestInit = {
+  cache: 'no-store',
+  credentials: 'omit',
+  mode: 'cors'
+};
 
 /** For tests: reset to embedded defaults without remote patch. */
 export function resetIntelligenceRulesForTests(): void {
@@ -61,13 +69,18 @@ export async function initIntelligenceRulesFromRemote(): Promise<void> {
 
   if (envUrl) {
     try {
-      const response = await fetch(envUrl, { cache: 'no-store' });
+      const response = await fetch(envUrl, rulesFetchInit);
       if (response.ok) {
         remote = await response.json();
         mode = 'env-url';
         detail = envUrl;
       } else {
-        errors.push(`env URL HTTP ${response.status}`);
+        errors.push(`env URL HTTP ${response.status}: ${envUrl}`);
+        if (import.meta.env.DEV) {
+          console.warn(
+            `[BrandOps] VITE_INTELLIGENCE_RULES_URL returned ${response.status}. Check signed URLs, CORS, and hotlinking bans.`
+          );
+        }
       }
     } catch (e) {
       errors.push(`env: ${e instanceof Error ? e.message : 'fetch failed'}`);
@@ -77,13 +90,18 @@ export async function initIntelligenceRulesFromRemote(): Promise<void> {
   if (remote === undefined) {
     const bundled = bundledJsonFetchUrl();
     try {
-      const response = await fetch(bundled, { cache: 'no-store' });
+      const response = await fetch(bundled, rulesFetchInit);
       if (response.ok) {
         remote = await response.json();
         mode = 'bundled-json';
         detail = bundled;
       } else {
         errors.push(`bundled HTTP ${response.status}: ${bundled}`);
+        if (import.meta.env.DEV) {
+          console.warn(
+            `[BrandOps] bundled intelligence rules rejected (${response.status}): ${bundled}. Deploy must include brandops-intelligence-rules.json at this path.`
+          );
+        }
       }
     } catch (e) {
       errors.push(`bundled: ${e instanceof Error ? e.message : 'fetch failed'} (${bundled})`);

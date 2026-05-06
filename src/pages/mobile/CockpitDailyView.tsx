@@ -54,7 +54,7 @@ export const CockpitDailyView = ({
   const actions = { btnFocus, commandBusy, runCommand, primeChat };
 
   return (
-    <div className="space-y-4" aria-label="Today">
+    <div className="space-y-3" aria-label="Today">
       <span className="sr-only">Today — plan and work</span>
 
       <CockpitWorkstreamBar
