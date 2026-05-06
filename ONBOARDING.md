@@ -13,7 +13,7 @@ Engineering and product reference for the first-session experience (`mobile.html
 ## Happy path (numbered)
 
 1. **Sign in** (if required) — provider buttons on the auth gate.
-2. **Assistant (default tab)** — run a workspace command or hosted Ask; use **Getting started** checklist when visible.
+2. **Assistant (default tab)** — run a workspace command or hosted Ask; use **Getting started** checklist when visible. The default assistant bubble mentions “checklist above” only while that card is shown; after dismiss it points at dock + ⌘K instead.
 3. **Plan** — dock or checklist **Open Plan**; pulse metrics, Today snapshot, soonest queue; **Today** / **Pipeline** tiles; **⌘K** for Integrations and Setup.
 4. **Today** — checklist **Open Today** or Plan tile; workstream bar and cockpit lanes.
 5. **Integrations & Settings** — **⌘K / Ctrl+K** palette (or deep links).

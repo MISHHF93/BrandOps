@@ -93,12 +93,15 @@ const MAX_PERSISTED_MESSAGES = 50;
 const MAX_COMMAND_CHIPS = 24;
 
 const defaultWelcomeMessage = (
-  surface: AppDocumentSurfaceId | 'chatbot' = 'mobile'
+  surface: AppDocumentSurfaceId | 'chatbot' = 'mobile',
+  gettingStartedChecklistVisible = true
 ): ChatMessage => {
-  const mobileLine =
-    'Use the Getting started checklist above for Plan, Today, and ⌘K — then type a command or pick a starter below.';
-  const welcomeLine =
-    'Use Getting started above, then run a command here. ⌘K opens the palette; Plan shows pulse and queue.';
+  const mobileLine = gettingStartedChecklistVisible
+    ? 'Use the Getting started checklist above for Plan, Today, and ⌘K — then type a command or pick a starter below.'
+    : 'Plan and Today are on the dock; ⌘K / Ctrl+K opens Integrations, Settings, and search. Type a command or pick a starter below.';
+  const welcomeLine = gettingStartedChecklistVisible
+    ? 'Use Getting started above, then run a command here. ⌘K opens the palette; Plan shows pulse and queue.'
+    : 'Run a command here or pick a starter. Plan shows pulse and queue; ⌘K opens Integrations and Settings.';
   return {
     id: uid(),
     role: 'assistant',
@@ -373,14 +376,14 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [launchAccess, setLaunchAccess] = useState<LaunchAccessState>(() =>
     readLaunchAccessState()
   );
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const persisted = readChatThread();
-    if (persisted && persisted.length > 0) return persisted;
-    return [defaultWelcomeMessage(surfaceLabel)];
-  });
   const [firstRunJourneyVisible, setFirstRunJourneyVisible] = useState(
     () => !readFirstRunJourneyDismissed()
   );
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const persisted = readChatThread();
+    if (persisted && persisted.length > 0) return persisted;
+    return [defaultWelcomeMessage(surfaceLabel, !readFirstRunJourneyDismissed())];
+  });
 
   const refreshWorkspaceSnapshot = useCallback(async () => {
     try {
@@ -1364,7 +1367,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 className={`rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-sm font-medium text-text ${btnFocus}`}
                 onClick={() => {
                   setPendingClearChat(false);
-                  setMessages([defaultWelcomeMessage(surfaceLabel)]);
+                  setMessages([defaultWelcomeMessage(surfaceLabel, firstRunJourneyVisible)]);
                   if (typeof localStorage !== 'undefined') {
                     localStorage.removeItem(CHAT_THREAD_KEY);
                   }
