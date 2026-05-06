@@ -149,7 +149,7 @@ export const CockpitFocusEngine = ({
   ];
 
   return (
-    <article className="bo-flagship-surface bo-flagship-surface--today" aria-label="Today focus engine">
+    <article className="bo-flagship-surface" aria-label="Today focus engine">
       <WorkspaceSignalsBoard metrics={snapshot} variant="today" />
 
       <div className="bo-vitality-frame-body space-y-3 px-3 pb-3 pt-3 sm:px-3.5">
