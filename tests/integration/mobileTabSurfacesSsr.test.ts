@@ -352,6 +352,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Export operator traces');
     expect(html).toContain('Record operator traces locally');
     expect(html).toContain('Assistant');
+    expect(html).toContain('Résumé grounding (hosted Ask)');
     expect(html).toContain('Diagnostics');
     expect(html).toContain('Extension shell');
     expect(html).toContain('Open integrations page in a new tab');

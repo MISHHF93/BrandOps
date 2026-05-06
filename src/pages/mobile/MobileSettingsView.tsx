@@ -25,6 +25,7 @@ import {
 import {
   SettingsAssistantComposer,
   SettingsDataSafetyBlock,
+  SettingsResumeNeuralPhasePanel,
   SettingsTierAOverview
 } from './MobileSettingsAISurface';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
@@ -199,6 +200,7 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
     ['Preferred model', r.preferredModel],
     ['Role context', r.roleContextPreview],
     ['Prompt template', r.promptTemplatePreview],
+    ['Résumé Phase R (preview)', r.resumeNeuralPhasePreview],
     ['Dataset review', r.datasetReviewEnabled ? 'yes' : 'no'],
     ['Integration review', r.integrationReviewEnabled ? 'yes' : 'no'],
     ['Deep work blocks', String(r.deepWorkBlockCount)],
@@ -743,6 +745,8 @@ export interface MobileSettingsViewProps {
   onOpenBillingPortal?: () => void;
   /** Persist unified Operating profile choice after successful `configure:` apply. */
   onOperatingProfileApplied?: (presetId: OperatingPresetId | 'custom') => void | Promise<void>;
+  /** Persist compressed résumé artifact for hosted Ask Phase R (empty clears). */
+  onPersistResumeNeuralPhaseContext?: (compressed: string) => void | Promise<void>;
 }
 
 /**
@@ -770,7 +774,8 @@ export const MobileSettingsView = ({
   onSignOut = () => {},
   onStartCheckout = () => {},
   onOpenBillingPortal = () => {},
-  onOperatingProfileApplied
+  onOperatingProfileApplied,
+  onPersistResumeNeuralPhaseContext = async () => {}
 }: MobileSettingsViewProps) => {
   const [importMessage, setImportMessage] = useState<string | null>(null);
   /** Any agent route (settings apply or chat quick command) — avoid parallel `executeAgentWorkspaceCommand`. */
@@ -851,6 +856,13 @@ export const MobileSettingsView = ({
             applyBusy={applyBusy}
             btnFocus={btnFocus}
             onOperatingProfileApplied={onOperatingProfileApplied}
+          />
+
+          <SettingsResumeNeuralPhasePanel
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            applyBusy={agentRouteBusy}
+            onPersistResumeNeuralPhaseContext={onPersistResumeNeuralPhaseContext}
           />
         </div>
       </details>

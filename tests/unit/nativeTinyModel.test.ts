@@ -209,7 +209,8 @@ Built Python NLP pipelines for production.
       settings: {
         notificationCenter: {
           roleContext: 'Staff AI engineer',
-          promptTemplate: 'Be precise.'
+          promptTemplate: 'Be precise.',
+          resumeNeuralPhaseContext: ''
         }
       }
     });

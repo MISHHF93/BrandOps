@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent } from 'react';
 import clsx from 'clsx';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
+import { extractResumeNeuralPhaseArtifact } from '../../services/ai/resumeNeuralPhaseExtract';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { ComposerBlankStarter } from './configurationStarters';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
@@ -294,5 +295,135 @@ export function SettingsDataSafetyBlock({
         </MobileTabSection>
       </div>
     </details>
+  );
+}
+
+export function SettingsResumeNeuralPhasePanel({
+  snapshot,
+  btnFocus,
+  applyBusy,
+  onPersistResumeNeuralPhaseContext
+}: {
+  snapshot: MobileWorkspaceSnapshot;
+  btnFocus: string;
+  applyBusy: boolean;
+  onPersistResumeNeuralPhaseContext: (compressed: string) => void | Promise<void>;
+}) {
+  const statusId = useId();
+  const [draft, setDraft] = useState('');
+  const [panelBusy, setPanelBusy] = useState(false);
+  const [banner, setBanner] = useState<{ msg: string; tone: 'success' | 'danger' } | null>(null);
+
+  useEffect(() => {
+    if (!banner) return;
+    const t = window.setTimeout(() => setBanner(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [banner]);
+
+  const disabled = applyBusy || panelBusy;
+
+  const compressAndSave = useCallback(async () => {
+    const raw = draft.trim();
+    if (!raw || disabled) return;
+    const artifact = extractResumeNeuralPhaseArtifact(raw);
+    if (!artifact.length) {
+      setBanner({
+        msg: 'Nothing useful to extract — add sections, bullets, or skills.',
+        tone: 'danger'
+      });
+      return;
+    }
+    setPanelBusy(true);
+    setBanner(null);
+    try {
+      await onPersistResumeNeuralPhaseContext(artifact);
+      setDraft('');
+      setBanner({ msg: 'Compressed résumé saved for hosted Ask.', tone: 'success' });
+    } catch {
+      setBanner({ msg: 'Save failed — try again.', tone: 'danger' });
+    } finally {
+      setPanelBusy(false);
+    }
+  }, [draft, disabled, onPersistResumeNeuralPhaseContext]);
+
+  const clearStored = useCallback(async () => {
+    if (disabled) return;
+    setPanelBusy(true);
+    setBanner(null);
+    try {
+      await onPersistResumeNeuralPhaseContext('');
+      setBanner({ msg: 'Résumé grounding cleared.', tone: 'success' });
+    } catch {
+      setBanner({ msg: 'Clear failed — try again.', tone: 'danger' });
+    } finally {
+      setPanelBusy(false);
+    }
+  }, [disabled, onPersistResumeNeuralPhaseContext]);
+
+  const chip = clsx(mobileChipClass(btnFocus), 'disabled:cursor-not-allowed disabled:opacity-50');
+
+  return (
+    <MobileTabSection
+      id="settings-resume-neural-phase"
+      title="Résumé grounding (hosted Ask)"
+      description="Paste plain-text résumé export; we compress it into Phase R context so hosted models infer your skills and roles. Brand profile still wins on conflicts."
+      descriptionVisibility="sr-only"
+    >
+      <p className="mt-2 text-[11px] leading-relaxed text-textSoft">
+        Neural phasing adds a short artifact to the hosted Ask system prompt (not the native on-device
+        model). Nothing is uploaded until you send a message that calls the hosted bridge.
+      </p>
+      <div className="mt-2 rounded-lg border border-border/40 bg-bgSubtle/45 px-2.5 py-2 text-[11px] text-textMuted">
+        <span className="font-medium text-textSoft">Stored preview</span>
+        <p className="mt-1 min-w-0 break-words leading-relaxed text-text">
+          {snapshot.resumeNeuralPhaseArtifactPreview.trim().length > 0
+            ? snapshot.resumeNeuralPhaseArtifactPreview
+            : '—'}
+        </p>
+      </div>
+      <label htmlFor="settings-resume-draft" className="sr-only">
+        Paste résumé text to compress
+      </label>
+      <textarea
+        id="settings-resume-draft"
+        value={draft}
+        disabled={disabled}
+        onChange={(e) => setDraft(e.target.value)}
+        rows={5}
+        spellCheck={false}
+        placeholder="Paste résumé or CV as plain text…"
+        className="mt-3 w-full resize-y rounded-lg border border-border/55 bg-surface/55 px-2.5 py-2 text-sm text-text outline-none placeholder:text-textSoft disabled:opacity-60"
+      />
+      <div className="mt-2 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={disabled || !draft.trim()}
+          onClick={() => void compressAndSave()}
+          className={clsx(
+            'rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-xs font-semibold text-text disabled:opacity-50',
+            btnFocus
+          )}
+        >
+          Compress &amp; save
+        </button>
+        <button type="button" disabled={disabled} onClick={() => void clearStored()} className={chip}>
+          Clear stored
+        </button>
+      </div>
+      <div id={statusId} className="mt-2 min-h-[1.25rem]" role="status" aria-live="polite">
+        {panelBusy ? <p className="text-[11px] text-textSoft">Saving…</p> : null}
+        {!panelBusy && banner ? (
+          <p
+            className={
+              banner.tone === 'danger'
+                ? 'text-[11px] text-danger'
+                : 'text-[11px] text-success'
+            }
+            role={banner.tone === 'danger' ? 'alert' : undefined}>
+            {banner.msg}
+          </p>
+        ) : null}
+      </div>
+    </MobileTabSection>
   );
 }

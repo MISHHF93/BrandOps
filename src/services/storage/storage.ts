@@ -867,7 +867,11 @@ const normalizeNotificationCenterSettings = (
     integrationReviewEnabled:
       typeof candidate.integrationReviewEnabled === 'boolean'
         ? candidate.integrationReviewEnabled
-        : fallback.integrationReviewEnabled
+        : fallback.integrationReviewEnabled,
+    resumeNeuralPhaseContext:
+      typeof candidate.resumeNeuralPhaseContext === 'string'
+        ? candidate.resumeNeuralPhaseContext.trim().slice(0, 12_000)
+        : fallback.resumeNeuralPhaseContext
   };
 };
 

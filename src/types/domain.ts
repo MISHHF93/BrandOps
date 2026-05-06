@@ -388,6 +388,11 @@ export interface NotificationCenterSettings {
   promptTemplate: string;
   datasetReviewEnabled: boolean;
   integrationReviewEnabled: boolean;
+  /**
+   * Compressed résumé / CV grounding for hosted Ask (sections · skills · roles · bullets).
+   * Populated from Settings; fed under explicit neural-phasing instructions so models infer expertise without overriding Brand facts.
+   */
+  resumeNeuralPhaseContext: string;
 }
 
 export type CadenceFlowMode = 'balanced' | 'maker-heavy' | 'client-heavy' | 'launch-day';

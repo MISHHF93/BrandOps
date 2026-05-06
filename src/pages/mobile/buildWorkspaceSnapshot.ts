@@ -257,6 +257,8 @@ export interface MobileWorkspaceSnapshot {
   sshTargetsCount: number;
   nextPublishingHint: string | null;
   settingsFullReadout: MobileSettingsFullReadout;
+  /** Preview of persisted Phase R résumé artifact (`notificationCenter.resumeNeuralPhaseContext`). */
+  resumeNeuralPhaseArtifactPreview: string;
   /** Named hosted Ask copilots + active id — Assistant picker reads this without touching storage. */
   copilotWorkerRegistry: CopilotWorkerRegistrySettings;
   cockpitOpportunityPeek: CockpitOpportunityPeekRow[];
@@ -380,6 +382,10 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     opportunitiesToClose,
     cadenceHeadline,
     settingsFullReadout: buildMobileSettingsFullReadout(workspace),
+    resumeNeuralPhaseArtifactPreview: truncatePeek(
+      workspace.settings.notificationCenter.resumeNeuralPhaseContext,
+      200
+    ),
     copilotWorkerRegistry: workspace.settings.copilotWorkers,
     cockpitOpportunityPeek: activeOpportunities.slice(0, 5).map((o) => ({
       id: o.id,

@@ -18,6 +18,8 @@ export interface MobileSettingsFullReadout {
   preferredModel: string;
   roleContextPreview: string;
   promptTemplatePreview: string;
+  /** Phase R résumé grounding preview for hosted Ask diagnostics. */
+  resumeNeuralPhasePreview: string;
   datasetReviewEnabled: boolean;
   integrationReviewEnabled: boolean;
   deepWorkBlockCount: number;
@@ -106,6 +108,9 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
     preferredModel: nc.preferredModel || '—',
     roleContextPreview: clip(nc.roleContext, 120),
     promptTemplatePreview: clip(nc.promptTemplate, 120),
+    resumeNeuralPhasePreview: nc.resumeNeuralPhaseContext.trim().length
+      ? clip(nc.resumeNeuralPhaseContext, 140)
+      : '—',
     datasetReviewEnabled: nc.datasetReviewEnabled,
     integrationReviewEnabled: nc.integrationReviewEnabled,
     deepWorkBlockCount: cf.deepWorkBlockCount,

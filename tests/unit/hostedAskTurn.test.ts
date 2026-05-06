@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildHostedAskMessages } from '../../src/services/ai/hostedAskTurn';
 import { defaultCopilotWorkerRegistry } from '../../src/config/copilotWorkerDefaults';
 import { seedData } from '../../src/modules/brandMemory/seed';
+import { cloneSeedData } from '../helpers/fixtures';
 
 describe('hostedAskTurn', () => {
   it('layers worker persona onto system message', () => {
@@ -17,5 +18,14 @@ describe('hostedAskTurn', () => {
     const strategist = defaultCopilotWorkerRegistry.workers.find((w) => w.id === 'content-strategist')!;
     const msgs = buildHostedAskMessages(seedData, 'Hook ideas?', strategist);
     expect(msgs[0].content).toContain('do NOT output executeAgentCommand or brandOpsActionPipeline JSON');
+  });
+
+  it('appends Phase R résumé block under neural-phasing instructions when context is stored', () => {
+    const ws = cloneSeedData();
+    ws.settings.notificationCenter.resumeNeuralPhaseContext = 'sections:a | skills:b';
+    const msgs = buildHostedAskMessages(ws, 'Hello', null);
+    expect(msgs[0].content).toContain('Neural phasing');
+    expect(msgs[0].content).toContain('sections:a');
+    expect(msgs[0].content).toContain('Global prompt scaffold');
   });
 });

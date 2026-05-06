@@ -1075,6 +1075,35 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     [refreshWorkspaceSnapshot]
   );
 
+  const persistResumeNeuralPhaseContext = useCallback(
+    async (compressed: string) => {
+      try {
+        const data = await storageService.getData();
+        const next = compressed.trim().slice(0, 12_000);
+        if (data.settings.notificationCenter.resumeNeuralPhaseContext === next) return;
+        await storageService.setData({
+          ...data,
+          settings: {
+            ...data.settings,
+            notificationCenter: {
+              ...data.settings.notificationCenter,
+              resumeNeuralPhaseContext: next
+            }
+          }
+        });
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint(
+          next.length > 0 ? 'Résumé grounding saved for hosted Ask.' : 'Résumé grounding cleared.'
+        );
+      } catch (err) {
+        console.error('BrandOps: resume neural phase persist failed', err);
+        setDataOpsHint('Could not update résumé grounding.');
+        throw err;
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
   const submitMessage = async () => {
     const line = buildOutgoingCommandLine(input.trim(), chatAttachment);
     if (!line?.trim() || commandLoading) return;
@@ -1285,6 +1314,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onStartCheckout={onStartCheckout}
                 onOpenBillingPortal={onOpenBillingPortal}
                 onOperatingProfileApplied={persistOperatingProfileApply}
+                onPersistResumeNeuralPhaseContext={persistResumeNeuralPhaseContext}
               />
             ) : null}
           </section>

@@ -1,6 +1,7 @@
 import type { BrandOpsData, CopilotWorker } from '../../types/domain';
 import type { ChatCompletionMessage } from './nlpInferenceGateway';
 import { buildCopilotContextHintBlock } from './copilotWorkers';
+import { buildNeuralPhasingResumeBlock } from './neuralPhasing';
 
 const GLOBAL_ROLE_LABEL = 'Global operator role (notificationCenter.roleContext)';
 
@@ -55,11 +56,14 @@ export function buildHostedAskMessages(
   ];
   const ctx = ctxLines.join('\n');
   const scoped = buildCopilotContextHintBlock(workspace, worker);
+  const neuralResume = buildNeuralPhasingResumeBlock(workspace);
+  const phased = neuralResume ? `\n\n${neuralResume}` : '';
 
-  const system = `${persona}\n\n${structured}\n\n${globalBaseline}\n\nWorkspace context:\n${ctx}${scoped}`.slice(
-    0,
-    28_000
-  );
+  const system =
+    `${persona}\n\n${structured}\n\n${globalBaseline}${phased}\n\nWorkspace context:\n${ctx}${scoped}`.slice(
+      0,
+      28_000
+    );
 
   return [
     { role: 'system', content: system },
