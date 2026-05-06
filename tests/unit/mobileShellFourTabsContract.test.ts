@@ -192,6 +192,14 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
 
 
+  it('does not render Getting started on Today-only branch (checklist lives on Assistant)', () => {
+
+    expect(mobileApp).not.toMatch(/activeTab === 'daily'[\s\S]*FirstRunJourneyCard/);
+
+  });
+
+
+
   it('threads getAgentCommandLock into the command palette for accurate agent lock copy', () => {
 
     expect(mobileApp).toContain('getAgentCommandLock(launchAccess, activeTab)');
