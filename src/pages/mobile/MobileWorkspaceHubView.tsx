@@ -52,7 +52,7 @@ export const MobileWorkspaceHubView = ({
         Today snapshot, and queue; Assistant runs chat.
       </span>
 
-      <article className="bo-flagship-surface overflow-hidden">
+      <article className="bo-flagship-surface">
         <div className="bo-vitality-frame-body space-y-3 px-3 pb-4 pt-3 sm:px-3.5">
           <header className="-mx-0.5 border-b border-border/28 pb-3">
             <h1 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-textMuted">Plan</h1>

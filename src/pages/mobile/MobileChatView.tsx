@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import {
   AlertCircle,
   Bot,
@@ -7,7 +8,8 @@ import {
   LayoutDashboard,
   User,
   Sparkles,
-  CalendarRange
+  CalendarRange,
+  MessageCircle
 } from 'lucide-react';
 import clsx from 'clsx';
 import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
@@ -60,7 +62,6 @@ export interface MobileChatViewProps {
   loading: boolean;
   commandHistory: string[];
   onQuickCommand: (command: string) => void;
-  /** Hosted Ask copilot registry + picker (persists via shell). */
   copilotWorkerRegistry: CopilotWorkerRegistrySettings;
   onSelectCopilotWorker: (workerId: string) => void;
   onClearCommandHistory: () => void;
@@ -68,11 +69,13 @@ export interface MobileChatViewProps {
   onOpenToday: () => void;
   onOpenPlan?: () => void;
   vitalityMetrics: WorkspaceSignalsPick;
+  /** Anchor for scroll-into-view while the shell main scrolls as one surface */
+  transcriptEndRef?: RefObject<HTMLDivElement | null>;
 }
 
 /**
- * **Assistant (Ask)** — compact AI-style chat: stat chips, starters, transcript.
- * Appearance (light/dark) is controlled from the shell header.
+ * Assistant tab — full-height conversational layout: one scroll container (shell `main`),
+ * fixed composer below. Avoids nested transcript panes that trap touch / keyboard scroll.
  */
 export const MobileChatView = ({
   messages,
@@ -85,48 +88,66 @@ export const MobileChatView = ({
   btnFocus,
   onOpenToday,
   onOpenPlan,
-  vitalityMetrics
+  vitalityMetrics,
+  transcriptEndRef
 }: MobileChatViewProps) => {
   return (
-    <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-2.5">
-      <header className="bo-assistant-hero bo-dos-hero px-3 py-2.5 sm:px-3.5">
-        <div className="flex items-start justify-between gap-2">
+    <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-3">
+      <header className="bo-assistant-hero bo-dos-hero rounded-2xl px-3 py-3 sm:px-3.5">
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="bo-dos-prompt text-[10px] font-semibold uppercase tracking-[0.14em] text-textMuted">
-              <span className="text-accent">C:\BRANDOPS&gt;</span>{' '}
-              <span className="normal-case tracking-normal text-textSoft">ask.exe</span>
-            </p>
-            <h2 className="bo-dos-hero-title text-text">Assistant</h2>
-            <p className="mt-0.5 bo-dos-prompt text-[11px] leading-snug text-textMuted">
-              On-device · <span className="whitespace-nowrap">⌘K</span> palette — dock switches Ask /
-              Plan
-            </p>
+            <div className="flex items-center gap-2 text-text">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-accent/35 bg-accentSoft/20 text-accent">
+                <MessageCircle className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-base font-semibold leading-tight tracking-tight text-text">
+                  Assistant
+                </h2>
+                <p className="mt-0.5 text-[12px] leading-snug text-textMuted">
+                  Workspace commands,{' '}
+                  <span className="whitespace-nowrap font-mono text-[11px] text-textSoft">
+                    ask: …
+                  </span>{' '}
+                  for hosted answers, attachments in the bar below. ⌘K opens every tab.
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5 self-start">
+          <nav
+            aria-label="Jump to workspace areas"
+            className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:items-center"
+          >
             {onOpenPlan ? (
               <button
                 type="button"
                 onClick={onOpenPlan}
                 title="Plan — queue and pulse"
                 aria-label="Open Plan"
-                className={clsx('bo-icon-btn-ai', btnFocus)}
+                className={clsx('bo-icon-btn-ai inline-flex items-center gap-1.5', btnFocus)}
               >
                 <LayoutDashboard className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                <span className="hidden min-[380px]:inline text-[11px] font-semibold">Plan</span>
               </button>
             ) : null}
             <button
               type="button"
               onClick={onOpenToday}
               title="Today lanes"
-              className={clsx('bo-icon-btn-ai bo-icon-btn-ai--accent', btnFocus)}
+              aria-label="Open Today"
+              className={clsx(
+                'bo-icon-btn-ai bo-icon-btn-ai--accent inline-flex items-center gap-1.5',
+                btnFocus
+              )}
             >
               <CalendarRange className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+              <span className="hidden min-[380px]:inline text-[11px] font-semibold">Today</span>
             </button>
-          </div>
+          </nav>
         </div>
 
         <div
-          className="mt-2.5 flex flex-wrap gap-1.5"
+          className="mt-3 flex flex-wrap gap-1.5"
           role="status"
           aria-label="Live workspace counts"
         >
@@ -136,8 +157,15 @@ export const MobileChatView = ({
         </div>
       </header>
 
-      <section aria-label="Hosted Ask copilot" className="min-w-0 px-2.5 sm:px-3.5">
-        <p className="bo-assistant-section-label">Copilot (ask: …)</p>
+      <section aria-label="Hosted Ask copilot" className="min-w-0 px-0.5">
+        <p className="bo-assistant-section-label">Copilot</p>
+        <p className="mb-1.5 text-[11px] leading-snug text-textSoft">
+          Choose a worker, then send{' '}
+          <code className="rounded border border-border/40 bg-bgSubtle/80 px-1 py-px text-[10px]">
+            ask: your question
+          </code>{' '}
+          in the composer.
+        </p>
         <div className="bo-copilot-rail">
           {copilotWorkerRegistry.workers.map((w) => {
             const active = copilotWorkerRegistry.activeWorkerId === w.id;
@@ -160,7 +188,7 @@ export const MobileChatView = ({
         </div>
       </section>
 
-      <section aria-labelledby="assistant-starters-label" className="min-w-0 px-2.5 sm:px-3.5">
+      <section aria-labelledby="assistant-starters-label" className="min-w-0 px-0.5">
         <p id="assistant-starters-label" className="bo-assistant-section-label">
           Starters
         </p>
@@ -184,7 +212,7 @@ export const MobileChatView = ({
       </section>
 
       {commandHistory.length > 0 ? (
-        <section className="min-w-0 px-2.5 sm:px-3.5">
+        <section className="min-w-0 px-0.5" aria-label="Recent commands">
           <div className="bo-assistant-recents-panel">
             <div className="bo-assistant-recents-header">
               <span className="bo-assistant-recents-label">
@@ -200,7 +228,7 @@ export const MobileChatView = ({
               </button>
             </div>
             <div className="bo-copilot-rail">
-              {commandHistory.slice(0, 10).map((cmd) => (
+              {commandHistory.slice(0, 12).map((cmd) => (
                 <button
                   key={cmd}
                   type="button"
@@ -208,7 +236,7 @@ export const MobileChatView = ({
                   className={clsx('bo-chat-history-chip', btnFocus)}
                   title={cmd}
                 >
-                  {cmd.length > 40 ? `${cmd.slice(0, 38)}…` : cmd}
+                  {cmd.length > 48 ? `${cmd.slice(0, 46)}…` : cmd}
                 </button>
               ))}
             </div>
@@ -217,25 +245,27 @@ export const MobileChatView = ({
       ) : null}
 
       <section
-        className="bo-assistant-thread-scroll bo-assistant-thread-shell flex min-h-[12rem] max-h-[min(56vh,32rem)] flex-col overflow-y-auto overscroll-contain px-2.5 py-2.5 sm:max-h-[min(60vh,36rem)]"
+        className="bo-assistant-thread-shell min-w-0 rounded-2xl border px-2.5 py-3 sm:px-3.5"
         aria-label="Conversation"
       >
         <h3 className="sr-only">Conversation transcript</h3>
         <div
-          className="flex min-h-0 flex-col gap-2.5"
+          className="flex flex-col gap-3"
           role="log"
           aria-relevant="additions"
           aria-live="polite"
           aria-atomic="false"
         >
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 px-3 py-10 text-center">
+            <div className="flex flex-col items-center justify-center gap-2 px-3 py-12 text-center sm:py-14">
               <span className="bo-assistant-empty-state-icon">
                 <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
               </span>
-              <p className="text-sm font-semibold text-text">New chat</p>
-              <p className="max-w-[16rem] text-[12px] leading-snug text-textMuted">
-                Choose a starter or type below — same engine as the rest of BrandOps.
+              <p className="text-sm font-semibold text-text">Start the thread</p>
+              <p className="max-w-[18rem] text-[12px] leading-relaxed text-textMuted">
+                Tap a starter or type in the composer. Plain language runs the same on-device command
+                engine as Plan and Today; hosted models answer lines that begin with{' '}
+                <span className="font-mono text-[11px] text-textSoft">ask:</span>.
               </p>
             </div>
           ) : (
@@ -243,13 +273,13 @@ export const MobileChatView = ({
               <article
                 key={message.id}
                 className={clsx(
-                  'flex gap-2',
+                  'flex gap-2.5',
                   message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                 )}
               >
                 <span
                   className={clsx(
-                    'mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold',
+                    'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold',
                     message.role === 'user'
                       ? 'border-borderStrong/50 bg-surfaceActive text-text'
                       : 'border-accent/35 bg-accentSoft/28 text-accent'
@@ -257,9 +287,9 @@ export const MobileChatView = ({
                   aria-hidden
                 >
                   {message.role === 'user' ? (
-                    <User className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    <User className="h-4 w-4" strokeWidth={2.25} />
                   ) : (
-                    <Bot className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    <Bot className="h-4 w-4" strokeWidth={2.25} />
                   )}
                 </span>
                 <div
@@ -275,7 +305,7 @@ export const MobileChatView = ({
                           {message.sourceSurface}
                         </p>
                       ) : null}
-                      <p>{message.text}</p>
+                      <p className="whitespace-pre-wrap break-words">{message.text}</p>
                     </div>
                   ) : message.resultKind === 'ask-result' ? (
                     <div className="bo-chat-bubble-assistant space-y-1">
@@ -286,7 +316,7 @@ export const MobileChatView = ({
                           Unavailable
                         </span>
                       ) : null}
-                      <p className="leading-snug">{message.text}</p>
+                      <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>
                     </div>
                   ) : message.resultKind === 'command-result' && message.action ? (
                     <div className="bo-chat-bubble-meta space-y-1.5 text-[13px]">
@@ -325,25 +355,27 @@ export const MobileChatView = ({
                           <Copy size={14} aria-hidden />
                         </button>
                       </div>
-                      <p className="leading-snug text-text">{message.text}</p>
+                      <p className="whitespace-pre-wrap break-words leading-relaxed text-text">
+                        {message.text}
+                      </p>
                     </div>
                   ) : (
                     <div className="bo-chat-bubble-assistant">
-                      <p className="leading-snug">{message.text}</p>
+                      <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>
                     </div>
                   )}
                 </div>
               </article>
             ))
           )}
+          {loading ? (
+            <div className="pt-1">
+              <AgentWorkingState />
+            </div>
+          ) : null}
+          <div ref={transcriptEndRef} className="h-1 w-full shrink-0 scroll-mt-24" aria-hidden />
         </div>
       </section>
-
-      {loading ? (
-        <div className="px-0.5">
-          <AgentWorkingState />
-        </div>
-      ) : null}
     </div>
   );
 };

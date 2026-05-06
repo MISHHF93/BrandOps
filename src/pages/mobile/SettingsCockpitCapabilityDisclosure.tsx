@@ -19,7 +19,7 @@ export function SettingsCockpitCapabilityDisclosure({ btnFocus }: { btnFocus: st
             </span>
           </span>
         </summary>
-        <ul className="mt-3 max-h-[min(28rem,55vh)] space-y-3 overflow-y-auto text-[11px] [scrollbar-width:thin]">
+        <ul className="mt-3 space-y-3 text-[11px]">
           {cockpitCapabilities.map((c) => (
             <li key={c.id} className="rounded-lg border border-border/30 bg-surface/55 p-2.5">
               <p className="font-medium text-text">{c.label}</p>

@@ -33,7 +33,7 @@ export const MobileIntegrationsView = ({
         live in Settings.
       </span>
 
-      <article className="bo-flagship-surface overflow-hidden">
+      <article className="bo-flagship-surface">
         <WorkspaceSignalsBoard
           metrics={snapshot}
           variant="integrations"

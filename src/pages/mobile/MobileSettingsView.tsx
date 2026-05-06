@@ -237,7 +237,7 @@ function WorkspaceModelReadout({
             </span>
           </span>
         </summary>
-        <dl className="mt-3 max-h-[min(24rem,50vh)] space-y-0 overflow-y-auto text-[11px] [scrollbar-width:thin]">
+        <dl className="mt-3 space-y-0 text-[11px]">
           {rows.map(([label, value]) => (
             <div
               key={label}
@@ -700,7 +700,7 @@ export const MobileSettingsView = ({
         use Integrations.
       </span>
 
-      <article className="bo-flagship-surface overflow-hidden">
+      <article className="bo-flagship-surface">
         <WorkspaceSignalsBoard
           metrics={snapshot}
           variant="settings"

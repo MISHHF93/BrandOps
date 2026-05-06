@@ -126,7 +126,9 @@ const normalizeStoredMessage = (raw: unknown): ChatMessage | null => {
         }
       : {}),
     ...(typeof m.ok === 'boolean' ? { ok: m.ok } : {}),
-    ...(m.resultKind === 'plain' || m.resultKind === 'command-result'
+    ...(m.resultKind === 'plain' ||
+    m.resultKind === 'command-result' ||
+    m.resultKind === 'ask-result'
       ? { resultKind: m.resultKind }
       : {}),
     ...(m.strip && typeof m.strip === 'object'
@@ -360,6 +362,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
   const [chatAttachment, setChatAttachment] = useState<ChatComposerAttachment | null>(null);
   const [launchAccess, setLaunchAccess] = useState<LaunchAccessState>(() =>
     readLaunchAccessState()
@@ -505,6 +508,18 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   useEffect(() => {
     cockpitSectionScrollRef.current = false;
   }, [activeTab, cockpitWorkstream]);
+
+  useEffect(() => {
+    if (activeTab !== 'chat') return;
+    const el = transcriptEndRef.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      el.scrollIntoView({
+        block: 'end',
+        behavior: messages.length <= 1 ? 'auto' : 'smooth'
+      });
+    });
+  }, [messages, commandLoading, activeTab]);
 
   useEffect(() => {
     if (!isAppShellWithSectionQuery()) return;
@@ -1081,6 +1096,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               onOpenToday={() => commitTab('daily')}
               onOpenPlan={() => commitTab('workspace')}
               vitalityMetrics={snapshot}
+              transcriptEndRef={transcriptEndRef}
             />
           </section>
         ) : (

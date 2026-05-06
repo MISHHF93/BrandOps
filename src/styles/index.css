@@ -680,7 +680,8 @@ html[data-app-surface='welcome'] body::after {
 
   .bo-flagship-surface {
     position: relative;
-    overflow: clip;
+    /* Visible so nested regions are not clipped into an extra viewport; radius + chrome stay on gradients/border. */
+    overflow: visible;
     max-width: 100%;
     border-radius: 1.28rem;
     border: 1px solid rgb(var(--color-border) / 0.54);
