@@ -40,4 +40,30 @@ describe('normalizeWorkspaceSettings contract', () => {
     expect(out.timezone).toBe('America/New_York');
     expect(out.copilotWorkers).toEqual(defaultAppSettings.copilotWorkers);
   });
+
+  it('normalizes operatingProfile.lastAppliedPresetId', () => {
+    expect(
+      normalizeWorkspaceSettings({
+        operatingProfile: { lastAppliedPresetId: 'launch-sprint' }
+      }).operatingProfile
+    ).toEqual({ lastAppliedPresetId: 'launch-sprint' });
+
+    expect(
+      normalizeWorkspaceSettings({
+        operatingProfile: { lastAppliedPresetId: 'custom' }
+      }).operatingProfile
+    ).toEqual({ lastAppliedPresetId: 'custom' });
+
+    expect(
+      normalizeWorkspaceSettings({
+        operatingProfile: { lastAppliedPresetId: null }
+      }).operatingProfile
+    ).toEqual({ lastAppliedPresetId: null });
+
+    expect(
+      normalizeWorkspaceSettings({
+        operatingProfile: { lastAppliedPresetId: 'not-a-real-preset' }
+      }).operatingProfile
+    ).toEqual(defaultAppSettings.operatingProfile);
+  });
 });

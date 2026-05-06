@@ -41,6 +41,10 @@ export function buildComposerBlankStarters(
     {
       label: 'Brand voice',
       snippet: `brand voice is "${starterSnippet(snapshot.voiceGuide, 200)}"`
+    },
+    {
+      label: 'Operating preset',
+      snippet: 'operating preset balanced'
     }
   ];
 }

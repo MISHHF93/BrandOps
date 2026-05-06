@@ -1,0 +1,6 @@
+{
+  "provider": "ollama",
+  "ollamaOpenAiBaseUrl": "http://127.0.0.1:11434/v1",
+  "model": "llama3.2:1b",
+  "notes": "Weights are never committed; run npm run local:model:pull once after installing Ollama."
+}

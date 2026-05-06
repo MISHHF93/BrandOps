@@ -887,10 +887,11 @@ html[data-app-surface='welcome'] body::after {
     color: rgb(var(--color-text-soft) / 1);
   }
 
+  /* Flush to shell horizontal gutter (parent section px); avoid negative margin so Assistant aligns with Plan/Today. */
   .bo-assistant-surface {
     border-radius: 1.2rem;
-    padding: 0.35rem 0.22rem 0.45rem;
-    margin-inline: -0.12rem;
+    padding: 0.35rem 0 0.5rem;
+    margin-inline: 0;
     border: 1px solid rgb(var(--bo-chat-assistant-border) / 0.4);
     background:
       linear-gradient(165deg, rgb(var(--bo-chat-hero-bg) / 0.38) 0%, transparent 46%),

@@ -504,6 +504,19 @@ export type CockpitLayoutMode = 'sections' | 'unified-scroll';
 /** Today stack: more open panels vs collapsed disclosures by default. */
 export type CockpitDensityMode = 'comfortable' | 'compact';
 
+/** Unified Settings operating profile (cadence + Today chrome + optional AI hints). */
+export type OperatingPresetId =
+  | 'offline-local-first'
+  | 'launch-sprint'
+  | 'focused-builder'
+  | 'client-heavy-ops'
+  | 'balanced-ops';
+
+export interface OperatingProfileState {
+  /** Last preset applied from the unified control; null when unknown / legacy workspaces. */
+  lastAppliedPresetId: OperatingPresetId | 'custom' | null;
+}
+
 /**
  * Optional bridge to hosted NLP / LLM APIs (OpenAI-compatible HTTPS shape).
  * API secrets MUST NOT live here — use extension storage (see `aiSecretsAccess`).
@@ -569,6 +582,8 @@ export interface AppSettings {
   aiBridge: AiBridgeSettings;
   /** Named hosted Ask copilots + active selection for Assistant. */
   copilotWorkers: CopilotWorkerRegistrySettings;
+  /** Tracks unified Operating profile applies from Settings (diagnostics / exports). */
+  operatingProfile: OperatingProfileState;
 }
 
 /** Workspace dataset lineage. Legacy `default-demo` is normalized to `demo-sample` on save. */

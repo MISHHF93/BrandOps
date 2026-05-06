@@ -1,4 +1,8 @@
 node_modules/
+
+# Generated Vitest / artifact verification outputs (JSON, CSV)
+reports/
+
 dist/
 release/
 *.tsbuildinfo

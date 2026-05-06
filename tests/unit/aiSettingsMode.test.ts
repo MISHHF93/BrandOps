@@ -53,6 +53,35 @@ describe('aiSettingsMode planner', () => {
     expect(brand?.payload.voiceGuide).toContain('Line one');
     expect(brand?.payload.operatorName).toBe('Alex');
   });
+
+  it('parses cockpit layout and density phrases', () => {
+    const plan = buildAiSettingsPlan(
+      'cockpit layout unified-scroll, cockpit density comfortable'
+    );
+    expect(plan.operations.some((o) => o.kind === 'set-cockpit-layout')).toBe(true);
+    expect(plan.operations.some((o) => o.kind === 'set-cockpit-density')).toBe(true);
+  });
+
+  it('parses ai adapter and guidance phrases', () => {
+    const plan = buildAiSettingsPlan('ai adapter local-only, ai guidance hybrid');
+    expect(plan.operations.some((o) => o.kind === 'set-ai-adapter-mode')).toBe(true);
+    expect(plan.operations.some((o) => o.kind === 'set-ai-guidance-mode')).toBe(true);
+  });
+
+  it('expands operating preset into nested configure operations', () => {
+    const plan = buildAiSettingsPlan('operating preset offline-local-first');
+    const kinds = plan.operations.map((o) => o.kind);
+    expect(kinds).toContain('set-cadence-mode');
+    expect(kinds).toContain('set-cockpit-layout');
+    expect(kinds).toContain('set-cockpit-density');
+    expect(kinds).toContain('set-ai-adapter-mode');
+    expect(kinds).toContain('set-ai-guidance-mode');
+  });
+
+  it('accepts legacy operating preset slug balanced', () => {
+    const plan = buildAiSettingsPlan('operating preset balanced');
+    expect(plan.operations.some((o) => o.kind === 'set-cadence-mode')).toBe(true);
+  });
 });
 
 describe('aiSettingsMode operation applier', () => {
@@ -103,5 +132,20 @@ describe('aiSettingsMode operation applier', () => {
     expect(result.data.brand.positioning).toBe('New positioning line');
     expect(result.data.brand.voiceGuide).toBe('Crisp and confident.');
     expect(result.applied).toHaveLength(1);
+  });
+
+  it('applies cockpit layout, density, and AI modes', () => {
+    const source = cloneDemoSampleData();
+    const result = applyAiSettingsOperations(source, [
+      { id: '1', kind: 'set-cockpit-layout', payload: { layout: 'unified-scroll' } },
+      { id: '2', kind: 'set-cockpit-density', payload: { density: 'comfortable' } },
+      { id: '3', kind: 'set-ai-adapter-mode', payload: { mode: 'local-only' } },
+      { id: '4', kind: 'set-ai-guidance-mode', payload: { mode: 'hybrid' } }
+    ]);
+    expect(result.data.settings.cockpitLayout).toBe('unified-scroll');
+    expect(result.data.settings.cockpitDensity).toBe('comfortable');
+    expect(result.data.settings.aiAdapterMode).toBe('local-only');
+    expect(result.data.settings.notificationCenter.aiGuidanceMode).toBe('hybrid');
+    expect(result.applied.length).toBe(4);
   });
 });

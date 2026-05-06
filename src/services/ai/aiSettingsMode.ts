@@ -1,4 +1,8 @@
 import { BrandOpsData } from '../../types/domain';
+import {
+  buildOperatingPresetConfigureLine,
+  resolveOperatingPresetSlug
+} from '../../shared/workspace/operatingProfileCatalog';
 
 export type AiSettingsOperationKind =
   | 'set-debug-mode'
@@ -7,6 +11,10 @@ export type AiSettingsOperationKind =
   | 'set-max-daily-tasks'
   | 'set-cadence-mode'
   | 'set-cadence-reminder-minutes'
+  | 'set-cockpit-layout'
+  | 'set-cockpit-density'
+  | 'set-ai-adapter-mode'
+  | 'set-ai-guidance-mode'
   | 'update-brand-profile'
   | 'add-note';
 
@@ -104,6 +112,49 @@ export const buildAiSettingsPlan = (prompt: string): AiSettingsPlan => {
     nextOperation(operations, 'set-cadence-mode', { mode: 'balanced' });
   }
 
+  if (
+    lower.includes('cockpit layout unified-scroll') ||
+    lower.includes('cockpit layout unified scroll')
+  ) {
+    nextOperation(operations, 'set-cockpit-layout', { layout: 'unified-scroll' });
+  } else if (lower.includes('cockpit layout sections')) {
+    nextOperation(operations, 'set-cockpit-layout', { layout: 'sections' });
+  }
+
+  if (lower.includes('cockpit density comfortable')) {
+    nextOperation(operations, 'set-cockpit-density', { density: 'comfortable' });
+  } else if (lower.includes('cockpit density compact')) {
+    nextOperation(operations, 'set-cockpit-density', { density: 'compact' });
+  }
+
+  if (
+    lower.includes('ai adapter external-opt-in') ||
+    lower.includes('ai adapter external opt in')
+  ) {
+    nextOperation(operations, 'set-ai-adapter-mode', { mode: 'external-opt-in' });
+  } else if (
+    lower.includes('ai adapter local-only') ||
+    lower.includes('ai adapter local only')
+  ) {
+    nextOperation(operations, 'set-ai-adapter-mode', { mode: 'local-only' });
+  } else if (lower.includes('ai adapter disabled')) {
+    nextOperation(operations, 'set-ai-adapter-mode', { mode: 'disabled' });
+  }
+
+  if (
+    lower.includes('ai guidance prompt-ready') ||
+    lower.includes('ai guidance prompt ready')
+  ) {
+    nextOperation(operations, 'set-ai-guidance-mode', { mode: 'prompt-ready' });
+  } else if (
+    lower.includes('ai guidance rule-based') ||
+    lower.includes('ai guidance rule based')
+  ) {
+    nextOperation(operations, 'set-ai-guidance-mode', { mode: 'rule-based' });
+  } else if (lower.includes('ai guidance hybrid')) {
+    nextOperation(operations, 'set-ai-guidance-mode', { mode: 'hybrid' });
+  }
+
   const reminderMatch = lower.match(/remind(?:er)?\s*(?:before)?\s*(\d{1,3})\s*min/);
   if (reminderMatch) {
     nextOperation(operations, 'set-cadence-reminder-minutes', {
@@ -127,6 +178,26 @@ export const buildAiSettingsPlan = (prompt: string): AiSettingsPlan => {
   if (brandVoiceMatch?.[1]?.trim()) brandPayload.voiceGuide = brandVoiceMatch[1].trim();
   if (Object.keys(brandPayload).length > 0) {
     nextOperation(operations, 'update-brand-profile', brandPayload);
+  }
+
+  const operatingPresetMatch = normalized.match(/operating preset\s+([\w-]+)/i);
+  if (operatingPresetMatch?.[1]) {
+    const presetId = resolveOperatingPresetSlug(operatingPresetMatch[1]);
+    if (presetId) {
+      const expanded = buildOperatingPresetConfigureLine(presetId);
+      const inner = buildAiSettingsPlan(expanded);
+      for (const op of inner.operations) {
+        if (operations.length >= MAX_AI_SETTINGS_OPERATIONS) {
+          warnings.push('Operation limit reached. Some operating preset steps were ignored.');
+          break;
+        }
+        operations.push({
+          ...op,
+          id: `ai-op-${operations.length + 1}`
+        });
+      }
+      warnings.push(...inner.warnings);
+    }
   }
 
   const noteMatch = normalized.match(/add note\s*:\s*([\s\S]+)/i);
@@ -217,6 +288,52 @@ export const applyAiSettingsOperations = (
             90
           );
           applied.push('Cadence reminder lead updated.');
+          break;
+        case 'set-cockpit-layout':
+          if (
+            operation.payload.layout === 'sections' ||
+            operation.payload.layout === 'unified-scroll'
+          ) {
+            data.settings.cockpitLayout = operation.payload.layout;
+            applied.push(`Today cockpit layout set to ${operation.payload.layout}.`);
+          } else {
+            skipped.push('Cockpit layout request skipped.');
+          }
+          break;
+        case 'set-cockpit-density':
+          if (
+            operation.payload.density === 'comfortable' ||
+            operation.payload.density === 'compact'
+          ) {
+            data.settings.cockpitDensity = operation.payload.density;
+            applied.push(`Today cockpit density set to ${operation.payload.density}.`);
+          } else {
+            skipped.push('Cockpit density request skipped.');
+          }
+          break;
+        case 'set-ai-adapter-mode':
+          if (
+            operation.payload.mode === 'disabled' ||
+            operation.payload.mode === 'local-only' ||
+            operation.payload.mode === 'external-opt-in'
+          ) {
+            data.settings.aiAdapterMode = operation.payload.mode;
+            applied.push(`AI adapter mode set to ${operation.payload.mode}.`);
+          } else {
+            skipped.push('AI adapter mode request skipped.');
+          }
+          break;
+        case 'set-ai-guidance-mode':
+          if (
+            operation.payload.mode === 'rule-based' ||
+            operation.payload.mode === 'prompt-ready' ||
+            operation.payload.mode === 'hybrid'
+          ) {
+            data.settings.notificationCenter.aiGuidanceMode = operation.payload.mode;
+            applied.push(`AI guidance mode set to ${operation.payload.mode}.`);
+          } else {
+            skipped.push('AI guidance mode request skipped.');
+          }
           break;
         case 'update-brand-profile':
           data.brand = {

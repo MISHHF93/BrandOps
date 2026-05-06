@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "description": "Committed gates for artifact resonance verification. Bump minPassedTests when you intentionally add unit/perf tests.",
+  "vitestUnitPerf": {
+    "minPassedTests": 280,
+    "requireVitestSuccess": true,
+    "maxFailedTests": 0
+  },
+  "registryCategoriesRequired": [
+    "workspace_json",
+    "operator_traces",
+    "nlp_gateway",
+    "embeddings",
+    "llm_structure",
+    "gateway_trace",
+    "intelligence_rules",
+    "local_intelligence",
+    "operating_profile",
+    "native_tiny_mlp"
+  ]
+}

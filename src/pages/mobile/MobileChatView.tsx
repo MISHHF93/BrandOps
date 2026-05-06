@@ -132,7 +132,7 @@ export const MobileChatView = ({
 }: MobileChatViewProps) => {
   const assistantPlanPicks = getAssistantQuickPlanPicks(ASSISTANT_STARTER_COMMAND_SET);
   return (
-    <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-2">
+    <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-3">
       <header className="bo-assistant-hero bo-dos-hero rounded-2xl px-3 py-3 sm:px-3.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">

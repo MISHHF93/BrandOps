@@ -13,7 +13,8 @@ describe('UI command entrypoints (growth / sales shell)', () => {
 
   it('keeps executeCommandFlow scoped to mobileApp orchestration', () => {
     expect(mobileApp).toContain('const executeCommandFlow');
-    expect(mobileApp).toMatch(/const runCommand = sendQuickCommand/);
+    expect(mobileApp).toContain('const sendQuickCommand');
+    expect(mobileApp).toMatch(/runCommand=\{sendQuickCommandFrom/);
   });
 
   it('does not reference executeCommandFlow from cockpit or integrations views', () => {

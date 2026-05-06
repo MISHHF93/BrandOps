@@ -30,8 +30,11 @@ import {
   ContentItemEmbeddingRecord,
   AiEmbeddingIndexState,
   CopilotWorker,
-  CopilotWorkerContextHints
+  CopilotWorkerContextHints,
+  OperatingPresetId,
+  OperatingProfileState
 } from '../../types/domain';
+import { OPERATING_PRESETS } from '../../shared/workspace/operatingProfileCatalog';
 import {
   MAX_OPERATOR_TRACE_ENTRIES,
   prependOperatorTrace,
@@ -1291,6 +1294,25 @@ const normalizeCopilotWorkerRegistry = (
   return { workers, activeWorkerId };
 };
 
+const VALID_OPERATING_PRESET_IDS = new Set<OperatingPresetId>(
+  OPERATING_PRESETS.map((p) => p.id)
+);
+
+function normalizeOperatingProfile(
+  raw: unknown,
+  fallback: OperatingProfileState
+): OperatingProfileState {
+  if (!raw || typeof raw !== 'object') return fallback;
+  const id = (raw as Partial<OperatingProfileState>).lastAppliedPresetId;
+  if (id === undefined) return fallback;
+  if (id === null) return { lastAppliedPresetId: null };
+  if (id === 'custom') return { lastAppliedPresetId: 'custom' };
+  if (typeof id === 'string' && VALID_OPERATING_PRESET_IDS.has(id as OperatingPresetId)) {
+    return { lastAppliedPresetId: id as OperatingPresetId };
+  }
+  return fallback;
+}
+
 const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
   const fallback = defaultAppSettings;
   if (!settings || typeof settings !== 'object') {
@@ -1351,7 +1373,8 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
     notificationCenter: normalizeNotificationCenterSettings(candidate.notificationCenter),
     cadenceFlow: normalizeCadenceFlowSettings(candidate.cadenceFlow),
     aiBridge: normalizeAiBridgeSettings(candidate.aiBridge, fallback.aiBridge),
-    copilotWorkers: normalizeCopilotWorkerRegistry(candidate.copilotWorkers, fallback.copilotWorkers)
+    copilotWorkers: normalizeCopilotWorkerRegistry(candidate.copilotWorkers, fallback.copilotWorkers),
+    operatingProfile: normalizeOperatingProfile(candidate.operatingProfile, fallback.operatingProfile)
   };
 };
 

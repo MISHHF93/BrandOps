@@ -21,6 +21,8 @@
  *   public/privacy-policy.html  → bundled legal; `getPrivacyPolicyHref` may point hosted URL
  *
  * Layer 1 — Shell / HTML surfaces (each is its own document):
+ *   Product UX is **one `MobileApp` shell** — `welcome`, `mobile`, `dashboard`, and `integrations` HTML
+ *   pages only vary `data-app-surface` for analytics/sign-in context; bookmark **`mobile.html`** as canonical.
  *   index.html          → site root; redirects to mobile.html (chatbot-first hosted preview entry)
  *   mobile.html         → primary AI chatbot application surface (`data-app-surface="mobile"`)
  *   welcome.html        → chatbot surface (`data-app-surface="welcome"`)

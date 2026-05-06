@@ -1,5 +1,6 @@
 import type { BrandOpsData } from '../../types/domain';
 import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
+import { getOperatingPresetDefinition } from '../../shared/workspace/operatingProfileCatalog';
 
 /** Curated readout for Settings UI and snapshots — not every `AppSettings` scalar is mirrored (e.g. `debugMode`). */
 export interface MobileSettingsFullReadout {
@@ -43,6 +44,8 @@ export interface MobileSettingsFullReadout {
   copilotActiveWorkerPreview: string;
   /** Short list of configured copilot names. */
   copilotWorkersListPreview: string;
+  /** Last unified Operating profile applied from Settings (diagnostics). */
+  operatingProfileLastApplied: string;
 }
 
 /** Safe preview for Settings readout — strips path/query noise beyond host + shortened path. */
@@ -84,6 +87,10 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
   const activeCw = resolveActiveCopilotWorker(s);
   const cwList = s.copilotWorkers.workers.map((w) => w.name).join(', ');
 
+  const opId = s.operatingProfile?.lastAppliedPresetId;
+  const operatingProfileLastApplied =
+    opId === undefined || opId === null ? '—' : opId === 'custom' ? 'Custom' : getOperatingPresetDefinition(opId).title;
+
   return {
     timezone: s.timezone,
     weekStartsOn: s.weekStartsOn,
@@ -123,6 +130,7 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
     aiBridgeChatModelId: bridge.chatModelId || '—',
     aiBridgeEmbeddingModelId: bridge.embeddingModelId || '—',
     copilotActiveWorkerPreview: activeCw ? `${activeCw.name} (${activeCw.id})` : '—',
-    copilotWorkersListPreview: clip(cwList, 160)
+    copilotWorkersListPreview: clip(cwList, 160),
+    operatingProfileLastApplied
   };
 }

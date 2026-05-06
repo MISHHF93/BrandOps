@@ -106,5 +106,8 @@ export const defaultAppSettings = {
     artifactSyncEnabled: true
   },
   aiBridge: defaultAiBridgeSettings,
-  copilotWorkers: defaultCopilotWorkerRegistry
+  copilotWorkers: defaultCopilotWorkerRegistry,
+  operatingProfile: {
+    lastAppliedPresetId: null
+  }
 } satisfies AppSettings;

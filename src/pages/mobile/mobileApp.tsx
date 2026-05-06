@@ -17,7 +17,7 @@ import {
 } from '../../services/ai/actionPipeline';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import { prependOperatorTrace } from '../../services/dataset/operatorTraces';
-import type { BrandOpsData, UiTheme } from '../../types/domain';
+import type { BrandOpsData, OperatingPresetId, UiTheme } from '../../types/domain';
 import {
   getCockpitMobileSectionHeadingId,
   type DashboardSectionId
@@ -1056,6 +1056,25 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     [settingsApplyLoading, refreshWorkspaceSnapshot, surfaceLabel]
   );
 
+  const persistOperatingProfileApply = useCallback(
+    async (presetId: OperatingPresetId | 'custom') => {
+      try {
+        const data = await storageService.getData();
+        await storageService.setData({
+          ...data,
+          settings: {
+            ...data.settings,
+            operatingProfile: { lastAppliedPresetId: presetId }
+          }
+        });
+        await refreshWorkspaceSnapshot();
+      } catch (err) {
+        console.error('BrandOps: operating profile persist failed', err);
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
   const submitMessage = async () => {
     const line = buildOutgoingCommandLine(input.trim(), chatAttachment);
     if (!line?.trim() || commandLoading) return;
@@ -1163,7 +1182,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           </div>
         ) : activeTab === 'chat' ? (
           <section
-            className="bo-shell-page bo-shell-panel-enter space-y-4 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-4 motion-reduce:animate-none"
+            className="bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-4 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-6 text-sm text-textMuted motion-reduce:animate-none"
             aria-label="Assistant conversation"
             key="shell-chat"
           >
@@ -1265,6 +1284,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onSignOut={onSignOut}
                 onStartCheckout={onStartCheckout}
                 onOpenBillingPortal={onOpenBillingPortal}
+                onOperatingProfileApplied={persistOperatingProfileApply}
               />
             ) : null}
           </section>

@@ -76,6 +76,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     paragraphs: [
       'On **welcome.html** / **mobile.html** you start on **Assistant**. The **Getting started** card (above the chat until you dismiss it) walks through: a sample command, Plan, Today, and ⌘K for Integrations & Settings.',
       'Sign-in and account creation share welcome.html: default is sign in (no query). Create account: welcome.html?flow=signup. Legacy ?auth= is still accepted where implemented.',
+      'Under **Settings → Preferences**, pick an **Operating profile** preset (launch sprint, focused builder, etc.) and tap **Apply operating profile** — one action aligns cockpit layout/density, AI defaults, and cadence to match how you work.',
       'Operator and brand fields also surface on Today and in Settings forms; tune cadence and reminders under Settings when you need workspace-level changes.',
       'See **ONBOARDING.md** in the repo root for the full onboarding map (engineering reference).'
     ]

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
-import type { CadenceFlowMode } from '../../types/domain';
+import type { CadenceFlowMode, OperatingPresetId } from '../../types/domain';
 import type { AuthProviderId, LaunchMembershipState } from '../../shared/account/launchAccess';
 import { authProviderLabel } from '../../shared/account/launchAccess';
 import { GoogleSignInButton } from '../../shared/ui/oauth/GoogleSignInButton';
@@ -17,6 +17,11 @@ import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { MobileSettingsFullReadout } from './mobileSettingsReadout';
 import { cadenceConfigureFragment, cadenceModeTitle } from './cadencePresentation';
 import { buildComposerBlankStarters } from './configurationStarters';
+import {
+  OPERATING_PRESETS,
+  buildOperatingPresetConfigureLine,
+  inferOperatingPresetId
+} from './operatingProfilePresets';
 import {
   SettingsAssistantComposer,
   SettingsDataSafetyBlock,
@@ -179,6 +184,7 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
     ['Theme', r.theme],
     ['Cockpit layout', r.cockpitLayout],
     ['Cockpit density', r.cockpitDensity],
+    ['Operating profile last applied', r.operatingProfileLastApplied],
     ['Local model enabled', r.localModelEnabled ? 'yes' : 'no'],
     ['AI adapter mode', r.aiAdapterMode],
     ['AI bridge · inference endpoint', r.aiInferenceEndpointPreview],
@@ -257,12 +263,14 @@ function SettingsEditablePanel({
   snapshot,
   applySettingsConfigure,
   applyBusy,
-  btnFocus
+  btnFocus,
+  onOperatingProfileApplied
 }: {
   snapshot: MobileWorkspaceSnapshot;
   applySettingsConfigure: (s: string) => Promise<AgentWorkspaceResult | null>;
   applyBusy: boolean;
   btnFocus: string;
+  onOperatingProfileApplied?: (presetId: OperatingPresetId | 'custom') => void | Promise<void>;
 }) {
   const [applyError, setApplyError] = useState<string | null>(null);
   const [wdStart, setWdStart] = useState('');
@@ -277,6 +285,14 @@ function SettingsEditablePanel({
   const [focusMetric, setFocusMetric] = useState('');
   const [cadenceMode, setCadenceMode] = useState<CadenceFlowMode>('balanced');
   const [applyHint, setApplyHint] = useState<string | null>(null);
+  const inferredOperatingPreset = inferOperatingPresetId(snapshot);
+  const [presetToApply, setPresetToApply] = useState<OperatingPresetId>('balanced-ops');
+
+  useEffect(() => {
+    if (inferredOperatingPreset !== 'custom') {
+      setPresetToApply(inferredOperatingPreset);
+    }
+  }, [inferredOperatingPreset]);
 
   useEffect(() => {
     setWdStart(String(snapshot.workdayStartHour));
@@ -317,7 +333,11 @@ function SettingsEditablePanel({
   }, [applyError]);
 
   const runApply = useCallback(
-    async (line: string, validationHint?: string) => {
+    async (
+      line: string,
+      validationHint?: string,
+      onOk?: () => void | Promise<void>
+    ): Promise<void> => {
       if (validationHint) {
         setApplyError(null);
         setApplyHint(validationHint);
@@ -332,6 +352,7 @@ function SettingsEditablePanel({
         return;
       }
       setApplyHint(r.summary.trim() || 'Applied.');
+      await onOk?.();
     },
     [applySettingsConfigure]
   );
@@ -343,8 +364,8 @@ function SettingsEditablePanel({
     const rM = Math.max(5, Math.min(90, Math.round(Number(remindMin) || 20)));
     const mw = Math.max(10, Math.min(90, Math.round(Number(mWeight) || 50)));
     const line = `workday ${wds} to ${wde}, max tasks per lane ${maxT}, remind before ${rM} min, ${mw}% business`;
-    await runApply(line);
-  }, [runApply, wdStart, wdEnd, maxTasks, remindMin, mWeight]);
+    await runApply(line, undefined, () => onOperatingProfileApplied?.('custom'));
+  }, [runApply, wdStart, wdEnd, maxTasks, remindMin, mWeight, onOperatingProfileApplied]);
 
   const onApplyProfile = useCallback(async () => {
     const op = forConfigureQuoting(operatorName);
@@ -362,12 +383,30 @@ function SettingsEditablePanel({
     if (po) parts.push(`primary offer is "${po}"`);
     if (vg) parts.push(`brand voice is "${vg}"`);
     if (fm) parts.push(`focus metric is "${fm}"`);
-    await runApply(parts.join(', '));
-  }, [runApply, operatorName, positioning, primaryOffer, voiceGuide, focusMetric]);
+    await runApply(parts.join(', '), undefined, () => onOperatingProfileApplied?.('custom'));
+  }, [
+    runApply,
+    operatorName,
+    positioning,
+    primaryOffer,
+    voiceGuide,
+    focusMetric,
+    onOperatingProfileApplied
+  ]);
 
   const onApplyCadence = useCallback(async () => {
-    await runApply(cadenceConfigureFragment(cadenceMode));
-  }, [runApply, cadenceMode]);
+    await runApply(cadenceConfigureFragment(cadenceMode), undefined, () =>
+      onOperatingProfileApplied?.('custom')
+    );
+  }, [runApply, cadenceMode, onOperatingProfileApplied]);
+
+  const onApplyOperatingProfile = useCallback(async () => {
+    await runApply(
+      buildOperatingPresetConfigureLine(presetToApply),
+      undefined,
+      () => onOperatingProfileApplied?.(presetToApply)
+    );
+  }, [runApply, presetToApply, onOperatingProfileApplied]);
 
   const f = fieldClass(btnFocus);
   const pBtn = primaryBtn(btnFocus);
@@ -392,227 +431,286 @@ function SettingsEditablePanel({
         </p>
       ) : null}
 
-      <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">
-        Workday, tasks, weights
-      </p>
-      <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-wd-start">
-            Start (hour, 0–23)
-          </label>
-          <input
-            id="bo-wd-start"
-            type="number"
-            min={0}
-            max={23}
-            value={wdStart}
-            onChange={(e) => setWdStart(e.target.value)}
-            className={f}
-          />
-        </div>
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-wd-end">
-            End (hour, 1–24)
-          </label>
-          <input
-            id="bo-wd-end"
-            type="number"
-            min={1}
-            max={24}
-            value={wdEnd}
-            onChange={(e) => setWdEnd(e.target.value)}
-            className={f}
-          />
-        </div>
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-max-t">
-            Max tasks / lane
-          </label>
-          <input
-            id="bo-max-t"
-            type="number"
-            min={1}
-            max={8}
-            value={maxTasks}
-            onChange={(e) => setMaxTasks(e.target.value)}
-            className={f}
-          />
-        </div>
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-remind">
-            Remind before (min)
-          </label>
-          <input
-            id="bo-remind"
-            type="number"
-            min={5}
-            max={90}
-            value={remindMin}
-            onChange={(e) => setRemindMin(e.target.value)}
-            className={f}
-          />
-        </div>
-      </div>
-      <div className="mt-2">
-        <label className="text-[11px] text-textMuted" htmlFor="bo-mw">
-          Business / managerial weight (%)
-        </label>
-        <input
-          id="bo-mw"
-          type="number"
-          min={10}
-          max={90}
-          value={mWeight}
-          onChange={(e) => setMWeight(e.target.value)}
-          className={f}
-        />
-      </div>
-      <button
-        type="button"
-        onClick={() => void onApplySchedule()}
-        disabled={applyBusy}
-        className={pBtn}
-      >
-        Apply workday, tasks, remind &amp; weight
-      </button>
-
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">
-        Operating mode
-      </p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-        <div className="min-w-0 flex-1">
-          <label className="text-[11px] text-textMuted" htmlFor="bo-cadence">
-            Preset
-          </label>
-          <select
-            id="bo-cadence"
-            value={cadenceMode}
-            onChange={(e) => setCadenceMode(e.target.value as CadenceFlowMode)}
-            className={f}
-          >
-            <option value="balanced">{cadenceModeTitle('balanced')}</option>
-            <option value="maker-heavy">{cadenceModeTitle('maker-heavy')}</option>
-            <option value="client-heavy">{cadenceModeTitle('client-heavy')}</option>
-            <option value="launch-day">{cadenceModeTitle('launch-day')}</option>
-          </select>
-        </div>
-        <button
-          type="button"
-          onClick={() => void onApplyCadence()}
-          disabled={applyBusy}
-          className={pBtn}
-        >
-          Apply operating mode
-        </button>
-      </div>
-
-      <p className="mb-1 mt-4 text-[10px] font-medium uppercase tracking-wide text-textMuted">
-        Profile
-      </p>
-      <details className="mb-2 rounded-lg border border-border/30 bg-surface/40 p-2 text-[10px] text-textMuted">
-        <summary className={`cursor-pointer font-medium text-textMuted ${btnFocus}`}>
-          Profile field details
-        </summary>
-        <p className="mt-1.5 leading-snug">
-          Each value is sent to the operating plan / external models with clear labels to prevent
-          ambiguity. In Notification Center prompt template, use{' '}
-          <code className="text-[9px] text-textSoft">{'{{brand_context}}'}</code> for the full
-          block, or <code className="text-[9px] text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
-          <code className="text-[9px] text-textSoft">{'{{brand_positioning}}'}</code>, etc.
+      <div className="rounded-xl border border-border/40 bg-surface/35 px-2.5 py-3">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">
+          Operating profile
         </p>
-      </details>
-      <div className="space-y-2">
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-op">
-            Operator name
-          </label>
-          <input
-            id="bo-op"
-            value={operatorName}
-            onChange={(e) => setOperatorName(e.target.value)}
-            className={f}
-            autoComplete="name"
-            autoCorrect="off"
-            spellCheck={false}
-          />
+        <p className="mt-1 text-[11px] leading-snug text-textSoft">
+          One apply updates cadence, Today cockpit layout/density, and (for some presets) AI adapter /
+          guidance. Advanced controls stay available below.
+        </p>
+        <p className="mt-2 text-[11px] text-text">
+          <span className="text-textMuted">Detected match:</span>{' '}
+          {inferredOperatingPreset === 'custom'
+            ? 'Custom mix'
+            : OPERATING_PRESETS.find((p) => p.id === inferredOperatingPreset)?.title ??
+              inferredOperatingPreset}
+        </p>
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="min-w-0 flex-1">
+            <label className="text-[11px] text-textMuted" htmlFor="bo-operating-profile">
+              Apply preset
+            </label>
+            <select
+              id="bo-operating-profile"
+              value={presetToApply}
+              onChange={(e) => setPresetToApply(e.target.value as OperatingPresetId)}
+              className={f}
+            >
+              {OPERATING_PRESETS.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => void onApplyOperatingProfile()}
+            disabled={applyBusy}
+            className={pBtn}
+          >
+            Apply operating profile
+          </button>
         </div>
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-positioning">
-            Positioning
-          </label>
-          <textarea
-            id="bo-positioning"
-            value={positioning}
-            onChange={(e) => setPositioning(e.target.value)}
-            rows={2}
-            placeholder="Who you help, in one sentence."
-            className={`${f} min-h-[3.25rem] resize-y`}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={true}
-          />
-        </div>
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-offer">
-            Primary offer
-          </label>
-          <input
-            id="bo-offer"
-            value={primaryOffer}
-            onChange={(e) => setPrimaryOffer(e.target.value)}
-            className={f}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={true}
-          />
-        </div>
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-voice">
-            Brand voice
-          </label>
-          <textarea
-            id="bo-voice"
-            value={voiceGuide}
-            onChange={(e) => setVoiceGuide(e.target.value)}
-            rows={4}
-            placeholder="Tone, vocabulary, and things to avoid."
-            className={`${f} min-h-[5.5rem] resize-y`}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={true}
-          />
-        </div>
-        <div>
-          <label className="text-[11px] text-textMuted" htmlFor="bo-fm">
-            Focus metric
-          </label>
-          <input
-            id="bo-fm"
-            value={focusMetric}
-            onChange={(e) => setFocusMetric(e.target.value)}
-            className={f}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-            placeholder="One number or phrase you check weekly."
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => void onApplyProfile()}
-          disabled={applyBusy}
-          className={pBtn}
-        >
-          Apply profile
-        </button>
+        <p className="mt-2 text-[10px] leading-snug text-textMuted">
+          {OPERATING_PRESETS.find((p) => p.id === presetToApply)?.shortDescription}
+        </p>
       </div>
 
-      <div className="mt-4 rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-[11px] leading-relaxed text-textSoft">
-        Appearance follows a DOS-inspired terminal skin: plain black or plain white canvas with
-        green phosphor accents in dark mode and forest-green ink in light mode. Monospace is used
-        for the shell. Motion follows the operating system reduced-motion
-        preference, so Settings only exposes workspace behavior and brand configuration.
-      </div>
+      <details className="mt-3 rounded-xl border border-border/35 bg-bgSubtle/20 px-2.5 py-2">
+        <summary
+          className={`cursor-pointer list-none text-[11px] font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+        >
+          Advanced operating controls
+          <span className="ml-2 text-[10px] font-normal text-textSoft">
+            Workday, cadence only, profile &amp; appearance notes
+          </span>
+        </summary>
+        <div className="mt-3 space-y-4 border-t border-border/25 pt-3">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">
+            Workday, tasks, weights
+          </p>
+          <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div>
+              <label className="text-[11px] text-textMuted" htmlFor="bo-wd-start">
+                Start (hour, 0–23)
+              </label>
+              <input
+                id="bo-wd-start"
+                type="number"
+                min={0}
+                max={23}
+                value={wdStart}
+                onChange={(e) => setWdStart(e.target.value)}
+                className={f}
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-textMuted" htmlFor="bo-wd-end">
+                End (hour, 1–24)
+              </label>
+              <input
+                id="bo-wd-end"
+                type="number"
+                min={1}
+                max={24}
+                value={wdEnd}
+                onChange={(e) => setWdEnd(e.target.value)}
+                className={f}
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-textMuted" htmlFor="bo-max-t">
+                Max tasks / lane
+              </label>
+              <input
+                id="bo-max-t"
+                type="number"
+                min={1}
+                max={8}
+                value={maxTasks}
+                onChange={(e) => setMaxTasks(e.target.value)}
+                className={f}
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-textMuted" htmlFor="bo-remind">
+                Remind before (min)
+              </label>
+              <input
+                id="bo-remind"
+                type="number"
+                min={5}
+                max={90}
+                value={remindMin}
+                onChange={(e) => setRemindMin(e.target.value)}
+                className={f}
+              />
+            </div>
+          </div>
+          <div className="mt-2">
+            <label className="text-[11px] text-textMuted" htmlFor="bo-mw">
+              Business / managerial weight (%)
+            </label>
+            <input
+              id="bo-mw"
+              type="number"
+              min={10}
+              max={90}
+              value={mWeight}
+              onChange={(e) => setMWeight(e.target.value)}
+              className={f}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => void onApplySchedule()}
+            disabled={applyBusy}
+            className={pBtn}
+          >
+            Apply workday, tasks, remind &amp; weight
+          </button>
+
+          <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-textMuted">
+            Cadence only (advanced)
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1">
+              <label className="text-[11px] text-textMuted" htmlFor="bo-cadence">
+                Preset
+              </label>
+              <select
+                id="bo-cadence"
+                value={cadenceMode}
+                onChange={(e) => setCadenceMode(e.target.value as CadenceFlowMode)}
+                className={f}
+              >
+                <option value="balanced">{cadenceModeTitle('balanced')}</option>
+                <option value="maker-heavy">{cadenceModeTitle('maker-heavy')}</option>
+                <option value="client-heavy">{cadenceModeTitle('client-heavy')}</option>
+                <option value="launch-day">{cadenceModeTitle('launch-day')}</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={() => void onApplyCadence()}
+              disabled={applyBusy}
+              className={pBtn}
+            >
+              Apply cadence only
+            </button>
+          </div>
+
+          <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-textMuted">
+            Profile
+          </p>
+          <details className="mb-2 rounded-lg border border-border/30 bg-surface/40 p-2 text-[10px] text-textMuted">
+            <summary className={`cursor-pointer font-medium text-textMuted ${btnFocus}`}>
+              Profile field details
+            </summary>
+            <p className="mt-1.5 leading-snug">
+              Each value is sent to the operating plan / external models with clear labels to prevent
+              ambiguity. In Notification Center prompt template, use{' '}
+              <code className="text-[9px] text-textSoft">{'{{brand_context}}'}</code> for the full
+              block, or <code className="text-[9px] text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
+              <code className="text-[9px] text-textSoft">{'{{brand_positioning}}'}</code>, etc.
+            </p>
+          </details>
+          <div className="space-y-2">
+            <div>
+              <label className="text-[11px] text-textMuted" htmlFor="bo-op">
+                Operator name
+              </label>
+              <input
+                id="bo-op"
+                value={operatorName}
+                onChange={(e) => setOperatorName(e.target.value)}
+                className={f}
+                autoComplete="name"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-textMuted" htmlFor="bo-positioning">
+                Positioning
+              </label>
+              <textarea
+                id="bo-positioning"
+                value={positioning}
+                onChange={(e) => setPositioning(e.target.value)}
+                rows={2}
+                placeholder="Who you help, in one sentence."
+                className={`${f} min-h-[3.25rem] resize-y`}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={true}
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-textMuted" htmlFor="bo-offer">
+                Primary offer
+              </label>
+              <input
+                id="bo-offer"
+                value={primaryOffer}
+                onChange={(e) => setPrimaryOffer(e.target.value)}
+                className={f}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={true}
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-textMuted" htmlFor="bo-voice">
+                Brand voice
+              </label>
+              <textarea
+                id="bo-voice"
+                value={voiceGuide}
+                onChange={(e) => setVoiceGuide(e.target.value)}
+                rows={4}
+                placeholder="Tone, vocabulary, and things to avoid."
+                className={`${f} min-h-[5.5rem] resize-y`}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={true}
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-textMuted" htmlFor="bo-fm">
+                Focus metric
+              </label>
+              <input
+                id="bo-fm"
+                value={focusMetric}
+                onChange={(e) => setFocusMetric(e.target.value)}
+                className={f}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="One number or phrase you check weekly."
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => void onApplyProfile()}
+              disabled={applyBusy}
+              className={pBtn}
+            >
+              Apply profile
+            </button>
+          </div>
+
+          <div className="rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-[11px] leading-relaxed text-textSoft">
+            Appearance follows a DOS-inspired terminal skin: plain black or plain white canvas with
+            green phosphor accents in dark mode and forest-green ink in light mode. Monospace is used
+            for the shell. Motion follows the operating system reduced-motion preference, so Settings
+            only exposes workspace behavior and brand configuration.
+          </div>
+        </div>
+      </details>
     </MobileTabSection>
   );
 }
@@ -643,6 +741,8 @@ export interface MobileSettingsViewProps {
   onSignOut?: () => void;
   onStartCheckout?: () => void;
   onOpenBillingPortal?: () => void;
+  /** Persist unified Operating profile choice after successful `configure:` apply. */
+  onOperatingProfileApplied?: (presetId: OperatingPresetId | 'custom') => void | Promise<void>;
 }
 
 /**
@@ -669,7 +769,8 @@ export const MobileSettingsView = ({
   onSignInProvider = () => {},
   onSignOut = () => {},
   onStartCheckout = () => {},
-  onOpenBillingPortal = () => {}
+  onOpenBillingPortal = () => {},
+  onOperatingProfileApplied
 }: MobileSettingsViewProps) => {
   const [importMessage, setImportMessage] = useState<string | null>(null);
   /** Any agent route (settings apply or chat quick command) — avoid parallel `executeAgentWorkspaceCommand`. */
@@ -749,6 +850,7 @@ export const MobileSettingsView = ({
             applySettingsConfigure={applySettingsConfigure}
             applyBusy={applyBusy}
             btnFocus={btnFocus}
+            onOperatingProfileApplied={onOperatingProfileApplied}
           />
         </div>
       </details>
