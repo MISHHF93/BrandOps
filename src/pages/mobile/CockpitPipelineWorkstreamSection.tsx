@@ -83,7 +83,7 @@ export const CockpitPipelineWorkstreamSection = ({
         <div
           role="group"
           aria-label="Pipeline projection figures, read-only — not buttons"
-          className="-mx-0.5 mt-2 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:thin]"
+          className="bo-scroll-x-lane -mx-0.5 mt-2 flex gap-1.5 pb-0.5"
         >
           {pulseTile(
             'Weighted',

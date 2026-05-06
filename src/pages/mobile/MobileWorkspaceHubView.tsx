@@ -280,7 +280,7 @@ export const MobileWorkspaceHubView = ({
               />
             </div>
           ) : (
-            <div className="mt-2 overflow-x-auto">
+            <div className="bo-scroll-x-lane mt-2">
               <table className="w-full min-w-[280px] border-collapse text-left text-[11px]">
                 <thead>
                   <tr className="border-b border-border/35 text-[10px] uppercase tracking-wide text-textSoft">

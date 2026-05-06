@@ -149,7 +149,7 @@ export const WorkspaceCommandPalette = ({
         />
       </div>
       <Command.List
-        className="max-h-[min(50vh,22rem)] overflow-y-auto overscroll-contain p-2"
+        className="bo-scroll-y-contained max-h-[min(50vh,22rem)] overflow-y-auto p-2"
         label="Command results"
       >
         <Command.Empty className="px-2 py-6 text-center text-sm text-textMuted">

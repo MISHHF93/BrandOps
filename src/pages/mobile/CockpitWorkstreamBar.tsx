@@ -58,7 +58,7 @@ export const CockpitWorkstreamBar = ({
     <div className="bo-workstream-dock mb-3">
       <span className="sr-only">Work areas.</span>
       <nav
-        className="bo-workstream-pill-strip mt-1 max-w-full scroll-smooth overflow-x-auto overflow-y-hidden pb-1 snap-x snap-mandatory [-webkit-overflow-scrolling:touch]"
+        className="bo-workstream-pill-strip mt-1 max-w-full pb-1 snap-x snap-mandatory"
         aria-label="Work areas"
       >
         <ul className="flex min-w-0 flex-nowrap items-stretch justify-start gap-1.5 px-0">

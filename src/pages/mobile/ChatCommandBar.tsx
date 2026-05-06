@@ -154,7 +154,7 @@ export const ChatCommandBar = ({
             <Wand2 className="h-3.5 w-3.5 text-accent" strokeWidth={2} aria-hidden />
             Try in one tap
           </p>
-          <div className="-mx-0.5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-0.5 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="bo-scroll-x-lane -mx-0.5 flex snap-x snap-mandatory gap-2 px-0.5 pb-0.5">
             {smartChips.map((intent) => (
               <button
                 key={intent.id}
@@ -195,7 +195,7 @@ export const ChatCommandBar = ({
 
       {showTypeahead ? (
         <ul
-          className="mb-1.5 max-h-[min(40vh,11rem)] overflow-y-auto overscroll-contain rounded-xl border border-border/60 bg-bgElevated/98 py-0.5 shadow-lg backdrop-blur-sm"
+          className="bo-scroll-y-contained mb-1.5 max-h-[min(40vh,11rem)] overflow-y-auto rounded-xl border border-border/60 bg-bgElevated/98 py-0.5 shadow-lg backdrop-blur-sm"
           id={LIST_ID}
           role="listbox"
           aria-label="Matching intents"
