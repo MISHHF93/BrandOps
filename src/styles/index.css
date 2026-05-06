@@ -27,17 +27,17 @@
   --color-secondary-hover: 150 205 168;
   --color-secondary-soft: 120 170 140;
   --alpha-secondary-soft: 0.14;
-  --color-success: 94 234 148;
-  --color-success-soft: 94 234 148;
+  --color-success: 82 255 156;
+  --color-success-soft: 82 255 156;
   --alpha-success-soft: 0.14;
-  --color-warning: 222 200 120;
-  --color-warning-soft: 222 200 120;
+  --color-warning: 255 212 78;
+  --color-warning-soft: 255 212 78;
   --alpha-warning-soft: 0.14;
-  --color-danger: 255 140 140;
-  --color-danger-soft: 255 140 140;
+  --color-danger: 255 106 118;
+  --color-danger-soft: 255 106 118;
   --alpha-danger-soft: 0.14;
-  --color-info: 120 200 190;
-  --color-info-soft: 120 200 190;
+  --color-info: 118 198 255;
+  --color-info-soft: 118 198 255;
   --alpha-info-soft: 0.14;
   --color-focus-ring: 94 234 148;
   --alpha-focus-ring: 0.45;
@@ -52,10 +52,17 @@
   --brand-gold-strong: 140 255 180;
   --brand-gold-soft: 51 255 119;
   --alpha-brand-gold-soft: 0.12;
-  --brand-command: 45 212 165;
-  --brand-command-soft: 45 212 165;
+  --brand-command: 64 230 200;
+  --brand-command-soft: 64 230 200;
   --alpha-brand-command-soft: 0.14;
   --brand-ink: 0 0 0;
+  /* ANSI-inspired accent RGB triplets (dark chrome only — not literal VGA). */
+  --ansi-cyan: 72 220 255;
+  --ansi-magenta: 242 92 255;
+  --ansi-yellow: 255 216 72;
+  --ansi-blue: 132 172 255;
+  --ansi-red: 255 96 108;
+  --ansi-green-bright: 58 255 138;
   --duration-fast: 120ms;
   --duration-base: 180ms;
   --duration-slow: 260ms;
@@ -67,9 +74,9 @@
   --duration-liquid-hover: 220ms;
   --ease-retro-springy: cubic-bezier(0.18, 0.9, 0.26, 1.08);
   --ease-retro-elastic: cubic-bezier(0.24, 1.08, 0.32, 1);
-  --retro-glow-cyan: 94 214 191;
-  --retro-glow-pink: 120 180 160;
-  --retro-glow-gold: 167 243 208;
+  --retro-glow-cyan: 72 220 255;
+  --retro-glow-pink: 242 92 255;
+  --retro-glow-gold: 255 216 72;
   --retro-noise-opacity: 0;
   /* Frosted glass: blur + saturation for translucent chrome over the canvas. */
   --glass-blur-soft: 8px;
@@ -2512,6 +2519,83 @@ html[data-app-surface='welcome'] body::after {
     );
     background-size: 22px 22px;
     background-position: 0 0;
+  }
+
+  /*
+   * Dark-only ANSI terminal chrome — layered after Tailwind utilities where specificity ties,
+   * so scoped selectors beat plain utilities on shared components (plan sheet, dock).
+   */
+  :root:not([data-theme='light']) .bo-plan-flat-root {
+    border-color: rgb(var(--ansi-magenta) / 0.38);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--ansi-magenta) / 0.1),
+      0 12px 36px rgb(0 0 0 / 0.32),
+      0 0 32px rgb(var(--ansi-cyan) / 0.06);
+  }
+
+  :root:not([data-theme='light']) .bo-brand-command-surface {
+    border-color: rgb(var(--ansi-magenta) / 0.42);
+    background:
+      linear-gradient(180deg, rgb(var(--ansi-magenta) / 0.14), transparent 58%),
+      linear-gradient(120deg, rgb(var(--ansi-yellow) / 0.06), transparent 46%),
+      linear-gradient(140deg, rgb(var(--color-surface) / 0.86), rgb(var(--color-bg-elevated) / 0.7));
+    box-shadow:
+      inset 0 1px 0 rgb(var(--ansi-cyan) / 0.1),
+      0 10px 26px rgb(var(--color-shadow) / 0.22);
+  }
+
+  :root:not([data-theme='light']) .bo-assistant-hero {
+    border: 1px solid rgb(var(--ansi-cyan) / 0.42);
+    border-left-width: 3px;
+    border-left-color: rgb(var(--ansi-cyan) / 0.85);
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--color-border) / 0.2),
+      0 0 28px rgb(var(--ansi-cyan) / 0.11);
+  }
+
+  :root:not([data-theme='light']) .bo-assistant-surface {
+    border-color: rgb(var(--ansi-cyan) / 0.32);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--ansi-cyan) / 0.08),
+      0 12px 36px rgb(var(--color-shadow) / 0.16),
+      0 0 24px rgb(var(--ansi-blue) / 0.05);
+  }
+
+  :root:not([data-theme='light']) .bo-mobile-nav__dock {
+    border-color: rgb(var(--ansi-cyan) / 0.38);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--ansi-magenta) / 0.12),
+      0 20px 42px rgb(0 0 0 / 0.4),
+      0 0 2px rgb(var(--ansi-yellow) / 0.18);
+  }
+
+  :root:not([data-theme='light']) .bo-mobile-nav__spotlight {
+    background:
+      linear-gradient(
+        125deg,
+        rgb(var(--ansi-cyan) / 0.16),
+        rgb(var(--ansi-magenta) / 0.13) 45%,
+        rgb(var(--ansi-yellow) / 0.1) 100%
+      );
+    border: 1px solid rgb(var(--ansi-green-bright) / 0.35);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--ansi-cyan) / 0.26),
+      0 8px 26px rgb(var(--ansi-magenta) / 0.14);
+  }
+
+  :root:not([data-theme='light']) .bo-assistant-hero .bo-assistant-stat-pill:nth-child(1) {
+    border-color: rgb(var(--ansi-cyan) / 0.42);
+    box-shadow: inset 0 0 12px rgb(var(--ansi-cyan) / 0.06);
+  }
+
+  :root:not([data-theme='light']) .bo-assistant-hero .bo-assistant-stat-pill:nth-child(2) {
+    border-color: rgb(var(--ansi-magenta) / 0.4);
+    box-shadow: inset 0 0 12px rgb(var(--ansi-magenta) / 0.06);
+  }
+
+  :root:not([data-theme='light']) .bo-assistant-hero .bo-assistant-stat-pill:nth-child(3) {
+    border-color: rgb(var(--ansi-yellow) / 0.44);
+    box-shadow: inset 0 0 12px rgb(var(--ansi-yellow) / 0.06);
   }
 }
 
