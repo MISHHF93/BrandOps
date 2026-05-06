@@ -17,8 +17,18 @@ import {
   initIntelligenceRulesFromRemote,
   resetIntelligenceRulesForTests
 } from '../../src/rules/intelligenceRulesRuntime';
+import type { LaunchAccessState } from '../../src/shared/account/launchAccess';
 import type { ChatMessage } from '../../src/pages/mobile/MobileChatView';
 import { cloneDemoSampleData, cloneSeedData } from '../helpers/fixtures';
+
+const planLaunchFixture: LaunchAccessState = {
+  auth: {
+    isAuthenticated: true,
+    provider: 'google',
+    email: 'operator@fixture.test'
+  },
+  membership: { status: 'active' }
+};
 
 const snapshot = () => buildWorkspaceSnapshot(cloneSeedData());
 const noop = () => {};
@@ -33,7 +43,14 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         commandBusy: false,
         runCommand: noop,
         primeChat: noop,
-        onOpenToday: noop
+        onOpenToday: noop,
+        launchAccess: planLaunchFixture,
+        onOpenAssistant: noop,
+        onOpenIntegrations: noop,
+        onOpenSettings: noop,
+        onOpenCommandPalette: noop,
+        canRunWorkspaceCommands: true,
+        workspaceCommandLockReason: null
       })
     );
     expect(html).toContain('aria-label="Plan"');
@@ -46,6 +63,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('bo-plan-destination-grid');
     expect(html).toContain('aria-label="Plan destinations"');
     expect(html).toContain('Jump within Plan');
+    expect(html).toContain('id="plan-actions"');
+    expect(html).toContain('Planning basics');
+    expect(html).toContain('Sync embeddings');
+    expect(html).toContain('bo-plan-flat-root');
     expect(html).toContain('Today snapshot');
     expect(html).toContain('Open full Today');
     expect(html).toContain('Integrations &amp; Setup live in ⌘K');
@@ -53,6 +74,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('>Pipeline<');
     expect(html).toContain('<table');
     expect(html).toContain('bo-icon-chip');
+    expect(html).toContain('Account &amp; billing');
+    expect(html).toContain('Membership active');
+    expect(html).toContain('operator@fixture.test');
   });
 
   it('Chat: header, thread, example commands, optional recent commands', () => {
@@ -76,17 +100,25 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         btnFocus: '',
         onOpenToday: noop,
         onOpenPlan: noop,
-        vitalityMetrics: snapshot()
+        vitalityMetrics: snapshot(),
+        onOpenCommandPalette: noop
       })
     );
     expect(html).toContain('aria-label="Assistant"');
     expect(html).toContain('Copilot');
     expect(html).toContain('Starters');
     expect(html).toContain('Connect Notion');
+    expect(html).toContain('Planning picks');
+    expect(html).toContain('Sync embeddings');
+    expect(html).toContain('Jump within Assistant');
+    expect(html).toContain('id="assistant-copilot"');
+    expect(html).toContain('id="assistant-commands"');
+    expect(html).toContain('id="assistant-thread"');
     expect(html).toContain('Recent');
     expect(html).toContain('pipeline health');
     expect(html).toContain('bo-assistant-hero');
     expect(html).toContain('Open Plan');
+    expect(html).toContain('⌘K');
   });
 
   it('Getting started card: Assistant onboarding landmarks', () => {

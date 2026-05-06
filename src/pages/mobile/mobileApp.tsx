@@ -8,10 +8,13 @@ import { runChatCompletion } from '../../services/ai/nlpInferenceGateway';
 import { persistChatGatewayTrace } from '../../services/ai/aiGatewayTracing';
 import { buildHostedAskMessages } from '../../services/ai/hostedAskTurn';
 import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
+import { isAllowedForWorker } from '../../services/ai/llmStructuredApply';
 import {
-  isAllowedForWorker,
-  parseStructuredAiApplyPayload
-} from '../../services/ai/llmStructuredApply';
+  parseAiExecutablePayload,
+  arePipelineCommandsAllowed,
+  runSequentialAgentCommands,
+  formatPipelineAutoRunSummary
+} from '../../services/ai/actionPipeline';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import { prependOperatorTrace } from '../../services/dataset/operatorTraces';
 import type { BrandOpsData, UiTheme } from '../../types/domain';
@@ -661,16 +664,20 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 text: result.text
               }
             ]);
-            const structured = parseStructuredAiApplyPayload(result.text);
-            if (
-              structured.kind === 'execute_agent_command' &&
-              isAllowedForWorker(workerResolved, structured.commandText)
-            ) {
-              const cmdResult = await executeAgentWorkspaceCommand({
-                text: structured.commandText,
+            const executable = parseAiExecutablePayload(result.text);
+            const agentSource = mapDocumentSurfaceToAgentSource(surfaceLabel);
+            const runAgentCmd = (text: string) =>
+              executeAgentWorkspaceCommand({
+                text,
                 actorName: 'mobile-operator',
-                source: mapDocumentSurfaceToAgentSource(surfaceLabel)
+                source: agentSource
               });
+
+            if (
+              executable.kind === 'single' &&
+              isAllowedForWorker(workerResolved, executable.commandText)
+            ) {
+              const cmdResult = await runAgentCmd(executable.commandText);
               const dataAfter = await storageService.getData();
               const strip = buildStripFromWorkspace(dataAfter);
               setMessages((prev) => [
@@ -687,6 +694,32 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 }
               ]);
               commandOk = cmdResult.ok;
+            } else if (
+              executable.kind === 'pipeline' &&
+              arePipelineCommandsAllowed(workerResolved, executable.commands)
+            ) {
+              const { results, stoppedAfterIndex } = await runSequentialAgentCommands(
+                executable.commands,
+                runAgentCmd,
+                { stopOnError: executable.stopOnError }
+              );
+              const dataAfter = await storageService.getData();
+              const strip = buildStripFromWorkspace(dataAfter);
+              const allOk = results.every((r) => r.ok);
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: uid(),
+                  role: 'assistant',
+                  resultKind: 'command-result',
+                  text: formatPipelineAutoRunSummary(results, stoppedAfterIndex),
+                  action: results[results.length - 1]?.action ?? 'unsupported',
+                  ok: allOk,
+                  sourceSurface,
+                  strip
+                }
+              ]);
+              commandOk = allOk;
             } else {
               commandOk = true;
             }
@@ -1097,6 +1130,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               onOpenPlan={() => commitTab('workspace')}
               vitalityMetrics={snapshot}
               transcriptEndRef={transcriptEndRef}
+              onOpenCommandPalette={() => setCommandPaletteOpen(true)}
             />
           </section>
         ) : (
@@ -1113,6 +1147,13 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 runCommand={sendQuickCommandFrom('Workspace')}
                 primeChat={primeChat}
                 onOpenToday={() => commitTab('daily')}
+                launchAccess={launchAccess}
+                onOpenAssistant={() => commitTab('chat')}
+                onOpenIntegrations={() => commitTab('integrations')}
+                onOpenSettings={() => commitTab('settings')}
+                onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+                canRunWorkspaceCommands={agentCommandLock === null}
+                workspaceCommandLockReason={agentCommandLock}
               />
             ) : null}
 

@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   suggestIntents,
   getInputRouteHint,
-  getIntentByCommandLine
+  getIntentsForPlanPage,
+  getAssistantQuickPlanPicks
 } from '../../src/pages/mobile/chatIntents';
 
 describe('chatIntents', () => {
@@ -29,8 +30,21 @@ describe('chatIntents', () => {
     expect(getInputRouteHint('define_offer_stack')).toContain('BrandOps strategy');
   });
 
-  it('resolves intent metadata for catalog command lines', () => {
-    const i = getIntentByCommandLine('pipeline health');
-    expect(i?.title).toMatch(/pipeline/i);
+  it('getIntentsForPlanPage exposes essentials through strategy in stable order', () => {
+    const intents = getIntentsForPlanPage();
+    expect(intents.some((i) => i.command === 'sync content embeddings')).toBe(true);
+    expect(intents.map((i) => i.groupId)).toContain('strategy');
+    expect(intents[0]?.command.toLowerCase()).toContain('pipeline');
+  });
+
+  it('getAssistantQuickPlanPicks dedupes planning essentials against excluded commands', () => {
+    const empty = getAssistantQuickPlanPicks(new Set());
+    expect(empty.every((i) => i.groupId === 'essentials')).toBe(true);
+    expect(empty.length).toBeGreaterThan(0);
+    expect(empty[0]!.title.length).toBeGreaterThan(0);
+
+    const noPipeline = getAssistantQuickPlanPicks(new Set(['pipeline health']));
+    expect(noPipeline.every((i) => i.command.toLowerCase() !== 'pipeline health')).toBe(true);
+    expect(noPipeline.some((i) => i.command === 'sync content embeddings')).toBe(true);
   });
 });

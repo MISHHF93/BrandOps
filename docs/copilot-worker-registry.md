@@ -36,6 +36,7 @@ These are **workspace-wide**, not per-copilot. The worker registry should **comp
 ### 1.4 Structured actions from the model
 
 - [`llmStructuredApply.ts`](../src/services/ai/llmStructuredApply.ts): `brandOpsStructuredApply` v1, optional `executeAgentCommand`.
+- **v2 pipelines** (`brandOpsActionPipeline`): [`AI_ACTION_PIPELINE.md`](./AI_ACTION_PIPELINE.md) — ordered steps, same command strings and allow-list semantics.
 - **Auto-exec allow-list** is intentionally narrow (e.g. `pipeline health`). Workers should map to **explicit allow-lists per persona**, not open-ended shell.
 
 ### 1.5 Embeddings and “artifacts”

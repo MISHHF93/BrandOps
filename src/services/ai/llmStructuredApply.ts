@@ -4,7 +4,7 @@ export type ParsedStructuredAiApply =
   | { kind: 'none' }
   | { kind: 'execute_agent_command'; commandText: string };
 
-const MAX_COMMAND_CHARS = 240;
+export const MAX_STRUCTURED_AGENT_COMMAND_CHARS = 240;
 
 /** Stable fingerprint for embedding source text (no crypto deps). */
 export function fingerprintTextSnippet(raw: string): string {
@@ -53,7 +53,7 @@ export function parseStructuredAiApplyPayload(modelText: string): ParsedStructur
   if (p.version !== 1 && p.version !== '1') return { kind: 'none' };
   const cmd = p.executeAgentCommand ?? p.execute_agent_command;
   if (typeof cmd !== 'string') return { kind: 'none' };
-  const trimmed = cmd.trim().slice(0, MAX_COMMAND_CHARS);
+  const trimmed = cmd.trim().slice(0, MAX_STRUCTURED_AGENT_COMMAND_CHARS);
   if (!trimmed.length) return { kind: 'none' };
   // Printable-ish ASCII only (avoid odd unicode injection through gateway copy/paste).
   if (!/^[\x20-\x7E]+$/.test(trimmed)) return { kind: 'none' };

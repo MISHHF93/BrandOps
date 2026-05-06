@@ -16,6 +16,6 @@ describe('hostedAskTurn', () => {
   it('disallows structured automation prose when worker has empty allow-list', () => {
     const strategist = defaultCopilotWorkerRegistry.workers.find((w) => w.id === 'content-strategist')!;
     const msgs = buildHostedAskMessages(seedData, 'Hook ideas?', strategist);
-    expect(msgs[0].content).toContain('do NOT output executeAgentCommand');
+    expect(msgs[0].content).toContain('do NOT output executeAgentCommand or brandOpsActionPipeline JSON');
   });
 });

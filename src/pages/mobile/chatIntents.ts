@@ -183,6 +183,15 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     command: 'configure: tone: concise, no emojis in drafts',
     pickWeight: 35,
     showAsChip: false
+  },
+  {
+    id: 'sync-embeddings',
+    groupId: 'essentials',
+    title: 'Sync embeddings',
+    subtitle: 'Refresh content library vectors',
+    command: 'sync content embeddings',
+    pickWeight: 44,
+    showAsChip: false
   }
 ];
 
@@ -208,7 +217,7 @@ const CHAT_EXAMPLE_GROUPS: { id: string; label: string; commandIds: string[] }[]
   {
     id: 'essentials',
     label: 'Start fast',
-    commandIds: ['check-pipeline', 'jot-note', 'follow-up']
+    commandIds: ['check-pipeline', 'jot-note', 'follow-up', 'sync-embeddings']
   },
   {
     id: 'pipeline',
@@ -224,6 +233,46 @@ const CHAT_EXAMPLE_GROUPS: { id: string; label: string; commandIds: string[] }[]
 ];
 
 const byId = new Map(BRANDOPS_CHAT_INTENTS.map((i) => [i.id, i]));
+
+/** Canonical order shown on Plan — mirrors palette command groups plus full planning moves. */
+const PLAN_PAGE_INTENT_IDS: readonly string[] = [
+  'check-pipeline',
+  'jot-note',
+  'follow-up',
+  'complete-fu',
+  'reschedule',
+  'sync-embeddings',
+  'configure',
+  'outreach',
+  'add-contact',
+  'opportunity',
+  'content-idea',
+  'post',
+  'content-angles',
+  'update-content',
+  'notion',
+  'add-source',
+  'audit-positioning',
+  'offer-stack',
+  'brand-narrative'
+];
+
+export function getIntentsForPlanPage(): BrandOpsChatIntent[] {
+  return PLAN_PAGE_INTENT_IDS.map((id) => byId.get(id)).filter((x): x is BrandOpsChatIntent => Boolean(x));
+}
+
+/** Essentials-only shortcuts for Assistant — dedupe against diversified starter commands. */
+export function getAssistantQuickPlanPicks(
+  excludeNormalizedCommands: ReadonlySet<string>
+): BrandOpsChatIntent[] {
+  return getIntentsForPlanPage()
+    .filter(
+      (i) =>
+        i.groupId === 'essentials' &&
+        !excludeNormalizedCommands.has(norm(i.command))
+    )
+    .slice(0, 6);
+}
 
 function intentForId(id: string): BrandOpsChatIntent | undefined {
   return byId.get(id);

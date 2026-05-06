@@ -5,6 +5,7 @@ export interface PlanJumpNavProps {
 }
 
 const LINKS: ReadonlyArray<{ href: string; label: string }> = [
+  { href: '#plan-actions', label: 'Plan actions' },
   { href: '#plan-pulse', label: 'Pulse' },
   { href: '#plan-today', label: 'Today snapshot' },
   { href: '#plan-queue', label: 'Queue' }

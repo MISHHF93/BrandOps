@@ -8,15 +8,26 @@ function buildStructuredJsonInstructions(worker: CopilotWorker | null): string {
   const cmds =
     worker?.allowedAgentCommands?.map((c) => c.trim()).filter((c) => c.length > 0) ?? [];
   if (!cmds.length) {
-    return `Structured automation: do NOT output executeAgentCommand JSON blocks — this copilot is not authorized for automatic workspace commands. Answer in prose only.`;
+    return `Structured automation: do NOT output executeAgentCommand or brandOpsActionPipeline JSON — this copilot is not authorized for automatic workspace commands. Answer in prose only.`;
   }
   const allowedList = cmds.join(' | ');
-  return `Optional: after your answer you MAY append one JSON code block so the app can run an allowed read-only command:
+  const exampleCmd = cmds[0];
+  return `Optional automation: after your answer you MAY append ONE json code block.
+
+**Single command (v1):**
 \`\`\`json
-{"brandOpsStructuredApply":{"version":1,"executeAgentCommand":"${cmds[0]}"}}
+{"brandOpsStructuredApply":{"version":1,"executeAgentCommand":"${exampleCmd}"}}
 \`\`\`
-Allowed executeAgentCommand strings ONLY (exact spelling): ${allowedList}
-Never suggest destructive commands. Omit the JSON block if unsure.`;
+
+**Multi-step pipeline (v2) — runs in order:**
+\`\`\`json
+{"brandOpsActionPipeline":{"version":2,"onError":"stop","steps":[{"executeAgentCommand":"${exampleCmd}"}]}}
+\`\`\`
+
+Allowed executeAgentCommand strings ONLY (exact spelling, use only from this list): ${allowedList}
+Never suggest destructive commands. Omit JSON if unsure.
+
+v2 limits: ≤12 steps; each command same length rules as typed chat. onError may be "stop" (default) or "continue".`;
 }
 
 export function buildHostedAskMessages(
