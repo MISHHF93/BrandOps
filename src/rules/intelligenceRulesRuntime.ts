@@ -42,11 +42,11 @@ function bundledJsonFetchUrl(): string {
   return base ? `${base}/brandops-intelligence-rules.json` : '/brandops-intelligence-rules.json';
 }
 
-const rulesFetchInit: RequestInit = {
+const rulesFetchInit = {
   cache: 'no-store',
   credentials: 'omit',
   mode: 'cors'
-};
+} as const;
 
 /** For tests: reset to embedded defaults without remote patch. */
 export function resetIntelligenceRulesForTests(): void {

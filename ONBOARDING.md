@@ -4,7 +4,7 @@ Engineering and product reference for the first-session experience (`mobile.html
 
 ## Personas
 
-| Personkind | Entry | Notes |
+| Persona | Entry | Notes |
 |------------|-------|--------|
 | **New install** | Chrome may open [`welcome.html`](welcome.html) when there is no federated session (see extension background `onInstalled`). | Same `MobileApp` as mobile; `surfaceLabel: 'welcome'`. |
 | **Returning user** | `mobile.html` or bookmarked `?section=` URLs. | Dismissed getting-started card stays hidden via localStorage. |
