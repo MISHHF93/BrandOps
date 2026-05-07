@@ -9,8 +9,9 @@
   /* ============================ */
   /* DOS / CRT-inspired: plain black canvas + phosphor-green hierarchy (readable green, not neon body copy). */
   --color-bg: 0 0 0;
-  --color-bg-elevated: 10 10 10;
-  --color-bg-subtle: 14 14 14;
+  /* Match canvas — flat black sheet (interactive layers use --color-surface). */
+  --color-bg-elevated: 0 0 0;
+  --color-bg-subtle: 0 0 0;
   --color-surface: 18 18 18;
   --color-surface-hover: 26 26 26;
   --color-surface-active: 34 34 34;
@@ -544,56 +545,38 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-mobile-nav__outer {
-    filter: drop-shadow(0 -8px 22px rgb(var(--color-shadow) / 0.2));
+    filter: none;
   }
 
   .bo-mobile-nav__dock {
     border-radius: 1.375rem;
-    border: 1px solid rgb(var(--color-border) / 0.42);
-    background:
-      linear-gradient(
-        164deg,
-        rgb(var(--color-bg-elevated) / 0.95),
-        rgb(var(--color-surface) / 0.74) 55%,
-        rgb(var(--color-bg) / 0.78)
-      );
-    box-shadow:
-      inset 0 1px 0 rgb(var(--flagship-sheen) / 0.07),
-      0 20px 40px rgb(var(--color-shadow) / 0.28);
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: none;
+    background: rgb(var(--color-bg));
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   :root[data-theme='light'] .bo-mobile-nav__dock {
-    background:
-      linear-gradient(
-        168deg,
-        rgb(var(--color-bg-elevated) / 0.99),
-        rgb(var(--flagship-sheen) / 0.92) 100%
-      );
-    border-color: rgb(var(--color-border) / 0.54);
-    box-shadow:
-      inset 0 1px 0 rgb(var(--flagship-sheen) / 1),
-      0 14px 32px rgb(var(--color-shadow) / 0.12);
+    border: none;
+    background: rgb(var(--color-bg));
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   .bo-mobile-nav__spotlight {
     align-self: center;
     justify-self: stretch;
-    background:
-      linear-gradient(
-        180deg,
-        rgb(var(--brand-gold) / 0.095),
-        rgb(var(--color-secondary) / 0.11) 64%,
-        transparent
-      );
-    border: 1px solid rgb(var(--brand-gold) / 0.26);
-    box-shadow:
-      inset 0 1px 0 rgb(var(--brand-gold) / 0.22),
-      0 8px 22px rgb(var(--color-shadow) / 0.14);
+    background: rgb(var(--color-surface));
+    border: none;
+    box-shadow: none;
     animation: bo-nav-spot-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
     transition:
       transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
       opacity 0.2s ease-out;
+  }
+
+  :root[data-theme='light'] .bo-mobile-nav__spotlight {
+    background: rgb(var(--color-bg-subtle));
   }
 
   .bo-shell-page {
@@ -2525,29 +2508,8 @@ html[data-app-surface='welcome'] body::after {
     border: none;
   }
 
-  :root:not([data-theme='light']) .bo-mobile-nav__dock {
-    border-color: rgb(var(--color-border-strong) / 0.42);
-    box-shadow:
-      inset 0 1px 0 rgb(var(--color-text) / 0.06),
-      0 20px 42px rgb(0 0 0 / 0.4),
-      0 0 2px rgb(var(--color-accent) / 0.16);
-  }
-
-  :root:not([data-theme='light']) .bo-mobile-nav__spotlight {
-    background:
-      linear-gradient(
-        125deg,
-        rgb(var(--color-accent) / 0.11),
-        rgb(var(--color-bg-elevated) / 0.72) 45%,
-        rgb(var(--ansi-yellow) / 0.07) 100%
-      );
-    border: 1px solid rgb(var(--ansi-green-bright) / 0.34);
-    box-shadow:
-      inset 0 1px 0 rgb(var(--color-accent) / 0.2),
-      0 8px 26px rgb(0 0 0 / 0.26);
-  }
-
 }
+
 
 :focus-visible {
   outline: 2px solid rgb(var(--color-focus-ring) / var(--alpha-focus-ring));
