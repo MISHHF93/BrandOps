@@ -1,9 +1,12 @@
 import {
   BrandOpsData,
-  IntegrationSourceKind,
   OpportunityStage,
   PublishingItem
 } from '../../types/domain';
+import {
+  integrationPresetForKind,
+  resolveIntegrationKindFromCommand
+} from '../../shared/integrations/integrationSourceCatalog';
 import { localIntelligence } from '../intelligence/localIntelligence';
 import { scheduler } from '../scheduling/scheduler';
 import { mapWorkspaceCommandSourceToActor, prependOperatorTrace } from '../dataset/operatorTraces';
@@ -99,18 +102,6 @@ const parseClock = (text: string) => {
     return { hour: 11, minute: 0 };
   }
   return { hour: match[3].toLowerCase() === 'pm' ? (rawHour % 12) + 12 : rawHour % 12, minute };
-};
-
-const parseIntegrationKind = (text: string): IntegrationSourceKind => {
-  const lower = text.toLowerCase();
-  if (lower.includes('notion')) return 'notion';
-  if (lower.includes('slack')) return 'slack';
-  if (lower.includes('github')) return 'github';
-  if (lower.includes('webhook')) return 'webhook';
-  if (lower.includes('drive')) return 'google-drive';
-  if (lower.includes('rss')) return 'rss';
-  if (lower.includes('workspace')) return 'google-workspace';
-  return 'custom-api';
 };
 
 const parseOpportunityStage = (text: string): OpportunityStage | null => {
@@ -234,6 +225,8 @@ const addIntegrationSource = async (
     100
   );
   const now = new Date().toISOString();
+  const kind = resolveIntegrationKindFromCommand(command.text);
+  const preset = integrationPresetForKind(kind);
   await withScheduler({
     ...workspace,
     integrationHub: {
@@ -242,11 +235,11 @@ const addIntegrationSource = async (
         {
           id: uid('source'),
           name,
-          kind: parseIntegrationKind(command.text),
+          kind,
           status: 'planned',
-          artifactTypes: ['conversation-log', 'campaign-event'],
-          tags: [command.source, 'agent-ingest'],
-          notes: 'Created by AI chatbot command.',
+          artifactTypes: [...preset.artifactTypes],
+          tags: [...preset.defaultTags, command.source, 'agent-ingest'],
+          notes: `Registered via Chat (${preset.label}). Wire OAuth or webhooks in extension flows when available.`,
           createdAt: now
         },
         ...workspace.integrationHub.sources
@@ -272,7 +265,6 @@ const addIntegrationArtifact = async (
   const title =
     pickLabeledField(command.text, 'title') ??
     trimText(bodyAfterPrefix.split(/[,]/)[0] ?? '', 'Untitled artifact', 140);
-  const artifactType = pickLabeledField(command.text, 'type') ?? 'capture';
   const sourceHint = (pickLabeledField(command.text, 'source') ?? '').toLowerCase();
   let sourceId: string | undefined;
   if (sourceHint) {
@@ -291,6 +283,14 @@ const addIntegrationArtifact = async (
       summary: 'Add an integration source first, or include source: <name or id> in the command.'
     };
   }
+  const sourceRow = workspace.integrationHub.sources.find((s) => s.id === sourceId);
+  const presetPrimary =
+    sourceRow !== undefined ? integrationPresetForKind(sourceRow.kind).artifactTypes[0] : 'capture';
+  const artifactType = trimText(
+    pickLabeledField(command.text, 'type') ?? presetPrimary ?? 'capture',
+    'capture',
+    70
+  );
   const summaryText = pickLabeledField(command.text, 'summary') ?? 'Ingested via agent command.';
   const now = new Date().toISOString();
   await withScheduler({
@@ -302,7 +302,7 @@ const addIntegrationArtifact = async (
           id: uid('artifact'),
           sourceId,
           title: title.slice(0, 140),
-          artifactType: artifactType.slice(0, 70),
+          artifactType,
           summary: summaryText.slice(0, 640),
           tags: [command.source, 'agent-artifact'],
           createdAt: now,

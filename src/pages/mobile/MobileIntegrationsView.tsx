@@ -1,10 +1,92 @@
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { hrefExtensionIntegrationsPage } from '../../shared/navigation/navigationIntents';
+import type { IntegrationSourceKind } from '../../types/domain';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
+import {
+  ALL_INTEGRATION_SOURCE_KINDS,
+  integrationPresetForKind
+} from '../../shared/integrations/integrationSourceCatalog';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 
 const chipDisabled = 'disabled:cursor-not-allowed disabled:opacity-50';
+
+function integrationKindDisplay(kind: string): string {
+  if ((ALL_INTEGRATION_SOURCE_KINDS as readonly string[]).includes(kind)) {
+    return integrationPresetForKind(kind as IntegrationSourceKind).label;
+  }
+  return kind;
+}
+
+/** Chat-primed shortcuts — registers integration hub presets (see `integrationSourceCatalog`). */
+const INTEGRATION_QUICK_GROUPS: {
+  heading: string;
+  chips: { label: string; command: string }[];
+}[] = [
+  {
+    heading: 'CRM & pipeline',
+    chips: [
+      { label: 'HubSpot', command: 'connect hubspot source: Primary CRM' },
+      { label: 'Salesforce', command: 'connect salesforce source: RevOps workspace' },
+      { label: 'Pipedrive', command: 'connect pipedrive source: SMB pipeline' }
+    ]
+  },
+  {
+    heading: 'Product & support',
+    chips: [
+      { label: 'Linear', command: 'connect linear source: Product backlog' },
+      { label: 'Jira', command: 'connect jira source: Delivery board' },
+      { label: 'Zendesk', command: 'connect zendesk source: Support desk' }
+    ]
+  },
+  {
+    heading: 'Docs & files',
+    chips: [
+      { label: 'Notion', command: 'connect notion source: Growth workspace' },
+      { label: 'Google Drive', command: 'connect google drive source: Brand kit' },
+      { label: 'Airtable', command: 'connect airtable source: Ops base' },
+      { label: 'RSS feed', command: 'add source: rss industry headlines' }
+    ]
+  },
+  {
+    heading: 'Engineering & automation',
+    chips: [
+      { label: 'GitHub', command: 'connect github source: Application repos' },
+      { label: 'Slack', command: 'connect slack source: GTM workspace' },
+      { label: 'Webhook', command: 'add source: webhook pipeline events' }
+    ]
+  },
+  {
+    heading: 'Growth & finance',
+    chips: [
+      { label: 'Meta Ads', command: 'connect meta ads source: Paid social' },
+      { label: 'LinkedIn campaigns', command: 'connect linkedin marketing source: B2B ads' },
+      { label: 'Stripe', command: 'connect stripe source: Subscription billing' }
+    ]
+  },
+  {
+    heading: 'Microsoft & Google Workspace',
+    chips: [
+      { label: 'Microsoft 365', command: 'connect microsoft 365 source: Company tenant' },
+      { label: 'Google Workspace', command: 'connect google workspace source: Operator calendar' }
+    ]
+  },
+  {
+    heading: 'Artifacts & infra',
+    chips: [
+      {
+        label: 'Sample artifact',
+        command:
+          'add integration artifact: title: Weekly metrics rollup summary: Paste export highlights'
+      },
+      {
+        label: 'SSH staging',
+        command:
+          'add ssh: name: staging host: staging.internal port: 22 user: deploy'
+      }
+    ]
+  }
+];
 
 export interface MobileIntegrationsViewProps {
   snapshot: MobileWorkspaceSnapshot;
@@ -89,7 +171,9 @@ export const MobileIntegrationsView = ({
                         <div className="min-w-0">
                           <p className="truncate text-[12px] font-medium text-text">{row.name}</p>
                           <p className="text-[10px] text-textMuted">
-                            {row.kind} · <span className="text-textSoft">{row.status}</span>
+                            {integrationKindDisplay(row.kind)}{' '}
+                            <span className="font-mono text-textSoft">({row.kind})</span> ·{' '}
+                            <span className="text-textSoft">{row.status}</span>
                           </p>
                         </div>
                         <button
@@ -305,47 +389,36 @@ export const MobileIntegrationsView = ({
               className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
             >
               Add via Chat
-              <span className="ml-2 text-[11px] font-normal text-textSoft">4 setup commands</span>
+              <span className="ml-2 text-[11px] font-normal text-textSoft">
+                CRM, issues, docs, ads — preset shortcuts
+              </span>
             </summary>
             <div className="border-t border-border/30 px-3 pb-3 pt-3">
-              <p className="sr-only">Fast setup commands for common integration tasks.</p>
-              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() => void runCommand('connect notion source: Growth workspace')}
-                  className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
-                >
-                  Run: Add connection
-                </button>
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() => void runCommand('add source: webhook pipeline')}
-                  className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
-                >
-                  Run: Add contact source
-                </button>
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() => void runCommand('add integration artifact: weekly metrics rollup')}
-                  className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
-                >
-                  Run: Add artifact stub
-                </button>
-                <button
-                  type="button"
-                  disabled={commandBusy}
-                  onClick={() =>
-                    void runCommand(
-                      'add ssh: name: staging host: staging.internal port: 22 user: deploy'
-                    )
-                  }
-                  className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
-                >
-                  Run: Add SSH stub
-                </button>
+              <p className="sr-only">
+                Registers integration hub sources — OAuth and API wiring still live in extension and
+                Settings where applicable.
+              </p>
+              <div className="space-y-4">
+                {INTEGRATION_QUICK_GROUPS.map((group) => (
+                  <div key={group.heading}>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-textSoft">
+                      {group.heading}
+                    </p>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      {group.chips.map((chip) => (
+                        <button
+                          key={`${group.heading}-${chip.label}`}
+                          type="button"
+                          disabled={commandBusy}
+                          onClick={() => void runCommand(chip.command)}
+                          className={`${mobileChipClass(btnFocus)} ${chipDisabled}`}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </details>

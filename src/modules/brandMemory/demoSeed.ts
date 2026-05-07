@@ -1,6 +1,7 @@
 import { BrandOpsData } from '../../types/domain';
 import { defaultAppSettings, defaultBrandProfile } from '../../config/workspaceDefaults';
 import { workspaceModules } from '../../shared/config/modules';
+import { integrationPresetForKind } from '../../shared/integrations/integrationSourceCatalog';
 
 const now = new Date();
 const plusHours = (hours: number) => new Date(now.getTime() + hours * 60 * 60 * 1000).toISOString();
@@ -575,20 +576,46 @@ Slide 7: CTA to request audit checklist`,
       }
     ],
     sshTargets: [],
-    sources: [
+    sources: (() => {
+      const gw = integrationPresetForKind('google-workspace');
+      const hb = integrationPresetForKind('hubspot');
+      return [
+        {
+          id: 'source-001',
+          name: 'Google Workspace',
+          kind: 'google-workspace' as const,
+          status: 'planned' as const,
+          baseUrl: 'https://workspace.google.com/',
+          artifactTypes: gw.artifactTypes,
+          tags: [...gw.defaultTags, 'ops', 'calendar', 'tasks'],
+          notes: 'Register as a manual source; wire capture flows from Settings → Integration hub.',
+          createdAt: minusHours(6)
+        },
+        {
+          id: 'source-002',
+          name: 'HubSpot pipeline',
+          kind: 'hubspot' as const,
+          status: 'planned' as const,
+          artifactTypes: hb.artifactTypes,
+          tags: [...hb.defaultTags, 'demo'],
+          notes: 'Demo CRM source — map deals and contacts via workspace commands.',
+          createdAt: minusHours(5)
+        }
+      ];
+    })(),
+    artifacts: [
       {
-        id: 'source-001',
-        name: 'Google Workspace',
-        kind: 'google-workspace',
-        status: 'planned',
-        baseUrl: 'https://workspace.google.com/',
-        artifactTypes: ['calendar events', 'tasks'],
-        tags: ['ops', 'calendar', 'tasks'],
-        notes: 'Register as a manual source; wire capture flows from Settings → Integration hub.',
-        createdAt: minusHours(6)
+        id: 'artifact-demo-1',
+        sourceId: 'source-002',
+        title: 'Q2 funnel snapshot',
+        artifactType: 'deal-update',
+        summary: 'Demo artifact tied to HubSpot-style ingest for cockpit previews.',
+        tags: ['demo', 'crm'],
+        syncedAt: minusHours(2),
+        createdAt: minusHours(2),
+        updatedAt: minusHours(2)
       }
-    ],
-    artifacts: []
+    ]
   },
   embeddingIndex: {
     entries: []

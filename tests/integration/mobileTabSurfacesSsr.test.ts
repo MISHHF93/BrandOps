@@ -238,7 +238,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Open integrations page');
     expect(html).toContain('Provider status');
     expect(html).toContain('Add via Chat');
-    expect(html).toContain('Run: Add connection');
+    expect(html).toContain('CRM &amp; pipeline');
+    expect(html).toContain('HubSpot');
+    expect(html).toContain('preset shortcuts');
     expect(html).toContain('Synced artifacts');
     expect(html).toContain('SSH targets');
   });

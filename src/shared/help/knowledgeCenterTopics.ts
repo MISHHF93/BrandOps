@@ -86,7 +86,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     summary:
       'Commands map to deterministic routes (parseCommandRoute) before executeAgentWorkspaceCommand runs.',
     paragraphs: [
-      'Examples that match the router: add note:, create follow up:, complete follow up:, draft outreach:, draft post:, reschedule posts …, pipeline health, update opportunity …, archive opportunity, restore opportunity, add contact:, update contact:, add content:, update publishing:, connect … source:, add source:, add integration artifact:, add ssh:, configure: …',
+      'Examples that match the router: add note:, create follow up:, complete follow up:, draft outreach:, draft post:, reschedule posts …, pipeline health, update opportunity …, archive opportunity, restore opportunity, add contact:, update contact:, add content:, update publishing:, connect … source:, connect hubspot source:, connect linear source:, connect stripe source:, add source:, add integration artifact:, add ssh:, configure: …',
       'Starters in the Assistant tab are curated to these patterns. If a phrase is unsupported, the assistant explains what is available.',
       'Destructive phrases such as archive opportunity may ask for confirmation before running.',
       'Lines beginning with **ask:** use your configured **hosted** OpenAI-compatible endpoint when enabled; everything else stays on-device.',
@@ -109,7 +109,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     summary:
       'Integrations tab and Today · Connections both summarize connectivity; Chat registers new sources.',
     paragraphs: [
-      'The **Integrations** tab lists sources, providers, artifacts, SSH targets, and Quick add chips.',
+      'The **Integrations** tab lists sources, providers, artifacts, SSH targets, and **Add via Chat** presets for CRM (HubSpot, Salesforce, Pipedrive), issues (Linear, Jira), support (Zendesk), docs (Notion, Drive, Airtable), ads (Meta, LinkedIn Marketing), billing (Stripe), Microsoft 365, plus engineering staples (GitHub, Slack, webhook).',
       '**Today → Connections** summarizes counts and links to the packaged integrations page when useful.',
       'OAuth client configuration for the extension may still live in manifest-adjacent flows; workspace-level source creation uses Chat commands such as connect notion source: …'
     ]

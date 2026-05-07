@@ -469,7 +469,18 @@ export type IntegrationSourceKind =
   | 'rss'
   | 'google-drive'
   | 'webhook'
-  | 'custom-api';
+  | 'custom-api'
+  | 'hubspot'
+  | 'salesforce'
+  | 'pipedrive'
+  | 'linear'
+  | 'jira'
+  | 'zendesk'
+  | 'stripe'
+  | 'microsoft-365'
+  | 'meta-business'
+  | 'linkedin-marketing'
+  | 'airtable';
 
 export interface IntegrationSource {
   id: string;

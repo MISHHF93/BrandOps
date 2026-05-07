@@ -32,8 +32,10 @@ import {
   CopilotWorker,
   CopilotWorkerContextHints,
   OperatingPresetId,
-  OperatingProfileState
+  OperatingProfileState,
+  IntegrationSourceKind
 } from '../../types/domain';
+import { ALL_INTEGRATION_SOURCE_KINDS } from '../../shared/integrations/integrationSourceCatalog';
 import { OPERATING_PRESETS } from '../../shared/workspace/operatingProfileCatalog';
 import {
   MAX_OPERATOR_TRACE_ENTRIES,
@@ -42,6 +44,8 @@ import {
 } from '../dataset/operatorTraces';
 
 const DATA_KEY = 'brandops:data';
+
+const ALLOWED_INTEGRATION_SOURCE_KINDS = new Set<string>(ALL_INTEGRATION_SOURCE_KINDS);
 
 const defaultBrandVault: BrandVault = seedData.brandVault;
 
@@ -1082,16 +1086,7 @@ const normalizeIntegrationHubState = (value: unknown): BrandOpsData['integration
         return;
       }
 
-      if (
-        source.kind !== 'google-workspace' &&
-        source.kind !== 'github' &&
-        source.kind !== 'notion' &&
-        source.kind !== 'slack' &&
-        source.kind !== 'rss' &&
-        source.kind !== 'google-drive' &&
-        source.kind !== 'webhook' &&
-        source.kind !== 'custom-api'
-      ) {
+      if (!ALLOWED_INTEGRATION_SOURCE_KINDS.has(source.kind)) {
         return;
       }
 
@@ -1106,7 +1101,7 @@ const normalizeIntegrationHubState = (value: unknown): BrandOpsData['integration
       sources.push({
         id: source.id,
         name: source.name,
-        kind: source.kind,
+        kind: source.kind as IntegrationSourceKind,
         status: source.status,
         baseUrl: typeof source.baseUrl === 'string' ? source.baseUrl : undefined,
         artifactTypes: asStringArray(source.artifactTypes),
