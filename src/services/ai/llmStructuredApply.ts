@@ -28,12 +28,7 @@ export function extractFirstJsonString(modelText: string): string | null {
 
 /** Normalize for matching structured executeAgentCommand strings across hyphenation / spacing. */
 export function normalizeAgentCommandToken(commandText: string): string {
-  return commandText
-    .trim()
-    .toLowerCase()
-    .replace(/-/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return commandText.trim().toLowerCase().replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 export function parseStructuredAiApplyPayload(modelText: string): ParsedStructuredAiApply {

@@ -157,13 +157,15 @@ describe('mobileShellQuery', () => {
   /** Round-trip: URL param emitted by the shell encoder parses back to the same tab/workstream. */
   it('round-trips section param for every shell tab and cockpit workstream', () => {
     const defaultTab = 'chat' as const;
-    const tabCases: Array<{ tab: 'workspace' | 'chat' | 'integrations' | 'settings'; ws: 'today' }> =
-      [
-        { tab: 'workspace', ws: 'today' },
-        { tab: 'chat', ws: 'today' },
-        { tab: 'integrations', ws: 'today' },
-        { tab: 'settings', ws: 'today' }
-      ];
+    const tabCases: Array<{
+      tab: 'workspace' | 'chat' | 'integrations' | 'settings';
+      ws: 'today';
+    }> = [
+      { tab: 'workspace', ws: 'today' },
+      { tab: 'chat', ws: 'today' },
+      { tab: 'integrations', ws: 'today' },
+      { tab: 'settings', ws: 'today' }
+    ];
     for (const { tab, ws } of tabCases) {
       const encoded = sectionParamValueForShellState(tab, ws);
       const parsed = parseMobileShellFromSearchParams(

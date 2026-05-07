@@ -47,7 +47,10 @@ function projectBrand(data) {
 
 function projectBrandVault(data) {
   const bv = data.brandVault && typeof data.brandVault === 'object' ? data.brandVault : {};
-  const list = (k) => arr(bv[k], 80).map((x) => str(x)).filter(Boolean);
+  const list = (k) =>
+    arr(bv[k], 80)
+      .map((x) => str(x))
+      .filter(Boolean);
   return {
     positioningStatement: str(bv.positioningStatement),
     shortBio: str(bv.shortBio),
@@ -286,10 +289,10 @@ function projectScheduler(data) {
 /** Safe settings slice — never emits OAuth tokens or API keys. */
 function projectSettings(data) {
   const s = data.settings && typeof data.settings === 'object' ? data.settings : {};
-  const nc = s.notificationCenter && typeof s.notificationCenter === 'object' ? s.notificationCenter : {};
+  const nc =
+    s.notificationCenter && typeof s.notificationCenter === 'object' ? s.notificationCenter : {};
   const op = s.operatingProfile && typeof s.operatingProfile === 'object' ? s.operatingProfile : {};
-  const cw =
-    s.copilotWorkers && typeof s.copilotWorkers === 'object' ? s.copilotWorkers : {};
+  const cw = s.copilotWorkers && typeof s.copilotWorkers === 'object' ? s.copilotWorkers : {};
 
   const workers = mapEntities(
     cw.workers,
@@ -349,7 +352,8 @@ function projectExternalSync(data) {
 }
 
 function projectIntegrationHub(data) {
-  const hub = data.integrationHub && typeof data.integrationHub === 'object' ? data.integrationHub : {};
+  const hub =
+    data.integrationHub && typeof data.integrationHub === 'object' ? data.integrationHub : {};
   const sources = mapEntities(
     hub.sources,
     (s) => ({
@@ -599,9 +603,15 @@ export function buildNativeStructuredArtifactPackage(workspaceExport, opts = {})
     fusedText: resumeFusedFromOpts || resumeRec.fusedText
   };
 
-  const profileBlobFusion = extractNativeEmployeeContextFromWorkspaceExport(data, resumeArtifact.fusedText);
+  const profileBlobFusion = extractNativeEmployeeContextFromWorkspaceExport(
+    data,
+    resumeArtifact.fusedText
+  );
   const segmentTokens = extractWorkContextSegments(data);
-  const profileBlobProfileOnly = extractNativeProfileFromWorkspaceExport(data, resumeArtifact.fusedText);
+  const profileBlobProfileOnly = extractNativeProfileFromWorkspaceExport(
+    data,
+    resumeArtifact.fusedText
+  );
 
   return {
     schemaVersion: STRUCTURED_ARTIFACT_SCHEMA_VERSION,

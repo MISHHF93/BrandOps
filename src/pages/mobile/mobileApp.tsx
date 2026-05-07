@@ -427,24 +427,27 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     }
   }, [refreshWorkspaceSnapshot]);
 
-  const selectCopilotWorker = useCallback(async (workerId: string) => {
-    try {
-      const data = await storageService.getData();
-      const reg = data.settings.copilotWorkers;
-      if (!reg.workers.some((w) => w.id === workerId)) return;
-      if (reg.activeWorkerId === workerId) return;
-      await storageService.setData({
-        ...data,
-        settings: {
-          ...data.settings,
-          copilotWorkers: { ...reg, activeWorkerId: workerId }
-        }
-      });
-      await refreshWorkspaceSnapshot();
-    } catch (err) {
-      console.error('BrandOps: failed to select copilot worker', err);
-    }
-  }, [refreshWorkspaceSnapshot]);
+  const selectCopilotWorker = useCallback(
+    async (workerId: string) => {
+      try {
+        const data = await storageService.getData();
+        const reg = data.settings.copilotWorkers;
+        if (!reg.workers.some((w) => w.id === workerId)) return;
+        if (reg.activeWorkerId === workerId) return;
+        await storageService.setData({
+          ...data,
+          settings: {
+            ...data.settings,
+            copilotWorkers: { ...reg, activeWorkerId: workerId }
+          }
+        });
+        await refreshWorkspaceSnapshot();
+      } catch (err) {
+        console.error('BrandOps: failed to select copilot worker', err);
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
 
   const setAppearanceTheme = useCallback(async (next: UiTheme) => {
     try {
@@ -582,7 +585,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     if (typeof window === 'undefined') return;
     if (!isAppShellWithSectionQuery()) return;
     if (window.location.hash.slice(1) !== SETTINGS_RESUME_PHASE_SECTION_ID) return;
-    const p = parseMobileShellFromSearchParams(new URLSearchParams(window.location.search), initialTab);
+    const p = parseMobileShellFromSearchParams(
+      new URLSearchParams(window.location.search),
+      initialTab
+    );
     if (p.tab !== 'settings') return;
     setResumePhaseRevealKey((k) => k + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- bookmark deep-link once per mount
@@ -668,8 +674,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           const workerResolved = resolveActiveCopilotWorker(settings);
           const completionMessages = buildHostedAskMessages(data, question, workerResolved);
           const tHttp = performance.now();
-          const askModelId =
-            workerResolved?.chatModelId?.trim().length ? workerResolved.chatModelId.trim() : undefined;
+          const askModelId = workerResolved?.chatModelId?.trim().length
+            ? workerResolved.chatModelId.trim()
+            : undefined;
           const maxTok = workerResolved?.maxCompletionTokens;
           const result = await runChatCompletion(settings, {
             messages: completionMessages,
@@ -677,8 +684,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             ...(typeof maxTok === 'number' && maxTok > 0 ? { maxTokens: maxTok } : {})
           });
           const durationMs = Math.round(performance.now() - tHttp);
-          const effectiveModel =
-            askModelId ?? settings.aiBridge.chatModelId;
+          const effectiveModel = askModelId ?? settings.aiBridge.chatModelId;
           await persistChatGatewayTrace(
             () => storageService.getData(),
             async (next) => {
@@ -1037,7 +1043,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           settings: { ...data.settings, operatorTraceCollectionEnabled: enabled }
         });
         await refreshWorkspaceSnapshot();
-        setDataOpsHint(enabled ? 'Operator trace collection on.' : 'Operator trace collection off.');
+        setDataOpsHint(
+          enabled ? 'Operator trace collection on.' : 'Operator trace collection off.'
+        );
       } catch (err) {
         console.error('BrandOps: operator trace preference update failed', err);
         setDataOpsHint('Could not update trace setting.');
@@ -1152,7 +1160,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         />
         <div className="mx-auto flex w-full max-w-md items-start justify-between gap-3 px-4">
           <div className="bo-mobile-brand flex min-w-0 flex-1 gap-3">
-            <span className="bo-mobile-brand__mark bo-mobile-brand__mark--compact shrink-0" aria-hidden>
+            <span
+              className="bo-mobile-brand__mark bo-mobile-brand__mark--compact shrink-0"
+              aria-hidden
+            >
               <BrandOpsCrownMark className="bo-mobile-brand__logo" />
             </span>
             <div className="min-w-0 flex-1">
@@ -1160,10 +1171,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               <span id={shellTitleDescId} className="sr-only">
                 {shellSrSummary}
               </span>
-              <h1
-                className="bo-mobile-brand__title text-h1"
-                aria-describedby={shellTitleDescId}
-              >
+              <h1 className="bo-mobile-brand__title text-h1" aria-describedby={shellTitleDescId}>
                 {shellScreenTitle}
               </h1>
               {dataOpsHint ? <WorkspaceDataHint message={dataOpsHint} /> : null}
@@ -1172,9 +1180,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           <div className="flex shrink-0 flex-wrap items-start justify-end gap-1.5">
             {!shouldRequireLaunchAuth(launchAccess) ? (
               <AppearanceToggle
-                activeTheme={
-                  snapshot.settingsFullReadout.theme === 'light' ? 'light' : 'dark'
-                }
+                activeTheme={snapshot.settingsFullReadout.theme === 'light' ? 'light' : 'dark'}
                 onChange={setAppearanceTheme}
                 btnFocus={btnFocus}
                 className="bo-theme-seg--header"
@@ -1327,7 +1333,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onExportOperatorTraces={exportOperatorTracesJsonl}
                 onImportWorkspace={importWorkspace}
                 onRequestResetWorkspace={() => setPendingResetWorkspace(true)}
-                onOperatorTraceCollectionChange={(enabled) => void setOperatorTraceCollection(enabled)}
+                onOperatorTraceCollectionChange={(enabled) =>
+                  void setOperatorTraceCollection(enabled)
+                }
                 documentSurface={surfaceLabel}
                 isAuthenticated={launchAccess.auth.isAuthenticated}
                 authProvider={launchAccess.auth.provider}

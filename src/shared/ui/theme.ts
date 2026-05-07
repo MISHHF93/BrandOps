@@ -59,10 +59,7 @@ const applyDocumentTheme = (theme: UiTheme) => {
   syncMetaThemeColor(resolved);
   const prefersReducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  root.setAttribute(
-    'data-motion-mode',
-    prefersReducedMotion ? 'off' : 'balanced'
-  );
+  root.setAttribute('data-motion-mode', prefersReducedMotion ? 'off' : 'balanced');
 
   try {
     const transitionTarget = window.sessionStorage.getItem('bo:surface-transition');

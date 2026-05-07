@@ -24,8 +24,7 @@ export function predictArtifactResonance(obs) {
   checks.push({
     id: 'vitest_success_flag',
     pass: !obs.requireVitestSuccess || obs.vitestSuccess === true,
-    detail:
-      obs.vitestSuccess === true ? undefined : `vitest success=${obs.vitestSuccess}`
+    detail: obs.vitestSuccess === true ? undefined : `vitest success=${obs.vitestSuccess}`
   });
 
   checks.push({

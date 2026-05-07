@@ -148,7 +148,9 @@ async function liveProbe(opts) {
       }
     }
   } else if (chatModel) {
-    console.log(`Tip: add --chat to also POST /v1/chat/completions using BRANDOPS_MONITOR_CHAT_MODEL=${chatModel}\n`);
+    console.log(
+      `Tip: add --chat to also POST /v1/chat/completions using BRANDOPS_MONITOR_CHAT_MODEL=${chatModel}\n`
+    );
   }
 
   if (!ok) process.exitCode = 1;
@@ -170,10 +172,14 @@ async function main() {
   if (!liveOnly) {
     console.log('Packages under test (Vitest files):\n ', AI_TEST_FILES.join('\n  '), '\n');
 
-    const run = spawnSync(process.execPath, [vitestMjs, 'run', ...AI_TEST_FILES, '--reporter=verbose'], {
-      stdio: 'inherit',
-      cwd: root
-    });
+    const run = spawnSync(
+      process.execPath,
+      [vitestMjs, 'run', ...AI_TEST_FILES, '--reporter=verbose'],
+      {
+        stdio: 'inherit',
+        cwd: root
+      }
+    );
 
     if (run.status !== 0) {
       process.exit(run.status ?? 1);

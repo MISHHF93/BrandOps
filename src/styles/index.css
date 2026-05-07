@@ -137,8 +137,8 @@
   --flagship-line: var(--color-accent);
   --flagship-depth-alpha: 0.35;
   --font-terminal:
-    ui-monospace, 'Cascadia Mono', 'Cascadia Code', 'Segoe UI Mono', 'SFMono-Regular', Menlo, Monaco,
-    Consolas, 'Liberation Mono', monospace;
+    ui-monospace, 'Cascadia Mono', 'Cascadia Code', 'Segoe UI Mono', 'SFMono-Regular', Menlo,
+    Monaco, Consolas, 'Liberation Mono', monospace;
   font-family: var(--font-terminal);
 }
 
@@ -2507,9 +2507,7 @@ html[data-app-surface='welcome'] body::after {
   :root:not([data-theme='light']) .bo-assistant-thread-shell {
     border: none;
   }
-
 }
-
 
 :focus-visible {
   outline: 2px solid rgb(var(--color-focus-ring) / var(--alpha-focus-ring));
@@ -3448,5 +3446,3 @@ html[data-app-surface='welcome'] body::after {
     opacity: 1;
   }
 }
-
-

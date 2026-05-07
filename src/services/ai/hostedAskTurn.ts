@@ -6,8 +6,7 @@ import { buildNeuralPhasingResumeBlock } from './neuralPhasing';
 const GLOBAL_ROLE_LABEL = 'Global operator role (notificationCenter.roleContext)';
 
 function buildStructuredJsonInstructions(worker: CopilotWorker | null): string {
-  const cmds =
-    worker?.allowedAgentCommands?.map((c) => c.trim()).filter((c) => c.length > 0) ?? [];
+  const cmds = worker?.allowedAgentCommands?.map((c) => c.trim()).filter((c) => c.length > 0) ?? [];
   if (!cmds.length) {
     return `Structured automation: do NOT output executeAgentCommand or brandOpsActionPipeline JSON — this copilot is not authorized for automatic workspace commands. Answer in prose only.`;
   }

@@ -49,12 +49,35 @@ describe('nativeTinyMlp (in-repo toy model)', () => {
       {
         brandVault: { positioningStatement: 'We ship clarity', expertiseAreas: ['AI ops'] },
         integrationHub: {
-          sources: [{ id: '1', name: 'Notion', kind: 'notion', status: 'connected', artifactTypes: [], tags: [], notes: '', createdAt: '' }],
+          sources: [
+            {
+              id: '1',
+              name: 'Notion',
+              kind: 'notion',
+              status: 'connected',
+              artifactTypes: [],
+              tags: [],
+              notes: '',
+              createdAt: ''
+            }
+          ],
           artifacts: [],
           liveFeed: [],
           sshTargets: []
         },
-        embeddingIndex: { entries: [{ modelId: 'embed-model', contentLibraryItemId: '', dims: 8, vector: [], textFingerprint: '', updatedAt: '', id: '' }] }
+        embeddingIndex: {
+          entries: [
+            {
+              modelId: 'embed-model',
+              contentLibraryItemId: '',
+              dims: 8,
+              vector: [],
+              textFingerprint: '',
+              updatedAt: '',
+              id: ''
+            }
+          ]
+        }
       },
       '',
       'operator:Z'
@@ -274,7 +297,9 @@ Built Python NLP pipelines for production.
     const blob = extractNativeEmployeeContextFromWorkspaceExport(
       {
         brand: { operatorName: 'Sam', positioning: 'GTM' },
-        opportunities: [{ name: 'Deal X', company: 'Co', status: 'building', opportunityType: 'advisory' }]
+        opportunities: [
+          { name: 'Deal X', company: 'Co', status: 'building', opportunityType: 'advisory' }
+        ]
       },
       ''
     );

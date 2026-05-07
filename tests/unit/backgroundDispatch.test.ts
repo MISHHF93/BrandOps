@@ -27,12 +27,15 @@ describe('dispatchRuntimeMessage', () => {
     const executeAgentWorkspaceCommand = vi.fn();
     const isBridgeNonceReplayed = vi.fn();
 
-    const result = await dispatchRuntimeMessage({ type: 'SYNC_SCHEDULER' }, {
-      scheduleAlarms,
-      executeAgentWorkspaceCommand,
-      isBridgeNonceReplayed,
-      bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
-    });
+    const result = await dispatchRuntimeMessage(
+      { type: 'SYNC_SCHEDULER' },
+      {
+        scheduleAlarms,
+        executeAgentWorkspaceCommand,
+        isBridgeNonceReplayed,
+        bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
+      }
+    );
 
     expect(result).toEqual({ ok: true });
     expect(scheduleAlarms).toHaveBeenCalledOnce();
@@ -210,12 +213,15 @@ describe('dispatchRuntimeMessage', () => {
   });
 
   it('rejects unknown message types', async () => {
-    const result = await dispatchRuntimeMessage({ type: 'UNSUPPORTED' as never }, {
-      scheduleAlarms: vi.fn(),
-      executeAgentWorkspaceCommand: vi.fn(),
-      isBridgeNonceReplayed: vi.fn(),
-      bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
-    });
+    const result = await dispatchRuntimeMessage(
+      { type: 'UNSUPPORTED' as never },
+      {
+        scheduleAlarms: vi.fn(),
+        executeAgentWorkspaceCommand: vi.fn(),
+        isBridgeNonceReplayed: vi.fn(),
+        bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
+      }
+    );
 
     expect(result).toEqual({ ok: false, error: 'Unsupported runtime message.' });
   });

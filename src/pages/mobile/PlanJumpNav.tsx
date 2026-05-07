@@ -22,7 +22,10 @@ export function PlanJumpNav({ btnFocus }: PlanJumpNavProps) {
           <a
             key={href}
             href={href}
-            className={clsx('bo-plan-jump-nav__link text-[11px] font-semibold text-textMuted', btnFocus)}
+            className={clsx(
+              'bo-plan-jump-nav__link text-[11px] font-semibold text-textMuted',
+              btnFocus
+            )}
           >
             {label}
           </a>

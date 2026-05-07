@@ -47,19 +47,23 @@ function parseResumeArtifactInternals(raw) {
     return { text: '', sections: [], bullets: [], techHits: [], datedRoles: [] };
   }
 
-  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const lines = text
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
   const bullets = [];
   const sections = [];
 
   for (const line of lines) {
     if (SECTION_HINT.test(line.replace(/\s+/g, ' '))) {
-      const sec = line.replace(/[:：]\s*$/, '').trim().slice(0, 40);
+      const sec = line
+        .replace(/[:：]\s*$/, '')
+        .trim()
+        .slice(0, 40);
       sections.push(sec.toLowerCase());
       continue;
     }
-    const bullet =
-      /^[-•*▪▸]\s+(.+)/.exec(line)?.[1] ||
-      /^\d+[.)]\s+(.+)/.exec(line)?.[1];
+    const bullet = /^[-•*▪▸]\s+(.+)/.exec(line)?.[1] || /^\d+[.)]\s+(.+)/.exec(line)?.[1];
     if (bullet) {
       bullets.push(slimClause(bullet));
       continue;

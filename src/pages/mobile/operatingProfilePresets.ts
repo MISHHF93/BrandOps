@@ -1,7 +1,5 @@
 import type { OperatingPresetId } from '../../types/domain';
-import type {
-  OperatingPresetDefinition
-} from '../../shared/workspace/operatingProfileCatalog';
+import type { OperatingPresetDefinition } from '../../shared/workspace/operatingProfileCatalog';
 import {
   OPERATING_PRESETS,
   buildOperatingPresetConfigureLine,
@@ -18,7 +16,9 @@ export {
   resolveOperatingPresetSlug
 };
 
-export function inferOperatingPresetId(snapshot: MobileWorkspaceSnapshot): OperatingPresetId | 'custom' {
+export function inferOperatingPresetId(
+  snapshot: MobileWorkspaceSnapshot
+): OperatingPresetId | 'custom' {
   for (const p of OPERATING_PRESETS) {
     if (matchesPreset(p, snapshot)) return p.id;
   }

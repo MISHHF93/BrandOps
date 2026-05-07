@@ -91,7 +91,11 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
 
   const opId = s.operatingProfile?.lastAppliedPresetId;
   const operatingProfileLastApplied =
-    opId === undefined || opId === null ? '—' : opId === 'custom' ? 'Custom' : getOperatingPresetDefinition(opId).title;
+    opId === undefined || opId === null
+      ? '—'
+      : opId === 'custom'
+        ? 'Custom'
+        : getOperatingPresetDefinition(opId).title;
 
   return {
     timezone: s.timezone,

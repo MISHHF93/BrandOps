@@ -132,24 +132,15 @@ export const buildAiSettingsPlan = (prompt: string): AiSettingsPlan => {
     lower.includes('ai adapter external opt in')
   ) {
     nextOperation(operations, 'set-ai-adapter-mode', { mode: 'external-opt-in' });
-  } else if (
-    lower.includes('ai adapter local-only') ||
-    lower.includes('ai adapter local only')
-  ) {
+  } else if (lower.includes('ai adapter local-only') || lower.includes('ai adapter local only')) {
     nextOperation(operations, 'set-ai-adapter-mode', { mode: 'local-only' });
   } else if (lower.includes('ai adapter disabled')) {
     nextOperation(operations, 'set-ai-adapter-mode', { mode: 'disabled' });
   }
 
-  if (
-    lower.includes('ai guidance prompt-ready') ||
-    lower.includes('ai guidance prompt ready')
-  ) {
+  if (lower.includes('ai guidance prompt-ready') || lower.includes('ai guidance prompt ready')) {
     nextOperation(operations, 'set-ai-guidance-mode', { mode: 'prompt-ready' });
-  } else if (
-    lower.includes('ai guidance rule-based') ||
-    lower.includes('ai guidance rule based')
-  ) {
+  } else if (lower.includes('ai guidance rule-based') || lower.includes('ai guidance rule based')) {
     nextOperation(operations, 'set-ai-guidance-mode', { mode: 'rule-based' });
   } else if (lower.includes('ai guidance hybrid')) {
     nextOperation(operations, 'set-ai-guidance-mode', { mode: 'hybrid' });

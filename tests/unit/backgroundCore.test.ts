@@ -13,7 +13,9 @@ import { cloneSeedData } from '../helpers/fixtures';
 
 const iso = '2026-05-02T12:00:00.000Z';
 
-const baseTask = (partial: Partial<SchedulerTask> & Pick<SchedulerTask, 'id' | 'status'>): SchedulerTask => ({
+const baseTask = (
+  partial: Partial<SchedulerTask> & Pick<SchedulerTask, 'id' | 'status'>
+): SchedulerTask => ({
   sourceId: 'src-1',
   sourceType: 'publishing',
   title: 'Test task',
@@ -175,9 +177,7 @@ describe('sendTaskReminderNotification', () => {
     const notifications = { create: vi.fn(async () => {}) };
     const markNotified = vi.fn((state: BrandOpsData['scheduler'], taskId: string) => ({
       ...state,
-      tasks: state.tasks.map((t) =>
-        t.id === taskId ? { ...t, lastNotifiedAt: iso } : t
-      ),
+      tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, lastNotifiedAt: iso } : t)),
       updatedAt: iso,
       lastHydratedAt: iso
     }));
@@ -196,10 +196,13 @@ describe('sendTaskReminderNotification', () => {
       taskId: 't-soon'
     });
 
-    expect(notifications.create).toHaveBeenCalledWith(`reminder:${task.id}`, expect.objectContaining({
-      type: 'basic',
-      title: `BrandOps reminder: ${task.title}`
-    }));
+    expect(notifications.create).toHaveBeenCalledWith(
+      `reminder:${task.id}`,
+      expect.objectContaining({
+        type: 'basic',
+        title: `BrandOps reminder: ${task.title}`
+      })
+    );
     expect(markNotified).toHaveBeenCalled();
     expect(setData).toHaveBeenCalled();
   });

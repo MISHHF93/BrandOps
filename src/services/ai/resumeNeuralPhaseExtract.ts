@@ -12,11 +12,13 @@ function asTrim(s: string): string {
 
 /** Same trimming rules as `normalizeResumeText` in nativeResumeArtifacts.mjs — preserves internal newlines. */
 export function normalizeResumeNeuralInput(raw: string): string {
-  return String(raw ?? '')
-    .replace(/\r\n/g, '\n')
-    // eslint-disable-next-line no-control-regex -- strip C0 controls except \t and \n
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '')
-    .trim();
+  return (
+    String(raw ?? '')
+      .replace(/\r\n/g, '\n')
+      // eslint-disable-next-line no-control-regex -- strip C0 controls except \t and \n
+      .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '')
+      .trim()
+  );
 }
 
 function slimClause(s: string): string {
@@ -98,21 +100,32 @@ function uniq(arr: string[]): string[] {
 function parseInternals(raw: string) {
   const text = normalizeResumeNeuralInput(raw);
   if (!text) {
-    return { text: '', sections: [] as string[], bullets: [] as string[], techHits: [] as string[], datedRoles: [] as string[] };
+    return {
+      text: '',
+      sections: [] as string[],
+      bullets: [] as string[],
+      techHits: [] as string[],
+      datedRoles: [] as string[]
+    };
   }
 
-  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const lines = text
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
   const bullets: string[] = [];
   const sections: string[] = [];
 
   for (const line of lines) {
     if (SECTION_HINT.test(line.replace(/\s+/g, ' '))) {
-      const sec = line.replace(/[:：]\s*$/, '').trim().slice(0, 40);
+      const sec = line
+        .replace(/[:：]\s*$/, '')
+        .trim()
+        .slice(0, 40);
       sections.push(sec.toLowerCase());
       continue;
     }
-    const bullet =
-      /^[-•*▪▸]\s+(.+)/.exec(line)?.[1] || /^\d+[.)]\s+(.+)/.exec(line)?.[1];
+    const bullet = /^[-•*▪▸]\s+(.+)/.exec(line)?.[1] || /^\d+[.)]\s+(.+)/.exec(line)?.[1];
     if (bullet) {
       bullets.push(slimClause(bullet));
       continue;

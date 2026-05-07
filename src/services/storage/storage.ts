@@ -1274,7 +1274,9 @@ const normalizeCopilotWorkerRegistry = (
       ...(contextHints ? { contextHints } : {}),
       ...(allowedAgentCommands ? { allowedAgentCommands } : {}),
       ...(chatModelId ? { chatModelId } : {}),
-      ...(maxCompletionTokens !== undefined && maxCompletionTokens > 0 ? { maxCompletionTokens } : {})
+      ...(maxCompletionTokens !== undefined && maxCompletionTokens > 0
+        ? { maxCompletionTokens }
+        : {})
     });
 
     if (workers.length >= MAX_COPILOT_WORKERS) break;
@@ -1286,15 +1288,12 @@ const normalizeCopilotWorkerRegistry = (
 
   const idSet = new Set(workers.map((x) => x.id));
   const activeTrimmed = activeRaw.slice(0, MAX_COPILOT_ID_LEN);
-  const activeWorkerId =
-    activeTrimmed && idSet.has(activeTrimmed) ? activeTrimmed : workers[0].id;
+  const activeWorkerId = activeTrimmed && idSet.has(activeTrimmed) ? activeTrimmed : workers[0].id;
 
   return { workers, activeWorkerId };
 };
 
-const VALID_OPERATING_PRESET_IDS = new Set<OperatingPresetId>(
-  OPERATING_PRESETS.map((p) => p.id)
-);
+const VALID_OPERATING_PRESET_IDS = new Set<OperatingPresetId>(OPERATING_PRESETS.map((p) => p.id));
 
 function normalizeOperatingProfile(
   raw: unknown,
@@ -1375,8 +1374,14 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
     notificationCenter: normalizeNotificationCenterSettings(candidate.notificationCenter),
     cadenceFlow: normalizeCadenceFlowSettings(candidate.cadenceFlow),
     aiBridge: normalizeAiBridgeSettings(candidate.aiBridge, fallback.aiBridge),
-    copilotWorkers: normalizeCopilotWorkerRegistry(candidate.copilotWorkers, fallback.copilotWorkers),
-    operatingProfile: normalizeOperatingProfile(candidate.operatingProfile, fallback.operatingProfile)
+    copilotWorkers: normalizeCopilotWorkerRegistry(
+      candidate.copilotWorkers,
+      fallback.copilotWorkers
+    ),
+    operatingProfile: normalizeOperatingProfile(
+      candidate.operatingProfile,
+      fallback.operatingProfile
+    )
   };
 };
 

@@ -258,7 +258,9 @@ const PLAN_PAGE_INTENT_IDS: readonly string[] = [
 ];
 
 export function getIntentsForPlanPage(): BrandOpsChatIntent[] {
-  return PLAN_PAGE_INTENT_IDS.map((id) => byId.get(id)).filter((x): x is BrandOpsChatIntent => Boolean(x));
+  return PLAN_PAGE_INTENT_IDS.map((id) => byId.get(id)).filter((x): x is BrandOpsChatIntent =>
+    Boolean(x)
+  );
 }
 
 /** Curated Plan hub tiles — first N in canonical Plan order; full catalogue remains in ⌘K / palette. */
@@ -272,11 +274,7 @@ export function getAssistantQuickPlanPicks(
   excludeNormalizedCommands: ReadonlySet<string>
 ): BrandOpsChatIntent[] {
   return getIntentsForPlanPage()
-    .filter(
-      (i) =>
-        i.groupId === 'essentials' &&
-        !excludeNormalizedCommands.has(norm(i.command))
-    )
+    .filter((i) => i.groupId === 'essentials' && !excludeNormalizedCommands.has(norm(i.command)))
     .slice(0, 6);
 }
 

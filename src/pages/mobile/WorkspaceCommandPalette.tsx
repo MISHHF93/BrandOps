@@ -290,7 +290,8 @@ export const WorkspaceCommandPalette = ({
       <p className="border-t border-border/40 px-3 py-2 text-[10px] text-textSoft">
         {commandRunContext === 'plan' ? (
           <>
-            Commands run on device while you stay on Plan. Open Ask for the full transcript thread.{' '}
+            Commands run on device while you stay on Plan. Open Ask for the full transcript
+            thread.{' '}
           </>
         ) : null}
         <kbd className="rounded border border-border/60 bg-bgSubtle/80 px-1 font-mono">⌘K</kbd> or{' '}

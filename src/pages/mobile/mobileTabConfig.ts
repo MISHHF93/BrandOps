@@ -1,10 +1,4 @@
-import {
-  CalendarCheck2,
-  LayoutDashboard,
-  MessageCircle,
-  PlugZap,
-  Settings
-} from 'lucide-react';
+import { CalendarCheck2, LayoutDashboard, MessageCircle, PlugZap, Settings } from 'lucide-react';
 import type { MobileShellTabId } from './mobileShellQuery';
 
 /**

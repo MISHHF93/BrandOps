@@ -73,7 +73,10 @@ export function PlanDestinationGrid({
               <span className="bo-plan-destination-card__title">{row.title}</span>
               <span className="bo-plan-destination-card__hint">{row.hint}</span>
             </span>
-            <ChevronRight className="bo-plan-destination-card__chevron shrink-0 text-textSoft/70" aria-hidden />
+            <ChevronRight
+              className="bo-plan-destination-card__chevron shrink-0 text-textSoft/70"
+              aria-hidden
+            />
           </button>
         );
       })}

@@ -31,7 +31,9 @@ TypeScript React
   });
 
   it('respects max length cap', () => {
-    const bullets = Array.from({ length: 80 }, (_, i) => `- Very long bullet ${i} `.repeat(12)).join('\n');
+    const bullets = Array.from({ length: 80 }, (_, i) =>
+      `- Very long bullet ${i} `.repeat(12)
+    ).join('\n');
     const out = extractResumeNeuralPhaseArtifact(`Skills\n${bullets}`, 200);
     expect(out.length).toBeLessThanOrEqual(200);
   });

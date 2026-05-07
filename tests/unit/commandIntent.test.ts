@@ -27,7 +27,9 @@ describe('parseCommandRoute', () => {
 
   it('maps embedding sync phrases', () => {
     expect(parseCommandRoute('sync content embeddings')).toBe('sync-content-embeddings');
-    expect(parseCommandRoute('refresh content embeddings for library')).toBe('sync-content-embeddings');
+    expect(parseCommandRoute('refresh content embeddings for library')).toBe(
+      'sync-content-embeddings'
+    );
   });
 
   it('maps BrandOps strategy functions without stealing operational commands', () => {

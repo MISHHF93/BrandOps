@@ -76,10 +76,19 @@ function parseArgs(argv) {
     }
     textParts.push(a);
   }
-  return { text: textParts.join(' ').trim(), workspace, profile, resume, traceArtifacts, structuredJson };
+  return {
+    text: textParts.join(' ').trim(),
+    workspace,
+    profile,
+    resume,
+    traceArtifacts,
+    structuredJson
+  };
 }
 
-const { text, workspace, profile, resume, traceArtifacts, structuredJson } = parseArgs(process.argv);
+const { text, workspace, profile, resume, traceArtifacts, structuredJson } = parseArgs(
+  process.argv
+);
 if (!text) {
   console.error(
     'Usage: node scripts/run-native-model.mjs [--workspace export.json] [--profile blob] [--resume resume.txt] [--trace-artifacts] [--structured-json] <text...>'
@@ -111,11 +120,12 @@ else if (workspace) {
 
 profileBlob = coerceArtifactBlob(profileBlob);
 
-const ncPhaseR =
-  workspaceData?.settings?.notificationCenter?.resumeNeuralPhaseContext;
+const ncPhaseR = workspaceData?.settings?.notificationCenter?.resumeNeuralPhaseContext;
 const resumeFusedForTrace = resumeArtifact
   ? resumeArtifact
-  : asNonNullStr(ncPhaseR ?? '').trim().slice(0, 1400);
+  : asNonNullStr(ncPhaseR ?? '')
+      .trim()
+      .slice(0, 1400);
 
 const bundle = JSON.parse(fs.readFileSync(weightsPath, 'utf8'));
 if (!bundle.weights) {

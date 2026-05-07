@@ -16,7 +16,8 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
     id: 'workspace-ai-bridge',
     label: 'Persisted aiBridge (URLs + model IDs)',
     status: 'implemented',
-    notes: 'Stored in AppSettings.aiBridge; secrets via chrome.storage.local key brandops_ai_openai_compat_key.'
+    notes:
+      'Stored in AppSettings.aiBridge; secrets via chrome.storage.local key brandops_ai_openai_compat_key.'
   },
   {
     id: 'gateway-chat-completions',
@@ -40,7 +41,8 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
     id: 'operator-traces-ai-io',
     label: 'Dataset traces for AI request/response lifecycle',
     status: 'implemented',
-    notes: 'persistChatGatewayTrace / persistEmbeddingsGatewayTrace write ai.gateway.* verbs when collection enabled.'
+    notes:
+      'persistChatGatewayTrace / persistEmbeddingsGatewayTrace write ai.gateway.* verbs when collection enabled.'
   },
   {
     id: 'internal-on-device-nlp',
@@ -52,13 +54,15 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
     id: 'chat-ui-binding',
     label: 'Assistant transcript wired to gateway',
     status: 'implemented',
-    notes: 'Mobile Assistant routes lines prefixed with ask: through runChatCompletion (+ optional structured pipeline-health auto-run).'
+    notes:
+      'Mobile Assistant routes lines prefixed with ask: through runChatCompletion (+ optional structured pipeline-health auto-run).'
   },
   {
     id: 'embedding-index-storage',
     label: 'Persisted embedding index for content library slices',
     status: 'implemented',
-    notes: 'BrandOpsData.embeddingIndex normalized in storage; refresh via “sync content embeddings” command.'
+    notes:
+      'BrandOpsData.embeddingIndex normalized in storage; refresh via “sync content embeddings” command.'
   },
   {
     id: 'copilot-worker-registry',
@@ -69,8 +73,6 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
   }
 ];
 
-export function countNlpCapabilitiesByStatus(
-  status: NlpCapabilityStatus
-): number {
+export function countNlpCapabilitiesByStatus(status: NlpCapabilityStatus): number {
   return NLP_CAPABILITY_CHECKLIST.filter((r) => r.status === status).length;
 }

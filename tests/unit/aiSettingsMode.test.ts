@@ -55,9 +55,7 @@ describe('aiSettingsMode planner', () => {
   });
 
   it('parses cockpit layout and density phrases', () => {
-    const plan = buildAiSettingsPlan(
-      'cockpit layout unified-scroll, cockpit density comfortable'
-    );
+    const plan = buildAiSettingsPlan('cockpit layout unified-scroll, cockpit density comfortable');
     expect(plan.operations.some((o) => o.kind === 'set-cockpit-layout')).toBe(true);
     expect(plan.operations.some((o) => o.kind === 'set-cockpit-density')).toBe(true);
   });

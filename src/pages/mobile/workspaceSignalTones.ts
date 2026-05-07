@@ -2,13 +2,7 @@ import clsx from 'clsx';
 import type { PulseTimelineKind } from './pulseTimeline';
 
 /** Semantic accent for workspace counters — maps to Tailwind tokens (danger/warning/info/success/primary/muted). */
-export type WorkspaceSignalTone =
-  | 'danger'
-  | 'warning'
-  | 'info'
-  | 'success'
-  | 'primary'
-  | 'muted';
+export type WorkspaceSignalTone = 'danger' | 'warning' | 'info' | 'success' | 'primary' | 'muted';
 
 export const FOLLOWUPS_OPEN_DANGER = 15;
 export const FOLLOWUPS_OPEN_WARNING = 8;

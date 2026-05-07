@@ -116,7 +116,9 @@ export const parseCommandRoute = (text: string): CommandRoute => {
   ) {
     return 'sync-content-embeddings';
   }
-  if (lower.includes('pipeline health') || lower.includes('opportunity health') ||
+  if (
+    lower.includes('pipeline health') ||
+    lower.includes('opportunity health') ||
     (lower.includes('rank') && lower.includes('opportunit'))
   ) {
     return 'pipeline-health';

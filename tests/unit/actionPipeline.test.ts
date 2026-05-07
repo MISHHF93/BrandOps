@@ -12,7 +12,8 @@ describe('actionPipeline', () => {
   const coach = defaultCopilotWorkerRegistry.workers.find((w) => w.id === 'pipeline-coach')!;
 
   it('parses v1 executeAgentCommand inside json', () => {
-    const text = 'Here is help.\n```json\n{"brandOpsStructuredApply":{"version":1,"executeAgentCommand":"pipeline health"}}\n```';
+    const text =
+      'Here is help.\n```json\n{"brandOpsStructuredApply":{"version":1,"executeAgentCommand":"pipeline health"}}\n```';
     const p = parseAiExecutablePayload(text);
     expect(p).toEqual({ kind: 'single', commandText: 'pipeline health' });
   });
@@ -56,14 +57,18 @@ describe('actionPipeline', () => {
   });
 
   it('rejects empty steps and too many steps', () => {
-    expect(parseAiExecutablePayload(JSON.stringify({ brandOpsActionPipeline: { version: 2, steps: [] } })).kind).toBe(
-      'none'
-    );
+    expect(
+      parseAiExecutablePayload(
+        JSON.stringify({ brandOpsActionPipeline: { version: 2, steps: [] } })
+      ).kind
+    ).toBe('none');
     const many = Array.from({ length: MAX_ACTION_PIPELINE_STEPS + 1 }, () => ({
       executeAgentCommand: 'pipeline health'
     }));
     expect(
-      parseAiExecutablePayload(JSON.stringify({ brandOpsActionPipeline: { version: 2, steps: many } })).kind
+      parseAiExecutablePayload(
+        JSON.stringify({ brandOpsActionPipeline: { version: 2, steps: many } })
+      ).kind
     ).toBe('none');
   });
 

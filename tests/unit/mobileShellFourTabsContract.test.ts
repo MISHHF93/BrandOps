@@ -4,20 +4,12 @@ import { readFileSync } from 'node:fs';
 
 import { resolve } from 'node:path';
 
-
-
 const read = (relativePath: string) => readFileSync(resolve(process.cwd(), relativePath), 'utf8');
 
-
-
 describe('MobileApp shell tab wiring (contract)', () => {
-
   const mobileApp = read('src/pages/mobile/mobileApp.tsx');
 
-
-
   it('maps each activeTab branch to the correct surface component', () => {
-
     expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*?<MobileChatView/);
 
     expect(mobileApp).toMatch(/activeTab === 'workspace'[\s\S]*?<MobileWorkspaceHubView/);
@@ -27,13 +19,9 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toMatch(/activeTab === 'integrations'[\s\S]*?<MobileIntegrationsView/);
 
     expect(mobileApp).toMatch(/activeTab === 'settings'[\s\S]*?<MobileSettingsView/);
-
   });
 
-
-
   it('threads documentSurface into Settings and Integrations (packaged-page link parity)', () => {
-
     expect(mobileApp).toContain('documentSurface={surfaceLabel}');
 
     const integrationsJsx = mobileApp.match(/<MobileIntegrationsView[\s\S]*?\/>/)?.[0] ?? '';
@@ -43,33 +31,21 @@ describe('MobileApp shell tab wiring (contract)', () => {
     const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
 
     expect(cockpitJsx).not.toContain('documentSurface');
-
   });
 
-
-
   it('passes workstream state into Today (Cockpit) only', () => {
-
     expect(mobileApp).toContain('activeWorkstream={cockpitWorkstream}');
 
     expect(mobileApp).toContain('onSelectWorkstream={handleSelectWorkstream}');
-
   });
 
-
-
   it('threads CockpitDailyView without obsolete Plan-tab cross-prop', () => {
-
     const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
 
     expect(cockpitJsx).not.toContain('onOpenPulseTab');
-
   });
 
-
-
   it('threads primeChat into Today only (Plan hub stays on tab for queue + tiles)', () => {
-
     const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
 
     expect(cockpitJsx).toContain('primeChat={primeChat}');
@@ -83,27 +59,21 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toContain('onImportWorkspace={importWorkspace}');
 
     expect(mobileApp).toContain('onRequestResetWorkspace');
-
   });
 
-
-
   it('keeps Plan + palette commands on workspace tab until user opens Assistant', () => {
-
     expect(mobileApp).toContain("sendQuickCommandFrom('Workspace', { navigateToChat: false })");
 
     expect(mobileApp).toContain('paletteOnRunCommand');
 
     expect(mobileApp).toContain("commandRunContext={activeTab === 'workspace' ? 'plan' : 'chat'}");
 
-    expect(mobileApp).toMatch(/const sendQuickCommand[\s\S]*?runAgentQuick\(command,\s*'Chat',\s*true\)/);
-
+    expect(mobileApp).toMatch(
+      /const sendQuickCommand[\s\S]*?runAgentQuick\(command,\s*'Chat',\s*true\)/
+    );
   });
 
-
-
   it('threads commandBusy from commandLoading into Today and Integrations command surfaces', () => {
-
     const cockpitJsx = mobileApp.match(/<CockpitDailyView[\s\S]*?\/>/)?.[0] ?? '';
 
     const integrationsJsx = mobileApp.match(/<MobileIntegrationsView[\s\S]*?\/>/)?.[0] ?? '';
@@ -111,13 +81,9 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(cockpitJsx).toContain('commandBusy={commandLoading}');
 
     expect(integrationsJsx).toContain('commandBusy={commandLoading}');
-
   });
 
-
-
   it('splits settings apply busy from chat command busy on MobileSettingsView', () => {
-
     const settingsJsx = mobileApp.match(/<MobileSettingsView[\s\S]*?\/>/)?.[0] ?? '';
 
     expect(settingsJsx).toContain('applyBusy={settingsApplyLoading}');
@@ -127,13 +93,9 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(settingsJsx).toContain('membership={launchAccess.membership}');
 
     expect(settingsJsx).toContain('onStartCheckout={onStartCheckout}');
-
   });
 
-
-
   it('gates shell behind launch auth and membership states', () => {
-
     expect(mobileApp).toContain('shouldRequireLaunchAuth(launchAccess)');
 
     expect(mobileApp).toContain('LaunchAuthGate');
@@ -141,13 +103,9 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toContain('shouldRequireLaunchMembership(launchAccess)');
 
     expect(mobileApp).toContain('MembershipGate');
-
   });
 
-
-
   it('uses a two-tab dock plus palette destinations for deeper panels', () => {
-
     expect(mobileApp).toContain('<MobileShellNav');
 
     const tabConfig = read('src/pages/mobile/mobileTabConfig.ts');
@@ -167,73 +125,45 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(tabConfig).toContain('Integrations');
 
     expect(tabConfig).toContain('Settings');
-
   });
 
-
-
   it('keeps Assistant composer outside MobileChatView so input stays fixed to viewport', () => {
-
     expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*<ChatCommandBar/);
 
     const bar = read('src/pages/mobile/ChatCommandBar.tsx');
 
     expect(bar).toMatch(/placeholder="Ask BrandOps anything/);
-
   });
-
-
 
   it('embeds a dismissible Getting started card on the Assistant tab', () => {
-
     expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*FirstRunJourneyCard/);
-
   });
 
-
-
   it('does not duplicate dock tabs on Plan hub (workspace hub omits Assistant / Integrations callbacks)', () => {
-
     const workspaceJsx = mobileApp.match(/<MobileWorkspaceHubView[\s\S]*?\/>/)?.[0] ?? '';
 
     expect(workspaceJsx).not.toContain('onOpenAssistant');
 
     expect(workspaceJsx).not.toContain('onOpenIntegrations');
-
   });
-
-
 
   it('does not render Getting started on Today-only branch (checklist lives on Assistant)', () => {
-
     expect(mobileApp).not.toMatch(/activeTab === 'daily'[\s\S]*FirstRunJourneyCard/);
-
   });
 
-
-
   it('threads getAgentCommandLock into the command palette for accurate agent lock copy', () => {
-
     expect(mobileApp).toContain('getAgentCommandLock(launchAccess, activeTab)');
 
     expect(mobileApp).toContain('agentLockReason={agentCommandLock}');
-
   });
-
 });
 
-
-
 describe('Mobile shell query parity (mobile + integrations HTML)', () => {
-
   const shell = read('src/pages/mobile/mobileShellQuery.ts');
 
   const mobileApp = read('src/pages/mobile/mobileApp.tsx');
 
-
-
   it('exports isAppShellWithSectionQuery for both mobile and integrations documents', () => {
-
     expect(shell).toContain('isAppShellWithSectionQuery');
 
     expect(shell).toContain('mobile');
@@ -241,13 +171,9 @@ describe('Mobile shell query parity (mobile + integrations HTML)', () => {
     expect(shell).toContain('integrations');
 
     expect(mobileApp).toContain('isAppShellWithSectionQuery');
-
   });
 
-
-
   it('keeps popstate + parseMobileShellFromSearchParams wired for deep-link back/forward', () => {
-
     expect(mobileApp).toContain("addEventListener('popstate'");
 
     expect(mobileApp).toContain('parseMobileShellFromSearchParams');
@@ -255,70 +181,44 @@ describe('Mobile shell query parity (mobile + integrations HTML)', () => {
     expect(mobileApp).toContain('replaceMobileShellQueryInUrl');
 
     expect(mobileApp).toMatch(/getCockpitMobileSectionHeadingId[\s\S]*?scrollIntoView/);
-
   });
-
 });
 
-
-
 describe('Surface entrypoints', () => {
-
   it('mobile.html boots MobileApp with Assistant as the default tab', () => {
-
     const main = read('src/pages/mobile/main.tsx');
 
     expect(main).toMatch(/initialTab:\s*'chat'/);
-
   });
 
-
-
   it('integrations.html boots renderChatbotSurface with integrations surface', () => {
-
     const main = read('src/pages/integrations/main.tsx');
 
     expect(main).toContain("surfaceLabel: 'integrations'");
 
     expect(main).toContain("initialTab: 'integrations'");
-
   });
 
-
-
   it('maps integrations document to chatbot-web agent source', () => {
-
     const src = read('src/shared/navigation/appDocumentSurface.ts');
 
     expect(src).toContain("'integrations'");
-
   });
 
-
-
   it('help.html boots HelpKnowledgeRoot', () => {
-
     const main = read('src/pages/help/main.tsx');
 
     expect(main).toContain('HelpKnowledgeRoot');
-
   });
-
 });
 
-
-
 describe('Lifecycle gate parity contract', () => {
-
   it('uses shared launch lifecycle gate helpers in mobile shell and background checks', () => {
-
     const mobileApp = read('src/pages/mobile/mobileApp.tsx');
 
     const background = read('src/background/index.ts');
 
     const gates = read('src/shared/account/launchLifecycleGate.ts');
-
-
 
     expect(mobileApp).toContain('shouldRequireLaunchAuth');
 
@@ -327,8 +227,5 @@ describe('Lifecycle gate parity contract', () => {
     expect(background).toContain('canOpenLaunchWorkspace');
 
     expect(gates).toContain('canOpenLaunchWorkspace');
-
   });
-
 });
-

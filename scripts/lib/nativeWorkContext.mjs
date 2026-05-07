@@ -14,7 +14,10 @@ function slim(s, max) {
 
 function takeListStrings(arr, maxItems) {
   if (!Array.isArray(arr)) return [];
-  return arr.map((x) => asNonNullStr(x)).filter(Boolean).slice(0, maxItems);
+  return arr
+    .map((x) => asNonNullStr(x))
+    .filter(Boolean)
+    .slice(0, maxItems);
 }
 
 function pushBrandVaultSegments(data, out) {
@@ -81,8 +84,7 @@ export function extractWorkContextSegments(data) {
     .filter((m) => m && typeof m === 'object' && m.status === 'active')
     .map((m) => asNonNullStr(m.id))
     .filter(Boolean);
-  if (activeModIds.length)
-    out.push(`modules:${slim(activeModIds.slice(0, 14).join(';'), 220)}`);
+  if (activeModIds.length) out.push(`modules:${slim(activeModIds.slice(0, 14).join(';'), 220)}`);
 
   const preset = data.settings?.operatingProfile?.lastAppliedPresetId;
   const presetStr = preset == null ? '' : asNonNullStr(preset);
@@ -139,7 +141,10 @@ export function extractWorkContextSegments(data) {
   const pub = Array.isArray(data.publishingQueue) ? data.publishingQueue : [];
   for (const p of pub.slice(0, 5)) {
     if (p?.title) {
-      const extra = joinArtifactParts([p.status, Array.isArray(p.platforms) ? p.platforms.join(',') : '']);
+      const extra = joinArtifactParts([
+        p.status,
+        Array.isArray(p.platforms) ? p.platforms.join(',') : ''
+      ]);
       const line = extra ? `${slim(p.title, 100)} · ${extra}` : slim(p.title, 120);
       out.push(`publish:${slim(line, 140)}`);
     }
@@ -201,12 +206,7 @@ export function extractWorkContextSegments(data) {
   const tasks = data.scheduler?.tasks;
   if (Array.isArray(tasks)) {
     const open = tasks
-      .filter(
-        (t) =>
-          t &&
-          t.status !== 'completed' &&
-          t.status !== 'cancelled'
-      )
+      .filter((t) => t && t.status !== 'completed' && t.status !== 'cancelled')
       .slice(0, 7);
     for (const t of open) {
       const line = joinArtifactParts([t.title, t.detail, t.status, t.sourceType, t.dueAt]);
@@ -275,9 +275,10 @@ export function extractWorkContextSegments(data) {
 
   const emb = data.embeddingIndex?.entries;
   if (Array.isArray(emb) && emb.length > 0) {
-    const models = [
-      ...new Set(emb.map((e) => asNonNullStr(e?.modelId)).filter(Boolean))
-    ].slice(0, 5);
+    const models = [...new Set(emb.map((e) => asNonNullStr(e?.modelId)).filter(Boolean))].slice(
+      0,
+      5
+    );
     const tail = models.length ? models.join(', ') : 'local index';
     out.push(`embeddings:${emb.length} entries · ${tail}`);
   }

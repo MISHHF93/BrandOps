@@ -18,11 +18,7 @@ export type OperatorTraceInput = Omit<OperatorTraceEntry, 'id' | 'at'> & {
 };
 
 /** Matches agent command `source` without importing the agent module (avoids cycles). */
-export type WorkspaceCommandSourceKind =
-  | 'chatbot-web'
-  | 'chatbot-mobile'
-  | 'telegram'
-  | 'whatsapp';
+export type WorkspaceCommandSourceKind = 'chatbot-web' | 'chatbot-mobile' | 'telegram' | 'whatsapp';
 
 export function mapWorkspaceCommandSourceToActor(
   source: WorkspaceCommandSourceKind
@@ -64,8 +60,7 @@ function isOperatorTraceActor(s: string): s is OperatorTraceActor {
 }
 
 export function buildOperatorTraceEntry(input: OperatorTraceInput): OperatorTraceEntry {
-  const id =
-    input.id ?? `trace-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const id = input.id ?? `trace-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const at = input.at ?? new Date().toISOString();
   const source = isOperatorTraceActor(input.source) ? input.source : 'user';
   const entry: OperatorTraceEntry = {
@@ -92,7 +87,9 @@ export function buildOperatorTraceEntry(input: OperatorTraceInput): OperatorTrac
   if (typeof input.entityId === 'string' && input.entityId.trim()) {
     entry.entityId = input.entityId.trim().slice(0, MAX_ENTITY_ID_LEN);
   }
-  const details = sanitizeOperatorTraceDetails(input.details as Record<string, unknown> | undefined);
+  const details = sanitizeOperatorTraceDetails(
+    input.details as Record<string, unknown> | undefined
+  );
   if (details) entry.details = details;
   if (input.outcome === 'success' || input.outcome === 'failure') {
     entry.outcome = input.outcome;

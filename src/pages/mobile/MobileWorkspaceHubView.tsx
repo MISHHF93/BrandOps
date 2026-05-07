@@ -85,8 +85,8 @@ export const MobileWorkspaceHubView = ({
   return (
     <div className="space-y-3" aria-label="Plan">
       <span className="sr-only">
-        Plan — workspace command center; profile summary and Account actions above; pulse, quick picks,
-        Today snapshot, and queue below. Cross-tab destinations use the dock or ⌘K palette.
+        Plan — workspace command center; profile summary and Account actions above; pulse, quick
+        picks, Today snapshot, and queue below. Cross-tab destinations use the dock or ⌘K palette.
       </span>
 
       <div className={SHEET}>
@@ -138,8 +138,9 @@ export const MobileWorkspaceHubView = ({
           />
 
           <p className="text-[11px] leading-snug text-textMuted">
-            <span className="font-medium text-textSoft">Other tabs:</span> palette lists Integrations,
-            Settings, Today lanes, and jump targets — no duplicate shortcuts needed here.
+            <span className="font-medium text-textSoft">Other tabs:</span> palette lists
+            Integrations, Settings, Today lanes, and jump targets — no duplicate shortcuts needed
+            here.
           </p>
 
           <PlanJumpNav btnFocus={btnFocus} />
@@ -252,11 +253,7 @@ export const MobileWorkspaceHubView = ({
           )}
         </section>
 
-        <section
-          id="plan-queue"
-          className={ROW}
-          aria-labelledby="plan-queue-heading"
-        >
+        <section id="plan-queue" className={ROW} aria-labelledby="plan-queue-heading">
           <h2
             id="plan-queue-heading"
             className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-textMuted"
@@ -287,17 +284,12 @@ export const MobileWorkspaceHubView = ({
                     <th className="py-1.5 pe-2 font-medium">Type</th>
                     <th className="py-1.5 pe-2 font-medium">Item</th>
                     <th className="py-1.5 font-medium">When / status</th>
-                    <th className="w-[1%] py-1.5 ps-2 font-medium whitespace-nowrap">
-                      Action
-                    </th>
+                    <th className="w-[1%] py-1.5 ps-2 font-medium whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sorted.slice(0, 14).map((row) => (
-                    <tr
-                      key={row.id}
-                      className="align-top text-textMuted"
-                    >
+                    <tr key={row.id} className="align-top text-textMuted">
                       <td className="py-2 pe-2 align-middle">
                         <span
                           className={pulseQueueBadgeSurfaceClass(pulseTimelineKindTone(row.kind))}
@@ -332,7 +324,8 @@ export const MobileWorkspaceHubView = ({
               </table>
               {sorted.length > 14 ? (
                 <p className="mt-2 text-[10px] text-textSoft">
-                  Showing 14 of {sorted.length}. Run narrower commands in Assistant to trim the queue.
+                  Showing 14 of {sorted.length}. Run narrower commands in Assistant to trim the
+                  queue.
                 </p>
               ) : null}
             </div>

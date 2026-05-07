@@ -26,11 +26,7 @@ export function PlanPlanningActions({
   const disabled = !agentEnabled || commandBusy;
 
   return (
-    <section
-      id="plan-actions"
-      className="scroll-mt-28"
-      aria-labelledby="plan-actions-heading"
-    >
+    <section id="plan-actions" className="scroll-mt-28" aria-labelledby="plan-actions-heading">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h2
           id="plan-actions-heading"
@@ -51,7 +47,8 @@ export function PlanPlanningActions({
         </button>
       </div>
       <p className="mt-1 text-[10px] leading-snug text-textSoft">
-        Eight high-use lines; every other command is in the palette. Destructive phrases still confirm.
+        Eight high-use lines; every other command is in the palette. Destructive phrases still
+        confirm.
       </p>
       {!agentEnabled && agentLockHint ? (
         <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/15 px-2.5 py-2 text-[11px] text-text">
@@ -73,7 +70,8 @@ export function PlanPlanningActions({
               onClick={() => runCommand(intent.command)}
               className={clsx(
                 'flex min-h-[2.6rem] w-full touch-manipulation flex-col items-start rounded-lg border border-border/45 bg-bgSubtle/55 px-2.5 py-2 text-start text-text transition hover:border-borderStrong hover:bg-surfaceActive/50',
-                disabled && 'cursor-not-allowed opacity-45 hover:border-border/45 hover:bg-bgSubtle/55',
+                disabled &&
+                  'cursor-not-allowed opacity-45 hover:border-border/45 hover:bg-bgSubtle/55',
                 btnFocus
               )}
             >

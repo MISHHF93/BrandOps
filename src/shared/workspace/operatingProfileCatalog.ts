@@ -1,8 +1,4 @@
-import type {
-  CockpitDensityMode,
-  CockpitLayoutMode,
-  OperatingPresetId
-} from '../../types/domain';
+import type { CockpitDensityMode, CockpitLayoutMode, OperatingPresetId } from '../../types/domain';
 
 export type OperatingPresetDefinition = {
   id: OperatingPresetId;
@@ -84,7 +80,10 @@ export function getOperatingPresetDefinition(id: OperatingPresetId): OperatingPr
 
 export function buildOperatingPresetConfigureLine(id: OperatingPresetId): string {
   const p = PRESET_BY_ID[id];
-  const parts: string[] = [`cockpit layout ${p.cockpitLayout}`, `cockpit density ${p.cockpitDensity}`];
+  const parts: string[] = [
+    `cockpit layout ${p.cockpitLayout}`,
+    `cockpit density ${p.cockpitDensity}`
+  ];
   if (p.setAiAdapterMode) {
     parts.push(`ai adapter ${p.setAiAdapterMode}`);
   }

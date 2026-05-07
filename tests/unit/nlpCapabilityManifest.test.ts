@@ -13,8 +13,8 @@ describe('nlpCapabilityManifest', () => {
   it('counts rows by status', () => {
     const implemented = countNlpCapabilitiesByStatus('implemented');
     expect(implemented).toBeGreaterThan(0);
-    expect(implemented + countNlpCapabilitiesByStatus('stub') + countNlpCapabilitiesByStatus('planned')).toBe(
-      NLP_CAPABILITY_CHECKLIST.length
-    );
+    expect(
+      implemented + countNlpCapabilitiesByStatus('stub') + countNlpCapabilitiesByStatus('planned')
+    ).toBe(NLP_CAPABILITY_CHECKLIST.length);
   });
 });

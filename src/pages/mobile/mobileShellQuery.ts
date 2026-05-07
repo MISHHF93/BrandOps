@@ -65,7 +65,13 @@ export function parseMobileShellFromSearchParams(
   }
   const lower = raw.toLowerCase();
   if (RESERVED_SECTION_TAB.has(lower)) {
-    if (lower === 'pulse' || lower === 'timeline' || lower === 'workspace' || lower === 'home' || lower === 'hub') {
+    if (
+      lower === 'pulse' ||
+      lower === 'timeline' ||
+      lower === 'workspace' ||
+      lower === 'home' ||
+      lower === 'hub'
+    ) {
       return { tab: 'workspace', workstream: null };
     }
     if (lower === 'chat') {

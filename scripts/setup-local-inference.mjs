@@ -44,7 +44,10 @@ function cmdPull() {
   }
   const { model } = loadPin();
   console.log(`Pulling model "${model}" (first run may take a few minutes)...\n`);
-  const r = spawnSync('ollama', ['pull', model], { stdio: 'inherit', shell: process.platform === 'win32' });
+  const r = spawnSync('ollama', ['pull', model], {
+    stdio: 'inherit',
+    shell: process.platform === 'win32'
+  });
   process.exit(r.status ?? 1);
 }
 
@@ -82,7 +85,9 @@ async function cmdSmoke() {
     console.log(`HTTP ${res.status}`);
     console.log('Response:', preview.length > 600 ? `${preview.slice(0, 600)}…` : preview);
     if (!res.ok) {
-      console.error('\nSmoke FAILED. Is Ollama running? Try: ollama serve (or start the Ollama app).');
+      console.error(
+        '\nSmoke FAILED. Is Ollama running? Try: ollama serve (or start the Ollama app).'
+      );
       process.exit(1);
     }
     console.log('\nSmoke OK — local model responded.');

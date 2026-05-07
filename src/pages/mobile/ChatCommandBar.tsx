@@ -306,7 +306,11 @@ export const ChatCommandBar = ({
             aria-label={commandLoading ? 'Command running' : 'Send message'}
           >
             {commandLoading ? (
-              <Loader2 className="h-5 w-5 motion-safe:animate-spin" strokeWidth={2.25} aria-hidden />
+              <Loader2
+                className="h-5 w-5 motion-safe:animate-spin"
+                strokeWidth={2.25}
+                aria-hidden
+              />
             ) : (
               <ArrowUp className="h-5 w-5" strokeWidth={2.5} aria-hidden />
             )}
@@ -316,7 +320,10 @@ export const ChatCommandBar = ({
             type="button"
             disabled={commandLoading}
             onClick={() => onSubmit()}
-            className={clsx('bo-btn-primary inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 px-4 sm:min-w-[5.5rem]', btn)}
+            className={clsx(
+              'bo-btn-primary inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 px-4 sm:min-w-[5.5rem]',
+              btn
+            )}
             title={commandLoading ? 'Working — your command is running' : 'Send (Enter)'}
           >
             {commandLoading ? (

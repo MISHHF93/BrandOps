@@ -59,7 +59,8 @@ export function FirstRunJourneyCard({
           <div className="min-w-0">
             <p className="text-h3 text-text">Getting started</p>
             <p className="mt-1 text-meta text-textSoft">
-              Four quick steps. You can dismiss this anytime — Help in the header always has the manual.
+              Four quick steps. You can dismiss this anytime — Help in the header always has the
+              manual.
             </p>
 
             <ol className="mt-2 list-none space-y-2 p-0 text-left" role="list">
@@ -85,7 +86,8 @@ export function FirstRunJourneyCard({
                   <span className="text-textSoft">2.</span> Open Plan
                 </p>
                 <p className={stepBodyClass}>
-                  Pulse counts, Today snapshot, and the soonest-first queue — plus Today / Pipeline shortcuts.
+                  Pulse counts, Today snapshot, and the soonest-first queue — plus Today / Pipeline
+                  shortcuts.
                 </p>
                 <button
                   type="button"
@@ -95,7 +97,11 @@ export function FirstRunJourneyCard({
                   )}
                   onClick={onOpenPlan}
                 >
-                  <LayoutDashboard className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
+                  <LayoutDashboard
+                    className="h-3.5 w-3.5 shrink-0"
+                    strokeWidth={2.25}
+                    aria-hidden
+                  />
                   Open Plan
                 </button>
               </li>
@@ -103,7 +109,9 @@ export function FirstRunJourneyCard({
                 <p className={stepTitleClass}>
                   <span className="text-textSoft">3.</span> Open Today
                 </p>
-                <p className={stepBodyClass}>Lanes, digests, and workstreams when you need the full cockpit.</p>
+                <p className={stepBodyClass}>
+                  Lanes, digests, and workstreams when you need the full cockpit.
+                </p>
                 <button
                   type="button"
                   className={clsx(
@@ -122,8 +130,8 @@ export function FirstRunJourneyCard({
                 </p>
                 <p className={stepBodyClass}>
                   Press <span className="whitespace-nowrap font-medium text-text">⌘K</span> /{' '}
-                  <span className="whitespace-nowrap font-medium text-text">Ctrl+K</span> to open the palette —
-                  jump to Integrations, Settings, or search commands.
+                  <span className="whitespace-nowrap font-medium text-text">Ctrl+K</span> to open
+                  the palette — jump to Integrations, Settings, or search commands.
                 </p>
               </li>
             </ol>

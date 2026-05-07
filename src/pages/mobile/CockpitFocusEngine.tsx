@@ -154,90 +154,94 @@ export const CockpitFocusEngine = ({
 
       <div className="bo-vitality-frame-body space-y-3 px-3 pb-3 pt-3 sm:px-3.5">
         <div role="tablist" aria-label="Focus areas" className="bo-focus-tabs">
-        {focusTabs.map((tab) => {
-          const isActive = activeFocus === tab.id;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-controls={`focus-panel-${tab.id}`}
-              id={`focus-tab-${tab.id}`}
-              onClick={() => setActiveFocus(tab.id)}
-              title={tab.label}
-              className={clsx('bo-focus-tab', btnFocus)}
-            >
-              <span
-                className={clsx('bo-icon-chip bo-icon-chip--xs', `bo-icon-chip--${tab.tone}`)}
-                aria-hidden
+          {focusTabs.map((tab) => {
+            const isActive = activeFocus === tab.id;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`focus-panel-${tab.id}`}
+                id={`focus-tab-${tab.id}`}
+                onClick={() => setActiveFocus(tab.id)}
+                title={tab.label}
+                className={clsx('bo-focus-tab', btnFocus)}
               >
-                <Icon className="h-3 w-3" strokeWidth={2.25} />
-              </span>
-              <span>{tab.label}</span>
-              <span className="bo-count-pill" aria-hidden>
-                {tab.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {focusTabs.map((tab) => (
-        <div
-          key={tab.id}
-          id={`focus-panel-${tab.id}`}
-          role="tabpanel"
-          aria-labelledby={`focus-tab-${tab.id}`}
-          hidden={activeFocus !== tab.id}
-          className={panelShell(tab.id)}
-        >
-          <LineList items={tab.items} />
+                <span
+                  className={clsx('bo-icon-chip bo-icon-chip--xs', `bo-icon-chip--${tab.tone}`)}
+                  aria-hidden
+                >
+                  <Icon className="h-3 w-3" strokeWidth={2.25} />
+                </span>
+                <span>{tab.label}</span>
+                <span className="bo-count-pill" aria-hidden>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      ))}
 
-      {focus.quickActions.length > 0 ? (
-        <div className="border-t border-border/36 pt-3">
-          <p className="bo-section-label">
-            <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--primary" aria-hidden>
-              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} />
-            </span>
-            <span>Fast actions</span>
-          </p>
-          <ul className="mt-2 flex flex-wrap gap-2" role="list">
-            {focus.quickActions.map((a) => (
-              <li key={a.id}>
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-1.5">
-                  <button
-                    type="button"
-                    disabled={commandBusy}
-                    onClick={() => void runCommand(a.command)}
-                    className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
-                    title={a.rationale}
-                  >
-                    <ArrowUpRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
-                    {a.label}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={commandBusy}
-                    onClick={() => primeChat(a.command)}
-                    className={clsx(
-                      'text-meta text-textSoft underline-offset-2 hover:underline',
-                      commandBusy && 'pointer-events-none opacity-50',
-                      btnFocus
-                    )}
-                    title="Put in Chat composer without sending"
-                  >
-                    Prime
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+        {focusTabs.map((tab) => (
+          <div
+            key={tab.id}
+            id={`focus-panel-${tab.id}`}
+            role="tabpanel"
+            aria-labelledby={`focus-tab-${tab.id}`}
+            hidden={activeFocus !== tab.id}
+            className={panelShell(tab.id)}
+          >
+            <LineList items={tab.items} />
+          </div>
+        ))}
+
+        {focus.quickActions.length > 0 ? (
+          <div className="border-t border-border/36 pt-3">
+            <p className="bo-section-label">
+              <span className="bo-icon-chip bo-icon-chip--sm bo-icon-chip--primary" aria-hidden>
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} />
+              </span>
+              <span>Fast actions</span>
+            </p>
+            <ul className="mt-2 flex flex-wrap gap-2" role="list">
+              {focus.quickActions.map((a) => (
+                <li key={a.id}>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-1.5">
+                    <button
+                      type="button"
+                      disabled={commandBusy}
+                      onClick={() => void runCommand(a.command)}
+                      className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
+                      title={a.rationale}
+                    >
+                      <ArrowUpRight
+                        className="h-3.5 w-3.5 shrink-0"
+                        strokeWidth={2.25}
+                        aria-hidden
+                      />
+                      {a.label}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={commandBusy}
+                      onClick={() => primeChat(a.command)}
+                      className={clsx(
+                        'text-meta text-textSoft underline-offset-2 hover:underline',
+                        commandBusy && 'pointer-events-none opacity-50',
+                        btnFocus
+                      )}
+                      title="Put in Chat composer without sending"
+                    >
+                      Prime
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
     </article>
   );

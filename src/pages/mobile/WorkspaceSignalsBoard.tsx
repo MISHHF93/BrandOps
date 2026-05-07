@@ -30,14 +30,7 @@ export type WorkspaceSignalsPick = Pick<
   | 'integrationSources'
 >;
 
-export type VitalityMetricKey =
-  | 'fu'
-  | 'queue'
-  | 'opps'
-  | 'sched'
-  | 'missed'
-  | 'oauth'
-  | 'src';
+export type VitalityMetricKey = 'fu' | 'queue' | 'opps' | 'sched' | 'missed' | 'oauth' | 'src';
 
 type MetricCell = {
   key: VitalityMetricKey;
@@ -247,10 +240,7 @@ function vitalitySrId(variant: WorkspaceSignalsBoardVariant) {
   }
 }
 
-function vitalitySubtitle(
-  variant: WorkspaceSignalsBoardVariant,
-  filtered: boolean
-): string {
+function vitalitySubtitle(variant: WorkspaceSignalsBoardVariant, filtered: boolean): string {
   if (filtered) {
     switch (variant) {
       case 'integrations':
@@ -283,10 +273,7 @@ export function WorkspaceSignalsBoard({
   mastHeadline
 }: WorkspaceSignalsBoardProps) {
   const all = buildCells(metrics);
-  const cells =
-    includeKeys?.length ?
-      all.filter((c) => includeKeys.includes(c.key))
-    : all;
+  const cells = includeKeys?.length ? all.filter((c) => includeKeys.includes(c.key)) : all;
 
   if (cells.length === 0) {
     return null;
@@ -305,7 +292,9 @@ export function WorkspaceSignalsBoard({
           <p id={srId} className="text-label font-semibold text-text">
             {mastHeadline ?? 'Workspace vitality'}
           </p>
-          <p className="text-meta text-textSoft">{vitalitySubtitle(variant, Boolean(includeKeys?.length))}</p>
+          <p className="text-meta text-textSoft">
+            {vitalitySubtitle(variant, Boolean(includeKeys?.length))}
+          </p>
         </div>
       </div>
       <div

@@ -36,7 +36,8 @@ export function SettingsTierAOverview({
   return (
     <section
       className="bo-tab-section bo-mobile-sheet p-3.5"
-      aria-labelledby="settings-tier-a-heading">
+      aria-labelledby="settings-tier-a-heading"
+    >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-border/40 pb-2.5">
         <h2 id="settings-tier-a-heading" className="text-h3 text-text">
           Workspace
@@ -262,9 +263,9 @@ export function SettingsDataSafetyBlock({
               <span>
                 <span className="font-medium">Record operator traces locally</span>
                 <span className="mt-1 block text-[11px] font-normal leading-snug text-textSoft">
-                  Saves navigation, assistant commands, and appearance changes on this device only—no
-                  automatic upload. Turn off anytime. Use export for analysis or training datasets;
-                  files may include business-sensitive metadata.
+                  Saves navigation, assistant commands, and appearance changes on this device
+                  only—no automatic upload. Turn off anytime. Use export for analysis or training
+                  datasets; files may include business-sensitive metadata.
                 </span>
               </span>
             </label>
@@ -389,8 +390,8 @@ export function SettingsResumeNeuralPhasePanel({
       descriptionVisibility="sr-only"
     >
       <p className="mt-2 text-[11px] leading-relaxed text-textSoft">
-        Neural phasing adds a short artifact to the hosted Ask system prompt (not the native on-device
-        model). Nothing is uploaded until you send a message that calls the hosted bridge.
+        Neural phasing adds a short artifact to the hosted Ask system prompt (not the native
+        on-device model). Nothing is uploaded until you send a message that calls the hosted bridge.
       </p>
       <div className="mt-2 rounded-lg border border-border/40 bg-bgSubtle/45 px-2.5 py-2 text-[11px] text-textMuted">
         <span className="font-medium text-textSoft">Stored preview</span>
@@ -440,7 +441,12 @@ export function SettingsResumeNeuralPhasePanel({
         >
           Compress &amp; save
         </button>
-        <button type="button" disabled={disabled} onClick={() => void clearStored()} className={chip}>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => void clearStored()}
+          className={chip}
+        >
           Clear stored
         </button>
       </div>
@@ -449,11 +455,10 @@ export function SettingsResumeNeuralPhasePanel({
         {!panelBusy && banner ? (
           <p
             className={
-              banner.tone === 'danger'
-                ? 'text-[11px] text-danger'
-                : 'text-[11px] text-success'
+              banner.tone === 'danger' ? 'text-[11px] text-danger' : 'text-[11px] text-success'
             }
-            role={banner.tone === 'danger' ? 'alert' : undefined}>
+            role={banner.tone === 'danger' ? 'alert' : undefined}
+          >
             {banner.msg}
           </p>
         ) : null}

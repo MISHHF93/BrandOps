@@ -18,5 +18,8 @@ export function coerceArtifactBlob(profileBlob) {
 
 /** @param {unknown[]} parts */
 export function joinArtifactParts(parts) {
-  return parts.map((p) => asNonNullStr(p)).filter(Boolean).join(' · ');
+  return parts
+    .map((p) => asNonNullStr(p))
+    .filter(Boolean)
+    .join(' · ');
 }

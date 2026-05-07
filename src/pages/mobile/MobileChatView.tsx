@@ -68,10 +68,7 @@ function assistantInPageAnchors(btnFocus: string) {
     { href: '#assistant-thread', label: 'Transcript' }
   ];
   return (
-    <nav
-      className="mt-2 pt-2"
-      aria-label="Jump within Assistant"
-    >
+    <nav className="mt-2 pt-2" aria-label="Jump within Assistant">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="text-[9px] font-bold uppercase tracking-wide text-textSoft">On page</span>
         {links.map(({ href, label }) => (
@@ -151,8 +148,11 @@ export const MobileChatView = ({
                   Assistant
                 </h2>
                 <p className="mt-0.5 text-[11px] leading-snug text-textMuted">
-                  <span className="whitespace-nowrap font-mono text-[10px] text-textSoft">ask: …</span>{' '}
-                  for hosted answers; other lines use the workspace engine. ⌘K is the full command list.
+                  <span className="whitespace-nowrap font-mono text-[10px] text-textSoft">
+                    ask: …
+                  </span>{' '}
+                  for hosted answers; other lines use the workspace engine. ⌘K is the full command
+                  list.
                 </p>
               </div>
             </div>
@@ -236,11 +236,9 @@ export const MobileChatView = ({
           <p className="bo-assistant-section-label">Copilot</p>
           <p className="mb-1.5 text-[11px] leading-snug text-textSoft">
             Choose a worker, then send{' '}
-            <code className="rounded bg-bgSubtle px-1 py-px text-[10px]">
-              ask: your question
-            </code>{' '}
-            in the composer. With an allow-list configured, the model may append JSON automation blocks
-            after the answer (same engine as Plan).
+            <code className="rounded bg-bgSubtle px-1 py-px text-[10px]">ask: your question</code>{' '}
+            in the composer. With an allow-list configured, the model may append JSON automation
+            blocks after the answer (same engine as Plan).
           </p>
           <div className="bo-copilot-rail">
             {copilotWorkerRegistry.workers.map((w) => {
@@ -251,11 +249,7 @@ export const MobileChatView = ({
                   type="button"
                   title={w.description ?? w.name}
                   onClick={() => onSelectCopilotWorker(w.id)}
-                  className={clsx(
-                    'bo-copilot-chip',
-                    active && 'bo-copilot-chip--active',
-                    btnFocus
-                  )}
+                  className={clsx('bo-copilot-chip', active && 'bo-copilot-chip--active', btnFocus)}
                 >
                   {w.name}
                 </button>
@@ -318,168 +312,171 @@ export const MobileChatView = ({
           className="bo-assistant-thread-shell scroll-mt-28 min-w-0 py-3 sm:py-3.5"
           aria-label="Transcript and recent commands"
         >
-        <h3 className="sr-only">Conversation transcript</h3>
-        <div
-          className="flex flex-col gap-3"
-          role="log"
-          aria-relevant="additions"
-          aria-live="polite"
-          aria-atomic="false"
-        >
-          {commandHistory.length > 0 ? (
-            <div
-              className="pb-3"
-              aria-label="Recent commands"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="bo-assistant-recents-label">
-                  <History className="h-3 w-3" strokeWidth={2} aria-hidden />
-                  Recent
-                </span>
-                <button
-                  type="button"
-                  className={clsx('bo-assistant-recents-clear', btnFocus)}
-                  onClick={onClearCommandHistory}
-                >
-                  Clear
-                </button>
-              </div>
-              <div className="bo-copilot-rail mt-1.5">
-                {commandHistory.slice(0, 12).map((cmd) => (
+          <h3 className="sr-only">Conversation transcript</h3>
+          <div
+            className="flex flex-col gap-3"
+            role="log"
+            aria-relevant="additions"
+            aria-live="polite"
+            aria-atomic="false"
+          >
+            {commandHistory.length > 0 ? (
+              <div className="pb-3" aria-label="Recent commands">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="bo-assistant-recents-label">
+                    <History className="h-3 w-3" strokeWidth={2} aria-hidden />
+                    Recent
+                  </span>
                   <button
-                    key={cmd}
                     type="button"
-                    onClick={() => onQuickCommand(cmd)}
-                    className={clsx('bo-chat-history-chip', btnFocus)}
-                    title={cmd}
+                    className={clsx('bo-assistant-recents-clear', btnFocus)}
+                    onClick={onClearCommandHistory}
                   >
-                    {cmd.length > 48 ? `${cmd.slice(0, 46)}…` : cmd}
+                    Clear
                   </button>
-                ))}
+                </div>
+                <div className="bo-copilot-rail mt-1.5">
+                  {commandHistory.slice(0, 12).map((cmd) => (
+                    <button
+                      key={cmd}
+                      type="button"
+                      onClick={() => onQuickCommand(cmd)}
+                      className={clsx('bo-chat-history-chip', btnFocus)}
+                      title={cmd}
+                    >
+                      {cmd.length > 48 ? `${cmd.slice(0, 46)}…` : cmd}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-12 text-center sm:py-14">
-              <span className="bo-assistant-empty-state-icon">
-                <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
-              </span>
-              <p className="text-sm font-semibold text-text">Start the thread</p>
-              <p className="max-w-[18rem] text-[12px] leading-relaxed text-textMuted">
-                Tap a starter or type in the composer. Plain language runs the same on-device command
-                engine as Plan and Today; hosted models answer lines that begin with{' '}
-                <span className="font-mono text-[11px] text-textSoft">ask:</span>.
-              </p>
-            </div>
-          ) : (
-            messages.map((message) => (
-              <article
-                key={message.id}
-                className={clsx(
-                  'flex gap-2.5',
-                  message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                )}
-              >
-                <span
-                  className={clsx(
-                    'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
-                    message.role === 'user'
-                      ? 'bg-surfaceActive text-text'
-                      : 'bg-accentSoft/35 text-accent'
-                  )}
-                  aria-hidden
-                >
-                  {message.role === 'user' ? (
-                    <User className="h-4 w-4" strokeWidth={2.25} />
-                  ) : (
-                    <Bot className="h-4 w-4" strokeWidth={2.25} />
-                  )}
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center sm:py-14">
+                <span className="bo-assistant-empty-state-icon">
+                  <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
                 </span>
-                <div
+                <p className="text-sm font-semibold text-text">Start the thread</p>
+                <p className="max-w-[18rem] text-[12px] leading-relaxed text-textMuted">
+                  Tap a starter or type in the composer. Plain language runs the same on-device
+                  command engine as Plan and Today; hosted models answer lines that begin with{' '}
+                  <span className="font-mono text-[11px] text-textSoft">ask:</span>.
+                </p>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <article
+                  key={message.id}
                   className={clsx(
-                    'min-w-0 flex-1',
-                    message.role === 'user' ? 'flex justify-end' : ''
+                    'flex gap-2.5',
+                    message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                   )}
                 >
-                  {message.role === 'user' ? (
-                    <div className="bo-chat-bubble-user">
-                      {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
-                        <p className="mb-1 text-[9px] font-bold uppercase opacity-80">
-                          {message.sourceSurface}
-                        </p>
-                      ) : null}
-                      <p className="whitespace-pre-wrap break-words">{message.text}</p>
-                    </div>
-                  ) : message.resultKind === 'ask-result' ? (
-                    <div className="bo-chat-bubble-assistant space-y-1">
-                      <p className="bo-chat-meta-label">Hosted model</p>
-                      {typeof message.ok === 'boolean' && !message.ok ? (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-warning">
-                          <AlertCircle size={11} aria-hidden />
-                          Unavailable
-                        </span>
-                      ) : null}
-                      <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>
-                    </div>
-                  ) : message.resultKind === 'command-result' && message.action ? (
-                    <div className="bo-chat-bubble-meta space-y-1.5 text-[13px]">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {message.ok ? (
-                          <span className="inline-flex items-center gap-0.5 rounded-full bg-successSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-success">
-                            <CheckCircle2 size={11} aria-hidden />
-                            Ok
-                          </span>
-                        ) : (
+                  <span
+                    className={clsx(
+                      'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                      message.role === 'user'
+                        ? 'bg-surfaceActive text-text'
+                        : 'bg-accentSoft/35 text-accent'
+                    )}
+                    aria-hidden
+                  >
+                    {message.role === 'user' ? (
+                      <User className="h-4 w-4" strokeWidth={2.25} />
+                    ) : (
+                      <Bot className="h-4 w-4" strokeWidth={2.25} />
+                    )}
+                  </span>
+                  <div
+                    className={clsx(
+                      'min-w-0 flex-1',
+                      message.role === 'user' ? 'flex justify-end' : ''
+                    )}
+                  >
+                    {message.role === 'user' ? (
+                      <div className="bo-chat-bubble-user">
+                        {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
+                          <p className="mb-1 text-[9px] font-bold uppercase opacity-80">
+                            {message.sourceSurface}
+                          </p>
+                        ) : null}
+                        <p className="whitespace-pre-wrap break-words">{message.text}</p>
+                      </div>
+                    ) : message.resultKind === 'ask-result' ? (
+                      <div className="bo-chat-bubble-assistant space-y-1">
+                        <p className="bo-chat-meta-label">Hosted model</p>
+                        {typeof message.ok === 'boolean' && !message.ok ? (
                           <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-warning">
                             <AlertCircle size={11} aria-hidden />
-                            Issue
+                            Unavailable
                           </span>
-                        )}
-                        <code className="rounded-md bg-bgSubtle px-1.5 py-0.5 text-[10px] text-info">
-                          {message.action}
-                        </code>
-                        {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
-                          <span className="text-[9px] text-textSoft">{message.sourceSurface}</span>
                         ) : null}
-                        <button
-                          type="button"
-                          className={clsx(
-                            'ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-bgElevated text-textSoft hover:bg-surfaceActive hover:text-text',
-                            btnFocus
-                          )}
-                          title="Copy"
-                          aria-label="Copy command output"
-                          onClick={() =>
-                            copyToClipboard(
-                              `${message.action}\n${message.text}${message.strip ? `\n${JSON.stringify(message.strip)}` : ''}`
-                            )
-                          }
-                        >
-                          <Copy size={14} aria-hidden />
-                        </button>
+                        <p className="whitespace-pre-wrap break-words leading-relaxed">
+                          {message.text}
+                        </p>
                       </div>
-                      <p className="whitespace-pre-wrap break-words leading-relaxed text-text">
-                        {message.text}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="bo-chat-bubble-assistant">
-                      <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>
-                    </div>
-                  )}
-                </div>
-              </article>
-            ))
-          )}
-          {loading ? (
-            <div className="pt-1">
-              <AgentWorkingState />
-            </div>
-          ) : null}
-          <div ref={transcriptEndRef} className="h-1 w-full shrink-0 scroll-mt-24" aria-hidden />
-        </div>
-      </section>
+                    ) : message.resultKind === 'command-result' && message.action ? (
+                      <div className="bo-chat-bubble-meta space-y-1.5 text-[13px]">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {message.ok ? (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-successSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-success">
+                              <CheckCircle2 size={11} aria-hidden />
+                              Ok
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-warning">
+                              <AlertCircle size={11} aria-hidden />
+                              Issue
+                            </span>
+                          )}
+                          <code className="rounded-md bg-bgSubtle px-1.5 py-0.5 text-[10px] text-info">
+                            {message.action}
+                          </code>
+                          {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
+                            <span className="text-[9px] text-textSoft">
+                              {message.sourceSurface}
+                            </span>
+                          ) : null}
+                          <button
+                            type="button"
+                            className={clsx(
+                              'ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-bgElevated text-textSoft hover:bg-surfaceActive hover:text-text',
+                              btnFocus
+                            )}
+                            title="Copy"
+                            aria-label="Copy command output"
+                            onClick={() =>
+                              copyToClipboard(
+                                `${message.action}\n${message.text}${message.strip ? `\n${JSON.stringify(message.strip)}` : ''}`
+                              )
+                            }
+                          >
+                            <Copy size={14} aria-hidden />
+                          </button>
+                        </div>
+                        <p className="whitespace-pre-wrap break-words leading-relaxed text-text">
+                          {message.text}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bo-chat-bubble-assistant">
+                        <p className="whitespace-pre-wrap break-words leading-relaxed">
+                          {message.text}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              ))
+            )}
+            {loading ? (
+              <div className="pt-1">
+                <AgentWorkingState />
+              </div>
+            ) : null}
+            <div ref={transcriptEndRef} className="h-1 w-full shrink-0 scroll-mt-24" aria-hidden />
+          </div>
+        </section>
       </div>
     </div>
   );

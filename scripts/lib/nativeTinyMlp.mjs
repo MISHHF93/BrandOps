@@ -203,7 +203,7 @@ export function trainStep(weights, text, labelIndex, lr, profileBlob = '') {
 
   let loss = 0;
   for (let k = 0; k < probs.length; k++) {
-    loss -= (k === labelIndex ? Math.log(probs[k] + 1e-12) : 0);
+    loss -= k === labelIndex ? Math.log(probs[k] + 1e-12) : 0;
   }
   return loss;
 }

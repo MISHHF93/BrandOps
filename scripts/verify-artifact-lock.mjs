@@ -83,10 +83,14 @@ function categoriesPresentInCsv(csvText, required) {
 const skipTests = process.argv.includes('--skip-tests');
 
 if (!skipTests) {
-  const gen = spawnSync(process.execPath, [path.join(root, 'scripts', 'generate-artifact-resonance-report.mjs')], {
-    stdio: 'inherit',
-    cwd: root
-  });
+  const gen = spawnSync(
+    process.execPath,
+    [path.join(root, 'scripts', 'generate-artifact-resonance-report.mjs')],
+    {
+      stdio: 'inherit',
+      cwd: root
+    }
+  );
   if (gen.status !== 0) process.exit(gen.status ?? 1);
 }
 

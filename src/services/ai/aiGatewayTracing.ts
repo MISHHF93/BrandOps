@@ -74,9 +74,7 @@ export async function persistEmbeddingsGatewayTrace(
     modelId: args.modelId,
     batchSize: args.batchSize,
     vectorDims:
-      args.result.ok && args.result.embeddings[0]
-        ? args.result.embeddings[0].length
-        : null
+      args.result.ok && args.result.embeddings[0] ? args.result.embeddings[0].length : null
   };
   if (!args.result.ok) {
     details.code = args.result.code;

@@ -114,7 +114,8 @@ const ARTIFACT_REGISTRY = [
     name: 'Operating profile presets + planner expansion',
     key_path: 'src/shared/workspace/operatingProfileCatalog.ts; src/services/ai/aiSettingsMode.ts',
     resonates_with: 'Settings configure:apply; lastAppliedPresetId persistence',
-    verification: 'tests/unit/aiSettingsMode.test.ts; tests/unit/settingsNormalizationContract.test.ts',
+    verification:
+      'tests/unit/aiSettingsMode.test.ts; tests/unit/settingsNormalizationContract.test.ts',
     notes: 'Phase A–C unified modes.'
   },
   {
@@ -211,7 +212,8 @@ for (const tr of raw.testResults ?? []) {
   const perfLayer = filePath.includes('performance/') ? 'performance' : 'unit';
   const assertions = tr.assertionResults ?? [];
   const durationMs = assertions.reduce((acc, a) => acc + (Number(a.duration) || 0), 0);
-  const status = tr.status === 'passed' ? 'passed' : tr.status === 'failed' ? 'failed' : String(tr.status ?? '');
+  const status =
+    tr.status === 'passed' ? 'passed' : tr.status === 'failed' ? 'failed' : String(tr.status ?? '');
   lines.push(
     row([
       perfLayer,
@@ -224,7 +226,12 @@ for (const tr of raw.testResults ?? []) {
       durationMs.toFixed(2),
       String(assertions.length),
       reportIso,
-      assertions.length ? assertions.map((a) => a.title).slice(0, 3).join(' | ') : ''
+      assertions.length
+        ? assertions
+            .map((a) => a.title)
+            .slice(0, 3)
+            .join(' | ')
+        : ''
     ])
   );
 }

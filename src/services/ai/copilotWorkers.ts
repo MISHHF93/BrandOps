@@ -35,9 +35,7 @@ export function buildCopilotContextHintBlock(
     const matched = workspace.contentLibrary.filter((item) =>
       item.tags.some((t) => tagSet.has(t.toLowerCase()))
     );
-    lines.push(
-      `Content tagged [${hints.contentTags.join(', ')}]: ${matched.length} item(s)`
-    );
+    lines.push(`Content tagged [${hints.contentTags.join(', ')}]: ${matched.length} item(s)`);
     const top = matched[0];
     if (top) lines.push(`Example item title: ${top.title.slice(0, 120)}`);
   }
