@@ -69,7 +69,7 @@ function assistantInPageAnchors(btnFocus: string) {
   ];
   return (
     <nav
-      className="mt-2 border-t border-border/25 pt-2"
+      className="mt-2 pt-2"
       aria-label="Jump within Assistant"
     >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -143,7 +143,7 @@ export const MobileChatView = ({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 text-text">
-              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-accent/35 bg-accentSoft/20 text-accent">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-bgElevated text-accent">
                 <MessageCircle className="h-4 w-4" strokeWidth={2.25} aria-hidden />
               </span>
               <div className="min-w-0">
@@ -236,7 +236,7 @@ export const MobileChatView = ({
           <p className="bo-assistant-section-label">Copilot</p>
           <p className="mb-1.5 text-[11px] leading-snug text-textSoft">
             Choose a worker, then send{' '}
-            <code className="rounded border border-border/40 bg-bgSubtle/80 px-1 py-px text-[10px]">
+            <code className="rounded bg-bgSubtle px-1 py-px text-[10px]">
               ask: your question
             </code>{' '}
             in the composer. With an allow-list configured, the model may append JSON automation blocks
@@ -328,7 +328,7 @@ export const MobileChatView = ({
         >
           {commandHistory.length > 0 ? (
             <div
-              className="border-b border-border/25 pb-3"
+              className="pb-3"
               aria-label="Recent commands"
             >
               <div className="flex items-center justify-between gap-2">
@@ -383,10 +383,10 @@ export const MobileChatView = ({
               >
                 <span
                   className={clsx(
-                    'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold',
+                    'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
                     message.role === 'user'
-                      ? 'border-borderStrong/50 bg-surfaceActive text-text'
-                      : 'border-accent/35 bg-accentSoft/28 text-accent'
+                      ? 'bg-surfaceActive text-text'
+                      : 'bg-accentSoft/35 text-accent'
                   )}
                   aria-hidden
                 >
@@ -436,7 +436,7 @@ export const MobileChatView = ({
                             Issue
                           </span>
                         )}
-                        <code className="rounded-md border border-border/35 bg-bgSubtle/80 px-1.5 py-0.5 text-[10px] text-info">
+                        <code className="rounded-md bg-bgSubtle px-1.5 py-0.5 text-[10px] text-info">
                           {message.action}
                         </code>
                         {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
@@ -445,7 +445,7 @@ export const MobileChatView = ({
                         <button
                           type="button"
                           className={clsx(
-                            'ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/40 text-textSoft hover:bg-surfaceActive hover:text-text',
+                            'ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-bgElevated text-textSoft hover:bg-surfaceActive hover:text-text',
                             btnFocus
                           )}
                           title="Copy"

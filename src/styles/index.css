@@ -828,8 +828,7 @@ html[data-app-surface='welcome'] body::after {
   .bo-assistant-hero {
     border-radius: 1rem;
     border: none;
-    border-bottom: 1px solid rgb(var(--color-border) / 0.24);
-    background: rgb(var(--bo-chat-hero-bg));
+    background: rgb(var(--color-bg));
     box-shadow: none;
   }
 
@@ -845,8 +844,8 @@ html[data-app-surface='welcome'] body::after {
     display: inline-flex;
     align-items: center;
     border-radius: 0.5rem;
-    border: 1px solid rgb(var(--color-border) / 0.42);
-    background: rgb(var(--color-surface) / 0.55);
+    border: none;
+    background: rgb(var(--color-surface));
     padding: 0.2rem 0.45rem;
     font-size: 0.625rem;
     font-weight: 700;
@@ -855,9 +854,14 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-assistant-stat-pill--action {
-    border-color: rgb(var(--brand-gold) / 0.38);
-    background: rgb(var(--brand-gold) / 0.09);
+    background: rgb(var(--brand-gold) / 0.12);
     color: rgb(var(--color-text));
+  }
+
+  .bo-assistant-hero .bo-icon-btn-ai {
+    border: none;
+    box-shadow: none;
+    background: rgb(var(--color-bg-elevated));
   }
 
   .bo-assistant-hero .bo-dos-hero-title {
@@ -885,19 +889,16 @@ html[data-app-surface='welcome'] body::after {
     padding: 0.35rem 0 0.5rem;
     margin-inline: 0;
     border: none;
-    background:
-      linear-gradient(165deg, rgb(var(--bo-chat-hero-bg) / 0.38) 0%, transparent 46%),
-      rgb(var(--bo-chat-canvas) / 1);
-    box-shadow: 0 10px 28px rgb(var(--color-shadow) / 0.08);
+    background: rgb(var(--color-bg));
+    box-shadow: none;
   }
 
   .bo-assistant-thread-shell {
-    margin-top: 0.15rem;
-    background: rgb(var(--bo-chat-thread-bg) / 0.97);
+    margin-top: 0;
+    background: rgb(var(--color-bg));
     border: none;
-    border-top: 1px solid rgb(var(--color-border) / 0.26);
-    border-radius: 0 0 1rem 1rem;
-    box-shadow: inset 0 1px 0 rgb(var(--color-text) / 0.025);
+    border-radius: 0;
+    box-shadow: none;
   }
 
   /**
@@ -955,26 +956,23 @@ html[data-app-surface='welcome'] body::after {
     scroll-snap-align: start;
     touch-action: manipulation;
     border-radius: 9999px;
-    border: 1px solid rgb(var(--bo-chat-starter-border) / 0.65);
-    background: rgb(var(--bo-chat-starter-bg) / 0.88);
+    border: none;
+    background: rgb(var(--bo-chat-starter-bg));
     padding: 0.38rem 0.85rem;
     font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.02em;
     color: rgb(var(--color-text-muted) / 1);
-    box-shadow: 0 1px 3px rgb(var(--color-shadow) / 0.06);
+    box-shadow: none;
     transition:
-      border-color var(--duration-fast) var(--ease-liquid-out),
       background var(--duration-fast) var(--ease-liquid-out),
       color var(--duration-fast) var(--ease-liquid-out),
-      box-shadow var(--duration-fast) var(--ease-liquid-out),
       transform var(--duration-fast) var(--ease-liquid-out);
   }
 
   .bo-copilot-chip:hover {
-    border-color: rgb(var(--color-accent) / 0.48);
     color: rgb(var(--color-text) / 1);
-    background: rgb(var(--color-accent) / 0.09);
+    background: rgb(var(--color-accent) / 0.14);
   }
 
   .bo-copilot-chip:active {
@@ -982,16 +980,9 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-copilot-chip--active {
-    border-color: rgb(var(--color-accent) / 0.72);
-    background: linear-gradient(
-      165deg,
-      rgb(var(--color-accent) / 0.22),
-      rgb(var(--color-secondary) / 0.14)
-    );
+    background: rgb(var(--color-accent) / 0.22);
     color: rgb(var(--color-accent) / 1);
-    box-shadow:
-      inset 0 1px 0 rgb(var(--color-text) / 0.06),
-      0 0 18px rgb(var(--color-accent) / 0.1);
+    box-shadow: none;
   }
 
   :root[data-theme='light'] .bo-copilot-chip--active {
@@ -1034,22 +1025,20 @@ html[data-app-surface='welcome'] body::after {
     white-space: nowrap;
     touch-action: manipulation;
     border-radius: 9999px;
-    border: 1px solid rgb(var(--bo-chat-starter-border) / 0.55);
-    background: rgb(var(--color-surface) / 0.65);
+    border: none;
+    background: rgb(var(--color-surface));
     padding: 0.4rem 0.75rem;
     text-align: left;
     font-size: 0.6875rem;
     font-weight: 600;
     color: rgb(var(--color-text-muted) / 1);
     transition:
-      border-color var(--duration-fast) var(--ease-liquid-out),
       background var(--duration-fast) var(--ease-liquid-out),
       color var(--duration-fast) var(--ease-liquid-out);
   }
 
   .bo-chat-history-chip:hover {
-    border-color: rgb(var(--color-accent) / 0.38);
-    background: rgb(var(--color-accent) / 0.08);
+    background: rgb(var(--color-accent) / 0.12);
     color: rgb(var(--color-text) / 1);
   }
 
@@ -1069,14 +1058,10 @@ html[data-app-surface='welcome'] body::after {
     align-items: center;
     justify-content: center;
     border-radius: 1rem;
-    border: 1px solid rgb(var(--color-accent) / 0.35);
+    border: none;
     color: rgb(var(--color-accent) / 1);
-    box-shadow: 0 4px 14px rgb(var(--color-shadow) / 0.12);
-    background: linear-gradient(
-      145deg,
-      rgb(var(--color-accent) / 0.2),
-      rgb(var(--bo-chat-canvas) / 0.5)
-    );
+    box-shadow: none;
+    background: rgb(var(--color-bg-elevated));
   }
 
   .bo-chat-bubble-user {
@@ -1089,14 +1074,14 @@ html[data-app-surface='welcome'] body::after {
     line-height: 1.45;
     box-shadow: none;
     text-align: left;
-    border: 1px solid rgb(var(--color-accent) / 0.22);
+    border: none;
   }
 
   .bo-chat-bubble-assistant {
     max-width: min(52vw + 6rem, 20rem);
     border-radius: 0.45rem 0.45rem 0.25rem 0.45rem;
     background: rgb(var(--bo-chat-assistant-bg) / 1);
-    border: 1px solid rgb(var(--bo-chat-assistant-border) / 0.85);
+    border: none;
     color: rgb(var(--color-text) / 1);
     padding: 0.5rem 0.8rem;
     font-size: 0.8125rem;
@@ -1107,7 +1092,7 @@ html[data-app-surface='welcome'] body::after {
   .bo-chat-bubble-meta {
     border-radius: 0.45rem 0.45rem 0.25rem 0.45rem;
     background: rgb(var(--bo-chat-assistant-bg) / 1);
-    border: 1px solid rgb(var(--bo-chat-assistant-border) / 0.85);
+    border: none;
     padding: 0.5rem 0.8rem;
     font-size: 0.8125rem;
     box-shadow: none;
@@ -1119,23 +1104,21 @@ html[data-app-surface='welcome'] body::after {
     flex-shrink: 0;
     scroll-snap-align: start;
     border-radius: 0.35rem;
-    border: 1px solid rgb(var(--bo-chat-starter-border) / 0.75);
-    background: rgb(var(--bo-chat-starter-bg) / 0.92);
+    border: none;
+    background: rgb(var(--bo-chat-starter-bg));
     padding: 0.45rem 0.8rem;
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.2;
     color: rgb(var(--color-text) / 1);
-    box-shadow: 0 1px 4px rgb(var(--color-shadow) / 0.08);
+    box-shadow: none;
     transition:
-      border-color var(--duration-fast) var(--ease-liquid-out),
       background var(--duration-fast) var(--ease-liquid-out),
       transform var(--duration-fast) var(--ease-liquid-out);
   }
 
   .bo-chat-starter-chip:hover {
-    border-color: rgb(var(--color-accent) / 0.55);
-    background: rgb(var(--color-accent) / 0.08);
+    background: rgb(var(--color-accent) / 0.14);
   }
 
   .bo-chat-starter-chip:active {
@@ -1246,12 +1229,12 @@ html[data-app-surface='welcome'] body::after {
     min-height: 3.15rem;
     text-align: left;
     border-radius: 0.9rem;
-    border: 1px solid rgb(var(--color-border) / 0.48);
-    background: rgb(var(--color-bg-elevated) / 0.72);
+    border: none;
+    background: rgb(var(--color-bg-elevated));
     padding: 0.52rem 0.55rem 0.52rem 0.62rem;
     font: inherit;
     color: rgb(var(--color-text) / 1);
-    box-shadow: 0 1px 3px rgb(var(--color-shadow) / 0.08);
+    box-shadow: none;
     transition:
       border-color var(--duration-fast) var(--ease-liquid-out),
       background var(--duration-fast) var(--ease-liquid-out),
@@ -1259,8 +1242,7 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-plan-destination-card:hover:not(:disabled) {
-    border-color: rgb(var(--color-accent) / 0.42);
-    background: rgb(var(--color-accent) / 0.06);
+    background: rgb(var(--color-surface-active));
   }
 
   .bo-plan-destination-card:active:not(:disabled) {
@@ -1273,12 +1255,11 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-plan-destination-card--accent {
-    border-color: rgb(var(--color-accent) / 0.45);
-    background: rgb(var(--color-accent) / 0.12);
+    background: rgb(var(--color-accent) / 0.14);
   }
 
   .bo-plan-destination-card--accent:hover:not(:disabled) {
-    background: rgb(var(--color-accent) / 0.18);
+    background: rgb(var(--color-accent) / 0.22);
   }
 
   .bo-plan-destination-card__icon {
@@ -1320,7 +1301,7 @@ html[data-app-surface='welcome'] body::after {
     align-items: baseline;
     gap: 0.45rem 0.65rem;
     padding: 0.35rem 0 0.15rem;
-    border-bottom: 1px solid rgb(var(--color-border) / 0.22);
+    border-bottom: none;
   }
 
   .bo-plan-jump-nav__link {
@@ -2514,11 +2495,8 @@ html[data-app-surface='welcome'] body::after {
    * so scoped selectors beat plain utilities on shared components (plan sheet, dock).
    */
   :root:not([data-theme='light']) .bo-plan-flat-root {
-    border-color: rgb(var(--color-border) / 0.92);
-    box-shadow:
-      inset 0 1px 0 rgb(var(--color-text) / 0.05),
-      0 12px 36px rgb(0 0 0 / 0.32),
-      0 0 28px rgb(var(--color-accent) / 0.045);
+    border: none;
+    box-shadow: none;
   }
 
   :root:not([data-theme='light']) .bo-brand-command-surface {
@@ -2532,20 +2510,19 @@ html[data-app-surface='welcome'] body::after {
       0 10px 26px rgb(var(--color-shadow) / 0.22);
   }
 
-  /* Assistant Ask tab — keep chrome on phosphor / forest greens (avoid cyan–blue ANSI reads). */
+  /* Assistant Ask tab — flat canvas (no layered shadows/borders). */
   :root:not([data-theme='light']) .bo-assistant-hero {
     border: none;
-    border-bottom: 1px solid rgb(var(--color-border) / 0.32);
-    box-shadow: inset 3px 0 0 rgb(var(--color-accent) / 0.62);
+    box-shadow: none;
   }
 
   :root:not([data-theme='light']) .bo-assistant-surface {
     border: none;
-    box-shadow: 0 10px 32px rgb(var(--color-shadow) / 0.14);
+    box-shadow: none;
   }
 
   :root:not([data-theme='light']) .bo-assistant-thread-shell {
-    border-top-color: rgb(var(--color-border-strong) / 0.34);
+    border: none;
   }
 
   :root:not([data-theme='light']) .bo-mobile-nav__dock {
@@ -2570,20 +2547,6 @@ html[data-app-surface='welcome'] body::after {
       0 8px 26px rgb(0 0 0 / 0.26);
   }
 
-  :root:not([data-theme='light']) .bo-assistant-hero .bo-assistant-stat-pill:nth-child(1) {
-    border-color: rgb(var(--color-accent) / 0.42);
-    box-shadow: inset 0 0 12px rgb(var(--color-accent) / 0.06);
-  }
-
-  :root:not([data-theme='light']) .bo-assistant-hero .bo-assistant-stat-pill:nth-child(2) {
-    border-color: rgb(var(--color-secondary) / 0.42);
-    box-shadow: inset 0 0 12px rgb(var(--color-secondary) / 0.06);
-  }
-
-  :root:not([data-theme='light']) .bo-assistant-hero .bo-assistant-stat-pill:nth-child(3) {
-    border-color: rgb(var(--ansi-yellow) / 0.44);
-    box-shadow: inset 0 0 12px rgb(var(--ansi-yellow) / 0.06);
-  }
 }
 
 :focus-visible {

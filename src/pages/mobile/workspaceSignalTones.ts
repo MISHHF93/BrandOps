@@ -50,13 +50,13 @@ export function metricToneTextClass(tone: WorkspaceSignalTone): string {
 /** Compact Plan “Today snapshot” KPI chips — border/fill tracks severity without painting whole sections. */
 export function planKpiSnapshotPillClass(tone: WorkspaceSignalTone): string {
   return clsx(
-    'rounded-md border px-2 py-0.5 text-[10px] tabular-nums text-textMuted',
-    tone === 'danger' && 'border-danger/42 bg-dangerSoft/15',
-    tone === 'warning' && 'border-warning/42 bg-warningSoft/15',
-    tone === 'info' && 'border-info/42 bg-infoSoft/15',
-    tone === 'success' && 'border-success/42 bg-successSoft/15',
-    tone === 'primary' && 'border-primary/38 bg-primarySoft/12',
-    tone === 'muted' && 'border-border/35 bg-surface/40'
+    'rounded-md px-2 py-0.5 text-[10px] tabular-nums text-textMuted',
+    tone === 'danger' && 'bg-dangerSoft/28',
+    tone === 'warning' && 'bg-warningSoft/28',
+    tone === 'info' && 'bg-infoSoft/28',
+    tone === 'success' && 'bg-successSoft/28',
+    tone === 'primary' && 'bg-primarySoft/22',
+    tone === 'muted' && 'bg-surface'
   );
 }
 

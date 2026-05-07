@@ -42,8 +42,8 @@ function planAgentLockCopy(reason: 'auth' | 'membership' | null): string | null 
   return null;
 }
 
-const SHEET = 'bo-plan-flat-root overflow-hidden rounded-2xl border border-border/50 bg-surface/35';
-const ROW = 'scroll-mt-28 border-b border-border/30 px-3 py-3 sm:px-3.5 last:border-b-0';
+const SHEET = 'bo-plan-flat-root overflow-hidden rounded-2xl bg-bg';
+const ROW = 'scroll-mt-28 px-3 py-3 sm:px-3.5';
 
 export interface MobileWorkspaceHubViewProps {
   snapshot: MobileWorkspaceSnapshot;
@@ -119,11 +119,11 @@ export const MobileWorkspaceHubView = ({
             <p className="mt-1.5 text-[11px] leading-snug text-textMuted">
               Pipeline health, quick picks, and queue runs stay on this tab. Integrations, Settings,
               and Assistant are on the dock or press{' '}
-              <kbd className="rounded border border-border/45 bg-bgSubtle px-1 py-px font-mono text-[10px] text-text">
+              <kbd className="rounded bg-bgSubtle px-1 py-px font-mono text-[10px] text-text">
                 ⌘K
               </kbd>{' '}
               /{' '}
-              <kbd className="rounded border border-border/45 bg-bgSubtle px-1 py-px font-mono text-[10px] text-text">
+              <kbd className="rounded bg-bgSubtle px-1 py-px font-mono text-[10px] text-text">
                 Ctrl+K
               </kbd>{' '}
               for the full catalogue.
@@ -180,7 +180,7 @@ export const MobileWorkspaceHubView = ({
               type="button"
               onClick={onOpenToday}
               className={clsx(
-                'shrink-0 rounded-lg border border-border/45 bg-bg px-2.5 py-1 text-[11px] font-semibold text-text',
+                'shrink-0 rounded-lg bg-bgElevated px-2.5 py-1 text-[11px] font-semibold text-text',
                 btnFocus
               )}
             >
@@ -208,7 +208,7 @@ export const MobileWorkspaceHubView = ({
             </span>
           </div>
           {hasTodayPeekLists ? (
-            <div className="mt-2 space-y-2 border-t border-border/25 pt-2">
+            <div className="mt-3 space-y-2 pt-1">
               {todayPreviewTasks.length > 0 ? (
                 <div>
                   <p className="text-[10px] font-medium uppercase tracking-wide text-textSoft">
@@ -246,7 +246,7 @@ export const MobileWorkspaceHubView = ({
               ) : null}
             </div>
           ) : (
-            <p className="mt-2 border-t border-border/25 pt-2 text-[10px] text-textSoft">
+            <p className="mt-3 pt-1 text-[10px] text-textSoft">
               Nothing peeking yet — open Today for scheduler lanes and pipeline detail.
             </p>
           )}
@@ -296,7 +296,7 @@ export const MobileWorkspaceHubView = ({
                   {sorted.slice(0, 14).map((row) => (
                     <tr
                       key={row.id}
-                      className="border-b border-border/25 align-top text-textMuted last:border-b-0"
+                      className="align-top text-textMuted"
                     >
                       <td className="py-2 pe-2 align-middle">
                         <span
