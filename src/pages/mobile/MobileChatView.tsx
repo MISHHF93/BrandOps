@@ -134,9 +134,12 @@ export const MobileChatView = ({
   onOpenResumeGrounding
 }: MobileChatViewProps) => {
   const assistantPlanPicks = getAssistantQuickPlanPicks(ASSISTANT_STARTER_COMMAND_SET);
+  /** Matches hero inset — keeps Copilot / starters / transcript edges aligned. */
+  const assistantGutter = 'px-3 sm:px-3.5';
+
   return (
     <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-3">
-      <header className="bo-assistant-hero bo-dos-hero rounded-2xl px-3 py-3 sm:px-3.5">
+      <header className={clsx('bo-assistant-hero bo-dos-hero rounded-2xl py-3 sm:py-3.5', assistantGutter)}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 text-text">
@@ -224,129 +227,97 @@ export const MobileChatView = ({
         ) : null}
       </header>
 
-      <section
-        id="assistant-copilot"
-        className="scroll-mt-28 min-w-0 px-0.5"
-        aria-label="Hosted Ask copilot"
-      >
-        <p className="bo-assistant-section-label">Copilot</p>
-        <p className="mb-1.5 text-[11px] leading-snug text-textSoft">
-          Choose a worker, then send{' '}
-          <code className="rounded border border-border/40 bg-bgSubtle/80 px-1 py-px text-[10px]">
-            ask: your question
-          </code>{' '}
-          in the composer. With an allow-list configured, the model may append JSON automation blocks
-          after the answer (same engine as Plan).
-        </p>
-        <div className="bo-copilot-rail">
-          {copilotWorkerRegistry.workers.map((w) => {
-            const active = copilotWorkerRegistry.activeWorkerId === w.id;
-            return (
-              <button
-                key={w.id}
-                type="button"
-                title={w.description ?? w.name}
-                onClick={() => onSelectCopilotWorker(w.id)}
-                className={clsx(
-                  'bo-copilot-chip',
-                  active && 'bo-copilot-chip--active',
-                  btnFocus
-                )}
-              >
-                {w.name}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <div id="assistant-commands" className="scroll-mt-28 space-y-3">
-        <section aria-labelledby="assistant-starters-label" className="min-w-0 px-0.5">
-          <p id="assistant-starters-label" className="bo-assistant-section-label">
-            Starters
+      <div className={clsx('flex min-w-0 flex-col gap-3', assistantGutter)}>
+        <section
+          id="assistant-copilot"
+          className="scroll-mt-28 min-w-0"
+          aria-label="Hosted Ask copilot"
+        >
+          <p className="bo-assistant-section-label">Copilot</p>
+          <p className="mb-1.5 text-[11px] leading-snug text-textSoft">
+            Choose a worker, then send{' '}
+            <code className="rounded border border-border/40 bg-bgSubtle/80 px-1 py-px text-[10px]">
+              ask: your question
+            </code>{' '}
+            in the composer. With an allow-list configured, the model may append JSON automation blocks
+            after the answer (same engine as Plan).
           </p>
-          <div className="bo-assistant-quick-strip mt-1.5">
-            {ASSISTANT_QUICK_PICKS.map((command) => {
-              const meta = getIntentByCommandLine(command);
-              const label = meta?.title ?? command;
+          <div className="bo-copilot-rail">
+            {copilotWorkerRegistry.workers.map((w) => {
+              const active = copilotWorkerRegistry.activeWorkerId === w.id;
               return (
                 <button
-                  key={command}
+                  key={w.id}
                   type="button"
-                  onClick={() => onQuickCommand(command)}
-                  title={meta ? `${meta.title} — ${meta.subtitle}` : command}
-                  className={clsx('bo-chat-starter-chip touch-manipulation', btnFocus)}
+                  title={w.description ?? w.name}
+                  onClick={() => onSelectCopilotWorker(w.id)}
+                  className={clsx(
+                    'bo-copilot-chip',
+                    active && 'bo-copilot-chip--active',
+                    btnFocus
+                  )}
                 >
-                  <span className="line-clamp-1">{label}</span>
+                  {w.name}
                 </button>
               );
             })}
           </div>
         </section>
 
-        {assistantPlanPicks.length > 0 ? (
-          <section aria-labelledby="assistant-plan-picks-label" className="min-w-0 px-0.5">
-            <p id="assistant-plan-picks-label" className="bo-assistant-section-label">
-              Planning picks
-            </p>
-            <p className="mb-1 text-[10px] leading-snug text-textSoft">
-              Essentials from the Plan page (deduped against Starters above).
+        <div id="assistant-commands" className="scroll-mt-28 space-y-3">
+          <section aria-labelledby="assistant-starters-label" className="min-w-0">
+            <p id="assistant-starters-label" className="bo-assistant-section-label">
+              Starters
             </p>
             <div className="bo-assistant-quick-strip mt-1.5">
-              {assistantPlanPicks.map((intent) => (
-                <button
-                  key={intent.id}
-                  type="button"
-                  onClick={() => onQuickCommand(intent.command)}
-                  title={`${intent.title} — ${intent.subtitle}`}
-                  className={clsx('bo-chat-starter-chip touch-manipulation', btnFocus)}
-                >
-                  <span className="line-clamp-1">{intent.title}</span>
-                </button>
-              ))}
+              {ASSISTANT_QUICK_PICKS.map((command) => {
+                const meta = getIntentByCommandLine(command);
+                const label = meta?.title ?? command;
+                return (
+                  <button
+                    key={command}
+                    type="button"
+                    onClick={() => onQuickCommand(command)}
+                    title={meta ? `${meta.title} — ${meta.subtitle}` : command}
+                    className={clsx('bo-chat-starter-chip touch-manipulation', btnFocus)}
+                  >
+                    <span className="line-clamp-1">{label}</span>
+                  </button>
+                );
+              })}
             </div>
           </section>
-        ) : null}
-      </div>
 
-      {commandHistory.length > 0 ? (
-        <section className="min-w-0 px-0.5" aria-label="Recent commands">
-          <div className="bo-assistant-recents-panel">
-            <div className="bo-assistant-recents-header">
-              <span className="bo-assistant-recents-label">
-                <History className="h-3 w-3" strokeWidth={2} aria-hidden />
-                Recent
-              </span>
-              <button
-                type="button"
-                className={clsx('bo-assistant-recents-clear', btnFocus)}
-                onClick={onClearCommandHistory}
-              >
-                Clear
-              </button>
-            </div>
-            <div className="bo-copilot-rail">
-              {commandHistory.slice(0, 12).map((cmd) => (
-                <button
-                  key={cmd}
-                  type="button"
-                  onClick={() => onQuickCommand(cmd)}
-                  className={clsx('bo-chat-history-chip', btnFocus)}
-                  title={cmd}
-                >
-                  {cmd.length > 48 ? `${cmd.slice(0, 46)}…` : cmd}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
+          {assistantPlanPicks.length > 0 ? (
+            <section aria-labelledby="assistant-plan-picks-label" className="min-w-0">
+              <p id="assistant-plan-picks-label" className="bo-assistant-section-label">
+                Planning picks
+              </p>
+              <p className="mb-1 text-[10px] leading-snug text-textSoft">
+                Essentials from the Plan page (deduped against Starters above).
+              </p>
+              <div className="bo-assistant-quick-strip mt-1.5">
+                {assistantPlanPicks.map((intent) => (
+                  <button
+                    key={intent.id}
+                    type="button"
+                    onClick={() => onQuickCommand(intent.command)}
+                    title={`${intent.title} — ${intent.subtitle}`}
+                    className={clsx('bo-chat-starter-chip touch-manipulation', btnFocus)}
+                  >
+                    <span className="line-clamp-1">{intent.title}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
 
-      <section
-        id="assistant-thread"
-        className="bo-assistant-thread-shell scroll-mt-28 min-w-0 rounded-2xl border px-2.5 py-3 sm:px-3.5"
-        aria-label="Conversation"
-      >
+        <section
+          id="assistant-thread"
+          className="bo-assistant-thread-shell scroll-mt-28 min-w-0 py-3 sm:py-3.5"
+          aria-label="Transcript and recent commands"
+        >
         <h3 className="sr-only">Conversation transcript</h3>
         <div
           className="flex flex-col gap-3"
@@ -355,8 +326,42 @@ export const MobileChatView = ({
           aria-live="polite"
           aria-atomic="false"
         >
+          {commandHistory.length > 0 ? (
+            <div
+              className="border-b border-border/35 pb-3"
+              aria-label="Recent commands"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="bo-assistant-recents-label">
+                  <History className="h-3 w-3" strokeWidth={2} aria-hidden />
+                  Recent
+                </span>
+                <button
+                  type="button"
+                  className={clsx('bo-assistant-recents-clear', btnFocus)}
+                  onClick={onClearCommandHistory}
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="bo-copilot-rail mt-1.5">
+                {commandHistory.slice(0, 12).map((cmd) => (
+                  <button
+                    key={cmd}
+                    type="button"
+                    onClick={() => onQuickCommand(cmd)}
+                    className={clsx('bo-chat-history-chip', btnFocus)}
+                    title={cmd}
+                  >
+                    {cmd.length > 48 ? `${cmd.slice(0, 46)}…` : cmd}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 px-3 py-12 text-center sm:py-14">
+            <div className="flex flex-col items-center justify-center gap-2 py-12 text-center sm:py-14">
               <span className="bo-assistant-empty-state-icon">
                 <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
               </span>
@@ -475,6 +480,7 @@ export const MobileChatView = ({
           <div ref={transcriptEndRef} className="h-1 w-full shrink-0 scroll-mt-24" aria-hidden />
         </div>
       </section>
+      </div>
     </div>
   );
 };

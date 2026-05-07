@@ -43,7 +43,7 @@ function planAgentLockCopy(reason: 'auth' | 'membership' | null): string | null 
 }
 
 const SHEET = 'bo-plan-flat-root overflow-hidden rounded-2xl border border-border/50 bg-surface/35';
-const ROW = 'scroll-mt-28 border-b border-border/30 px-3 py-3 sm:px-4 last:border-b-0';
+const ROW = 'scroll-mt-28 border-b border-border/30 px-3 py-3 sm:px-3.5 last:border-b-0';
 
 export interface MobileWorkspaceHubViewProps {
   snapshot: MobileWorkspaceSnapshot;
