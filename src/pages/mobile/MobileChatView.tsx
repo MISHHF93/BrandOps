@@ -69,7 +69,7 @@ function assistantInPageAnchors(btnFocus: string) {
   ];
   return (
     <nav
-      className="mt-2 border-t border-border/35 pt-2"
+      className="mt-2 border-t border-border/25 pt-2"
       aria-label="Jump within Assistant"
     >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -139,7 +139,7 @@ export const MobileChatView = ({
 
   return (
     <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-3">
-      <header className={clsx('bo-assistant-hero bo-dos-hero rounded-2xl py-3 sm:py-3.5', assistantGutter)}>
+      <header className={clsx('bo-assistant-hero bo-dos-hero py-3 sm:py-3.5', assistantGutter)}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 text-text">
@@ -328,7 +328,7 @@ export const MobileChatView = ({
         >
           {commandHistory.length > 0 ? (
             <div
-              className="border-b border-border/35 pb-3"
+              className="border-b border-border/25 pb-3"
               aria-label="Recent commands"
             >
               <div className="flex items-center justify-between gap-2">
