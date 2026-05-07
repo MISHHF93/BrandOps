@@ -122,7 +122,7 @@ const ARTIFACT_REGISTRY = [
     category: 'native_tiny_mlp',
     name: 'Committed toy MLP (hash segments → scaled-dot attention pool → ReLU MLP → softmax)',
     key_path:
-      'scripts/lib/nativeTinyMlp.mjs; scripts/lib/nativeWorkContext.mjs; scripts/lib/nativeStructuredArtifacts.mjs; ARTIFACT_PIPELINE_PLAN.md; scripts/data/native-mlp-weights.json',
+      'scripts/lib/nativeTinyMlp.mjs; scripts/lib/nativeWorkContext.mjs; scripts/lib/nativeStructuredArtifacts.mjs; scripts/data/native-mlp-weights.json',
     resonates_with:
       'npm run native:model:run — offline intent probe; workspace exports fuse operator profile + live work slots + resume; optional --structured-json graph mirrors BrandOpsData; no vendor APIs',
     verification:
