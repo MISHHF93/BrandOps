@@ -2794,15 +2794,26 @@ html[data-app-surface='welcome'] body::after {
 
 @keyframes bo-intro3d-palette-shift {
   0% {
-    background-position: 0% 40%;
+    background-position: 8% 35%;
   }
 
   50% {
-    background-position: 100% 60%;
+    background-position: 92% 65%;
   }
 
   100% {
-    background-position: 0% 40%;
+    background-position: 8% 35%;
+  }
+}
+
+@keyframes bo-intro3d-ambient-luma {
+  0%,
+  100% {
+    filter: brightness(0.9) saturate(1.06);
+  }
+
+  50% {
+    filter: brightness(1.12) saturate(1.14);
   }
 }
 
@@ -2830,14 +2841,15 @@ html[data-app-surface='welcome'] body::after {
 }
 
 .bo-intro3d-root--exit {
-  animation: bo-intro3d-root-out 0.52s var(--ease-liquid-out) forwards;
+  animation: bo-intro3d-root-out 0.58s var(--ease-liquid-out) forwards;
 }
 
 .bo-intro3d-ambient {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(
+  background-color: rgb(var(--intro-black));
+  background-image: linear-gradient(
     125deg,
     rgb(var(--intro-black)),
     rgb(var(--intro-green-deep)),
@@ -2847,8 +2859,12 @@ html[data-app-surface='welcome'] body::after {
     rgb(var(--intro-brown) / 0.85),
     rgb(var(--intro-black))
   );
-  background-size: 400% 400%;
-  animation: bo-intro3d-palette-shift 18s var(--ease-liquid-in-out) infinite;
+  background-repeat: no-repeat;
+  background-size: 520% 520%;
+  transform: translateZ(0);
+  animation:
+    bo-intro3d-palette-shift 14s var(--ease-liquid-in-out) infinite,
+    bo-intro3d-ambient-luma 5.5s var(--ease-liquid-in-out) infinite;
   pointer-events: none;
 }
 
@@ -2862,7 +2878,7 @@ html[data-app-surface='welcome'] body::after {
       rgb(var(--intro-green) / 0.12),
       transparent 58%
     ),
-    radial-gradient(ellipse 120% 88% at 50% 100%, rgb(0 0 0 / 0.72), rgb(var(--intro-black) / 0.94));
+    radial-gradient(ellipse 120% 88% at 50% 100%, rgb(0 0 0 / 0.58), rgb(var(--intro-black) / 0.88));
   pointer-events: none;
 }
 
@@ -3019,6 +3035,7 @@ html[data-app-surface='welcome'] body::after {
 
   .bo-intro3d-ambient {
     animation: none !important;
+    filter: none !important;
     background-position: 50% 50%;
   }
 
@@ -3080,6 +3097,7 @@ html[data-app-surface='welcome'] body::after {
 
 :root[data-motion-mode='off'] .bo-intro3d-ambient {
   animation: none !important;
+  filter: none !important;
   background-position: 50% 50%;
 }
 

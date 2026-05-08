@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { BrandOpsCrownMark } from '../../shared/ui/brandopsPolish';
 
 /** Bump when the intro visuals change materially — shows the new sequence once per tab session. */
-export const LIQUID_INTRO_SESSION_KEY = 'brandops:intro3d:v3';
+export const LIQUID_INTRO_SESSION_KEY = 'brandops:intro3d:v4';
 
-const HOLD_MS = 2200;
-const FADE_OUT_MS = 520;
+const HOLD_MS = 3800;
+const FADE_OUT_MS = 580;
 
 export interface LiquidIntroOverlayProps {
   open: boolean;
