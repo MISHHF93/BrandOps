@@ -108,7 +108,7 @@ export const WorkspaceCommandPalette = ({
       shouldFilter
       loop
       overlayClassName="bo-system-overlay--soft fixed inset-0 z-[100]"
-      contentClassName="bo-system-sheet bo-mobile-main fixed left-1/2 top-[10vh] z-[100] w-[min(100%-1.5rem,28rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-border/70 p-0 shadow-panel"
+      contentClassName="bo-system-sheet bo-mobile-main fixed left-1/2 top-[10vh] z-[100] w-[min(100%-1.5rem,28rem)] min-[1920px]:w-[min(100%-2rem,44rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-border/70 p-0 shadow-panel"
     >
       {commandBusy ? (
         <div

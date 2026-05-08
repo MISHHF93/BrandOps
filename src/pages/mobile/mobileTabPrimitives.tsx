@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { dockTabForShellTab, type MobileShellTabId } from './mobileShellQuery';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
 import { SHELL_TAB_PURPOSE } from './shellSectionCopy';
-import { MOBILE_SHELL_MAX_WIDTH_CLASS } from './shellLayoutTokens';
+import { MOBILE_SHELL_EDGE_PAD_CLASS, MOBILE_SHELL_MAX_WIDTH_CLASS } from './shellLayoutTokens';
 
 const TAB_COLUMN_COUNT = MOBILE_SHELL_NAV_TABS.length;
 
@@ -121,8 +121,9 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
     >
       <div
         className={clsx(
-          'bo-mobile-nav__outer pointer-events-auto w-full px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-[max(0.45rem,env(safe-area-inset-bottom,0px))] pt-1',
-          MOBILE_SHELL_MAX_WIDTH_CLASS
+          'bo-mobile-nav__outer pointer-events-auto w-full pb-[max(0.45rem,env(safe-area-inset-bottom,0px))] pt-1',
+          MOBILE_SHELL_MAX_WIDTH_CLASS,
+          MOBILE_SHELL_EDGE_PAD_CLASS
         )}
       >
         <div className="bo-mobile-nav__dock relative overflow-hidden">

@@ -37,7 +37,7 @@ import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
 import { buildWorkspaceSnapshot, type MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { MOBILE_BTN_FOCUS, MobileShellNav } from './mobileTabPrimitives';
-import { MOBILE_SHELL_MAX_WIDTH_CLASS } from './shellLayoutTokens';
+import { MOBILE_SHELL_EDGE_PAD_CLASS, MOBILE_SHELL_MAX_WIDTH_CLASS } from './shellLayoutTokens';
 import {
   FirstRunJourneyCard,
   GETTING_STARTED_CONTENT_VERSION,
@@ -1195,8 +1195,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         />
         <div
           className={clsx(
-            'mx-auto flex w-full items-start justify-between gap-3 px-4',
-            MOBILE_SHELL_MAX_WIDTH_CLASS
+            'mx-auto flex w-full items-start justify-between gap-3',
+            MOBILE_SHELL_MAX_WIDTH_CLASS,
+            MOBILE_SHELL_EDGE_PAD_CLASS
           )}
         >
           <div className="bo-mobile-brand flex min-w-0 flex-1 gap-3">
@@ -1281,7 +1282,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           </div>
         ) : activeTab === 'chat' ? (
           <section
-            className="bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-4 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-6 text-sm text-textMuted motion-reduce:animate-none"
+            className={clsx(
+              'bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-4 pb-6 text-sm text-textMuted motion-reduce:animate-none',
+              MOBILE_SHELL_EDGE_PAD_CLASS
+            )}
             aria-label="Assistant conversation"
             key="shell-chat"
           >
@@ -1322,7 +1326,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         ) : (
           <section
             key={activeTab}
-            className="bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-4 px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-6 text-sm text-textMuted motion-reduce:animate-none"
+            className={clsx(
+              'bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-4 pb-6 text-sm text-textMuted motion-reduce:animate-none',
+              MOBILE_SHELL_EDGE_PAD_CLASS
+            )}
             aria-label={`${activeTab} tab`}
           >
             {activeTab === 'workspace' ? (
