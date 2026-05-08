@@ -2774,7 +2774,7 @@ html[data-app-surface='welcome'] body::after {
   transform: scale(0.98);
 }
 
-/* Mobile shell — CSS-only 3D welcome intro (perspective floor + monolith + orbit). */
+/* Mobile shell — welcome intro: single slow green / black / brown gradient; static 3D scene. */
 @keyframes bo-intro3d-root-in {
   from {
     opacity: 0;
@@ -2792,72 +2792,17 @@ html[data-app-surface='welcome'] body::after {
   }
 }
 
-@keyframes bo-intro3d-lockup {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.96);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes bo-intro3d-world-sway {
+@keyframes bo-intro3d-palette-shift {
   0% {
-    transform: rotateX(-5deg) rotateY(-14deg) rotateZ(0deg);
-  }
-
-  100% {
-    transform: rotateX(4deg) rotateY(12deg) rotateZ(0.5deg);
-  }
-}
-
-@keyframes bo-intro3d-floor-drift {
-  0% {
-    background-position:
-      0 0,
-      0 0;
-  }
-
-  100% {
-    background-position:
-      56px 28px,
-      28px 56px;
-  }
-}
-
-@keyframes bo-intro3d-monolith-tilt {
-  0% {
-    transform: rotateX(16deg) rotateY(-22deg) translateZ(0);
-  }
-
-  100% {
-    transform: rotateX(10deg) rotateY(18deg) translateZ(18px);
-  }
-}
-
-@keyframes bo-intro3d-glow-pulse {
-  0%,
-  100% {
-    opacity: 0.45;
-    transform: translate(-50%, -50%) scale3d(1, 1, 1);
+    background-position: 0% 40%;
   }
 
   50% {
-    opacity: 0.72;
-    transform: translate(-50%, -50%) scale3d(1.06, 1.08, 1);
-  }
-}
-
-@keyframes bo-intro3d-orbit-spin {
-  from {
-    transform: rotateY(0deg);
+    background-position: 100% 60%;
   }
 
-  to {
-    transform: rotateY(360deg);
+  100% {
+    background-position: 0% 40%;
   }
 }
 
@@ -2865,45 +2810,66 @@ html[data-app-surface='welcome'] body::after {
   isolation: isolate;
   opacity: 0;
   animation: bo-intro3d-root-in 0.5s var(--ease-liquid-out) forwards;
-  --intro-gold: 252 186 92;
-  --intro-cyan: 72 210 255;
-  --intro-blue: 118 158 255;
-  --intro-indigo: 88 98 228;
-  --intro-violet: 178 132 255;
-  --intro-grid: 120 140 255;
+  --intro-green: 34 110 72;
+  --intro-green-deep: 18 58 38;
+  --intro-brown: 112 72 42;
+  --intro-brown-deep: 58 38 22;
+  --intro-black: 8 10 9;
+  --intro-grid-g: 48 140 88;
+  --intro-grid-br: 130 90 56;
 }
 
 :root[data-theme='light'] .bo-intro3d-root {
-  --intro-gold: 200 130 42;
-  --intro-cyan: 0 158 206;
-  --intro-blue: 62 108 210;
-  --intro-indigo: 68 78 198;
-  --intro-violet: 124 88 198;
-  --intro-grid: 72 92 180;
+  --intro-green: 28 92 58;
+  --intro-green-deep: 22 72 48;
+  --intro-brown: 92 58 34;
+  --intro-brown-deep: 72 46 28;
+  --intro-black: 18 20 18;
+  --intro-grid-g: 38 120 72;
+  --intro-grid-br: 110 78 48;
 }
 
 .bo-intro3d-root--exit {
   animation: bo-intro3d-root-out 0.52s var(--ease-liquid-out) forwards;
 }
 
-.bo-intro3d-vignette {
+.bo-intro3d-ambient {
   position: absolute;
   inset: 0;
   z-index: 0;
+  background: linear-gradient(
+    125deg,
+    rgb(var(--intro-black)),
+    rgb(var(--intro-green-deep)),
+    rgb(var(--intro-brown-deep)),
+    rgb(var(--intro-black)),
+    rgb(var(--intro-green) / 0.92),
+    rgb(var(--intro-brown) / 0.85),
+    rgb(var(--intro-black))
+  );
+  background-size: 400% 400%;
+  animation: bo-intro3d-palette-shift 18s var(--ease-liquid-in-out) infinite;
+  pointer-events: none;
+}
+
+.bo-intro3d-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   background:
     radial-gradient(
-      ellipse 72% 58% at 50% 38%,
-      rgb(var(--color-bg-elevated) / 0.08),
-      rgb(var(--color-bg) / 0.97) 72%
+      ellipse 78% 62% at 50% 36%,
+      rgb(var(--intro-green) / 0.12),
+      transparent 58%
     ),
-    radial-gradient(circle at 50% 22%, rgb(var(--intro-indigo) / 0.09), transparent 52%);
+    radial-gradient(ellipse 120% 88% at 50% 100%, rgb(0 0 0 / 0.72), rgb(var(--intro-black) / 0.94));
   pointer-events: none;
 }
 
 .bo-intro3d-scene {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2918,7 +2884,7 @@ html[data-app-surface='welcome'] body::after {
   width: min(110vw, 72rem);
   height: min(72vh, 38rem);
   transform-style: preserve-3d;
-  animation: bo-intro3d-world-sway 9s var(--ease-liquid-in-out) infinite alternate;
+  transform: rotateX(-4deg) rotateY(-10deg);
 }
 
 .bo-intro3d-floor {
@@ -2931,26 +2897,25 @@ html[data-app-surface='welcome'] body::after {
   transform-origin: 50% 50%;
   transform-style: preserve-3d;
   border-radius: 12px;
-  opacity: 0.55;
+  opacity: 0.42;
   background-image:
     linear-gradient(
       90deg,
-      rgb(var(--intro-grid) / 0.07) 1px,
+      rgb(var(--intro-grid-g) / 0.09) 1px,
       transparent 1px,
       transparent 47px,
-      rgb(var(--intro-grid) / 0.055) 48px
+      rgb(var(--intro-grid-br) / 0.055) 48px
     ),
     linear-gradient(
       180deg,
-      rgb(var(--intro-grid) / 0.06) 1px,
+      rgb(var(--intro-grid-g) / 0.075) 1px,
       transparent 1px,
       transparent 47px,
-      rgb(var(--intro-grid) / 0.045) 48px
+      rgb(var(--intro-grid-br) / 0.045) 48px
     );
   background-size:
     48px 48px,
     48px 48px;
-  animation: bo-intro3d-floor-drift 22s linear infinite;
   mask-image: radial-gradient(ellipse 58% 72% at 50% 42%, #000 22%, transparent 78%);
 }
 
@@ -2964,144 +2929,53 @@ html[data-app-surface='welcome'] body::after {
   transform-style: preserve-3d;
 }
 
-.bo-intro3d-monolith-glow {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 140%;
-  height: 118%;
-  border-radius: 2rem;
-  transform: translate(-50%, -40%) translateZ(-60px) rotateX(72deg);
-  transform-style: preserve-3d;
-  background: radial-gradient(
-    ellipse at 50% 38%,
-    rgb(var(--intro-cyan) / 0.35),
-    rgb(var(--intro-indigo) / 0.22) 48%,
-    transparent 68%
-  );
-  filter: blur(28px);
-  animation: bo-intro3d-glow-pulse 4.5s var(--ease-liquid-in-out) infinite;
-}
-
 .bo-intro3d-monolith {
   position: absolute;
   inset: 0;
   border-radius: 1.65rem;
   transform-style: preserve-3d;
-  transform-origin: 50% 60%;
-  animation: bo-intro3d-monolith-tilt 8s var(--ease-liquid-in-out) infinite alternate;
+  transform: rotateX(14deg) rotateY(-18deg);
   background: linear-gradient(
-    155deg,
-    rgb(var(--intro-indigo) / 0.42) 0%,
-    rgb(var(--color-surface) / 0.85) 38%,
-    rgb(var(--color-bg-elevated) / 0.92) 100%
+    152deg,
+    rgb(var(--intro-brown-deep) / 0.95) 0%,
+    rgb(var(--intro-black) / 0.92) 42%,
+    rgb(var(--intro-green-deep) / 0.88) 100%
   );
-  border: 1px solid rgb(var(--intro-cyan) / 0.28);
+  border: 1px solid rgb(var(--intro-green) / 0.35);
   box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.06) inset,
-    0 90px 140px rgb(var(--intro-indigo) / 0.38),
-    0 28px 56px rgb(0 0 0 / 0.55);
-}
-
-.bo-intro3d-monolith::before {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: inherit;
-  padding: 2px;
-  background: linear-gradient(
-    135deg,
-    rgb(var(--intro-gold) / 0.55),
-    rgb(var(--intro-cyan) / 0.45),
-    rgb(var(--intro-violet) / 0.5),
-    rgb(var(--intro-gold) / 0.35)
-  );
-  background-size: 200% 200%;
-  animation: bo-intro3d-floor-drift 16s linear infinite reverse;
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0.85;
-  pointer-events: none;
-}
-
-.bo-intro3d-orbits {
-  position: absolute;
-  left: 50%;
-  top: 42%;
-  width: 19rem;
-  height: 19rem;
-  margin: -9.5rem 0 0 -9.5rem;
-  transform-style: preserve-3d;
-  animation: bo-intro3d-orbit-spin 14s linear infinite;
-}
-
-.bo-intro3d-orbit-dot {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 0.55rem;
-  height: 0.55rem;
-  margin: -0.275rem 0 0 -0.275rem;
-  border-radius: 999px;
-  transform-style: preserve-3d;
-  box-shadow: 0 0 18px rgb(var(--intro-cyan) / 0.85);
-}
-
-.bo-intro3d-orbit-dot--a {
-  background: rgb(var(--intro-cyan));
-  transform: rotateY(0deg) translateZ(9.25rem);
-}
-
-.bo-intro3d-orbit-dot--b {
-  background: rgb(var(--intro-gold));
-  box-shadow: 0 0 18px rgb(var(--intro-gold) / 0.75);
-  transform: rotateY(120deg) translateZ(9.25rem);
-}
-
-.bo-intro3d-orbit-dot--c {
-  background: rgb(var(--intro-violet));
-  box-shadow: 0 0 18px rgb(var(--intro-violet) / 0.65);
-  transform: rotateY(240deg) rotateX(8deg) translateZ(9.25rem);
+    0 1px 0 rgb(var(--intro-green) / 0.08) inset,
+    0 72px 120px rgb(0 0 0 / 0.62),
+    0 20px 40px rgb(var(--intro-brown-deep) / 0.35);
 }
 
 .bo-intro3d-root .bo-intro3d-lockup-mark {
-  border-color: rgb(var(--intro-cyan) / 0.4);
+  border-color: rgb(var(--intro-green) / 0.42);
   background: linear-gradient(
     148deg,
-    rgb(var(--intro-indigo) / 0.2),
-    rgb(var(--intro-violet) / 0.11)
+    rgb(var(--intro-brown-deep) / 0.55),
+    rgb(var(--intro-black) / 0.7)
   );
   box-shadow:
-    0 14px 48px rgb(var(--intro-indigo) / 0.34),
-    inset 0 1px 0 rgb(var(--intro-gold) / 0.14),
-    0 0 0 4px rgb(var(--intro-indigo) / 0.06);
-  color: rgb(var(--intro-gold));
+    0 14px 48px rgb(0 0 0 / 0.45),
+    inset 0 1px 0 rgb(var(--intro-green) / 0.12),
+    0 0 0 4px rgb(var(--intro-green) / 0.06);
+  color: rgb(var(--intro-green));
 }
 
 .bo-intro3d-root .bo-intro3d-lockup-mark::after {
-  border-color: rgb(var(--intro-cyan) / 0.14);
+  border-color: rgb(var(--intro-brown) / 0.22);
 }
 
 .bo-intro3d-root .bo-intro3d-lockup-mark svg {
-  color: rgb(var(--intro-gold));
+  color: rgb(var(--intro-green));
 }
 
 .bo-intro3d-lockup-sub {
-  color: rgb(var(--intro-blue));
+  color: rgb(var(--intro-brown) / 0.92);
 }
 
 :root[data-theme='light'] .bo-intro3d-lockup-sub {
-  opacity: 0.88;
-}
-
-.bo-intro3d-lockup {
-  animation: bo-intro3d-lockup 0.92s var(--ease-liquid-out) 0.12s both;
+  opacity: 0.92;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3143,14 +3017,9 @@ html[data-app-surface='welcome'] body::after {
     pointer-events: none !important;
   }
 
-  .bo-intro3d-world,
-  .bo-intro3d-floor,
-  .bo-intro3d-monolith,
-  .bo-intro3d-monolith-glow,
-  .bo-intro3d-monolith::before,
-  .bo-intro3d-orbits,
-  .bo-intro3d-lockup {
+  .bo-intro3d-ambient {
     animation: none !important;
+    background-position: 50% 50%;
   }
 
   .bo-press-ink:active {
@@ -3209,14 +3078,9 @@ html[data-app-surface='welcome'] body::after {
   pointer-events: none !important;
 }
 
-:root[data-motion-mode='off'] .bo-intro3d-world,
-:root[data-motion-mode='off'] .bo-intro3d-floor,
-:root[data-motion-mode='off'] .bo-intro3d-monolith,
-:root[data-motion-mode='off'] .bo-intro3d-monolith-glow,
-:root[data-motion-mode='off'] .bo-intro3d-monolith::before,
-:root[data-motion-mode='off'] .bo-intro3d-orbits,
-:root[data-motion-mode='off'] .bo-intro3d-lockup {
+:root[data-motion-mode='off'] .bo-intro3d-ambient {
   animation: none !important;
+  background-position: 50% 50%;
 }
 
 /* ==========================================================================

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BrandOpsCrownMark } from '../../shared/ui/brandopsPolish';
 
 /** Bump when the intro visuals change materially — shows the new sequence once per tab session. */
-export const LIQUID_INTRO_SESSION_KEY = 'brandops:intro3d:v2';
+export const LIQUID_INTRO_SESSION_KEY = 'brandops:intro3d:v3';
 
 const HOLD_MS = 2200;
 const FADE_OUT_MS = 520;
@@ -15,7 +15,7 @@ export interface LiquidIntroOverlayProps {
 }
 
 /**
- * Full-screen **CSS 3D** welcome scene (perspective grid + monolith + orbital accents).
+ * Full-screen welcome scene: static perspective grid + monolith over a slow green / black / brown gradient.
  * No WebGL; respects reduced motion via stylesheet + parent skip logic.
  */
 export function LiquidIntroOverlay({ open, btnFocus, onFinished }: LiquidIntroOverlayProps) {
@@ -66,19 +66,14 @@ export function LiquidIntroOverlay({ open, btnFocus, onFinished }: LiquidIntroOv
         Welcome to BrandOps
       </h2>
 
+      <div className="bo-intro3d-ambient" aria-hidden />
       <div className="bo-intro3d-vignette" aria-hidden />
 
       <div className="bo-intro3d-scene" aria-hidden>
         <div className="bo-intro3d-world">
           <div className="bo-intro3d-floor" />
           <div className="bo-intro3d-monolith-wrap">
-            <div className="bo-intro3d-monolith-glow" />
             <div className="bo-intro3d-monolith" />
-          </div>
-          <div className="bo-intro3d-orbits">
-            <span className="bo-intro3d-orbit-dot bo-intro3d-orbit-dot--a" />
-            <span className="bo-intro3d-orbit-dot bo-intro3d-orbit-dot--b" />
-            <span className="bo-intro3d-orbit-dot bo-intro3d-orbit-dot--c" />
           </div>
         </div>
       </div>
