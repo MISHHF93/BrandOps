@@ -1,8 +1,8 @@
 import type { AppSettings } from '../../types/domain';
 import { aiRuntimePolicy } from '../aiAdapters/runtimePolicy';
 import {
-  BRANDOPS_AI_OPENAI_COMPAT_STORAGE_KEY,
-  getOpenAiCompatibleApiKey
+  getOpenAiCompatibleApiKey,
+  describeAiSecretsStorageHint
 } from './aiSecretsAccess';
 
 export type NlpGatewayFailureCode =
@@ -138,7 +138,7 @@ export async function runChatCompletion(
     return {
       ok: false,
       code: 'missing_api_key',
-      message: `Set API key in chrome.storage.local["${BRANDOPS_AI_OPENAI_COMPAT_STORAGE_KEY}"].`
+      message: `Configure hosted API key (${describeAiSecretsStorageHint()}).`
     };
   }
 
@@ -251,7 +251,7 @@ export async function runEmbeddings(
     return {
       ok: false,
       code: 'missing_api_key',
-      message: `Set API key in chrome.storage.local["${BRANDOPS_AI_OPENAI_COMPAT_STORAGE_KEY}"].`
+      message: `Configure hosted API key (${describeAiSecretsStorageHint()}).`
     };
   }
 

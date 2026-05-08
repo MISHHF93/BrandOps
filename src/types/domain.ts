@@ -535,7 +535,7 @@ export interface OperatingProfileState {
 
 /**
  * Optional bridge to hosted NLP / LLM APIs (OpenAI-compatible HTTPS shape).
- * API secrets MUST NOT live here — use extension storage (see `aiSecretsAccess`).
+ * API secrets MUST NOT live here — use `aiSecretsAccess` / device-local storage (Chrome Web Store + Play).
  */
 export interface AiBridgeSettings {
   /** Example: `https://api.openai.com/v1` — trailing slashes tolerated. */

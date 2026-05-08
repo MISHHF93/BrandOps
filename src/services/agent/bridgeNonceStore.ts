@@ -1,17 +1,12 @@
+import { browserLocalStorage } from '../../shared/storage/browserStorage';
 import { BridgeReplayGuard } from './bridgeReplayGuard';
 
 const STORAGE_KEY = 'brandops:bridgeNonceExpiry';
 const inMemory = new BridgeReplayGuard();
 
-const hasChromeStorage = () =>
-  typeof chrome !== 'undefined' &&
-  Boolean(chrome.storage?.local?.get) &&
-  Boolean(chrome.storage?.local?.set);
-
 /**
- * Durable(ish) replay protection for the extension: persists nonce expiry map in
- * `chrome.storage.local` when available; otherwise falls back to the in-memory guard
- * (dev builds and unit tests).
+ * Durable(ish) replay protection: persists nonce expiry map via {@link browserLocalStorage}
+ * (Chrome `chrome.storage.local`, Capacitor `localStorage`, tests → memory).
  */
 export const isBridgeNonceReplayed = async (
   nonce: string,
@@ -20,40 +15,24 @@ export const isBridgeNonceReplayed = async (
 ) => {
   const normalized = nonce.trim();
   if (!normalized) return true;
-  if (!hasChromeStorage()) {
+
+  try {
+    const raw = await browserLocalStorage.get<Record<string, number>>(STORAGE_KEY);
+    const map: Record<string, number> = raw && typeof raw === 'object' ? { ...raw } : {};
+    for (const [k, exp] of Object.entries(map)) {
+      if (typeof exp !== 'number' || exp <= now) {
+        delete map[k];
+      }
+    }
+    const previous = map[normalized];
+    if (typeof previous === 'number' && previous > now) {
+      await browserLocalStorage.set(STORAGE_KEY, map);
+      return true;
+    }
+    map[normalized] = now + ttlMs;
+    await browserLocalStorage.set(STORAGE_KEY, map);
+    return false;
+  } catch {
     return inMemory.registerAndCheckReplay(normalized, now);
   }
-  return new Promise<boolean>((resolve, reject) => {
-    void chrome.storage.local.get(STORAGE_KEY, (existing) => {
-      const lastError = chrome.runtime?.lastError;
-      if (lastError) {
-        reject(new Error(lastError.message));
-        return;
-      }
-      const raw = (existing as { [k: string]: unknown })[STORAGE_KEY] as
-        | Record<string, number>
-        | undefined;
-      const map: Record<string, number> = raw && typeof raw === 'object' ? { ...raw } : {};
-      for (const [k, exp] of Object.entries(map)) {
-        if (typeof exp !== 'number' || exp <= now) {
-          delete map[k];
-        }
-      }
-      const previous = map[normalized];
-      if (typeof previous === 'number' && previous > now) {
-        void chrome.storage.local.set({ [STORAGE_KEY]: map });
-        resolve(true);
-        return;
-      }
-      map[normalized] = now + ttlMs;
-      void chrome.storage.local.set({ [STORAGE_KEY]: map }, () => {
-        const e = chrome.runtime?.lastError;
-        if (e) {
-          reject(new Error(e.message));
-        } else {
-          resolve(false);
-        }
-      });
-    });
-  });
 };

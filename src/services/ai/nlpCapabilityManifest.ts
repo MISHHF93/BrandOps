@@ -17,7 +17,7 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
     label: 'Persisted aiBridge (URLs + model IDs)',
     status: 'implemented',
     notes:
-      'Stored in AppSettings.aiBridge; secrets via chrome.storage.local key brandops_ai_openai_compat_key.'
+      'Stored in AppSettings.aiBridge; API key via browserLocalStorage / chrome.storage.local key brandops_ai_openai_compat_key (see aiSecretsAccess).'
   },
   {
     id: 'gateway-chat-completions',

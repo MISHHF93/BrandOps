@@ -1,6 +1,6 @@
 /**
- * Extension runtime helpers: one place for chrome.runtime URL resolution so pages
- * and navigation do not each re-implement the same guards and dev fallbacks.
+ * Extension + Capacitor URL helpers: `chrome.runtime.getURL()` when packaged as MV3;
+ * otherwise resolves relative to `window.location` (mobile WebView / dev server).
  *
  * App routing uses **query strings** on `.html` pages (see `extensionLinks.ts`), not `#` fragments.
  * `chrome.runtime.getURL()` must receive the **packaged path only** (`file.html`); anything after

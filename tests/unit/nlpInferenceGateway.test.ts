@@ -4,7 +4,8 @@ import type { AppSettings } from '../../src/types/domain';
 
 vi.mock('../../src/services/ai/aiSecretsAccess', () => ({
   BRANDOPS_AI_OPENAI_COMPAT_STORAGE_KEY: 'brandops_ai_openai_compat_key',
-  getOpenAiCompatibleApiKey: vi.fn()
+  getOpenAiCompatibleApiKey: vi.fn(),
+  describeAiSecretsStorageHint: vi.fn(() => 'chrome.storage.local["brandops_ai_openai_compat_key"]')
 }));
 
 import { getOpenAiCompatibleApiKey } from '../../src/services/ai/aiSecretsAccess';
