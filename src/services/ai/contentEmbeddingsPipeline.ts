@@ -5,7 +5,7 @@ import type {
 } from '../../types/domain';
 import { fingerprintTextSnippet } from './llmStructuredApply';
 import { persistEmbeddingsGatewayTrace } from './aiGatewayTracing';
-import { runEmbeddings } from './nlpInferenceGateway';
+import { runEmbeddings } from './hostedNlp';
 
 export const MAX_EMBEDDING_INDEX_ENTRIES = 48;
 

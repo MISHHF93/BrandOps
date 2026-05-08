@@ -1,8 +1,4 @@
-import {
-  BrandOpsData,
-  OpportunityStage,
-  PublishingItem
-} from '../../types/domain';
+import { BrandOpsData, OpportunityStage, PublishingItem } from '../../types/domain';
 import {
   integrationPresetForKind,
   resolveIntegrationKindFromCommand

@@ -207,6 +207,28 @@ export async function runChatCompletion(
   }
 }
 
+/** Snapshot of where hosted chat vs embeddings POST (same policy + key; optional dedicated embed URL). */
+export interface HostedNlpRoutingPreview {
+  chatInferenceRoot: string;
+  embeddingRootResolved: string;
+  embeddingUsesInferenceFallback: boolean;
+  chatModelId: string;
+  embeddingModelId: string;
+}
+
+export function describeHostedNlpRouting(settings: AppSettings): HostedNlpRoutingPreview {
+  const inferenceBase = settings.aiBridge.inferenceBaseUrl.trim();
+  const embeddingDedicated = settings.aiBridge.embeddingBaseUrl.trim();
+  const embeddingRootResolved = embeddingDedicated.length > 0 ? embeddingDedicated : inferenceBase;
+  return {
+    chatInferenceRoot: inferenceBase,
+    embeddingRootResolved,
+    embeddingUsesInferenceFallback: embeddingDedicated.length === 0,
+    chatModelId: settings.aiBridge.chatModelId,
+    embeddingModelId: settings.aiBridge.embeddingModelId
+  };
+}
+
 /** Uses embedding root URL + `/embeddings`. */
 export async function runEmbeddings(
   settings: AppSettings,

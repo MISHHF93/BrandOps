@@ -28,7 +28,9 @@ describe('integrationSourceCatalog', () => {
     expect(resolveIntegrationKindFromCommand('connect microsoft 365 source: tenant')).toBe(
       'microsoft-365'
     );
-    expect(resolveIntegrationKindFromCommand('connect meta ads source: paid')).toBe('meta-business');
+    expect(resolveIntegrationKindFromCommand('connect meta ads source: paid')).toBe(
+      'meta-business'
+    );
     expect(resolveIntegrationKindFromCommand('connect linkedin marketing source: ads')).toBe(
       'linkedin-marketing'
     );
@@ -36,6 +38,8 @@ describe('integrationSourceCatalog', () => {
     expect(resolveIntegrationKindFromCommand('connect google workspace source: ops')).toBe(
       'google-workspace'
     );
-    expect(resolveIntegrationKindFromCommand('connect mystery vendor source: x')).toBe('custom-api');
+    expect(resolveIntegrationKindFromCommand('connect mystery vendor source: x')).toBe(
+      'custom-api'
+    );
   });
 });

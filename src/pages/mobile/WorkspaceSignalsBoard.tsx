@@ -5,10 +5,14 @@ import {
   Briefcase,
   CalendarClock,
   Database,
+  FileText,
   Inbox,
   KeyRound,
   MessageSquare,
-  Gauge
+  Gauge,
+  Package,
+  SendHorizontal,
+  Zap
 } from 'lucide-react';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import {
@@ -23,14 +27,29 @@ export type WorkspaceSignalsPick = Pick<
   MobileWorkspaceSnapshot,
   | 'incompleteFollowUps'
   | 'publishingQueue'
+  | 'queuedPublishing'
   | 'activeOpportunities'
   | 'dueTodayTasks'
   | 'missedTasks'
   | 'syncProvidersConnected'
   | 'integrationSources'
+  | 'notes'
+  | 'outreachDrafts'
+  | 'integrationArtifactCount'
 >;
 
-export type VitalityMetricKey = 'fu' | 'queue' | 'opps' | 'sched' | 'missed' | 'oauth' | 'src';
+export type VitalityMetricKey =
+  | 'fu'
+  | 'queue'
+  | 'pubReady'
+  | 'opps'
+  | 'sched'
+  | 'missed'
+  | 'oauth'
+  | 'src'
+  | 'notes'
+  | 'outreach'
+  | 'artifacts';
 
 type MetricCell = {
   key: VitalityMetricKey;
@@ -100,11 +119,15 @@ function MiniRing({ fillPct, tone }: { fillPct: number; tone: WorkspaceSignalTon
 function buildCells(s: WorkspaceSignalsPick): MetricCell[] {
   const fu = s.incompleteFollowUps;
   const q = s.publishingQueue;
+  const qp = s.queuedPublishing;
   const op = s.activeOpportunities;
   const due = s.dueTodayTasks;
   const miss = s.missedTasks;
   const oauth = s.syncProvidersConnected;
   const src = s.integrationSources;
+  const notes = s.notes;
+  const outreach = s.outreachDrafts;
+  const artifacts = s.integrationArtifactCount;
 
   const capLin = (n: number, cap: number) => clampPct(cap <= 0 ? 0 : (n / cap) * 100);
 
@@ -121,13 +144,23 @@ function buildCells(s: WorkspaceSignalsPick): MetricCell[] {
     },
     {
       key: 'queue',
-      label: 'Publish',
-      sub: 'queue items',
+      label: 'Publish queue',
+      sub: 'total',
       display: String(q),
       icon: Inbox,
       tone: 'info',
       fillPct: capLin(q, 14),
       title: 'Publishing queue size'
+    },
+    {
+      key: 'pubReady',
+      label: 'Publish ready',
+      sub: 'queued · soon',
+      display: String(qp),
+      icon: Zap,
+      tone: 'warning',
+      fillPct: capLin(qp, 12),
+      title: 'Publishing items queued or due-soon (subset of total publish queue)'
     },
     {
       key: 'opps',
@@ -178,6 +211,36 @@ function buildCells(s: WorkspaceSignalsPick): MetricCell[] {
       tone: 'primary',
       fillPct: capLin(src, 14),
       title: 'Registered integration sources'
+    },
+    {
+      key: 'notes',
+      label: 'Notes',
+      sub: 'workspace',
+      display: String(notes),
+      icon: FileText,
+      tone: 'info',
+      fillPct: capLin(notes, 28),
+      title: 'Activity notes captured in the workspace'
+    },
+    {
+      key: 'outreach',
+      label: 'Outreach',
+      sub: 'drafts',
+      display: String(outreach),
+      icon: SendHorizontal,
+      tone: 'info',
+      fillPct: capLin(outreach, 14),
+      title: 'Outreach drafts in the workspace'
+    },
+    {
+      key: 'artifacts',
+      label: 'Captured',
+      sub: 'artifacts',
+      display: String(artifacts),
+      icon: Package,
+      tone: 'primary',
+      fillPct: capLin(artifacts, 24),
+      title: 'Integration hub artifact rows (manual or agent)'
     }
   ];
 }
@@ -221,6 +284,10 @@ export interface WorkspaceSignalsBoardProps {
   includeKeys?: readonly VitalityMetricKey[];
   /** Overrides mast headline (default: Workspace vitality). */
   mastHeadline?: string;
+  /** Merge labels/tooltips per metric key (e.g. Integrations tab sync-hub honesty). */
+  cellOverrides?: Partial<
+    Record<VitalityMetricKey, Partial<Pick<MetricCell, 'label' | 'sub' | 'title'>>>
+  >;
 }
 
 function vitalitySrId(variant: WorkspaceSignalsBoardVariant) {
@@ -257,7 +324,7 @@ function vitalitySubtitle(variant: WorkspaceSignalsBoardVariant, filtered: boole
     return 'Due-next counts only — open Today for focus lanes.';
   }
   if (variant === 'workspace') {
-    return 'Live parameters — queue below is soonest-first, not a feed.';
+    return 'Live workspace counters — publishing pipeline, cadence, captures, and sync hub — queue below is soonest-first, not a feed.';
   }
   return 'Read-only counters from your workspace snapshot — shared across Workspace and Today.';
 }
@@ -270,17 +337,19 @@ export function WorkspaceSignalsBoard({
   metrics,
   variant = 'today',
   includeKeys,
-  mastHeadline
+  mastHeadline,
+  cellOverrides
 }: WorkspaceSignalsBoardProps) {
   const all = buildCells(metrics);
-  const cells = includeKeys?.length ? all.filter((c) => includeKeys.includes(c.key)) : all;
+  const cellsRaw = includeKeys?.length ? all.filter((c) => includeKeys.includes(c.key)) : all;
+  const cells = cellsRaw.map((c) => ({ ...c, ...cellOverrides?.[c.key] }));
 
   if (cells.length === 0) {
     return null;
   }
 
   const srId = vitalitySrId(variant);
-  const fewBand = cells.length < 7;
+  const fewBand = cells.length < 11;
 
   return (
     <section aria-labelledby={srId} className="bo-vitality-board">

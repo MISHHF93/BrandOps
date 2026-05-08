@@ -285,6 +285,8 @@ export interface MobileWorkspaceSnapshot {
 /** Fields required by Today cockpit sections; keeps props in sync with {@link MobileWorkspaceSnapshot}. */
 export type CockpitDailySnapshot = Pick<
   MobileWorkspaceSnapshot,
+  | 'notes'
+  | 'outreachDrafts'
   | 'publishingQueue'
   | 'integrationSources'
   | 'syncProvidersConnected'

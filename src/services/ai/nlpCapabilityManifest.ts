@@ -23,13 +23,15 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
     id: 'gateway-chat-completions',
     label: 'OpenAI-compatible chat completions client',
     status: 'implemented',
-    notes: 'runChatCompletion in nlpInferenceGateway.ts — POST /v1/chat/completions.'
+    notes:
+      'runChatCompletion — import via hostedNlp; implements POST /v1/chat/completions in nlpInferenceGateway.ts.'
   },
   {
     id: 'gateway-embeddings',
     label: 'OpenAI-compatible embeddings client',
     status: 'implemented',
-    notes: 'runEmbeddings in nlpInferenceGateway.ts — POST /v1/embeddings.'
+    notes:
+      'runEmbeddings — import via hostedNlp; implements POST /v1/embeddings in nlpInferenceGateway.ts (same policy + key as chat).'
   },
   {
     id: 'policy-gates',

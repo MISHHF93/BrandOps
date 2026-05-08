@@ -147,7 +147,19 @@ export const MobileWorkspaceHubView = ({
         </div>
 
         <section id="plan-pulse" className={ROW}>
-          <WorkspaceSignalsBoard metrics={snapshot} variant="workspace" mastHeadline="Pulse" />
+          <WorkspaceSignalsBoard
+            metrics={snapshot}
+            variant="workspace"
+            mastHeadline="Pulse"
+            cellOverrides={{
+              oauth: {
+                label: 'Sync hub',
+                sub: '3 slots',
+                title:
+                  'Google, GitHub, and LinkedIn sync-hub preference rows (connected vs disconnected).'
+              }
+            }}
+          />
         </section>
 
         <div className={ROW}>

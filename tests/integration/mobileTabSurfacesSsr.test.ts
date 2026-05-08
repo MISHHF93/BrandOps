@@ -55,7 +55,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('id="plan-today"');
     expect(html).toContain('id="plan-queue"');
     expect(html).toContain('>Pulse<');
-    expect(html).toContain('Live parameters — queue below is soonest-first, not a feed.');
+    expect(html).toContain(
+      'Live workspace counters — publishing pipeline, cadence, captures, and sync hub — queue below is soonest-first, not a feed.'
+    );
     expect(html).toContain('Soonest queue');
     expect(html).toContain('bo-plan-destination-grid');
     expect(html).toContain('aria-label="Plan destinations"');
@@ -179,8 +181,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('>Momentum<');
     expect(html).toContain('Workspace vitality');
     expect(html).toContain('Workspace metric instruments');
-    expect(html).toContain('Publish');
-    expect(html).toContain('OAuth');
+    expect(html).toContain('Publish queue');
+    expect(html).toContain('Sync hub');
     expect(html).toContain('bo-metric-tile');
     expect(html).toContain('bo-pill-nav');
     expect(html).toContain('id="cockpit-today"');
@@ -231,17 +233,18 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Integrations"');
-    expect(html).toContain('OAuth and sync health for each provider.');
+    expect(html).toContain('Google, GitHub, and LinkedIn preference rows from Settings');
     expect(html).toContain('Sources');
     expect(html).toContain('Connect tools and data');
     expect(html).toContain('Registered sources');
     expect(html).toContain('Open integrations page');
-    expect(html).toContain('Provider status');
+    expect(html).toContain('Sync hub');
+    expect(html).toContain('How the registry works');
     expect(html).toContain('Add via Chat');
     expect(html).toContain('CRM &amp; pipeline');
     expect(html).toContain('HubSpot');
     expect(html).toContain('preset shortcuts');
-    expect(html).toContain('Synced artifacts');
+    expect(html).toContain('Captured artifacts');
     expect(html).toContain('SSH targets');
   });
 
@@ -268,6 +271,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('Review in Chat');
+    expect(html).toContain('Saved locally');
     expect(html).not.toContain('No sources in this workspace yet');
   });
 

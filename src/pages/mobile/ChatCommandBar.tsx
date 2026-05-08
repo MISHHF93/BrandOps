@@ -12,6 +12,7 @@ import clsx from 'clsx';
 import { Lightbulb, Loader2, Paperclip, Sparkles, Wand2, X, ArrowUp } from 'lucide-react';
 import { getInputRouteHint, suggestIntents, type BrandOpsChatIntent } from './chatIntents';
 import { MOBILE_BTN_FOCUS } from './mobileTabPrimitives';
+import { MOBILE_SHELL_MAX_WIDTH_CLASS } from './shellLayoutTokens';
 
 const btn = MOBILE_BTN_FOCUS;
 
@@ -133,7 +134,10 @@ export const ChatCommandBar = ({
 
   return (
     <div
-      className="bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full max-w-md px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1 bottom-[calc(6.15rem+env(safe-area-inset-bottom,0px))]"
+      className={clsx(
+        'bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))] pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1 bottom-[calc(6.15rem+env(safe-area-inset-bottom,0px))]',
+        MOBILE_SHELL_MAX_WIDTH_CLASS
+      )}
       aria-busy={commandLoading}
     >
       {commandLoading ? (

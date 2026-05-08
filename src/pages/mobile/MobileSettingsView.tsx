@@ -111,6 +111,10 @@ function AccountMembershipSection({
           description="Sign-in provider and membership status for this workspace."
           descriptionVisibility="sr-only"
         >
+          <p className="mt-2 text-[10px] leading-snug text-textSoft">
+            Provider buttons simulate sign-in on this device for launch QA — no federated cloud
+            session yet.
+          </p>
           <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
             <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
               <dt>Signed in</dt>

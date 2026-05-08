@@ -3,6 +3,7 @@ import {
   BookOpen,
   CalendarRange,
   Eye,
+  Info,
   Keyboard,
   LayoutGrid,
   MessageSquareText,
@@ -18,6 +19,7 @@ const TOPIC_ICONS: Record<string, LucideIcon> = {
   'chat-commands': MessageSquareText,
   'today-execution': CalendarRange,
   connections: Plug2,
+  'integration-registry': Info,
   shortcuts: Keyboard,
   'visual-wayfinding': Eye,
   'intelligence-tuning': SlidersHorizontal

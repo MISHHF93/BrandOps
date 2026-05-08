@@ -4,7 +4,7 @@ import {
   executeAgentWorkspaceCommand,
   type AgentWorkspaceResult
 } from '../../services/agent/agentWorkspaceEngine';
-import { runChatCompletion } from '../../services/ai/nlpInferenceGateway';
+import { runChatCompletion } from '../../services/ai/hostedNlp';
 import { persistChatGatewayTrace } from '../../services/ai/aiGatewayTracing';
 import { buildHostedAskMessages } from '../../services/ai/hostedAskTurn';
 import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
@@ -37,6 +37,7 @@ import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
 import { buildWorkspaceSnapshot, type MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import { MOBILE_BTN_FOCUS, MobileShellNav } from './mobileTabPrimitives';
+import { MOBILE_SHELL_MAX_WIDTH_CLASS } from './shellLayoutTokens';
 import {
   FirstRunJourneyCard,
   GETTING_STARTED_CONTENT_VERSION,
@@ -263,7 +264,8 @@ function LaunchAuthGate({
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Sign in to continue</h2>
       <p className="mt-1 text-[11px] text-textSoft">
-        Launch setup uses one account across mobile and extension. Pick a provider:
+        Launch gate for QA: sign-in is simulated on-device (no federated account yet). Pick a
+        provider to continue into the workspace:
       </p>
       <div className="bo-auth-actions mt-3">
         <GoogleSignInButton
@@ -309,7 +311,8 @@ function MembershipGate({
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Activate membership</h2>
       <p className="mt-1 text-[11px] text-textSoft">
-        One paid plan unlocks full workspace execution across app and extension.
+        Stripe checkout and billing portal open only when env URLs are set; membership state here is
+        for launch QA until billing is wired end-to-end.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button type="button" className={clsx('bo-link', btnFocus)} onClick={onStartCheckout}>
@@ -1158,7 +1161,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           style={{ transform: `scaleX(${scrollProgress})` }}
           aria-hidden
         />
-        <div className="mx-auto flex w-full max-w-md items-start justify-between gap-3 px-4">
+        <div
+          className={clsx(
+            'mx-auto flex w-full items-start justify-between gap-3 px-4',
+            MOBILE_SHELL_MAX_WIDTH_CLASS
+          )}
+        >
           <div className="bo-mobile-brand flex min-w-0 flex-1 gap-3">
             <span
               className="bo-mobile-brand__mark bo-mobile-brand__mark--compact shrink-0"
@@ -1220,7 +1228,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         id="bo-mobile-main"
         tabIndex={-1}
         className={clsx(
-          'bo-mobile-main mx-auto w-full max-w-md pt-4 outline-none motion-safe:scroll-smooth',
+          'bo-mobile-main mx-auto w-full pt-4 outline-none motion-safe:scroll-smooth',
+          MOBILE_SHELL_MAX_WIDTH_CLASS,
           activeTab === 'chat'
             ? 'pb-[max(11.25rem,calc(9.5rem+env(safe-area-inset-bottom,0px)))]'
             : 'pb-[max(11rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
@@ -1376,7 +1385,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       ) : null}
 
       {activeTab === 'settings' && shouldRequireLaunchMembership(launchAccess) ? (
-        <div className="bo-mobile-main fixed inset-x-0 bottom-[calc(10.85rem+env(safe-area-inset-bottom,0px))] z-[32] mx-auto w-full max-w-md px-2 pe-14 ps-3">
+        <div
+          className={clsx(
+            'bo-mobile-main fixed inset-x-0 bottom-[calc(10.85rem+env(safe-area-inset-bottom,0px))] z-[32] mx-auto w-full px-2 pe-14 ps-3',
+            MOBILE_SHELL_MAX_WIDTH_CLASS
+          )}
+        >
           <button
             type="button"
             onClick={onMarkMembershipActive}

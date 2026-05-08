@@ -150,7 +150,18 @@ export const CockpitFocusEngine = ({
 
   return (
     <article className="bo-flagship-surface" aria-label="Today focus engine">
-      <WorkspaceSignalsBoard metrics={snapshot} variant="today" />
+      <WorkspaceSignalsBoard
+        metrics={snapshot}
+        variant="today"
+        cellOverrides={{
+          oauth: {
+            label: 'Sync hub',
+            sub: '3 slots',
+            title:
+              'Google, GitHub, and LinkedIn sync-hub preference rows (connected vs disconnected).'
+          }
+        }}
+      />
 
       <div className="bo-vitality-frame-body space-y-3 px-3 pb-3 pt-3 sm:px-3.5">
         <div role="tablist" aria-label="Focus areas" className="bo-focus-tabs">

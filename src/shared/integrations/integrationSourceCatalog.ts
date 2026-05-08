@@ -10,10 +10,7 @@ export interface IntegrationSourcePreset {
 }
 
 /** Exhaustive presets — extend when adding a new {@link IntegrationSourceKind}. */
-export const INTEGRATION_SOURCE_PRESETS: Record<
-  IntegrationSourceKind,
-  IntegrationSourcePreset
-> = {
+export const INTEGRATION_SOURCE_PRESETS: Record<IntegrationSourceKind, IntegrationSourcePreset> = {
   'google-workspace': {
     label: 'Google Workspace',
     artifactTypes: ['calendar-event', 'email-thread-summary', 'contact-sync'],
@@ -146,7 +143,11 @@ export function resolveIntegrationKindFromCommand(text: string): IntegrationSour
     return 'microsoft-365';
   }
 
-  if (lower.includes('meta ads') || lower.includes('facebook ads') || lower.includes('instagram ads')) {
+  if (
+    lower.includes('meta ads') ||
+    lower.includes('facebook ads') ||
+    lower.includes('instagram ads')
+  ) {
     return 'meta-business';
   }
   if (

@@ -9,6 +9,7 @@ vi.mock('../../src/services/ai/aiSecretsAccess', () => ({
 
 import { getOpenAiCompatibleApiKey } from '../../src/services/ai/aiSecretsAccess';
 import {
+  describeHostedNlpRouting,
   joinOpenAiCompatibleUrl,
   runChatCompletion,
   runEmbeddings
@@ -29,6 +30,37 @@ describe('joinOpenAiCompatibleUrl', () => {
     expect(joinOpenAiCompatibleUrl('https://api.example.com/v1', 'chat/completions')).toBe(
       'https://api.example.com/v1/chat/completions'
     );
+  });
+});
+
+describe('describeHostedNlpRouting', () => {
+  it('falls back embedding root to inference base when embedding URL empty', () => {
+    const s = gatewaySettings({
+      aiBridge: {
+        inferenceBaseUrl: 'https://api.example.com/v1',
+        embeddingBaseUrl: '',
+        chatModelId: 'gpt-4o-mini',
+        embeddingModelId: 'text-embedding-3-small'
+      }
+    });
+    const r = describeHostedNlpRouting(s);
+    expect(r.chatInferenceRoot).toBe('https://api.example.com/v1');
+    expect(r.embeddingRootResolved).toBe('https://api.example.com/v1');
+    expect(r.embeddingUsesInferenceFallback).toBe(true);
+  });
+
+  it('uses dedicated embedding base when set', () => {
+    const s = gatewaySettings({
+      aiBridge: {
+        inferenceBaseUrl: 'https://chat.example.com/v1',
+        embeddingBaseUrl: 'https://embed.example.com/v1',
+        chatModelId: 'a',
+        embeddingModelId: 'b'
+      }
+    });
+    const r = describeHostedNlpRouting(s);
+    expect(r.embeddingRootResolved).toBe('https://embed.example.com/v1');
+    expect(r.embeddingUsesInferenceFallback).toBe(false);
   });
 });
 
