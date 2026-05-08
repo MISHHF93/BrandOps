@@ -78,7 +78,7 @@ function Spark({ fillPct, tone }: { fillPct: number; tone: WorkspaceSignalTone }
   );
 }
 
-/** Compact SVG arc — fills clockwise from noon; behaves like an odometer bezel. */
+/** Compact SVG arc — fills clockwise from noon; value sits centered like a gauge readout. */
 function MiniRing({ fillPct, tone }: { fillPct: number; tone: WorkspaceSignalTone }) {
   const r = 13.5;
   const c = 2 * Math.PI * r;
@@ -88,7 +88,7 @@ function MiniRing({ fillPct, tone }: { fillPct: number; tone: WorkspaceSignalTon
       width="38"
       height="38"
       viewBox="0 0 38 38"
-      className="bo-vitality-ring shrink-0"
+      className="bo-vitality-ring bo-vitality-dial__ring"
       aria-hidden
     >
       <circle
@@ -247,10 +247,24 @@ function buildCells(s: WorkspaceSignalsPick): MetricCell[] {
 
 function VitalityMetricCell({ m, valueId }: { m: MetricCell; valueId: string }) {
   const Icon = m.icon;
+  const digits = m.display.length;
   return (
     <div className="bo-vitality-cell" title={m.title}>
       <div className="bo-vitality-cell__row">
-        <MiniRing fillPct={m.fillPct} tone={m.tone} />
+        <div className="bo-vitality-dial">
+          <MiniRing fillPct={m.fillPct} tone={m.tone} />
+          <span
+            id={valueId}
+            className={clsx(
+              'bo-vitality-dial__value',
+              digits >= 3 && 'bo-vitality-dial__value--compact',
+              digits >= 4 && 'bo-vitality-dial__value--micro',
+              metricToneTextClass(m.tone)
+            )}
+          >
+            {m.display}
+          </span>
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
             <span className={clsx('bo-icon-chip bo-icon-chip--xs', `bo-icon-chip--${m.tone}`)}>
@@ -258,9 +272,6 @@ function VitalityMetricCell({ m, valueId }: { m: MetricCell; valueId: string }) 
             </span>
             <span className="bo-vitality-cell__label truncate">{m.label}</span>
           </div>
-          <p id={valueId} className={clsx('bo-vitality-cell__value', metricToneTextClass(m.tone))}>
-            {m.display}
-          </p>
           <Spark fillPct={m.fillPct} tone={m.tone} />
           {m.sub ? <p className="bo-vitality-cell__sub">{m.sub}</p> : null}
         </div>

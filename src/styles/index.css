@@ -3484,8 +3484,49 @@ html[data-app-surface='welcome'] body::after {
 
   .bo-vitality-cell__row {
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: 0.42rem;
+  }
+
+  /* Gauge dial: arc ring with centered numeric readout (odometer-style). */
+  .bo-vitality-dial {
+    position: relative;
+    flex-shrink: 0;
+    width: 2.375rem;
+    height: 2.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bo-vitality-dial__ring {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    pointer-events: none;
+  }
+
+  .bo-vitality-dial__value {
+    position: relative;
+    z-index: 1;
+    font-size: 0.9375rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    text-shadow:
+      0 0 10px currentcolor,
+      0 1px 2px rgb(0 0 0 / 0.45);
+  }
+
+  .bo-vitality-dial__value--compact {
+    font-size: 0.75rem;
+    letter-spacing: -0.04em;
+  }
+
+  .bo-vitality-dial__value--micro {
+    font-size: 0.625rem;
+    letter-spacing: -0.05em;
   }
 
   .bo-vitality-cell__label {
@@ -3494,15 +3535,6 @@ html[data-app-surface='welcome'] body::after {
     letter-spacing: 0.03em;
     text-transform: uppercase;
     color: rgb(var(--color-text-soft));
-  }
-
-  .bo-vitality-cell__value {
-    margin-top: 0.1rem;
-    font-size: 1.175rem;
-    font-weight: 700;
-    line-height: 1.06;
-    font-variant-numeric: tabular-nums;
-    color: rgb(var(--color-text));
   }
 
   .bo-vitality-cell__sub {
