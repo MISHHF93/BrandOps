@@ -2774,8 +2774,8 @@ html[data-app-surface='welcome'] body::after {
   transform: scale(0.98);
 }
 
-/* Mobile shell — liquid / pseudo-3D intro (CSS blobs + perspective; no WebGL). */
-@keyframes bo-liquid-intro-root-in {
+/* Mobile shell — CSS-only 3D welcome intro (perspective floor + monolith + orbit). */
+@keyframes bo-intro3d-root-in {
   from {
     opacity: 0;
   }
@@ -2785,17 +2785,17 @@ html[data-app-surface='welcome'] body::after {
   }
 }
 
-@keyframes bo-liquid-intro-root-out {
+@keyframes bo-intro3d-root-out {
   to {
     opacity: 0;
     visibility: hidden;
   }
 }
 
-@keyframes bo-liquid-intro-lockup {
+@keyframes bo-intro3d-lockup {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.94);
+    transform: translateY(18px) scale(0.96);
   }
 
   to {
@@ -2804,205 +2804,304 @@ html[data-app-surface='welcome'] body::after {
   }
 }
 
-@keyframes bo-liquid-morph-a {
+@keyframes bo-intro3d-world-sway {
   0% {
-    border-radius: 58% 42% 62% 38% / 48% 52% 45% 55%;
-    transform: translate3d(-16%, -10%, 0) rotateX(20deg) rotateY(-26deg) scale3d(1.06, 1.1, 1);
+    transform: rotateX(-5deg) rotateY(-14deg) rotateZ(0deg);
   }
 
   100% {
-    border-radius: 40% 60% 38% 62% / 56% 44% 56% 44%;
-    transform: translate3d(8%, 14%, 0) rotateX(10deg) rotateY(16deg) scale3d(1.14, 1.02, 1);
+    transform: rotateX(4deg) rotateY(12deg) rotateZ(0.5deg);
   }
 }
 
-@keyframes bo-liquid-morph-b {
+@keyframes bo-intro3d-floor-drift {
   0% {
-    border-radius: 45% 55% 52% 48% / 42% 58% 44% 56%;
-    transform: translate3d(12%, -14%, -12px) rotateX(14deg) rotateY(22deg) scale3d(1.1, 1.06, 1);
+    background-position:
+      0 0,
+      0 0;
   }
 
   100% {
-    border-radius: 62% 38% 44% 56% / 54% 46% 52% 48%;
-    transform: translate3d(-14%, 8%, 8px) rotateX(22deg) rotateY(-14deg) scale3d(1.04, 1.12, 1);
+    background-position:
+      56px 28px,
+      28px 56px;
   }
 }
 
-@keyframes bo-liquid-morph-c {
+@keyframes bo-intro3d-monolith-tilt {
   0% {
-    border-radius: 52% 48% 40% 60% / 50% 50% 58% 42%;
-    transform: translate3d(-6%, 18%, 6px) rotateX(12deg) rotateY(-18deg) scale3d(1.08, 1.08, 1);
+    transform: rotateX(16deg) rotateY(-22deg) translateZ(0);
   }
 
   100% {
-    border-radius: 44% 56% 62% 38% / 46% 54% 44% 56%;
-    transform: translate3d(10%, -12%, -18px) rotateX(18deg) rotateY(20deg) scale3d(1.12, 1.04, 1);
+    transform: rotateX(10deg) rotateY(18deg) translateZ(18px);
   }
 }
 
-@keyframes bo-liquid-shine-sweep {
+@keyframes bo-intro3d-glow-pulse {
   0%,
   100% {
-    opacity: 0.32;
-    transform: translateX(-14%) rotate(-8deg) skewX(-10deg);
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale3d(1, 1, 1);
   }
 
   50% {
-    opacity: 0.58;
-    transform: translateX(14%) rotate(-6deg) skewX(-6deg);
+    opacity: 0.72;
+    transform: translate(-50%, -50%) scale3d(1.06, 1.08, 1);
   }
 }
 
-.bo-liquid-intro-root {
+@keyframes bo-intro3d-orbit-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.bo-intro3d-root {
   isolation: isolate;
   opacity: 0;
-  animation: bo-liquid-intro-root-in 0.52s var(--ease-liquid-out) forwards;
-  /*
-   * Intro-only palette — decoupled from shell phosphor green (--brand-gold / --color-accent).
-   * Aurora liquid: warm metal + electric cyan + indigo depth.
-   */
-  --bo-li-gold: 255 188 96;
-  --bo-li-amber: 255 218 150;
-  --bo-li-cyan: 64 210 255;
-  --bo-li-blue: 118 158 255;
-  --bo-li-indigo: 92 108 235;
-  --bo-li-violet: 176 132 255;
+  animation: bo-intro3d-root-in 0.5s var(--ease-liquid-out) forwards;
+  --intro-gold: 252 186 92;
+  --intro-cyan: 72 210 255;
+  --intro-blue: 118 158 255;
+  --intro-indigo: 88 98 228;
+  --intro-violet: 178 132 255;
+  --intro-grid: 120 140 255;
 }
 
-:root[data-theme='light'] .bo-liquid-intro-root {
-  --bo-li-gold: 214 140 48;
-  --bo-li-amber: 255 206 130;
-  --bo-li-cyan: 0 162 212;
-  --bo-li-blue: 72 118 220;
-  --bo-li-indigo: 72 82 190;
-  --bo-li-violet: 130 98 210;
+:root[data-theme='light'] .bo-intro3d-root {
+  --intro-gold: 200 130 42;
+  --intro-cyan: 0 158 206;
+  --intro-blue: 62 108 210;
+  --intro-indigo: 68 78 198;
+  --intro-violet: 124 88 198;
+  --intro-grid: 72 92 180;
 }
 
-.bo-liquid-intro-root--exit {
-  animation: bo-liquid-intro-root-out 0.52s var(--ease-liquid-out) forwards;
+.bo-intro3d-root--exit {
+  animation: bo-intro3d-root-out 0.52s var(--ease-liquid-out) forwards;
 }
 
-.bo-liquid-intro-backdrop {
+.bo-intro3d-vignette {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: radial-gradient(
-    ellipse 85% 65% at 50% 40%,
-    rgb(var(--color-bg-elevated) / 0.94),
-    rgb(var(--color-bg) / 0.99)
-  );
+  background:
+    radial-gradient(
+      ellipse 72% 58% at 50% 38%,
+      rgb(var(--color-bg-elevated) / 0.08),
+      rgb(var(--color-bg) / 0.97) 72%
+    ),
+    radial-gradient(circle at 50% 22%, rgb(var(--intro-indigo) / 0.09), transparent 52%);
+  pointer-events: none;
 }
 
-.bo-liquid-intro-stage {
+.bo-intro3d-scene {
   position: absolute;
-  inset: -18%;
+  inset: 0;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 1180px;
-  perspective-origin: 50% 42%;
+  overflow: hidden;
+  perspective: 1550px;
+  perspective-origin: 50% 38%;
+  pointer-events: none;
+}
+
+.bo-intro3d-world {
+  position: relative;
+  width: min(110vw, 72rem);
+  height: min(72vh, 38rem);
+  transform-style: preserve-3d;
+  animation: bo-intro3d-world-sway 9s var(--ease-liquid-in-out) infinite alternate;
+}
+
+.bo-intro3d-floor {
+  position: absolute;
+  left: -45%;
+  top: 18%;
+  width: 190%;
+  height: 120%;
+  transform: rotateX(82deg) translateZ(-220px) translateY(12%);
+  transform-origin: 50% 50%;
+  transform-style: preserve-3d;
+  border-radius: 12px;
+  opacity: 0.55;
+  background-image:
+    linear-gradient(
+      90deg,
+      rgb(var(--intro-grid) / 0.07) 1px,
+      transparent 1px,
+      transparent 47px,
+      rgb(var(--intro-grid) / 0.055) 48px
+    ),
+    linear-gradient(
+      180deg,
+      rgb(var(--intro-grid) / 0.06) 1px,
+      transparent 1px,
+      transparent 47px,
+      rgb(var(--intro-grid) / 0.045) 48px
+    );
+  background-size:
+    48px 48px,
+    48px 48px;
+  animation: bo-intro3d-floor-drift 22s linear infinite;
+  mask-image: radial-gradient(ellipse 58% 72% at 50% 42%, #000 22%, transparent 78%);
+}
+
+.bo-intro3d-monolith-wrap {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 11.5rem;
+  height: 13rem;
+  transform: translate(-50%, -50%);
   transform-style: preserve-3d;
 }
 
-.bo-liquid-intro-blob {
+.bo-intro3d-monolith-glow {
   position: absolute;
-  width: min(82vw, 24rem);
-  height: min(82vw, 24rem);
-  filter: blur(52px);
-  opacity: 0.74;
-  mix-blend-mode: screen;
-  will-change: transform, border-radius;
-}
-
-:root[data-theme='light'] .bo-liquid-intro-blob {
-  mix-blend-mode: multiply;
-  opacity: 0.42;
-  filter: blur(56px);
-}
-
-.bo-liquid-intro-blob--a {
+  left: 50%;
+  top: 50%;
+  width: 140%;
+  height: 118%;
+  border-radius: 2rem;
+  transform: translate(-50%, -40%) translateZ(-60px) rotateX(72deg);
+  transform-style: preserve-3d;
   background: radial-gradient(
-    circle at 32% 30%,
-    rgb(var(--bo-li-gold) / 0.88),
-    rgb(var(--bo-li-blue) / 0.45) 56%,
-    transparent 74%
+    ellipse at 50% 38%,
+    rgb(var(--intro-cyan) / 0.35),
+    rgb(var(--intro-indigo) / 0.22) 48%,
+    transparent 68%
   );
-  animation: bo-liquid-morph-a 6.8s var(--ease-liquid-in-out) infinite alternate;
+  filter: blur(28px);
+  animation: bo-intro3d-glow-pulse 4.5s var(--ease-liquid-in-out) infinite;
 }
 
-.bo-liquid-intro-blob--b {
-  background: radial-gradient(
-    circle at 62% 58%,
-    rgb(var(--bo-li-cyan) / 0.68),
-    rgb(var(--bo-li-indigo) / 0.52) 54%,
-    transparent 72%
-  );
-  animation: bo-liquid-morph-b 8.2s var(--ease-liquid-in-out) infinite alternate;
-}
-
-.bo-liquid-intro-blob--c {
-  background: radial-gradient(
-    circle at 48% 44%,
-    rgb(var(--bo-li-violet) / 0.42),
-    rgb(var(--bo-li-amber) / 0.34) 52%,
-    transparent 70%
-  );
-  opacity: 0.62;
-  animation: bo-liquid-morph-c 7.4s var(--ease-liquid-in-out) infinite alternate;
-}
-
-:root[data-theme='light'] .bo-liquid-intro-blob--c {
-  opacity: 0.48;
-}
-
-.bo-liquid-intro-shine {
+.bo-intro3d-monolith {
   position: absolute;
-  inset: -5%;
-  z-index: 2;
+  inset: 0;
+  border-radius: 1.65rem;
+  transform-style: preserve-3d;
+  transform-origin: 50% 60%;
+  animation: bo-intro3d-monolith-tilt 8s var(--ease-liquid-in-out) infinite alternate;
   background: linear-gradient(
-    118deg,
-    transparent 30%,
-    rgb(var(--bo-li-cyan) / 0.14) 44%,
-    rgb(var(--bo-li-gold) / 0.12) 52%,
-    transparent 66%
+    155deg,
+    rgb(var(--intro-indigo) / 0.42) 0%,
+    rgb(var(--color-surface) / 0.85) 38%,
+    rgb(var(--color-bg-elevated) / 0.92) 100%
   );
-  pointer-events: none;
-  animation: bo-liquid-shine-sweep 3.6s var(--ease-liquid-in-out) infinite;
+  border: 1px solid rgb(var(--intro-cyan) / 0.28);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.06) inset,
+    0 90px 140px rgb(var(--intro-indigo) / 0.38),
+    0 28px 56px rgb(0 0 0 / 0.55);
 }
 
-.bo-liquid-intro-root .bo-liquid-intro-lockup-mark {
-  border-color: rgb(var(--bo-li-cyan) / 0.42);
+.bo-intro3d-monolith::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    rgb(var(--intro-gold) / 0.55),
+    rgb(var(--intro-cyan) / 0.45),
+    rgb(var(--intro-violet) / 0.5),
+    rgb(var(--intro-gold) / 0.35)
+  );
+  background-size: 200% 200%;
+  animation: bo-intro3d-floor-drift 16s linear infinite reverse;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.bo-intro3d-orbits {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 19rem;
+  height: 19rem;
+  margin: -9.5rem 0 0 -9.5rem;
+  transform-style: preserve-3d;
+  animation: bo-intro3d-orbit-spin 14s linear infinite;
+}
+
+.bo-intro3d-orbit-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin: -0.275rem 0 0 -0.275rem;
+  border-radius: 999px;
+  transform-style: preserve-3d;
+  box-shadow: 0 0 18px rgb(var(--intro-cyan) / 0.85);
+}
+
+.bo-intro3d-orbit-dot--a {
+  background: rgb(var(--intro-cyan));
+  transform: rotateY(0deg) translateZ(9.25rem);
+}
+
+.bo-intro3d-orbit-dot--b {
+  background: rgb(var(--intro-gold));
+  box-shadow: 0 0 18px rgb(var(--intro-gold) / 0.75);
+  transform: rotateY(120deg) translateZ(9.25rem);
+}
+
+.bo-intro3d-orbit-dot--c {
+  background: rgb(var(--intro-violet));
+  box-shadow: 0 0 18px rgb(var(--intro-violet) / 0.65);
+  transform: rotateY(240deg) rotateX(8deg) translateZ(9.25rem);
+}
+
+.bo-intro3d-root .bo-intro3d-lockup-mark {
+  border-color: rgb(var(--intro-cyan) / 0.4);
   background: linear-gradient(
     148deg,
-    rgb(var(--bo-li-indigo) / 0.18),
-    rgb(var(--bo-li-violet) / 0.1)
+    rgb(var(--intro-indigo) / 0.2),
+    rgb(var(--intro-violet) / 0.11)
   );
   box-shadow:
-    0 14px 48px rgb(var(--bo-li-indigo) / 0.34),
-    inset 0 1px 0 rgb(var(--bo-li-gold) / 0.15),
-    0 0 0 4px rgb(var(--bo-li-indigo) / 0.06);
-  color: rgb(var(--bo-li-gold));
+    0 14px 48px rgb(var(--intro-indigo) / 0.34),
+    inset 0 1px 0 rgb(var(--intro-gold) / 0.14),
+    0 0 0 4px rgb(var(--intro-indigo) / 0.06);
+  color: rgb(var(--intro-gold));
 }
 
-.bo-liquid-intro-root .bo-liquid-intro-lockup-mark::after {
-  border-color: rgb(var(--bo-li-cyan) / 0.14);
+.bo-intro3d-root .bo-intro3d-lockup-mark::after {
+  border-color: rgb(var(--intro-cyan) / 0.14);
 }
 
-.bo-liquid-intro-root .bo-liquid-intro-lockup-mark svg {
-  color: rgb(var(--bo-li-gold));
+.bo-intro3d-root .bo-intro3d-lockup-mark svg {
+  color: rgb(var(--intro-gold));
 }
 
-.bo-liquid-intro-lockup-sub {
-  color: rgb(var(--bo-li-blue));
+.bo-intro3d-lockup-sub {
+  color: rgb(var(--intro-blue));
 }
 
-:root[data-theme='light'] .bo-liquid-intro-lockup-sub {
+:root[data-theme='light'] .bo-intro3d-lockup-sub {
   opacity: 0.88;
 }
 
-.bo-liquid-intro-lockup {
-  animation: bo-liquid-intro-lockup 0.95s var(--ease-liquid-out) 0.14s both;
+.bo-intro3d-lockup {
+  animation: bo-intro3d-lockup 0.92s var(--ease-liquid-out) 0.12s both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3036,20 +3135,21 @@ html[data-app-surface='welcome'] body::after {
     animation: none !important;
   }
 
-  .bo-liquid-intro-root,
-  .bo-liquid-intro-root--exit {
+  .bo-intro3d-root,
+  .bo-intro3d-root--exit {
     animation: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
   }
 
-  .bo-liquid-intro-blob,
-  .bo-liquid-intro-blob--a,
-  .bo-liquid-intro-blob--b,
-  .bo-liquid-intro-blob--c,
-  .bo-liquid-intro-shine,
-  .bo-liquid-intro-lockup {
+  .bo-intro3d-world,
+  .bo-intro3d-floor,
+  .bo-intro3d-monolith,
+  .bo-intro3d-monolith-glow,
+  .bo-intro3d-monolith::before,
+  .bo-intro3d-orbits,
+  .bo-intro3d-lockup {
     animation: none !important;
   }
 
@@ -3101,20 +3201,21 @@ html[data-app-surface='welcome'] body::after {
   transition: none !important;
 }
 
-:root[data-motion-mode='off'] .bo-liquid-intro-root,
-:root[data-motion-mode='off'] .bo-liquid-intro-root--exit {
+:root[data-motion-mode='off'] .bo-intro3d-root,
+:root[data-motion-mode='off'] .bo-intro3d-root--exit {
   animation: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
 }
 
-:root[data-motion-mode='off'] .bo-liquid-intro-blob,
-:root[data-motion-mode='off'] .bo-liquid-intro-blob--a,
-:root[data-motion-mode='off'] .bo-liquid-intro-blob--b,
-:root[data-motion-mode='off'] .bo-liquid-intro-blob--c,
-:root[data-motion-mode='off'] .bo-liquid-intro-shine,
-:root[data-motion-mode='off'] .bo-liquid-intro-lockup {
+:root[data-motion-mode='off'] .bo-intro3d-world,
+:root[data-motion-mode='off'] .bo-intro3d-floor,
+:root[data-motion-mode='off'] .bo-intro3d-monolith,
+:root[data-motion-mode='off'] .bo-intro3d-monolith-glow,
+:root[data-motion-mode='off'] .bo-intro3d-monolith::before,
+:root[data-motion-mode='off'] .bo-intro3d-orbits,
+:root[data-motion-mode='off'] .bo-intro3d-lockup {
   animation: none !important;
 }
 
