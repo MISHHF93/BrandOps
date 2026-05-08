@@ -57,7 +57,7 @@ export interface MobileWorkspaceHubViewProps {
   onOpenSettings: () => void;
   onOpenIntegrations: () => void;
   onOpenCommandPalette: () => void;
-  /** When true, show Plan setup hint alongside profile-heuristic (Getting started still active). */
+  /** When true, Getting started card shows above this hub (setup hint hidden until dismissed). */
   firstRunJourneyVisible?: boolean;
   canRunWorkspaceCommands: boolean;
   workspaceCommandLockReason: 'auth' | 'membership' | null;
@@ -85,7 +85,7 @@ export const MobileWorkspaceHubView = ({
     !snapshot.primaryOffer.trim() ||
     !snapshot.voiceGuide.trim() ||
     !snapshot.focusMetric.trim();
-  const showSetupHint = firstRunJourneyVisible || profileIncomplete;
+  const showSetupHint = profileIncomplete && !firstRunJourneyVisible;
 
   const sorted = sortRowsSoonestFirst(snapshot.pulseTimelineRows);
   const todayPreviewTasks = snapshot.cockpitSchedulerTaskPeek.slice(0, 4);

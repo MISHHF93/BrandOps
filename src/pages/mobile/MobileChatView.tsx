@@ -5,18 +5,15 @@ import {
   CheckCircle2,
   Copy,
   History,
-  LayoutDashboard,
   User,
   Sparkles,
-  CalendarRange,
   MessageCircle,
   Search
 } from 'lucide-react';
 import clsx from 'clsx';
 import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
-import type { WorkspaceSignalsPick } from './WorkspaceSignalsBoard';
-import { getAssistantQuickPlanPicks, getIntentByCommandLine } from './chatIntents';
+import { getIntentByCommandLine } from './chatIntents';
 import type { CopilotWorkerRegistrySettings } from '../../types/domain';
 
 export interface ChatMessage {
@@ -53,38 +50,6 @@ const ASSISTANT_QUICK_PICKS = (() => {
   return out;
 })();
 
-function normalizeCommandDedupe(command: string) {
-  return command.toLowerCase().replace(/\s+/g, ' ').trim();
-}
-
-const ASSISTANT_STARTER_COMMAND_SET = new Set(
-  ASSISTANT_QUICK_PICKS.map((c) => normalizeCommandDedupe(c))
-);
-
-function assistantInPageAnchors(btnFocus: string) {
-  const links: ReadonlyArray<{ href: string; label: string }> = [
-    { href: '#assistant-copilot', label: 'Copilot' },
-    { href: '#assistant-commands', label: 'Commands' },
-    { href: '#assistant-thread', label: 'Transcript' }
-  ];
-  return (
-    <nav className="mt-2 pt-2" aria-label="Jump within Assistant">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="text-[9px] font-bold uppercase tracking-wide text-textSoft">On page</span>
-        {links.map(({ href, label }) => (
-          <a
-            key={href}
-            href={href}
-            className={clsx('text-[10px] font-semibold text-textMuted hover:text-text', btnFocus)}
-          >
-            {label}
-          </a>
-        ))}
-      </div>
-    </nav>
-  );
-}
-
 function copyToClipboard(text: string) {
   if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) return;
   void navigator.clipboard.writeText(text).catch(() => {});
@@ -99,9 +64,6 @@ export interface MobileChatViewProps {
   onSelectCopilotWorker: (workerId: string) => void;
   onClearCommandHistory: () => void;
   btnFocus: string;
-  onOpenToday: () => void;
-  onOpenPlan?: () => void;
-  vitalityMetrics: WorkspaceSignalsPick;
   /** Anchor for scroll-into-view while the shell main scrolls as one surface */
   transcriptEndRef?: RefObject<HTMLDivElement>;
   /** Open global command palette — same catalogue as Plan and ⌘K */
@@ -123,14 +85,10 @@ export const MobileChatView = ({
   onSelectCopilotWorker,
   onClearCommandHistory,
   btnFocus,
-  onOpenToday,
-  onOpenPlan,
-  vitalityMetrics,
   transcriptEndRef,
   onOpenCommandPalette,
   onOpenResumeGrounding
 }: MobileChatViewProps) => {
-  const assistantPlanPicks = getAssistantQuickPlanPicks(ASSISTANT_STARTER_COMMAND_SET);
   /** Matches hero inset — keeps Copilot / starters / transcript edges aligned. */
   const assistantGutter = 'px-3 sm:px-3.5';
 
@@ -151,42 +109,14 @@ export const MobileChatView = ({
                   <span className="whitespace-nowrap font-mono text-[10px] text-textSoft">
                     ask: …
                   </span>{' '}
-                  for hosted answers; other lines use the workspace engine. ⌘K is the full command
-                  list.
+                  for hosted answers; everything else runs on-device. Quick picks and pulse live on{' '}
+                  <span className="font-medium text-textSoft">Plan</span> — ⌘K lists all commands.
                 </p>
               </div>
             </div>
           </div>
-          <nav
-            aria-label="Jump to workspace areas"
-            className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:items-center"
-          >
-            {onOpenPlan ? (
-              <button
-                type="button"
-                onClick={onOpenPlan}
-                title="Plan — queue and pulse"
-                aria-label="Open Plan"
-                className={clsx('bo-icon-btn-ai inline-flex items-center gap-1.5', btnFocus)}
-              >
-                <LayoutDashboard className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-                <span className="hidden min-[380px]:inline text-[11px] font-semibold">Plan</span>
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={onOpenToday}
-              title="Today lanes"
-              aria-label="Open Today"
-              className={clsx(
-                'bo-icon-btn-ai bo-icon-btn-ai--accent inline-flex items-center gap-1.5',
-                btnFocus
-              )}
-            >
-              <CalendarRange className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-              <span className="hidden min-[380px]:inline text-[11px] font-semibold">Today</span>
-            </button>
-            {onOpenCommandPalette ? (
+          {onOpenCommandPalette ? (
+            <nav aria-label="Assistant shortcuts" className="flex shrink-0 items-start">
               <button
                 type="button"
                 onClick={onOpenCommandPalette}
@@ -197,20 +127,9 @@ export const MobileChatView = ({
                 <Search className="h-4 w-4" strokeWidth={2.25} aria-hidden />
                 <span className="hidden min-[380px]:inline text-[11px] font-semibold">⌘K</span>
               </button>
-            ) : null}
-          </nav>
+            </nav>
+          ) : null}
         </div>
-
-        <div
-          className="mt-2.5 flex flex-wrap gap-1.5"
-          role="status"
-          aria-label="Live workspace counts"
-        >
-          <span className="bo-assistant-stat-pill">FU {vitalityMetrics.incompleteFollowUps}</span>
-          <span className="bo-assistant-stat-pill">Q {vitalityMetrics.publishingQueue}</span>
-          <span className="bo-assistant-stat-pill">Missed {vitalityMetrics.missedTasks}</span>
-        </div>
-        {assistantInPageAnchors(btnFocus)}
         {onOpenResumeGrounding ? (
           <p className="mt-2 text-[10px] leading-snug text-textSoft">
             <button
@@ -235,10 +154,9 @@ export const MobileChatView = ({
         >
           <p className="bo-assistant-section-label">Copilot</p>
           <p className="mb-1.5 text-[11px] leading-snug text-textSoft">
-            Choose a worker, then send{' '}
-            <code className="rounded bg-bgSubtle px-1 py-px text-[10px]">ask: your question</code>{' '}
-            in the composer. With an allow-list configured, the model may append JSON automation
-            blocks after the answer (same engine as Plan).
+            Pick a worker, then send{' '}
+            <code className="rounded bg-bgSubtle px-1 py-px text-[10px]">ask: …</code> in the
+            composer. Allow-listed workers may attach automation JSON after the reply.
           </p>
           <div className="bo-copilot-rail">
             {copilotWorkerRegistry.workers.map((w) => {
@@ -282,29 +200,6 @@ export const MobileChatView = ({
             </div>
           </section>
 
-          {assistantPlanPicks.length > 0 ? (
-            <section aria-labelledby="assistant-plan-picks-label" className="min-w-0">
-              <p id="assistant-plan-picks-label" className="bo-assistant-section-label">
-                Planning picks
-              </p>
-              <p className="mb-1 text-[10px] leading-snug text-textSoft">
-                Essentials from the Plan page (deduped against Starters above).
-              </p>
-              <div className="bo-assistant-quick-strip mt-1.5">
-                {assistantPlanPicks.map((intent) => (
-                  <button
-                    key={intent.id}
-                    type="button"
-                    onClick={() => onQuickCommand(intent.command)}
-                    title={`${intent.title} — ${intent.subtitle}`}
-                    className={clsx('bo-chat-starter-chip touch-manipulation', btnFocus)}
-                  >
-                    <span className="line-clamp-1">{intent.title}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : null}
         </div>
 
         <section
@@ -358,9 +253,9 @@ export const MobileChatView = ({
                 </span>
                 <p className="text-sm font-semibold text-text">Start the thread</p>
                 <p className="max-w-[18rem] text-[12px] leading-relaxed text-textMuted">
-                  Tap a starter or type in the composer. Plain language runs the same on-device
-                  command engine as Plan and Today; hosted models answer lines that begin with{' '}
-                  <span className="font-mono text-[11px] text-textSoft">ask:</span>.
+                  Starters send workspace commands; lines beginning with{' '}
+                  <span className="font-mono text-[11px] text-textSoft">ask:</span> use the hosted
+                  model. Planning shortcuts stay on Plan — ⌘K finds anything else.
                 </p>
               </div>
             ) : (

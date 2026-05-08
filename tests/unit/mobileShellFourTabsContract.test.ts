@@ -135,8 +135,8 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(bar).toMatch(/placeholder="Ask BrandOps anything/);
   });
 
-  it('embeds a dismissible Getting started card on the Assistant tab', () => {
-    expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*FirstRunJourneyCard/);
+  it('embeds a dismissible Getting started card on the Plan (workspace) tab', () => {
+    expect(mobileApp).toMatch(/activeTab === 'workspace'[\s\S]*FirstRunJourneyCard/);
   });
 
   it('threads Integrations opener into Plan hub for setup hint without dock duplication', () => {
@@ -147,7 +147,7 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(workspaceJsx).toContain('onOpenIntegrations');
   });
 
-  it('does not render Getting started on Today-only branch (checklist lives on Assistant)', () => {
+  it('does not render Getting started on Today-only branch', () => {
     expect(mobileApp).not.toMatch(/activeTab === 'daily'[\s\S]*FirstRunJourneyCard/);
   });
 

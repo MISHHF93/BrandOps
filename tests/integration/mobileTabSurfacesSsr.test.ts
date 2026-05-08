@@ -74,9 +74,6 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('id="plan-profile-summary"');
     expect(html).toContain('Workspace profile');
     expect(html).toContain('Edit profile');
-    expect(html).toContain('Workspace setup hint');
-    expect(html).toContain('Finish setup');
-    expect(html).toContain('Open Settings');
     expect(html).toContain('Primary offer');
     expect(html).toContain('Voice guide');
     expect(html).toContain('Focus metric');
@@ -88,9 +85,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Account &amp; billing');
     expect(html).toContain('Membership active');
     expect(html).toContain('operator@fixture.test');
+    expect(html).not.toContain('Workspace setup hint');
   });
 
-  it('Plan hub: setup hint from default seed operator without Getting started flag', () => {
+  it('Plan hub: setup hint when profile placeholders remain (Getting started checklist dismissed)', () => {
     const html = renderToString(
       React.createElement(MobileWorkspaceHubView, {
         snapshot: buildWorkspaceSnapshot(cloneSeedData()),
@@ -111,7 +109,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('⌘K palette');
   });
 
-  it('Plan hub: no setup hint on personalized demo when Getting started dismissed', () => {
+  it('Plan hub: no setup hint on personalized demo when profile is complete', () => {
     const html = renderToString(
       React.createElement(MobileWorkspaceHubView, {
         snapshot: buildWorkspaceSnapshot(cloneDemoSampleData()),
@@ -150,9 +148,6 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onSelectCopilotWorker: noop,
         onClearCommandHistory: noop,
         btnFocus: '',
-        onOpenToday: noop,
-        onOpenPlan: noop,
-        vitalityMetrics: snapshot(),
         onOpenCommandPalette: noop,
         onOpenResumeGrounding: noop
       })
@@ -161,27 +156,25 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Copilot');
     expect(html).toContain('Starters');
     expect(html).toContain('Connect Notion');
-    expect(html).toContain('Planning picks');
-    expect(html).toContain('Sync embeddings');
-    expect(html).toContain('Jump within Assistant');
+    expect(html).toContain('Check pipeline');
     expect(html).toContain('id="assistant-copilot"');
     expect(html).toContain('id="assistant-commands"');
     expect(html).toContain('id="assistant-thread"');
     expect(html).toContain('Recent');
     expect(html).toContain('pipeline health');
     expect(html).toContain('bo-assistant-hero');
-    expect(html).toContain('Open Plan');
+    expect(html).toContain('Quick picks');
+    expect(html).toContain('Plan');
     expect(html).toContain('⌘K');
     expect(html).toContain('Résumé grounding for Ask');
   });
 
-  it('Getting started card: Assistant onboarding landmarks', () => {
+  it('Getting started card: Plan onboarding landmarks', () => {
     const html = renderToString(
       React.createElement(FirstRunJourneyCard, {
         btnFocus: '',
         onDismiss: noop,
         onTryCommand: noop,
-        onOpenPlan: noop,
         onOpenToday: noop,
         onOpenSettings: noop,
         onOpenHelp: noop
@@ -190,7 +183,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('aria-label="Start here — first session"');
     expect(html).toContain('Getting started');
     expect(html).toContain('Five quick steps');
-    expect(html).toContain('Open Plan');
+    expect(html).toContain('Jump to Quick picks');
     expect(html).toContain('Open Today');
     expect(html).toContain('Pipeline health');
     expect(html).toContain('Open Settings');

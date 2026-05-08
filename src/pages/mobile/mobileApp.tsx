@@ -104,11 +104,11 @@ const defaultWelcomeMessage = (
   gettingStartedChecklistVisible = true
 ): ChatMessage => {
   const mobileLine = gettingStartedChecklistVisible
-    ? 'Use the Getting started checklist above (five steps: Plan, Today, palette, Settings, Help) — then type a command or pick a starter below.'
-    : 'Plan and Today are on the dock; ⌘K / Ctrl+K opens Integrations, Settings, and search. Type a command or pick a starter below.';
+    ? 'Getting started is on Plan (dock): five-step checklist, pulse, queue. Assistant here uses Starters, Recent, and ⌘K / Ctrl+K.'
+    : 'Quick picks and pulse stay on Plan. Assistant uses Starters, ⌘K / Ctrl+K, and typed lines.';
   const welcomeLine = gettingStartedChecklistVisible
-    ? 'Use Getting started above — tune profile and presets in Settings, then run a command here. ⌘K opens the palette; Plan shows pulse and queue.'
-    : 'Run a command here or pick a starter. Plan shows pulse and queue; ⌘K opens Integrations and Settings.';
+    ? 'Getting started is on Plan (checklist, pulse, queue). Assistant focuses on commands and hosted ask: replies.'
+    : 'Plan has pulse and queue; Assistant handles commands and ask:. ⌘K / Ctrl+K opens the full catalogue.';
   return {
     id: uid(),
     role: 'assistant',
@@ -1289,20 +1289,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             aria-label="Assistant conversation"
             key="shell-chat"
           >
-            {firstRunJourneyVisible ? (
-              <FirstRunJourneyCard
-                btnFocus={btnFocus}
-                onDismiss={() => {
-                  setFirstRunJourneyVisible(false);
-                  void persistGettingStartedCompletionToWorkspace();
-                }}
-                onTryCommand={sendQuickCommand}
-                onOpenPlan={() => commitTab('workspace')}
-                onOpenToday={() => commitTab('daily')}
-                onOpenSettings={() => commitTab('settings')}
-                onOpenHelp={() => openExtensionSurface('help')}
-              />
-            ) : null}
             <MobileChatView
               messages={messages}
               loading={commandLoading}
@@ -1315,9 +1301,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 setCommandHistory([]);
               }}
               btnFocus={btnFocus}
-              onOpenToday={() => commitTab('daily')}
-              onOpenPlan={() => commitTab('workspace')}
-              vitalityMetrics={snapshot}
               transcriptEndRef={transcriptEndRef}
               onOpenCommandPalette={() => setCommandPaletteOpen(true)}
               onOpenResumeGrounding={openSettingsResumePhase}
@@ -1333,20 +1316,35 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             aria-label={`${activeTab} tab`}
           >
             {activeTab === 'workspace' ? (
-              <MobileWorkspaceHubView
-                snapshot={snapshot}
-                btnFocus={btnFocus}
-                commandBusy={commandLoading}
-                runCommand={sendQuickCommandFrom('Workspace', { navigateToChat: false })}
-                onOpenToday={() => commitTab('daily')}
-                launchAccess={launchAccess}
-                onOpenSettings={() => commitTab('settings')}
-                onOpenIntegrations={() => commitTab('integrations')}
-                onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-                firstRunJourneyVisible={firstRunJourneyVisible}
-                canRunWorkspaceCommands={agentCommandLock === null}
-                workspaceCommandLockReason={agentCommandLock}
-              />
+              <>
+                {firstRunJourneyVisible ? (
+                  <FirstRunJourneyCard
+                    btnFocus={btnFocus}
+                    onDismiss={() => {
+                      setFirstRunJourneyVisible(false);
+                      void persistGettingStartedCompletionToWorkspace();
+                    }}
+                    onTryCommand={sendQuickCommandFrom('Workspace', { navigateToChat: false })}
+                    onOpenToday={() => commitTab('daily')}
+                    onOpenSettings={() => commitTab('settings')}
+                    onOpenHelp={() => openExtensionSurface('help')}
+                  />
+                ) : null}
+                <MobileWorkspaceHubView
+                  snapshot={snapshot}
+                  btnFocus={btnFocus}
+                  commandBusy={commandLoading}
+                  runCommand={sendQuickCommandFrom('Workspace', { navigateToChat: false })}
+                  onOpenToday={() => commitTab('daily')}
+                  launchAccess={launchAccess}
+                  onOpenSettings={() => commitTab('settings')}
+                  onOpenIntegrations={() => commitTab('integrations')}
+                  onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+                  firstRunJourneyVisible={firstRunJourneyVisible}
+                  canRunWorkspaceCommands={agentCommandLock === null}
+                  workspaceCommandLockReason={agentCommandLock}
+                />
+              </>
             ) : null}
 
             {activeTab === 'daily' ? (

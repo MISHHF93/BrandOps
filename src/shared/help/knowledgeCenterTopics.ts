@@ -26,11 +26,11 @@ export interface KnowledgeCenterDailyPlaybook {
 export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
   title: 'Every day in BrandOps (mobile shell)',
   intro:
-    'You land on **Assistant**. The dismissible **Getting started** checklist (five steps) sits above the chat: run **Pipeline health**, open **Plan** (optionally a **Finish setup** hint above the read-only profile), open **Today**, use **⌘K / Ctrl+K** for the palette, then **Open Settings** and **Help — First run** to tune profile and operating presets. The dock is **Ask** and **Plan** only — deeper tabs open from the palette or Plan tiles.',
+    'You land on **Assistant**. Open **Plan** on the dock for the dismissible **Getting started** checklist (five steps): pipeline health, Pulse / Quick picks, **Today**, **⌘K / Ctrl+K**, then **Settings** and **Help — First run**. Assistant stays focused on chat — pulse and curated commands stay on Plan. The dock is **Ask** and **Plan** only.',
   steps: [
     {
       title: 'Run one command from Assistant',
-      body: 'Assistant is the default home — type natural-language commands (examples: pipeline health, draft post: …, add note: …). Expand Command starters for role-based chips (sales vs growth). Results appear in the thread. Press ⌘K / Ctrl+K to navigate anywhere.'
+      body: 'Assistant is the default home — type commands or use Starters; lines beginning with ask: use hosted models when configured. Press ⌘K / Ctrl+K for the full catalogue. Planning Quick picks and Pulse live on Plan to avoid duplicating controls between tabs.'
     },
     {
       title: 'Open Plan for counts and queue',
@@ -63,7 +63,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
       'Primary UI is mobile.html (Assistant + Workspace dock; deeper panels for Today / Integrations / Settings). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
     paragraphs: [
       'The product is a browser extension. **mobile.html** is the primary workspace: Assistant (default), Plan (dock), Today, Integrations, and Settings (Assistant + Plan are the dock; Plan surfaces a read-only **workspace profile** — edits live under Settings → Preferences). Deeper tabs use ⌘K or actions from Plan.',
-      '**welcome.html** uses the same shell and lands on **Assistant** first — Getting started on that tab walks new users through Plan, Today, palette, Settings, and Help.',
+      '**welcome.html** uses the same shell and lands on **Assistant** first — open **Plan** for the **Getting started** checklist (Plan / Today / palette / Settings / Help).',
       '**dashboard.html** loads the same shell; legacy ?section= workstream links redirect to mobile.html so deep links stay consistent.',
       '**integrations.html** is the Chrome options_ui entry (Integrations tab by default). **help.html** is this Knowledge Center.',
       'Use ?section= on mobile.html or integrations.html for tabs and cockpit workstreams (today, pipeline, brand-content, connections). See the mobile shell query parser in the codebase for the full token list.'
@@ -74,8 +74,8 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     title: 'First run and profile',
     summary: 'Welcome uses the mobile shell; sign-in and sign-up share welcome.html.',
     paragraphs: [
-      'On **welcome.html** / **mobile.html** you start on **Assistant**. The **Getting started** card walks through: a sample command, **Plan**, **Today**, palette (**⌘K** / **Ctrl+K**), then **Settings** (Preferences + operating profile preset) and **Help → First run and profile**.',
-      '**Plan** can show a **Finish setup** hint above the read-only **Workspace profile** until the checklist is dismissed or you replace placeholder identity fields — same destinations as **Edit profile** / Integrations / ⌘K.',
+      'On **welcome.html** / **mobile.html** you start on **Assistant**. The **Getting started** checklist is on **Plan**: pipeline health, Pulse / Quick picks, **Today**, palette (**⌘K** / **Ctrl+K**), then **Settings** and **Help → First run and profile**.',
+      '**Plan** can show **Finish setup** after you dismiss Getting started if placeholder identity fields remain — same destinations as **Edit profile** / Integrations / ⌘K.',
       'Sign-in and account creation share welcome.html: default is sign in (no query). Create account: welcome.html?flow=signup. Legacy ?auth= is still accepted where implemented.',
       'Under **Settings → Preferences**, pick an **Operating profile** preset (launch sprint, focused builder, etc.) and tap **Apply operating profile** — one action aligns cockpit layout/density, AI defaults, and cadence to match how you work.',
       'Operator and brand fields also surface on Today and in Settings forms; tune cadence and reminders under Settings when you need workspace-level changes.'
@@ -88,7 +88,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
       'Commands map to deterministic routes (parseCommandRoute) before executeAgentWorkspaceCommand runs.',
     paragraphs: [
       'Examples that match the router: add note:, create follow up:, complete follow up:, draft outreach:, draft post:, reschedule posts …, pipeline health, update opportunity …, archive opportunity, restore opportunity, add contact:, update contact:, add content:, update publishing:, connect … source:, connect hubspot source:, connect linear source:, connect stripe source:, add source:, add integration artifact:, add ssh:, configure: …',
-      'Starters in the Assistant tab are curated to these patterns. If a phrase is unsupported, the assistant explains what is available.',
+      'Starters in the Assistant tab are curated to these patterns; identical Quick picks stay on Plan so Ask is not cluttered. If a phrase is unsupported, the assistant explains what is available.',
       'Destructive phrases such as archive opportunity may ask for confirmation before running.',
       'Lines beginning with **ask:** use your configured **hosted** OpenAI-compatible endpoint when enabled; everything else stays on-device.',
       '**Résumé grounding (Phase R)** is under **Settings → Unified workspace**. Paste or load plain text, then **Compress & save** — the artifact is sent only with hosted **ask:** lines (Brand profile still wins on conflicts). From Assistant use **Résumé grounding for Ask (Phase R)** or **mobile.html?section=settings#settings-resume-neural-phase**.'

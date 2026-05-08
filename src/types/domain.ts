@@ -609,7 +609,7 @@ export interface SeedMetadata {
   seededAt: string;
   source: SeedDataSource;
   version: string;
-  /** First completion of in-shell Getting started (Assistant checklist dismiss). ISO timestamp. */
+  /** First completion of in-shell Getting started (Plan checklist dismiss). ISO timestamp. */
   welcomeCompletedAt?: string;
   /** Checklist generation the user last dismissed; aligns with `GETTING_STARTED_CONTENT_VERSION`. */
   onboardingVersion?: string;

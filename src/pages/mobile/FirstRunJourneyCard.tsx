@@ -3,20 +3,32 @@ import { BookOpen, CalendarRange, LayoutDashboard, Settings, Sparkles, X } from 
 import { BrandOpsMarkBadge } from '../../shared/ui/brandopsPolish';
 
 /** Current dismissal flag — bump suffix when checklist content/placement changes materially. */
-export const GETTING_STARTED_STORAGE_KEY = 'brandops:gettingStartedDismissed:v4';
+export const GETTING_STARTED_STORAGE_KEY = 'brandops:gettingStartedDismissed:v5';
 
 /**
  * Persisted on workspace `seed.onboardingVersion` when the user dismisses Getting started.
  * Keep in sync with the suffix on {@link GETTING_STARTED_STORAGE_KEY}.
  */
-export const GETTING_STARTED_CONTENT_VERSION = '4';
+export const GETTING_STARTED_CONTENT_VERSION = '5';
 
 /** Legacy key (Today-tab only card). No longer read. */
 export const LEGACY_FIRST_RUN_STORAGE_KEY = 'brandops:firstRunJourneyDismissed';
 
+/** Reads dismissal under current storage key; migrates prior checklist versions once per browser. */
 export function readFirstRunJourneyDismissed(): boolean {
   if (typeof localStorage === 'undefined') return false;
-  return localStorage.getItem(GETTING_STARTED_STORAGE_KEY) === '1';
+  if (localStorage.getItem(GETTING_STARTED_STORAGE_KEY) === '1') return true;
+  const legacyKeys = ['brandops:gettingStartedDismissed:v4'];
+  for (const legacy of legacyKeys) {
+    if (localStorage.getItem(legacy) !== '1') continue;
+    try {
+      localStorage.setItem(GETTING_STARTED_STORAGE_KEY, '1');
+    } catch {
+      // ignore
+    }
+    return true;
+  }
+  return false;
 }
 
 function writeGettingStartedDismissed() {
@@ -33,13 +45,12 @@ const stepTitleClass = 'text-[11px] font-semibold text-text';
 const stepBodyClass = 'mt-0.5 text-[10px] leading-snug text-textSoft';
 
 /**
- * First-session checklist on **Assistant** — numbered steps + CTAs for Plan, Today, palette, Settings, and Help.
+ * First-session checklist on **Plan** — numbered steps + CTAs for Today, palette, Settings, and Help.
  */
 export function FirstRunJourneyCard({
   btnFocus,
   onDismiss,
   onTryCommand,
-  onOpenPlan,
   onOpenToday,
   onOpenSettings,
   onOpenHelp
@@ -47,7 +58,6 @@ export function FirstRunJourneyCard({
   btnFocus: string;
   onDismiss: () => void;
   onTryCommand: (line: string) => void;
-  onOpenPlan: () => void;
   onOpenToday: () => void;
   onOpenSettings: () => void;
   onOpenHelp: () => void;
@@ -73,7 +83,8 @@ export function FirstRunJourneyCard({
                   <span className="text-textSoft">1.</span> Run a command
                 </p>
                 <p className={stepBodyClass}>
-                  BrandOps runs typed workspace commands and Ask from here. Try a health check.
+                  Runs from Assistant on the dock for transcripts — try a health check here first
+                  (stays on Plan).
                 </p>
                 <button
                   type="button"
@@ -87,27 +98,26 @@ export function FirstRunJourneyCard({
               </li>
               <li className={stepClass}>
                 <p className={stepTitleClass}>
-                  <span className="text-textSoft">2.</span> Open Plan
+                  <span className="text-textSoft">2.</span> Pulse & quick picks
                 </p>
                 <p className={stepBodyClass}>
-                  Pulse counts, Today snapshot, and the soonest-first queue — plus Today / Pipeline
-                  shortcuts.
+                  Scroll this tab for Pulse counts, Quick picks, Today snapshot, and the queue — your
+                  workspace hub.
                 </p>
-                <button
-                  type="button"
+                <a
+                  href="#plan-actions"
                   className={clsx(
                     'mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-[11px] font-semibold text-text',
                     btnFocus
                   )}
-                  onClick={onOpenPlan}
                 >
                   <LayoutDashboard
                     className="h-3.5 w-3.5 shrink-0"
                     strokeWidth={2.25}
                     aria-hidden
                   />
-                  Open Plan
-                </button>
+                  Jump to Quick picks
+                </a>
               </li>
               <li className={stepClass}>
                 <p className={stepTitleClass}>
