@@ -67,10 +67,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('id="plan-actions"');
     expect(html).toContain('Quick picks');
     expect(html).toContain('Sync embeddings');
-    expect(html).toContain('bo-plan-flat-root');
+    expect(html).toContain('Execution and governance');
     expect(html).toContain('Today snapshot');
     expect(html).toContain('Open full Today');
-    expect(html).toContain('stay on this tab');
+    expect(html).toContain('Plan strip');
     expect(html).toContain('id="plan-profile-summary"');
     expect(html).toContain('Workspace profile');
     expect(html).toContain('Edit profile');

@@ -24,7 +24,7 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
     label: 'OpenAI-compatible chat completions client',
     status: 'implemented',
     notes:
-      'runChatCompletion — import via hostedNlp; implements POST /v1/chat/completions in nlpInferenceGateway.ts.'
+      'runChatCompletion — import via hostedNlp; implements POST /v1/chat/completions in nlpInferenceGateway.ts. Optional `brandOpsAiProvenance` JSON is normalized via aiIoProvenance.ts for Assistant evidence chips + auditable workspace traces.'
   },
   {
     id: 'gateway-embeddings',
@@ -57,7 +57,7 @@ export const NLP_CAPABILITY_CHECKLIST: readonly NlpCapabilityRow[] = [
     label: 'Assistant transcript wired to gateway',
     status: 'implemented',
     notes:
-      'Mobile Assistant routes lines prefixed with ask: through runChatCompletion (+ optional structured pipeline-health auto-run).'
+      'Mobile Assistant routes `ask:` through runChatCompletion; parses optional citation envelopes; persists AiAssistantTurnTrace rows when trace collection is enabled (+ structured pipeline auto-run when workers allow it).'
   },
   {
     id: 'embedding-index-storage',

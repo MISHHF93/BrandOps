@@ -24,6 +24,8 @@ export async function persistChatGatewayTrace(
     workerId?: string | null;
     route?: string;
     surface?: string;
+    /** Count of normalized citations extracted from the assistant body (no payload persisted here). */
+    citationCount?: number;
   }
 ): Promise<void> {
   const fresh = await loadData();
@@ -37,6 +39,9 @@ export async function persistChatGatewayTrace(
   };
   if (args.workerId != null && args.workerId !== '') {
     details.workerId = args.workerId;
+  }
+  if (typeof args.citationCount === 'number' && args.citationCount >= 0) {
+    details.citationCount = args.citationCount;
   }
   if (!args.result.ok) {
     details.code = args.result.code;

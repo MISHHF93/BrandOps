@@ -38,7 +38,7 @@ function HonestyPill({ label, tone }: { label: string; tone: HubHonestyPillTone 
   return (
     <span
       className={clsx(
-        'inline-flex shrink-0 rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
+        'inline-flex shrink-0 rounded-md border px-1.5 py-0.5 text-overline font-semibold uppercase tracking-wide',
         toneClass
       )}
     >
@@ -158,9 +158,9 @@ export const MobileIntegrationsView = ({
           }}
         />
 
-        <div className="bo-vitality-frame-body space-y-3 px-3 pb-3 pt-2 sm:px-3.5">
+        <div className="bo-vitality-frame-body space-y-4 px-4 pb-4 pt-3 sm:px-5">
           {documentSurface !== 'integrations' ? (
-            <details className="bo-disclosure px-2.5 py-2 text-[11px] text-textMuted">
+            <details className="bo-disclosure px-2.5 py-2 text-meta text-textMuted">
               <summary
                 className={`cursor-pointer list-none text-textSoft [&::-webkit-details-marker]:hidden ${btnFocus}`}
               >
@@ -184,14 +184,14 @@ export const MobileIntegrationsView = ({
             >
               Sources & providers
             </summary>
-            <div className="space-y-4 border-t border-border/30 px-3 pb-3 pt-3">
+            <div className="space-y-4 border-t border-border/30 px-4 pb-4 pt-4">
               <MobileTabSection
                 id="integrations-registered-sources"
                 title="Registered sources"
                 description="Hub rows stored in this workspace (registry)."
                 descriptionVisibility="sr-only"
               >
-                <p className="mt-2 text-[11px] leading-relaxed text-textMuted">
+                <p className="mt-2 text-meta leading-relaxed text-textMuted">
                   Rows are <strong className="font-medium text-textSoft">saved locally</strong> —
                   Chat registers intent and defaults; background vendor sync is not bundled yet.{' '}
                   <a
@@ -203,10 +203,10 @@ export const MobileIntegrationsView = ({
                   .
                 </p>
                 {snapshot.integrationHubSources.length === 0 ? (
-                  <p className="mt-2 text-[11px] text-textMuted">
+                  <p className="mt-2 text-meta text-textMuted">
                     No sources yet. Use Add via Chat below or Chat for custom{' '}
-                    <code className="text-[10px]">connect</code> /{' '}
-                    <code className="text-[10px]">add source</code> lines.
+                    <code className="text-fine">connect</code> /{' '}
+                    <code className="text-fine">add source</code> lines.
                   </p>
                 ) : (
                   <ul className="mt-2 space-y-2">
@@ -216,8 +216,8 @@ export const MobileIntegrationsView = ({
                         className="flex flex-col gap-1.5 rounded-lg border border-border/30 bg-surface/45 px-2 py-2 sm:flex-row sm:items-start sm:justify-between"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12px] font-medium text-text">{row.name}</p>
-                          <p className="mt-0.5 text-[10px] text-textMuted">
+                          <p className="truncate text-label font-medium text-text">{row.name}</p>
+                          <p className="mt-0.5 text-fine text-textMuted">
                             {integrationKindDisplay(row.kind)}{' '}
                             <span className="font-mono text-textSoft">({row.kind})</span>
                           </p>
@@ -242,7 +242,7 @@ export const MobileIntegrationsView = ({
                   </ul>
                 )}
                 {snapshot.integrationHubSources.length > 20 ? (
-                  <p className="mt-2 text-[10px] text-textMuted">
+                  <p className="mt-2 text-fine text-textMuted">
                     Showing 20 of {snapshot.integrationSources}. More in Chat.
                   </p>
                 ) : null}
@@ -254,13 +254,13 @@ export const MobileIntegrationsView = ({
                 description="Google, GitHub, and LinkedIn preference rows from Settings—not every integration kind."
                 descriptionVisibility="sr-only"
               >
-                <p className="mt-2 text-[11px] leading-relaxed text-textMuted">
+                <p className="mt-2 text-meta leading-relaxed text-textMuted">
                   Three extension sync slots only (Google, GitHub, LinkedIn). Status reflects saved
                   preferences — OAuth completion depends on your shipped build.
                 </p>
                 <ul className="mt-2 space-y-1.5 text-textMuted">
                   {snapshot.providerStatuses.map((provider) => (
-                    <li key={provider.id} className="flex justify-between gap-2 text-[11px]">
+                    <li key={provider.id} className="flex justify-between gap-2 text-meta">
                       <span className="text-textSoft">{provider.id}</span>
                       <span className="text-text">{provider.status}</span>
                     </li>
@@ -278,7 +278,7 @@ export const MobileIntegrationsView = ({
               >
                 Activity & sync details
               </summary>
-              <div className="space-y-4 border-t border-border/30 px-3 pb-3 pt-3">
+              <div className="space-y-4 border-t border-border/30 px-4 pb-4 pt-4">
                 {snapshot.externalSyncLinksPeek.length > 0 ? (
                   <MobileTabSection
                     id="integrations-external-sync"
@@ -290,12 +290,12 @@ export const MobileIntegrationsView = ({
                       {snapshot.externalSyncLinksPeek.map((row) => (
                         <li
                           key={row.id}
-                          className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
+                          className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-meta text-textMuted"
                         >
                           <p className="font-medium text-text">
                             {row.provider} · {row.resourceType}
                           </p>
-                          <p className="mt-0.5 text-[10px] text-textMuted">
+                          <p className="mt-0.5 text-fine text-textMuted">
                             {row.sourceType} · synced {row.lastSyncedAt}
                           </p>
                           <button
@@ -325,12 +325,12 @@ export const MobileIntegrationsView = ({
                       {snapshot.integrationLiveFeedPeek.map((row) => (
                         <li
                           key={row.id}
-                          className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
+                          className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-meta text-textMuted"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <p className="min-w-0 font-medium text-text">{row.title}</p>
                             <span
-                              className={`shrink-0 text-[10px] font-medium uppercase ${
+                              className={`shrink-0 text-fine font-medium uppercase ${
                                 row.level === 'warning'
                                   ? 'text-warning'
                                   : row.level === 'success'
@@ -341,11 +341,11 @@ export const MobileIntegrationsView = ({
                               {row.level}
                             </span>
                           </div>
-                          <p className="mt-0.5 text-[10px] text-textMuted">{row.source}</p>
-                          <p className="mt-1 text-[10px] leading-snug text-textSoft">
+                          <p className="mt-0.5 text-fine text-textMuted">{row.source}</p>
+                          <p className="mt-1 text-fine leading-snug text-textSoft">
                             {row.detail}
                           </p>
-                          <p className="mt-1 text-[10px] text-textSoft">{row.happenedAt}</p>
+                          <p className="mt-1 text-fine text-textSoft">{row.happenedAt}</p>
                         </li>
                       ))}
                     </ul>
@@ -360,11 +360,11 @@ export const MobileIntegrationsView = ({
               className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
             >
               Technical inventory
-              <span className="ml-2 text-[11px] font-normal text-textSoft">
+              <span className="ml-2 text-meta font-normal text-textSoft">
                 Captured artifacts and SSH targets
               </span>
             </summary>
-            <div className="space-y-4 border-t border-border/30 px-3 pb-3 pt-3">
+            <div className="space-y-4 border-t border-border/30 px-4 pb-4 pt-4">
               <MobileTabSection
                 id="integrations-artifacts"
                 title="Captured artifacts"
@@ -372,7 +372,7 @@ export const MobileIntegrationsView = ({
                 descriptionVisibility="sr-only"
               >
                 {snapshot.integrationArtifactsPeek.length === 0 ? (
-                  <p className="mt-2 text-[11px] text-textMuted">
+                  <p className="mt-2 text-meta text-textMuted">
                     No artifacts yet. Total: {snapshot.integrationArtifactCount}.
                   </p>
                 ) : (
@@ -380,10 +380,10 @@ export const MobileIntegrationsView = ({
                     {snapshot.integrationArtifactsPeek.map((row) => (
                       <li
                         key={row.id}
-                        className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
+                        className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-meta text-textMuted"
                       >
                         <p className="font-medium text-text">{row.title}</p>
-                        <p className="text-[10px] text-textMuted">{row.artifactType}</p>
+                        <p className="text-fine text-textMuted">{row.artifactType}</p>
                         <button
                           type="button"
                           disabled={commandBusy}
@@ -409,7 +409,7 @@ export const MobileIntegrationsView = ({
                 descriptionVisibility="sr-only"
               >
                 {snapshot.sshTargetsPeek.length === 0 ? (
-                  <p className="mt-2 text-[11px] text-textMuted">
+                  <p className="mt-2 text-meta text-textMuted">
                     No SSH targets. Total: {snapshot.sshTargetsCount}.
                   </p>
                 ) : (
@@ -417,10 +417,10 @@ export const MobileIntegrationsView = ({
                     {snapshot.sshTargetsPeek.map((row) => (
                       <li
                         key={row.id}
-                        className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
+                        className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-meta text-textMuted"
                       >
                         <p className="font-medium text-text">{row.name}</p>
-                        <p className="text-[10px] text-textMuted">{row.host}</p>
+                        <p className="text-fine text-textMuted">{row.host}</p>
                         <button
                           type="button"
                           disabled={commandBusy}
@@ -444,11 +444,11 @@ export const MobileIntegrationsView = ({
               className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
             >
               Add via Chat
-              <span className="ml-2 text-[11px] font-normal text-textSoft">
+              <span className="ml-2 text-meta font-normal text-textSoft">
                 CRM, issues, docs, ads — preset shortcuts
               </span>
             </summary>
-            <div className="border-t border-border/30 px-3 pb-3 pt-3">
+            <div className="border-t border-border/30 px-4 pb-4 pt-4">
               <p className="sr-only">
                 Registers hub sources locally. Sync hub OAuth covers Google, GitHub, and LinkedIn
                 slots above; other vendors remain registry-only until connectors ship.
@@ -456,7 +456,7 @@ export const MobileIntegrationsView = ({
               <div className="space-y-4">
                 {INTEGRATION_QUICK_GROUPS.map((group) => (
                   <div key={group.heading}>
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-textSoft">
+                    <p className="mb-1.5 text-fine font-semibold uppercase tracking-wide text-textSoft">
                       {group.heading}
                     </p>
                     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">

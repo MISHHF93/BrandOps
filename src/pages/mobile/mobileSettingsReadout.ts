@@ -1,4 +1,5 @@
 import type { BrandOpsData } from '../../types/domain';
+import type { AiOperatorMode } from '../../types/aiIntegrationSuite';
 import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
 import { getOperatingPresetDefinition } from '../../shared/workspace/operatingProfileCatalog';
 
@@ -48,6 +49,8 @@ export interface MobileSettingsFullReadout {
   copilotWorkersListPreview: string;
   /** Last unified Operating profile applied from Settings (diagnostics). */
   operatingProfileLastApplied: string;
+  aiOperatorMode: AiOperatorMode;
+  aiRoutingDiagnosticsEnabled: boolean;
 }
 
 /** Safe preview for Settings readout — strips path/query noise beyond host + shortened path. */
@@ -140,6 +143,8 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
     aiBridgeEmbeddingModelId: bridge.embeddingModelId || '—',
     copilotActiveWorkerPreview: activeCw ? `${activeCw.name} (${activeCw.id})` : '—',
     copilotWorkersListPreview: clip(cwList, 160),
-    operatingProfileLastApplied
+    operatingProfileLastApplied,
+    aiOperatorMode: s.aiOperatorMode,
+    aiRoutingDiagnosticsEnabled: s.aiRoutingDiagnosticsEnabled
   };
 }

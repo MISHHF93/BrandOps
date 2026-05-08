@@ -163,7 +163,7 @@ export const CockpitFocusEngine = ({
         }}
       />
 
-      <div className="bo-vitality-frame-body space-y-3 px-3 pb-3 pt-3 sm:px-3.5">
+      <div className="bo-vitality-frame-body space-y-4 px-4 pb-4 pt-4 sm:px-5">
         <div role="tablist" aria-label="Focus areas" className="bo-focus-tabs">
           {focusTabs.map((tab) => {
             const isActive = activeFocus === tab.id;

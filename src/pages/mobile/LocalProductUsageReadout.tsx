@@ -52,13 +52,13 @@ export function LocalProductUsageReadout() {
   if (err) {
     return (
       <div className="mt-2 space-y-2">
-        <p className="text-[11px] text-warning" role="alert">
+        <p className="text-meta text-warning" role="alert">
           {err}
         </p>
         <button
           type="button"
           onClick={load}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-surface/60 px-2.5 py-1.5 text-[10px] font-medium text-text"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-surface/60 px-2.5 py-1.5 text-fine font-medium text-text"
         >
           <RefreshCw className="h-3 w-3" strokeWidth={2} aria-hidden />
           Retry
@@ -68,7 +68,7 @@ export function LocalProductUsageReadout() {
   }
 
   if (!summary && pending) {
-    return <p className="mt-2 text-[11px] text-textMuted">Loading local metrics…</p>;
+    return <p className="mt-2 text-meta text-textMuted">Loading local metrics…</p>;
   }
 
   if (!summary) {
@@ -89,7 +89,7 @@ export function LocalProductUsageReadout() {
       aria-label="On-device product experience metrics"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <p className="flex min-w-0 items-start gap-1.5 text-[10px] font-medium text-textSoft">
+        <p className="flex min-w-0 items-start gap-1.5 text-fine font-medium text-textSoft">
           <Shield className="mt-0.5 h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
           <span>
             Stored on this device only. Maps to the roadmap: habit, command confidence, and
@@ -102,7 +102,7 @@ export function LocalProductUsageReadout() {
           onClick={load}
           disabled={pending}
           aria-busy={pending}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border/60 bg-surface/60 px-2.5 py-1.5 text-[10px] font-medium text-text hover:border-borderStrong disabled:cursor-wait"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border/60 bg-surface/60 px-2.5 py-1.5 text-fine font-medium text-text hover:border-borderStrong disabled:cursor-wait"
         >
           <RefreshCw
             className={`h-3 w-3 ${pending ? 'motion-safe:animate-spin' : ''}`}
@@ -113,7 +113,7 @@ export function LocalProductUsageReadout() {
         </button>
       </div>
 
-      <p className="text-[10px] leading-snug text-textMuted">
+      <p className="text-fine leading-snug text-textMuted">
         <span className="font-semibold text-textSoft">Habit: </span>
         active days in rolling windows;{' '}
         <span className="font-semibold text-textSoft"> Command confidence: </span>
@@ -138,7 +138,7 @@ export function LocalProductUsageReadout() {
             key={label}
             className="rounded-lg border border-border/40 bg-surface/40 px-2 py-2 text-center"
           >
-            <p className="text-[9px] font-semibold uppercase tracking-wide text-textSoft">
+            <p className="text-overline font-semibold uppercase tracking-wide text-textSoft">
               {label}
             </p>
             <p
@@ -147,12 +147,12 @@ export function LocalProductUsageReadout() {
             >
               {n}
             </p>
-            <p className="text-[9px] text-textSoft">→ Chat</p>
+            <p className="text-overline text-textSoft">→ Chat</p>
           </div>
         ))}
       </div>
 
-      <dl className="space-y-0 text-[11px] text-textMuted">
+      <dl className="space-y-0 text-meta text-textMuted">
         <div className="flex flex-col gap-0.5 border-b border-border/30 py-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-2">
           <dt className="shrink-0 sm:max-w-[55%]">Active days in last 7 / 30 (local calendar)</dt>
           <dd className="min-w-0 text-left font-medium tabular-nums text-text sm:text-right">
@@ -200,7 +200,7 @@ export function LocalProductUsageReadout() {
             {firstAt}
           </dd>
         </div>
-        <div className="mt-1 flex items-center gap-1.5 border-t border-border/30 pt-2 text-[10px] text-textSoft">
+        <div className="mt-1 flex items-center gap-1.5 border-t border-border/30 pt-2 text-fine text-textSoft">
           <Activity className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
           <span>
             These numbers update as you use the shell. Use Refresh to pull the latest after commands

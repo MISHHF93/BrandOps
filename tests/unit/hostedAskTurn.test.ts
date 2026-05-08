@@ -32,4 +32,10 @@ describe('hostedAskTurn', () => {
     expect(msgs[0].content).toContain('sections:a');
     expect(msgs[0].content).toContain('Global prompt scaffold');
   });
+
+  it('documents citation envelope parsing beside Ask completions', () => {
+    const coach = defaultCopilotWorkerRegistry.workers.find((w) => w.id === 'pipeline-coach')!;
+    const msgs = buildHostedAskMessages(seedData, 'What matters today?', coach);
+    expect(msgs[0].content).toContain('brandOpsAiProvenance');
+  });
 });

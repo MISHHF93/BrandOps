@@ -20,10 +20,10 @@ export function PlanSetupHint({
       className="rounded-xl border border-info/28 bg-info/6 px-3 py-2.5 sm:px-3.5"
       aria-label="Workspace setup hint"
     >
-      <p className="text-[11px] font-semibold leading-snug text-text">
+      <p className="text-meta font-semibold leading-snug text-text">
         Finish setup — profile here is read-only
       </p>
-      <p className="mt-1 text-[10px] leading-snug text-textSoft">
+      <p className="mt-1 text-fine leading-snug text-textSoft">
         Use <span className="font-medium text-text">Edit profile</span> below for{' '}
         <span className="font-medium text-text">Settings → Preferences</span> (operator, offer,
         voice, focus). Pick an <span className="font-medium text-text">operating profile</span>{' '}
@@ -38,7 +38,7 @@ export function PlanSetupHint({
           onClick={onOpenSettings}
           title="Open Settings — Preferences and operating profile"
           className={clsx(
-            'inline-flex items-center gap-1 rounded-lg border border-border/45 bg-bg px-2 py-1.5 text-[10px] font-semibold text-text',
+            'inline-flex items-center gap-1 rounded-lg border border-border/45 bg-bg px-2 py-1.5 text-fine font-semibold text-text',
             btnFocus
           )}
         >
@@ -50,7 +50,7 @@ export function PlanSetupHint({
           onClick={onOpenIntegrations}
           title="Open Integrations — sources and sync hub"
           className={clsx(
-            'inline-flex items-center gap-1 rounded-lg border border-border/45 bg-bg px-2 py-1.5 text-[10px] font-semibold text-text',
+            'inline-flex items-center gap-1 rounded-lg border border-border/45 bg-bg px-2 py-1.5 text-fine font-semibold text-text',
             btnFocus
           )}
         >
@@ -62,7 +62,7 @@ export function PlanSetupHint({
           onClick={onOpenCommandPalette}
           title="Open command palette"
           className={clsx(
-            'inline-flex items-center gap-1 rounded-lg border border-border/45 bg-bg px-2 py-1.5 text-[10px] font-semibold text-text',
+            'inline-flex items-center gap-1 rounded-lg border border-border/45 bg-bg px-2 py-1.5 text-fine font-semibold text-text',
             btnFocus
           )}
         >

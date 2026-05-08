@@ -10,6 +10,7 @@ import { PlanJumpNav } from './PlanJumpNav';
 import { PlanProfileSummary } from './PlanProfileSummary';
 import { PlanSetupHint } from './PlanSetupHint';
 import { PlanPlanningActions } from './PlanPlanningActions';
+import { PlanExecutionInsights } from './PlanExecutionInsights';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
 import { mobileChipClass } from './mobileTabPrimitives';
@@ -45,7 +46,7 @@ function planAgentLockCopy(reason: 'auth' | 'membership' | null): string | null 
 }
 
 const SHEET = 'bo-plan-flat-root overflow-hidden rounded-2xl bg-bg';
-const ROW = 'scroll-mt-28 px-3 py-3 sm:px-3.5';
+const ROW = 'scroll-mt-28 px-4 py-4 sm:px-5';
 
 export interface MobileWorkspaceHubViewProps {
   snapshot: MobileWorkspaceSnapshot;
@@ -138,20 +139,13 @@ export const MobileWorkspaceHubView = ({
 
         <div className={clsx(ROW, 'space-y-3')}>
           <header>
-            <h1 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-textMuted">
+            <h1 className="text-meta font-semibold uppercase tracking-[0.14em] text-textMuted">
               Plan
             </h1>
-            <p className="mt-1.5 text-[11px] leading-snug text-textMuted">
-              Pipeline health, quick picks, and queue runs stay on this tab. Integrations, Settings,
-              and Assistant are on the dock or press{' '}
-              <kbd className="rounded bg-bgSubtle px-1 py-px font-mono text-[10px] text-text">
-                ⌘K
-              </kbd>{' '}
-              /{' '}
-              <kbd className="rounded bg-bgSubtle px-1 py-px font-mono text-[10px] text-text">
-                Ctrl+K
-              </kbd>{' '}
-              for the full catalogue.
+            <p className="mt-1.5 text-meta leading-snug text-textMuted">
+              Use the Plan strip (Overview · Workstreams · Connect · Setup) or{' '}
+              <kbd className="rounded bg-bgSubtle px-1 py-px font-mono text-fine text-text">⌘K</kbd>{' '}
+              — Assistant stays on Ask.
             </p>
           </header>
 
@@ -162,10 +156,9 @@ export const MobileWorkspaceHubView = ({
             onOpenToday={onOpenToday}
           />
 
-          <p className="text-[11px] leading-snug text-textMuted">
-            <span className="font-medium text-textSoft">Other tabs:</span> palette lists
-            Integrations, Settings, Today lanes, and jump targets — no duplicate shortcuts needed
-            here.
+          <p className="text-meta leading-snug text-textMuted">
+            <span className="font-medium text-textSoft">Palette:</span> still lists commands and
+            deep targets — the strip above keeps everyday navigation inside Plan.
           </p>
 
           <PlanJumpNav btnFocus={btnFocus} />
@@ -198,17 +191,21 @@ export const MobileWorkspaceHubView = ({
           />
         </div>
 
+        <div className={ROW}>
+          <PlanExecutionInsights snapshot={snapshot} />
+        </div>
+
         <section id="plan-today" className={ROW} aria-labelledby="plan-today-heading">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <h2
                 id="plan-today-heading"
-                className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-textMuted"
+                className="flex items-center gap-2 text-meta font-semibold uppercase tracking-wide text-textMuted"
               >
                 <CalendarCheck2 className="h-3.5 w-3.5 shrink-0 text-textSoft" aria-hidden />
                 Today snapshot
               </h2>
-              <p className="mt-1 text-[11px] leading-snug text-textSoft line-clamp-3">
+              <p className="mt-1 text-meta leading-snug text-textSoft line-clamp-3">
                 {snapshot.cadenceHeadline.trim()
                   ? snapshot.cadenceHeadline
                   : 'Cadence and peek rows — full cockpit lives on Today.'}
@@ -218,7 +215,7 @@ export const MobileWorkspaceHubView = ({
               type="button"
               onClick={onOpenToday}
               className={clsx(
-                'shrink-0 rounded-lg bg-bgElevated px-2.5 py-1 text-[11px] font-semibold text-text',
+                'shrink-0 rounded-lg bg-bgElevated px-2.5 py-1 text-meta font-semibold text-text',
                 btnFocus
               )}
             >
@@ -249,16 +246,16 @@ export const MobileWorkspaceHubView = ({
             <div className="mt-3 space-y-2 pt-1">
               {todayPreviewTasks.length > 0 ? (
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wide text-textSoft">
+                  <p className="text-fine font-medium uppercase tracking-wide text-textSoft">
                     Scheduler
                   </p>
-                  <ul className="mt-1 space-y-1 text-[11px] text-textMuted">
+                  <ul className="mt-1 space-y-1 text-meta text-textMuted">
                     {todayPreviewTasks.map((t) => (
                       <li key={t.id} className="flex items-start justify-between gap-2">
                         <span className="min-w-0 flex-1 truncate font-medium text-text">
                           {t.title}
                         </span>
-                        <span className="max-w-[45%] shrink-0 text-end text-[10px] text-textSoft">
+                        <span className="max-w-[45%] shrink-0 text-end text-fine text-textSoft">
                           {t.dueAt ? `${t.dueAt} · ` : ''}
                           {t.status}
                         </span>
@@ -269,14 +266,14 @@ export const MobileWorkspaceHubView = ({
               ) : null}
               {todayPreviewDeals.length > 0 ? (
                 <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wide text-textSoft">
+                  <p className="text-fine font-medium uppercase tracking-wide text-textSoft">
                     Pipeline
                   </p>
-                  <ul className="mt-1 space-y-1 text-[11px] text-textMuted">
+                  <ul className="mt-1 space-y-1 text-meta text-textMuted">
                     {todayPreviewDeals.map((d) => (
                       <li key={d.id} className="flex flex-col gap-0.5">
                         <span className="truncate font-medium text-text">{d.name}</span>
-                        <span className="truncate text-[10px] text-textSoft">{d.company}</span>
+                        <span className="truncate text-fine text-textSoft">{d.company}</span>
                       </li>
                     ))}
                   </ul>
@@ -284,7 +281,7 @@ export const MobileWorkspaceHubView = ({
               ) : null}
             </div>
           ) : (
-            <p className="mt-3 pt-1 text-[10px] text-textSoft">
+            <p className="mt-3 pt-1 text-fine text-textSoft">
               Nothing peeking yet — open Today for scheduler lanes and pipeline detail.
             </p>
           )}
@@ -293,13 +290,13 @@ export const MobileWorkspaceHubView = ({
         <section id="plan-queue" className={ROW} aria-labelledby="plan-queue-heading">
           <h2
             id="plan-queue-heading"
-            className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-textMuted"
+            className="flex flex-wrap items-center gap-2 text-meta font-semibold uppercase tracking-wide text-textMuted"
           >
             <TableProperties className="h-3.5 w-3.5 shrink-0 text-textSoft" aria-hidden />
             Soonest queue
             <span
               className={clsx(
-                'tabular-nums text-[10px] font-medium normal-case',
+                'tabular-nums text-fine font-medium normal-case',
                 sorted.length > 0 ? 'text-info' : 'text-textSoft'
               )}
             >
@@ -315,9 +312,9 @@ export const MobileWorkspaceHubView = ({
             </div>
           ) : (
             <div className="bo-scroll-x-lane mt-2">
-              <table className="w-full min-w-[280px] border-collapse text-left text-[11px]">
+              <table className="w-full min-w-[280px] border-collapse text-left text-meta">
                 <thead>
-                  <tr className="border-b border-border/35 text-[10px] uppercase tracking-wide text-textSoft">
+                  <tr className="border-b border-border/35 text-fine uppercase tracking-wide text-textSoft">
                     <th className="py-1.5 pe-2 font-medium">Type</th>
                     <th className="py-1.5 pe-2 font-medium">Item</th>
                     <th className="py-1.5 font-medium">When / status</th>
@@ -340,7 +337,7 @@ export const MobileWorkspaceHubView = ({
                           {row.title}
                         </span>
                       </td>
-                      <td className="py-2 pe-2 text-[10px] leading-snug text-textSoft">
+                      <td className="py-2 pe-2 text-fine leading-snug text-textSoft">
                         {row.subtitle}
                       </td>
                       <td className="py-2 ps-2 text-end whitespace-nowrap">
@@ -349,7 +346,7 @@ export const MobileWorkspaceHubView = ({
                           disabled={commandBusy}
                           title="Run this queue line on device (stay on Plan)"
                           onClick={() => runCommand(workspaceQueueCommandLine(row))}
-                          className={clsx(mobileChipClass(btnFocus), 'text-[10px]')}
+                          className={clsx(mobileChipClass(btnFocus), 'text-fine')}
                         >
                           <CirclePlay className="me-1 inline h-3 w-3 align-text-bottom" />
                           Run
@@ -360,7 +357,7 @@ export const MobileWorkspaceHubView = ({
                 </tbody>
               </table>
               {sorted.length > 14 ? (
-                <p className="mt-2 text-[10px] text-textSoft">
+                <p className="mt-2 text-fine text-textSoft">
                   Showing 14 of {sorted.length}. Run narrower commands in Assistant to trim the
                   queue.
                 </p>

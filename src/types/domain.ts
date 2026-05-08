@@ -600,6 +600,13 @@ export interface AppSettings {
   copilotWorkers: CopilotWorkerRegistrySettings;
   /** Tracks unified Operating profile applies from Settings (diagnostics / exports). */
   operatingProfile: OperatingProfileState;
+  /**
+   * Operator-facing routing stance for hosted NLP (`ask:`) — chooses scoring weights + decoding knobs.
+   * See {@link ./aiIntegrationSuite.ts}.
+   */
+  aiOperatorMode: import('./aiIntegrationSuite').AiOperatorMode;
+  /** Append routing scoring breadcrumbs into hosted Ask system prompts (advanced troubleshooting). */
+  aiRoutingDiagnosticsEnabled: boolean;
 }
 
 /** Workspace dataset lineage. Legacy `default-demo` is normalized to `demo-sample` on save. */
@@ -688,6 +695,83 @@ export interface AiEmbeddingIndexState {
   entries: ContentItemEmbeddingRecord[];
 }
 
+/**
+ * Structured citation / retrieval provenance for hosted Assistant (`ask:`) and future multimodal surfaces.
+ * Persisted only inside workspace JSON when trace retention is enabled — never API keys or raw secrets.
+ */
+export type AiCitationSourceType =
+  | 'workspace_entity'
+  | 'integration_hub'
+  | 'linked_document'
+  | 'web_retrieval'
+  | 'browser_overlay'
+  | 'user_attachment'
+  | 'audio'
+  | 'image'
+  | 'video'
+  | 'document'
+  | 'unknown';
+
+export type AiCitationModality = 'text' | 'audio' | 'image' | 'video' | 'document' | 'browser_overlay';
+
+/** Optional multimodal anchor — URIs are hints/ids only (no bearer tokens or secrets). */
+export interface AiMultimodalContextRef {
+  modality?: AiCitationModality;
+  mime_type?: string;
+  /** Relative workspace key, asset id, or https URL length-capped — sanitized at persistence. */
+  uri_hint?: string;
+  duration_ms?: number;
+  dimensions?: { w?: number; h?: number };
+  transcript_span?: { start_ms?: number; end_ms?: number };
+}
+
+/** One retrievable span the model attributes to its answer (RAG chunk, doc page, entity row, overlay slice, …). */
+export interface AiCitationChunk {
+  /** Stable id for inline `[cite: …]` markers — numeric or string (e.g. `12`, `ISO_42001.pdf`). */
+  chunk_id?: string | number;
+  source?: string;
+  /** Page number or logical page label (e.g. "appendix-a"). */
+  page?: number | string;
+  source_type?: AiCitationSourceType;
+  retrieval_timestamp?: string;
+  /** 0–1 when provided; clamped on normalize. */
+  confidence?: number;
+  embedding_region?: string;
+  workspace_entity_id?: string;
+  message_id?: string;
+  agent_step_id?: string;
+  multimodal?: AiMultimodalContextRef;
+  /** Short excerpt for UI chips — capped on sanitize. */
+  excerpt?: string;
+}
+
+export type AiAssistantTraceSurface = 'assistant_chat' | 'linkedin_overlay' | 'workspace_automation';
+
+/** Append-only Assistant I/O trace row (auditable; capped in storage). */
+export interface AiAssistantTurnTrace {
+  id: string;
+  at: string;
+  trace_schema_version: string;
+  surface: AiAssistantTraceSurface;
+  outcome: 'success' | 'failure';
+  /** Chat transcript message id (Assistant UI), when known. */
+  message_id?: string;
+  /** Bounded preview of user question — not full system prompt. */
+  user_turn_preview: string;
+  /** Bounded preview of assistant visible text after structured-json strip. */
+  assistant_preview: string;
+  citations: AiCitationChunk[];
+  /** Inline `[cite: x]` markers that did not match any citation row (bounded; audit). */
+  orphan_inline_markers?: string[];
+  model_id?: string;
+  worker_id?: string;
+  duration_ms?: number;
+}
+
+export interface AiAssistantTraceLogState {
+  entries: AiAssistantTurnTrace[];
+}
+
 export interface BrandOpsData {
   brand: BrandProfile;
   brandVault: BrandVault;
@@ -714,4 +798,10 @@ export interface BrandOpsData {
   operatorTraces?: OperatorTracesState;
   /** Hosted embedding vectors keyed by content library item id (optional; normalized on read). */
   embeddingIndex?: AiEmbeddingIndexState;
+  /** Assistant `ask:` citation / provenance turns (optional; normalized on read). */
+  aiAssistantTraces?: AiAssistantTraceLogState;
+  /** AI provenance graph bundles — auditable artifact linkage (optional; normalized on read). */
+  aiTraceGraph?: import('./aiTraceGraph').AIWorkspaceTraceIndexState;
+  /** Declarative AI pipeline executions — capped audit-only rows (optional). */
+  aiPipelineRuns?: import('./aiIntegrationSuite').AiPipelineRunLogState;
 }

@@ -41,8 +41,8 @@ function writeGettingStartedDismissed() {
 }
 
 const stepClass = 'mt-2 rounded-lg border border-border/35 bg-bgSubtle/30 px-2.5 py-2';
-const stepTitleClass = 'text-[11px] font-semibold text-text';
-const stepBodyClass = 'mt-0.5 text-[10px] leading-snug text-textSoft';
+const stepTitleClass = 'text-meta font-semibold text-text';
+const stepBodyClass = 'mt-0.5 text-fine leading-snug text-textSoft';
 
 /**
  * First-session checklist on **Plan** — numbered steps + CTAs for Today, palette, Settings, and Help.
@@ -107,7 +107,7 @@ export function FirstRunJourneyCard({
                 <a
                   href="#plan-actions"
                   className={clsx(
-                    'mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-[11px] font-semibold text-text',
+                    'mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-meta font-semibold text-text',
                     btnFocus
                   )}
                 >
@@ -129,7 +129,7 @@ export function FirstRunJourneyCard({
                 <button
                   type="button"
                   className={clsx(
-                    'mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-[11px] font-semibold text-text',
+                    'mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-meta font-semibold text-text',
                     btnFocus
                   )}
                   onClick={onOpenToday}
@@ -153,18 +153,19 @@ export function FirstRunJourneyCard({
                   <span className="text-textSoft">5.</span> Tune your workspace
                 </p>
                 <p className={stepBodyClass}>
-                  In <span className="font-medium text-text">Settings → Preferences</span>, replace
+                  In <span className="font-medium text-text">Settings → Unified workspace</span>, replace
                   placeholder profile fields, then apply an{' '}
                   <span className="font-medium text-text">operating profile</span> preset (layout,
-                  AI defaults, cadence). Use{' '}
-                  <span className="font-medium text-text">Integrations</span> for sources and sync
-                  hub rows.
+                  AI defaults, cadence). Pick a <span className="font-medium text-text">Hosted Ask routing</span>{' '}
+                  mode (Fast / Evidence / …) for hosted <span className="font-medium text-text">ask:</span>{' '}
+                  turns. Use{' '}
+                  <span className="font-medium text-text">Integrations</span> for sources and sync hub rows.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <button
                     type="button"
                     className={clsx(
-                      'inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-[11px] font-semibold text-text',
+                      'inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-meta font-semibold text-text',
                       btnFocus
                     )}
                     onClick={onOpenSettings}
@@ -176,7 +177,7 @@ export function FirstRunJourneyCard({
                   <button
                     type="button"
                     className={clsx(
-                      'inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-[11px] font-semibold text-text',
+                      'inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-meta font-semibold text-text',
                       btnFocus
                     )}
                     onClick={onOpenHelp}

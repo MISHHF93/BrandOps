@@ -86,7 +86,7 @@ export function WorkspaceDataHint({ message, className }: { message: string; cla
   return (
     <p
       className={clsx(
-        'mt-1.5 flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[10px] leading-snug bo-hint-appear',
+        'mt-1.5 flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-fine leading-snug bo-hint-appear',
         color,
         className
       )}
@@ -105,11 +105,11 @@ export function OnDeviceTrustLine({ className }: { className?: string }) {
   return (
     <p
       className={clsx(
-        'mt-0.5 flex max-w-sm items-center gap-1 text-[9px] font-medium uppercase tracking-wide text-textSoft/90',
+        'mt-0.5 flex max-w-sm items-center gap-1 text-overline uppercase tracking-wide text-textSoft/90',
         className
       )}
     >
-      <Shield className="h-2.5 w-2.5 text-textSoft" strokeWidth={2} aria-hidden />
+      <Shield className="h-3 w-3 text-textSoft" strokeWidth={2} aria-hidden />
       <span>Workspace data stays on this device</span>
     </p>
   );
@@ -120,7 +120,7 @@ export function OnDeviceDialogTrustFooter({ className }: { className?: string })
   return (
     <p
       className={clsx(
-        'mt-3 flex items-start gap-1.5 text-[10px] leading-snug text-textSoft',
+        'mt-3 flex items-start gap-1.5 text-fine leading-snug text-textSoft',
         className
       )}
       role="note"
@@ -153,7 +153,7 @@ export function AgentWorkingState({ label = 'BrandOps is working' }: { label?: s
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-text">{label}</p>
-          <p className="text-[10px] text-textSoft">
+          <p className="text-fine text-textSoft">
             Running your command and updating the workspace on-device.
           </p>
         </div>
@@ -185,7 +185,7 @@ export function EmptyState({
       )}
     >
       <p className="text-sm font-medium text-text">{title}</p>
-      <p className="mt-1 text-[11px] leading-relaxed text-textSoft">{body}</p>
+      <p className="mt-1 text-meta leading-relaxed text-textSoft">{body}</p>
       {children ? (
         <div className="mt-3 flex flex-wrap items-center justify-center gap-2">{children}</div>
       ) : null}

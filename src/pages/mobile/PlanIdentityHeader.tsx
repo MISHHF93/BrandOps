@@ -68,14 +68,14 @@ export function PlanIdentityHeader({
       className={clsx(
         'flex flex-col gap-3',
         variant === 'card' &&
-          'rounded-2xl border border-border/45 bg-surface/55 px-3 py-3 sm:px-3.5',
+          'rounded-2xl border border-border/45 bg-surface/55 px-4 py-4 sm:px-5',
         variant === 'sheet' && 'px-0 py-0'
       )}
       aria-labelledby="plan-identity-heading"
     >
       <div className="flex items-start gap-3">
         <span
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-accent/35 bg-accentSoft/22 text-[13px] font-bold uppercase tracking-wide text-accent"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-accent/35 bg-accentSoft/22 text-label font-bold uppercase tracking-wide text-accent"
           aria-hidden
         >
           {initials}
@@ -83,11 +83,11 @@ export function PlanIdentityHeader({
         <div className="min-w-0 flex-1">
           <p
             id="plan-identity-heading"
-            className="text-[13px] font-semibold leading-tight text-text"
+            className="text-label font-semibold leading-tight text-text"
           >
             {operatorName.trim() || 'Workspace operator'}
           </p>
-          <p className="mt-1 flex items-start gap-1.5 text-[11px] leading-snug text-textSoft">
+          <p className="mt-1 flex items-start gap-1.5 text-meta leading-snug text-textSoft">
             <UserRound className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-75" aria-hidden />
             <span>{positioning || 'Add positioning under Settings → Preferences.'}</span>
           </p>
@@ -96,13 +96,13 @@ export function PlanIdentityHeader({
 
       <div className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-border/35 bg-bgSubtle/55 px-2.5 py-2">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-textMuted">
+          <p className="text-fine font-semibold uppercase tracking-wide text-textMuted">
             Account
           </p>
-          <p className="mt-1 break-words text-[11px] text-textMuted">{accountLine}</p>
+          <p className="mt-1 break-words text-meta text-textMuted">{accountLine}</p>
           <p
             className={clsx(
-              'mt-1 text-[10px] font-semibold',
+              'mt-1 text-fine font-semibold',
               mem.tone === 'success' && 'text-success',
               mem.tone === 'warning' && 'text-warning',
               mem.tone === 'muted' && 'text-textSoft'
@@ -116,7 +116,7 @@ export function PlanIdentityHeader({
           onClick={onOpenSettings}
           title="Account, billing, and workspace preferences"
           className={clsx(
-            'inline-flex shrink-0 items-center gap-1 rounded-lg border border-border/50 bg-bg px-2 py-1.5 text-[11px] font-semibold text-text',
+            'inline-flex shrink-0 items-center gap-1 rounded-lg border border-border/50 bg-bg px-2 py-1.5 text-meta font-semibold text-text',
             btnFocus
           )}
         >

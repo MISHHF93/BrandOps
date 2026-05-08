@@ -20,7 +20,7 @@ const PIPELINE_STRIP_ITEMS = [
 ] as const;
 
 const rowChip = (btnFocus: string) =>
-  `rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] text-text ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
+  `rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-fine text-text ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
 
 /**
  * `id="cockpit-pipeline"` must stay stable for `?section=pipeline` and scroll targets.
@@ -71,11 +71,11 @@ export const CockpitPipelineWorkstreamSection = ({
       >
         <p
           id="cockpit-pipeline-projection-heading"
-          className="text-[10px] font-semibold uppercase tracking-wide text-success"
+          className="text-fine font-semibold uppercase tracking-wide text-success"
         >
           Weighted projection
         </p>
-        <p className="mt-1 text-[10px] leading-snug text-textMuted">
+        <p className="mt-1 text-fine leading-snug text-textMuted">
           Open deals only (excludes won, lost, archived).{' '}
           <span className="text-textSoft">Weighted</span> is Σ value × confidence% — a sizing lens
           from the same rules as deal health, not a forecast.
@@ -115,12 +115,12 @@ export const CockpitPipelineWorkstreamSection = ({
         </div>
         {snapshot.pipelineSignals.length === 0 ? (
           <div className="mt-1 space-y-1">
-            <p className="text-[11px] text-textMuted">
+            <p className="text-meta text-textMuted">
               No active opportunities in the workspace yet.
             </p>
-            <p className="text-[11px] text-textMuted">
+            <p className="text-meta text-textMuted">
               In <strong className="text-text">Chat</strong>, add opportunities or run{' '}
-              <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">
+              <code className="rounded bg-surface/90 px-1 text-fine text-textMuted">
                 pipeline health
               </code>{' '}
               after you have deals in motion.
@@ -134,9 +134,9 @@ export const CockpitPipelineWorkstreamSection = ({
                   <span className="text-text">
                     {i + 1}. {row.label}
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] text-success">{row.score}</span>
+                  <span className="shrink-0 font-mono text-meta text-success">{row.score}</span>
                 </div>
-                <p className="text-[10px] leading-snug text-textMuted">{row.reason}</p>
+                <p className="text-fine leading-snug text-textMuted">{row.reason}</p>
               </li>
             ))}
           </ol>
@@ -157,15 +157,15 @@ export const CockpitPipelineWorkstreamSection = ({
 
       {snapshot.cockpitOutreachTemplatePeek.length > 0 ? (
         <div className="border-t border-border/25 pt-3">
-          <p className="text-[11px] font-medium text-textSoft">Outreach templates</p>
+          <p className="text-meta font-medium text-textSoft">Outreach templates</p>
           <ul className="mt-2 space-y-2">
             {snapshot.cockpitOutreachTemplatePeek.map((row) => (
               <li
                 key={row.id}
-                className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
+                className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-meta text-textMuted"
               >
                 <p className="font-medium text-text">{row.name}</p>
-                <p className="text-[10px] text-textMuted">
+                <p className="text-fine text-textMuted">
                   {row.category} · updated {formatPeekDue(row.updatedAt)}
                 </p>
                 <button
@@ -186,22 +186,22 @@ export const CockpitPipelineWorkstreamSection = ({
 
       {snapshot.cockpitOutreachHistoryPeek.length > 0 ? (
         <div className="border-t border-border/25 pt-3">
-          <p className="text-[11px] font-medium text-textSoft">Outreach history</p>
+          <p className="text-meta font-medium text-textSoft">Outreach history</p>
           <ul className="mt-2 space-y-2">
             {snapshot.cockpitOutreachHistoryPeek.map((row) => (
               <li
                 key={row.id}
-                className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
+                className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-meta text-textMuted"
               >
                 <p className="font-medium text-text">
                   {row.targetName}
                   <span className="font-normal text-textSoft"> · {row.company}</span>
                 </p>
-                <p className="text-[10px] text-textMuted">
+                <p className="text-fine text-textMuted">
                   {row.status} · {formatPeekDue(row.loggedAt)}
                 </p>
                 {row.summaryPreview ? (
-                  <p className="mt-1 text-[10px] leading-snug text-textMuted">
+                  <p className="mt-1 text-fine leading-snug text-textMuted">
                     {row.summaryPreview}
                   </p>
                 ) : null}
@@ -223,7 +223,7 @@ export const CockpitPipelineWorkstreamSection = ({
     </div>
     {snapshot.cockpitOpportunityPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
-        <p className="text-[11px] font-medium text-textSoft">Opportunities in workspace</p>
+        <p className="text-meta font-medium text-textSoft">Opportunities in workspace</p>
         <span className="sr-only">
           Read-only peek. Agent stage updates still apply to the first active deal unless you name
           fields in Chat.
@@ -232,13 +232,13 @@ export const CockpitPipelineWorkstreamSection = ({
           {snapshot.cockpitOpportunityPeek.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
+              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-meta text-textMuted"
             >
               <p className="font-medium text-text">
                 {row.name}
                 <span className="font-normal text-textSoft"> · {row.company}</span>
               </p>
-              <p className="mt-0.5 text-[10px] text-textMuted">
+              <p className="mt-0.5 text-fine text-textMuted">
                 {row.status}
                 {row.nextAction ? ` · ${row.nextAction}` : ''}
               </p>

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { BrandOpsData } from '../../src/types/domain';
 import { cloneSeedData } from '../helpers/fixtures';
 
 const memoryStorage = new Map<string, unknown>();
@@ -128,5 +129,79 @@ describe('storageService', () => {
     await expect(storageService.importData('{"foo":"bar"}')).rejects.toThrow(
       'Invalid BrandOps workspace payload.'
     );
+  });
+
+  it('normalizes aiAssistantTraces on setData (drops invalid rows, sanitizes citations)', async () => {
+    const source = cloneSeedData();
+    source.aiAssistantTraces = {
+      entries: [
+        {
+          id: 'bad',
+          at: 'x',
+          surface: 'not-a-surface',
+          outcome: 'success',
+          user_turn_preview: 'q',
+          assistant_preview: 'a',
+          citations: [],
+          trace_schema_version: '1.0.0'
+        },
+        {
+          id: 'ok',
+          at: new Date().toISOString(),
+          trace_schema_version: '1.0.0',
+          surface: 'assistant_chat',
+          outcome: 'success',
+          user_turn_preview: 'q',
+          assistant_preview: 'a',
+          citations: [
+            // Confidence > 1 + long excerpt — sanitized on read
+            { source: 'Doc', confidence: 9, chunkId: 'c1', excerpt: 'e'.repeat(400) }
+          ]
+        }
+      ]
+    } as BrandOpsData['aiAssistantTraces'];
+
+    const normalized = await storageService.setData(source);
+    expect(normalized.aiAssistantTraces?.entries).toHaveLength(1);
+    expect(normalized.aiAssistantTraces?.entries?.[0].id).toBe('ok');
+    expect(normalized.aiAssistantTraces?.entries?.[0].citations[0]?.confidence).toBe(1);
+    expect(normalized.aiAssistantTraces?.entries?.[0].citations[0]?.excerpt?.length).toBeLessThanOrEqual(
+      360
+    );
+  });
+
+  it('normalizes aiTraceGraph on setData (drops invalid bundles, sanitizes governance)', async () => {
+    const source = cloneSeedData();
+    source.aiTraceGraph = {
+      schema_version: '9',
+      bundles: [
+        {
+          trace_id: 'ok',
+          schema_version: '1.0.0',
+          created_at: '2026-02-01T00:00:00.000Z',
+          surface: 'assistant_chat',
+          artifacts: [],
+          links: [],
+          invocations: [],
+          retrieval_chunks: [],
+          governance_meta: { hallucination_risk: 'not-valid' as never }
+        },
+        {
+          trace_id: '',
+          created_at: '',
+          schema_version: '1.0.0',
+          surface: 'assistant_chat',
+          artifacts: [],
+          links: [],
+          invocations: [],
+          retrieval_chunks: []
+        }
+      ]
+    } as BrandOpsData['aiTraceGraph'];
+
+    const normalized = await storageService.setData(source);
+    expect(normalized.aiTraceGraph?.bundles).toHaveLength(1);
+    expect(normalized.aiTraceGraph?.bundles?.[0].trace_id).toBe('ok');
+    expect(normalized.aiTraceGraph?.bundles?.[0].governance_meta?.hallucination_risk).toBeUndefined();
   });
 });

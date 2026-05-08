@@ -18,7 +18,7 @@ export const MOBILE_BTN_FOCUS =
 
 export function mobileChipClass(btnFocus: string) {
   return clsx(
-    'rounded-full border border-border/55 bg-surface/55 px-2.5 py-1.5 text-left text-xs text-text',
+    'rounded-full border border-border/55 bg-surface/55 px-3 py-2 text-left text-sm text-text',
     btnFocus
   );
 }
@@ -45,17 +45,17 @@ export function MobileTabSection({
   return (
     <section
       id={id}
-      className="bo-tab-section bo-mobile-sheet p-3 text-xs text-textMuted"
+      className="bo-tab-section bo-mobile-sheet p-4 text-sm text-textMuted"
       aria-labelledby={titleId}
     >
-      <h3 id={titleId} className="text-sm font-semibold text-text">
+      <h3 id={titleId} className="text-h3 font-semibold text-text">
         {title}
       </h3>
       {description ? (
         descriptionVisibility === 'sr-only' ? (
           <span className="sr-only">{description}</span>
         ) : (
-          <p className="mt-1.5 text-[11px] leading-relaxed text-textSoft">{description}</p>
+          <p className="mt-1.5 text-meta leading-relaxed text-textSoft">{description}</p>
         )
       ) : null}
       {children}
@@ -87,9 +87,9 @@ export function MobileTabPageHeader({
         haloTone === 'primary' && 'bo-section-halo--primary'
       )}
     >
-      <div className="flex items-center gap-3">
-        <div className={clsx('h-10 w-10 shrink-0', iconWrapperClassName)}>
-          <Icon className={clsx('h-5 w-5', iconClassName)} aria-hidden />
+      <div className="flex items-center gap-3.5">
+        <div className={clsx('h-11 w-11 shrink-0', iconWrapperClassName)}>
+          <Icon className={clsx('h-5 w-5 sm:h-6 sm:w-6', iconClassName)} aria-hidden />
         </div>
         <div className="min-w-0">
           <h2 className="text-h1 text-text">{title}</h2>
@@ -121,7 +121,7 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
     >
       <div
         className={clsx(
-          'bo-mobile-nav__outer pointer-events-auto w-full pb-[max(0.45rem,env(safe-area-inset-bottom,0px))] pt-1',
+          'bo-mobile-nav__outer pointer-events-auto mx-auto w-full pb-[max(0.45rem,env(safe-area-inset-bottom,0px))] pt-1',
           MOBILE_SHELL_MAX_WIDTH_CLASS,
           MOBILE_SHELL_EDGE_PAD_CLASS
         )}
@@ -130,18 +130,18 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
           {/* Sliding spotlight aligns to the grid cell for the active tab */}
           <div
             aria-hidden
-            className="bo-mobile-nav__track pointer-events-none absolute inset-x-2 inset-y-2 z-0 grid gap-1"
+            className="bo-mobile-nav__track pointer-events-none absolute inset-x-2.5 inset-y-2.5 z-0 grid gap-1"
             style={NAV_TRACK_STYLE}
           >
             <span
-              className="bo-mobile-nav__spotlight col-span-1 min-h-[2.5rem] self-stretch rounded-2xl"
+              className="bo-mobile-nav__spotlight col-span-1 min-h-[2.85rem] self-stretch rounded-2xl"
               style={{ gridColumnStart: activeIndex + 1 }}
               key={`spot-${dockActive}`}
             />
           </div>
 
           <ul
-            className="relative z-[1] grid gap-1 px-2 py-2"
+            className="relative z-[1] grid gap-1 px-2.5 py-2.5"
             style={NAV_TRACK_STYLE}
             role="presentation"
           >
@@ -157,7 +157,7 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
                     aria-current={active ? 'page' : undefined}
                     title={`${tab.label}: ${SHELL_TAB_PURPOSE[tab.id]}`}
                     className={clsx(
-                      'group bo-mobile-nav-item bo-press-ink flex min-h-[3.45rem] w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl px-0 py-2 text-micro outline-none ring-inset ring-transparent duration-base motion-safe:transition-colors',
+                      'group bo-mobile-nav-item bo-press-ink flex min-h-[3.75rem] w-full min-w-0 touch-manipulation flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl px-0 py-2 text-micro outline-none ring-inset ring-transparent duration-base motion-safe:transition-colors',
                       btnFocus,
                       'focus-visible:ring-2 focus-visible:ring-focusRing/85 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
                       active
@@ -167,16 +167,16 @@ export function MobileShellNav({ activeTab, onSelect, btnFocus }: MobileShellNav
                   >
                     <span
                       className={clsx(
-                        'bo-mobile-nav-item__glyph flex size-9 shrink-0 items-center justify-center rounded-xl border bg-transparent duration-base motion-safe:transition-[border-color,background-color,color,box-shadow]',
+                        'bo-mobile-nav-item__glyph flex size-10 shrink-0 items-center justify-center rounded-xl border bg-transparent duration-base motion-safe:transition-[border-color,background-color,color,box-shadow]',
                         active
                           ? 'border-borderStrong/65 bg-surfaceActive/65 text-text shadow-[inset_0_1px_0_rgb(var(--brand-gold)/0.18)]'
                           : 'border-transparent text-textMuted group-hover:border-borderStrong/55 group-hover:bg-surfaceActive/65 group-hover:text-text'
                       )}
                       aria-hidden
                     >
-                      <Icon size={18} strokeWidth={active ? 2.45 : 2} />
+                      <Icon size={20} strokeWidth={active ? 2.45 : 2} />
                     </span>
-                    <span className="block w-full min-w-0 shrink truncate px-0.5 text-center text-[9px] font-bold uppercase leading-none tracking-[0.02em] text-current">
+                    <span className="block w-full min-w-0 shrink truncate px-0.5 text-center text-overline uppercase leading-none tracking-[0.02em] text-current">
                       {dock}
                     </span>
                   </button>

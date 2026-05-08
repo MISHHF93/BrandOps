@@ -27,7 +27,7 @@ const TODAY_STRIP_ITEMS = [
 ] as const;
 
 const rowChip = (btnFocus: string) =>
-  `rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] text-text ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
+  `rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-fine text-text ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
 
 /**
  * `id="cockpit-today"` must stay stable for `?section=today` / workstream scroll and {@link getCockpitMobileSectionHeadingId}.
@@ -75,7 +75,7 @@ export const CockpitTodayWorkstreamSection = ({
 
     {snapshot.cockpitSchedulerTaskPeek.length > 0 ? (
       <div className="mt-4 border-t border-border/25 pt-4">
-        <p className="text-[11px] font-medium text-textSoft">Upcoming scheduler tasks</p>
+        <p className="text-meta font-medium text-textSoft">Upcoming scheduler tasks</p>
         <span className="sr-only">
           Read-only digest. Snooze and completion flow through Chat commands. "Complete follow-up"
           in the strip marks the first incomplete follow-up in workspace order.
@@ -84,10 +84,10 @@ export const CockpitTodayWorkstreamSection = ({
           {snapshot.cockpitSchedulerTaskPeek.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
+              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-meta text-textMuted"
             >
               <p className="font-medium text-text">{row.title}</p>
-              <p className="mt-0.5 text-[10px] text-textMuted">
+              <p className="mt-0.5 text-fine text-textMuted">
                 {row.status} · {row.sourceType} · due {formatPeekDue(row.dueAt)}
               </p>
               <div className="mt-2">
@@ -108,15 +108,15 @@ export const CockpitTodayWorkstreamSection = ({
 
     {snapshot.cockpitRecentNotesPeek.length > 0 ? (
       <div className="mt-4 border-t border-border/25 pt-4">
-        <p className="text-[11px] font-medium text-textSoft">Recent notes</p>
+        <p className="text-meta font-medium text-textSoft">Recent notes</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitRecentNotesPeek.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
+              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-meta text-textMuted"
             >
               <p className="font-medium text-text">{row.title}</p>
-              <p className="mt-0.5 text-[10px] text-textMuted">
+              <p className="mt-0.5 text-fine text-textMuted">
                 {row.entityType} · {formatPeekDue(row.createdAt)}
               </p>
               <button
@@ -137,18 +137,18 @@ export const CockpitTodayWorkstreamSection = ({
 
     {snapshot.cockpitContactsPeek.length > 0 ? (
       <div className="mt-4 border-t border-border/25 pt-4">
-        <p className="text-[11px] font-medium text-textSoft">Contacts (recent touch)</p>
+        <p className="text-meta font-medium text-textSoft">Contacts (recent touch)</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitContactsPeek.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
+              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-meta text-textMuted"
             >
               <p className="font-medium text-text">
                 {row.name}
                 <span className="font-normal text-textSoft"> · {row.company}</span>
               </p>
-              <p className="mt-0.5 text-[10px] text-textMuted">{row.role}</p>
+              <p className="mt-0.5 text-fine text-textMuted">{row.role}</p>
               <div className="mt-2">
                 <button
                   type="button"

@@ -78,16 +78,15 @@ function Spark({ fillPct, tone }: { fillPct: number; tone: WorkspaceSignalTone }
   );
 }
 
-/** Compact SVG arc — fills clockwise from noon; value sits centered like a gauge readout. */
+/** Compact SVG arc — fills clockwise from noon; numeric readout stacks in the same grid cell (see `.bo-vitality-dial`). */
 function MiniRing({ fillPct, tone }: { fillPct: number; tone: WorkspaceSignalTone }) {
   const r = 13.5;
   const c = 2 * Math.PI * r;
   const arcLen = (fillPct / 100) * c;
   return (
     <svg
-      width="38"
-      height="38"
       viewBox="0 0 38 38"
+      preserveAspectRatio="xMidYMid meet"
       className="bo-vitality-ring bo-vitality-dial__ring"
       aria-hidden
     >
@@ -251,28 +250,30 @@ function VitalityMetricCell({ m, valueId }: { m: MetricCell; valueId: string }) 
   return (
     <div className="bo-vitality-cell" title={m.title}>
       <div className="bo-vitality-cell__row">
-        <div className="bo-vitality-dial">
-          <MiniRing fillPct={m.fillPct} tone={m.tone} />
-          <span
-            id={valueId}
-            className={clsx(
-              'bo-vitality-dial__value',
-              digits >= 3 && 'bo-vitality-dial__value--compact',
-              digits >= 4 && 'bo-vitality-dial__value--micro',
-              metricToneTextClass(m.tone)
-            )}
-          >
-            {m.display}
-          </span>
+        <div className="bo-vitality-cell__gauge-stack">
+          <div className="bo-vitality-dial">
+            <MiniRing fillPct={m.fillPct} tone={m.tone} />
+            <span
+              id={valueId}
+              className={clsx(
+                'bo-vitality-dial__value',
+                digits >= 3 && 'bo-vitality-dial__value--compact',
+                digits >= 4 && 'bo-vitality-dial__value--micro',
+                metricToneTextClass(m.tone)
+              )}
+            >
+              {m.display}
+            </span>
+          </div>
+          <Spark fillPct={m.fillPct} tone={m.tone} />
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="bo-vitality-cell__meta-col">
           <div className="flex items-center gap-1">
             <span className={clsx('bo-icon-chip bo-icon-chip--xs', `bo-icon-chip--${m.tone}`)}>
               <Icon className="h-3 w-3" strokeWidth={2.25} aria-hidden />
             </span>
             <span className="bo-vitality-cell__label truncate">{m.label}</span>
           </div>
-          <Spark fillPct={m.fillPct} tone={m.tone} />
           {m.sub ? <p className="bo-vitality-cell__sub">{m.sub}</p> : null}
         </div>
       </div>

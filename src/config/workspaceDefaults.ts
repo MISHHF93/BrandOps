@@ -110,5 +110,7 @@ export const defaultAppSettings = {
   copilotWorkers: defaultCopilotWorkerRegistry,
   operatingProfile: {
     lastAppliedPresetId: null
-  }
+  },
+  aiOperatorMode: 'balanced',
+  aiRoutingDiagnosticsEnabled: false
 } satisfies AppSettings;

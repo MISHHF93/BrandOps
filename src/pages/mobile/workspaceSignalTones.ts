@@ -44,7 +44,7 @@ export function metricToneTextClass(tone: WorkspaceSignalTone): string {
 /** Compact Plan “Today snapshot” KPI chips — border/fill tracks severity without painting whole sections. */
 export function planKpiSnapshotPillClass(tone: WorkspaceSignalTone): string {
   return clsx(
-    'rounded-md px-2 py-0.5 text-[10px] tabular-nums text-textMuted',
+    'rounded-md px-2 py-0.5 text-fine tabular-nums text-textMuted',
     tone === 'danger' && 'bg-dangerSoft/28',
     tone === 'warning' && 'bg-warningSoft/28',
     tone === 'info' && 'bg-infoSoft/28',
@@ -57,7 +57,7 @@ export function planKpiSnapshotPillClass(tone: WorkspaceSignalTone): string {
 /** Queue row type column — readable hue per workload kind. */
 export function pulseQueueBadgeSurfaceClass(tone: WorkspaceSignalTone): string {
   return clsx(
-    'inline-flex max-w-[10rem] truncate rounded px-1.5 py-0.5 text-[10px] font-semibold leading-tight',
+    'inline-flex max-w-[10rem] truncate rounded px-1.5 py-0.5 text-fine font-semibold leading-tight',
     metricToneTextClass(tone),
     tone === 'danger' && 'bg-dangerSoft/18',
     tone === 'warning' && 'bg-warningSoft/18',

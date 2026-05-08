@@ -18,11 +18,13 @@ describe('persistChatGatewayTrace', () => {
         messages: [{ role: 'user', content: 'hello' }],
         result: { ok: false, code: 'missing_endpoint', message: 'No URL' },
         durationMs: 4,
-        modelId: 'gpt-test'
+        modelId: 'gpt-test',
+        citationCount: 3
       }
     );
 
     expect(saved.operatorTraces?.entries?.[0]?.verb).toBe('ai.gateway.chat');
     expect(saved.operatorTraces?.entries?.[0]?.outcome).toBe('failure');
+    expect(saved.operatorTraces?.entries?.[0]?.details?.citationCount).toBe(3);
   });
 });

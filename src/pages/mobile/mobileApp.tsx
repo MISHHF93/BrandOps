@@ -7,7 +7,19 @@ import {
 import { runChatCompletion } from '../../services/ai/hostedNlp';
 import { persistChatGatewayTrace } from '../../services/ai/aiGatewayTracing';
 import { buildHostedAskMessages } from '../../services/ai/hostedAskTurn';
+import { parseHostedAskResponse, sanitizeAiCitationChunks } from '../../services/ai/aiIoProvenance';
+import {
+  findOrphanInlineCitationMarkers,
+  sanitizeOrphanInlineMarkers
+} from '../../services/ai/aiInlineCitations';
+import { prependAiAssistantTurnTrace } from '../../services/ai/aiAssistantTraceLog';
+import { buildAssistantAskTraceBundle, toAssistantAskTraceSummaryUI } from '../../services/ai/aiTraceBundleBuilder';
+import {
+  prependAITraceBundle,
+  sanitizeAssistantAskTraceSummaryUI
+} from '../../services/ai/aiTracePersistence';
 import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
+import { resolveHostedAssistantRouting } from '../../services/ai/aiAskRouting';
 import { isAllowedForWorker } from '../../services/ai/llmStructuredApply';
 import {
   parseAiExecutablePayload,
@@ -18,6 +30,7 @@ import {
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import { prependOperatorTrace } from '../../services/dataset/operatorTraces';
 import type { BrandOpsData, OperatingPresetId, UiTheme } from '../../types/domain';
+import type { AiOperatorMode } from '../../types/aiIntegrationSuite';
 import {
   getCockpitMobileSectionHeadingId,
   type DashboardSectionId
@@ -43,11 +56,11 @@ import {
   GETTING_STARTED_CONTENT_VERSION,
   readFirstRunJourneyDismissed
 } from './FirstRunJourneyCard';
-import { LIQUID_INTRO_SESSION_KEY, LiquidIntroOverlay } from './LiquidIntroOverlay';
 import { getAgentCommandLock } from './agentCommandAccess';
 import { ChatCommandBar } from './ChatCommandBar';
 import { AppearanceToggle } from './AppearanceToggle';
 import { WorkspaceCommandPalette } from './WorkspaceCommandPalette';
+import { PlanSurfaceNav } from './PlanSurfaceNav';
 import { requestExtensionSchedulerSync } from '../../services/messaging/requestExtensionSchedulerSync';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
@@ -153,7 +166,26 @@ const normalizeStoredMessage = (raw: unknown): ChatMessage | null => {
             opportunities: Number((m.strip as { opportunities?: unknown }).opportunities) || 0
           }
         }
-      : {})
+      : {}),
+    ...(Array.isArray(m.citations)
+      ? { citations: sanitizeAiCitationChunks(m.citations) }
+      : {}),
+    ...((): Record<string, never> | { orphanInlineMarkers: string[] } => {
+      const raw = Array.isArray(m.orphanInlineMarkers)
+        ? m.orphanInlineMarkers
+        : Array.isArray(m.orphan_inline_markers)
+          ? m.orphan_inline_markers
+          : null;
+      if (!raw) return {};
+      const cleaned = sanitizeOrphanInlineMarkers(
+        raw.filter((x): x is string => typeof x === 'string')
+      );
+      return cleaned.length ? { orphanInlineMarkers: cleaned } : {};
+    })(),
+    ...((): Record<string, never> | { traceSummary: NonNullable<ReturnType<typeof sanitizeAssistantAskTraceSummaryUI>> } => {
+      const ts = sanitizeAssistantAskTraceSummaryUI(m.traceSummary ?? m.trace_summary);
+      return ts ? { traceSummary: ts } : {};
+    })()
   };
 };
 
@@ -264,7 +296,7 @@ function LaunchAuthGate({
   return (
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Sign in to continue</h2>
-      <p className="mt-1 text-[11px] text-textSoft">
+      <p className="mt-1 text-meta text-textSoft">
         Launch gate for QA: sign-in is simulated on-device (no federated account yet). Pick a
         provider to continue into the workspace:
       </p>
@@ -311,7 +343,7 @@ function MembershipGate({
   return (
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Activate membership</h2>
-      <p className="mt-1 text-[11px] text-textSoft">
+      <p className="mt-1 text-meta text-textSoft">
         Stripe checkout and billing portal open only when env URLs are set; membership state here is
         for launch QA until billing is wired end-to-end.
       </p>
@@ -323,7 +355,7 @@ function MembershipGate({
           Billing portal
         </button>
       </div>
-      <p className="mt-2 text-[10px] text-textSoft">
+      <p className="mt-2 text-fine text-textSoft">
         Set `VITE_STRIPE_CHECKOUT_URL` and `VITE_STRIPE_BILLING_PORTAL_URL` in env for production.
       </p>
     </section>
@@ -390,7 +422,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [firstRunJourneyVisible, setFirstRunJourneyVisible] = useState(
     () => !readFirstRunJourneyDismissed()
   );
-  const [liquidIntroOpen, setLiquidIntroOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
@@ -431,36 +462,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       console.error('BrandOps: failed to persist getting-started workspace completion', err);
     }
   }, [refreshWorkspaceSnapshot]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const membershipBlocked =
-      shouldRequireLaunchMembership(launchAccess) && activeTab !== 'settings';
-    const unlocked = !shouldRequireLaunchAuth(launchAccess) && !membershipBlocked;
-    if (!unlocked) return;
-
-    try {
-      if (window.sessionStorage.getItem(LIQUID_INTRO_SESSION_KEY) === '1') return;
-    } catch {
-      /* ignore */
-    }
-
-    const reduced =
-      typeof window.matchMedia !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const motionOff = document.documentElement.getAttribute('data-motion-mode') === 'off';
-    if (reduced || motionOff) {
-      try {
-        window.sessionStorage.setItem(LIQUID_INTRO_SESSION_KEY, '1');
-      } catch {
-        /* ignore */
-      }
-      return;
-    }
-
-    setLiquidIntroOpen((prev) => prev || true);
-  }, [launchAccess, activeTab]);
 
   const selectCopilotWorker = useCallback(
     async (workerId: string) => {
@@ -707,19 +708,47 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           const data = await storageService.getData();
           const settings = data.settings;
           const workerResolved = resolveActiveCopilotWorker(settings);
-          const completionMessages = buildHostedAskMessages(data, question, workerResolved);
+          const routing = resolveHostedAssistantRouting({
+            settings,
+            workerModelId: workerResolved?.chatModelId ?? null
+          });
+          const routingAugment = [routing.behaviorHint, routing.diagnosticsDetail]
+            .filter(Boolean)
+            .join('\n\n');
+          const completionMessages = buildHostedAskMessages(
+            data,
+            question,
+            workerResolved,
+            routingAugment.length ? routingAugment : undefined
+          );
           const tHttp = performance.now();
-          const askModelId = workerResolved?.chatModelId?.trim().length
-            ? workerResolved.chatModelId.trim()
-            : undefined;
-          const maxTok = workerResolved?.maxCompletionTokens;
+          const workerCap = workerResolved?.maxCompletionTokens;
+          const routedMax = routing.maxTokens;
+          const effectiveMaxTokens =
+            typeof workerCap === 'number' &&
+            workerCap > 0 &&
+            typeof routedMax === 'number' &&
+            routedMax > 0
+              ? Math.min(workerCap, routedMax)
+              : typeof workerCap === 'number' && workerCap > 0
+                ? workerCap
+                : routedMax;
           const result = await runChatCompletion(settings, {
             messages: completionMessages,
-            ...(askModelId ? { model: askModelId } : {}),
-            ...(typeof maxTok === 'number' && maxTok > 0 ? { maxTokens: maxTok } : {})
+            model: routing.modelId,
+            ...(typeof effectiveMaxTokens === 'number' && effectiveMaxTokens > 0
+              ? { maxTokens: effectiveMaxTokens }
+              : {}),
+            ...(routing.temperature !== undefined ? { temperature: routing.temperature } : {})
           });
           const durationMs = Math.round(performance.now() - tHttp);
-          const effectiveModel = askModelId ?? settings.aiBridge.chatModelId;
+          const effectiveModel = routing.modelId;
+          let citationCount = 0;
+          let parsedAsk: ReturnType<typeof parseHostedAskResponse> | null = null;
+          if (result.ok) {
+            parsedAsk = parseHostedAskResponse(result.text);
+            citationCount = parsedAsk.citations.length;
+          }
           await persistChatGatewayTrace(
             () => storageService.getData(),
             async (next) => {
@@ -732,30 +761,89 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               modelId: effectiveModel,
               workerId: workerResolved?.id ?? null,
               surface: 'chat',
-              route: mapDocumentSurfaceToAgentSource(surfaceLabel)
+              route: mapDocumentSurfaceToAgentSource(surfaceLabel),
+              citationCount
             }
           );
           if (!result.ok) {
+            const failureMsgId = uid();
+            const failureText = `Hosted model unavailable (${result.code}): ${result.message}`;
             setMessages((prev) => [
               ...prev,
               {
-                id: uid(),
+                id: failureMsgId,
                 role: 'assistant',
                 resultKind: 'ask-result',
                 ok: false,
-                text: `Hosted model unavailable (${result.code}): ${result.message}`
+                text: failureText
               }
             ]);
+            const tracedFail = prependAiAssistantTurnTrace(await storageService.getData(), {
+              surface: 'assistant_chat',
+              outcome: 'failure',
+              user_turn_preview: question,
+              assistant_preview: failureText,
+              citations: [],
+              model_id: effectiveModel,
+              worker_id: workerResolved?.id,
+              duration_ms: durationMs,
+              message_id: failureMsgId
+            });
+            await storageService.setData(tracedFail);
             commandOk = false;
           } else {
+            const assistantMsgId = uid();
+            const parsed = parsedAsk!;
+            const orphans = sanitizeOrphanInlineMarkers(
+              findOrphanInlineCitationMarkers(parsed.displayText, parsed.citations)
+            );
+            let nextWorkspace = prependAiAssistantTurnTrace(data, {
+              surface: 'assistant_chat',
+              outcome: 'success',
+              user_turn_preview: question,
+              assistant_preview: parsed.displayText,
+              citations: parsed.citations,
+              ...(orphans.length ? { orphan_inline_markers: orphans } : {}),
+              model_id: effectiveModel,
+              worker_id: workerResolved?.id,
+              duration_ms: durationMs,
+              message_id: assistantMsgId
+            });
+            const providerHint = (() => {
+              try {
+                const u = new URL(settings.aiBridge.inferenceBaseUrl.trim().replace(/\/?$/, '/'));
+                return u.hostname.replace(/^www\./, '').slice(0, 120);
+              } catch {
+                return undefined;
+              }
+            })();
+            const traceBundle = buildAssistantAskTraceBundle({
+              brandData: nextWorkspace,
+              question,
+              assistantMessageId: assistantMsgId,
+              displayText: parsed.displayText,
+              citations: parsed.citations,
+              governanceMeta: parsed.governanceMeta,
+              orphanInlineMarkers: orphans,
+              modelId: effectiveModel,
+              providerHint,
+              workerId: workerResolved?.id ?? null,
+              durationMs
+            });
+            nextWorkspace = prependAITraceBundle(nextWorkspace, traceBundle);
+            const traceSummary = toAssistantAskTraceSummaryUI(traceBundle);
+            await storageService.setData(nextWorkspace);
             setMessages((prev) => [
               ...prev,
               {
-                id: uid(),
+                id: assistantMsgId,
                 role: 'assistant',
                 resultKind: 'ask-result',
                 ok: true,
-                text: result.text
+                text: parsed.displayText,
+                ...(parsed.citations.length ? { citations: parsed.citations } : {}),
+                ...(orphans.length ? { orphanInlineMarkers: orphans } : {}),
+                traceSummary
               }
             ]);
             const executable = parseAiExecutablePayload(result.text);
@@ -1089,6 +1177,44 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     [refreshWorkspaceSnapshot]
   );
 
+  const patchAiOperatorMode = useCallback(
+    async (mode: AiOperatorMode) => {
+      try {
+        const data = await storageService.getData();
+        if (data.settings.aiOperatorMode === mode) return;
+        await storageService.setData({
+          ...data,
+          settings: { ...data.settings, aiOperatorMode: mode }
+        });
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint(`AI routing mode: ${mode}`);
+      } catch (err) {
+        console.error('BrandOps: AI operator mode update failed', err);
+        setDataOpsHint('Could not update AI routing mode.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  const patchAiRoutingDiagnostics = useCallback(
+    async (enabled: boolean) => {
+      try {
+        const data = await storageService.getData();
+        if (data.settings.aiRoutingDiagnosticsEnabled === enabled) return;
+        await storageService.setData({
+          ...data,
+          settings: { ...data.settings, aiRoutingDiagnosticsEnabled: enabled }
+        });
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint(enabled ? 'Routing diagnostics on.' : 'Routing diagnostics off.');
+      } catch (err) {
+        console.error('BrandOps: routing diagnostics toggle failed', err);
+        setDataOpsHint('Could not update diagnostics preference.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
   const importWorkspace = useCallback(
     async (raw: string) => {
       await storageService.importData(raw);
@@ -1261,11 +1387,11 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         id="bo-mobile-main"
         tabIndex={-1}
         className={clsx(
-          'bo-mobile-main mx-auto w-full pt-4 outline-none motion-safe:scroll-smooth',
+          'bo-mobile-main mx-auto w-full pt-5 outline-none motion-safe:scroll-smooth sm:pt-6',
           MOBILE_SHELL_MAX_WIDTH_CLASS,
           activeTab === 'chat'
-            ? 'pb-[max(11.25rem,calc(9.5rem+env(safe-area-inset-bottom,0px)))]'
-            : 'pb-[max(11rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
+            ? 'pb-[max(11.85rem,calc(10rem+env(safe-area-inset-bottom,0px)))]'
+            : 'pb-[max(11.5rem,calc(9.5rem+env(safe-area-inset-bottom,0px)))]'
         )}
       >
         {shouldRequireLaunchAuth(launchAccess) ? (
@@ -1304,6 +1430,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               transcriptEndRef={transcriptEndRef}
               onOpenCommandPalette={() => setCommandPaletteOpen(true)}
               onOpenResumeGrounding={openSettingsResumePhase}
+              assistantRoutingCaption={snapshot.aiAssistantRoutingCaption}
             />
           </section>
         ) : (
@@ -1315,6 +1442,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             )}
             aria-label={`${activeTab} tab`}
           >
+            <PlanSurfaceNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />
             {activeTab === 'workspace' ? (
               <>
                 {firstRunJourneyVisible ? (
@@ -1398,6 +1526,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onOperatingProfileApplied={persistOperatingProfileApply}
                 onPersistResumeNeuralPhaseContext={persistResumeNeuralPhaseContext}
                 resumePhaseRevealKey={resumePhaseRevealKey}
+                onAiOperatorModeChange={patchAiOperatorMode}
+                onAiRoutingDiagnosticsChange={patchAiRoutingDiagnostics}
               />
             ) : null}
           </section>
@@ -1598,19 +1728,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           </div>
         </div>
       ) : null}
-
-      <LiquidIntroOverlay
-        open={liquidIntroOpen}
-        btnFocus={btnFocus}
-        onFinished={() => {
-          setLiquidIntroOpen(false);
-          try {
-            window.sessionStorage.setItem(LIQUID_INTRO_SESSION_KEY, '1');
-          } catch {
-            /* ignore */
-          }
-        }}
-      />
 
       <MobileShellNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />
 

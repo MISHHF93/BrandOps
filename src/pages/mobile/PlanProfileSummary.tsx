@@ -31,8 +31,8 @@ export function PlanProfileSummary({
   const metricDisplay = focusMetric.trim() || emptyHint;
   const focusMetricClass =
     metricDisplay === emptyHint
-      ? 'mt-0.5 text-[11px] leading-snug text-text'
-      : 'mt-0.5 text-[11px] font-medium leading-snug text-info';
+      ? 'mt-0.5 text-meta leading-snug text-text'
+      : 'mt-0.5 text-meta font-medium leading-snug text-info';
 
   return (
     <section
@@ -43,7 +43,7 @@ export function PlanProfileSummary({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h2
           id="plan-profile-summary-heading"
-          className="text-[11px] font-semibold uppercase tracking-[0.12em] text-textMuted"
+          className="text-meta font-semibold uppercase tracking-[0.12em] text-textMuted"
         >
           Workspace profile
         </h2>
@@ -52,7 +52,7 @@ export function PlanProfileSummary({
           onClick={onEditProfile}
           title="Edit profile fields in Settings"
           className={clsx(
-            'inline-flex shrink-0 items-center gap-1 rounded-lg border border-border/50 bg-bg px-2 py-1.5 text-[11px] font-semibold text-text',
+            'inline-flex shrink-0 items-center gap-1 rounded-lg border border-border/50 bg-bg px-2 py-1.5 text-meta font-semibold text-text',
             btnFocus
           )}
         >
@@ -63,21 +63,21 @@ export function PlanProfileSummary({
 
       <dl className="mt-2 space-y-2 border-t border-border/25 pt-2">
         <div className="min-w-0">
-          <dt className="text-[10px] font-semibold uppercase tracking-wide text-textMuted">
+          <dt className="text-fine font-semibold uppercase tracking-wide text-textMuted">
             Primary offer
           </dt>
-          <dd className="mt-0.5 text-[11px] leading-snug text-text">{offerDisplay}</dd>
+          <dd className="mt-0.5 text-meta leading-snug text-text">{offerDisplay}</dd>
         </div>
         <div className="min-w-0">
-          <dt className="text-[10px] font-semibold uppercase tracking-wide text-textMuted">
+          <dt className="text-fine font-semibold uppercase tracking-wide text-textMuted">
             Voice guide
           </dt>
-          <dd className="mt-0.5 whitespace-pre-wrap text-[11px] leading-snug text-text">
+          <dd className="mt-0.5 whitespace-pre-wrap text-meta leading-snug text-text">
             {voiceDisplay}
           </dd>
         </div>
         <div className="min-w-0">
-          <dt className="text-[10px] font-semibold uppercase tracking-wide text-textMuted">
+          <dt className="text-fine font-semibold uppercase tracking-wide text-textMuted">
             Focus metric
           </dt>
           <dd className={focusMetricClass}>{metricDisplay}</dd>

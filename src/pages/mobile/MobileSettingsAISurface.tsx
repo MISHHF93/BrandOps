@@ -49,13 +49,13 @@ export function SettingsTierAOverview({
           Edit
         </a>
       </div>
-      <p className="mt-2.5 text-[11px] leading-relaxed text-textSoft">
+      <p className="mt-2.5 text-meta leading-relaxed text-textSoft">
         Unified appearance · {snapshot.reminderWindow} · rules: {rulesSourceLabel}
       </p>
 
-      <dl className="mt-3 overflow-hidden rounded-lg border border-border/45 text-[11px] text-textMuted">
+      <dl className="mt-3 overflow-hidden rounded-lg border border-border/45 text-meta text-textMuted">
         <div className="border-b border-border/40 px-2.5 py-2.5">
-          <dt className="text-[10px] font-medium uppercase tracking-wide text-textSoft">
+          <dt className="text-fine font-medium uppercase tracking-wide text-textSoft">
             Profile (saved)
           </dt>
           <dd className="mt-1 min-w-0 break-words text-left leading-relaxed text-text">
@@ -63,7 +63,7 @@ export function SettingsTierAOverview({
           </dd>
         </div>
         <div className="px-2.5 py-2.5">
-          <dt className="text-[10px] font-medium uppercase tracking-wide text-textSoft">Seed</dt>
+          <dt className="text-fine font-medium uppercase tracking-wide text-textSoft">Seed</dt>
           <dd className="mt-1 min-w-0 break-words text-left text-text leading-relaxed">
             {seedLine}
           </dd>
@@ -71,7 +71,7 @@ export function SettingsTierAOverview({
       </dl>
       {snapshot.intelligenceRulesReadout.error ? (
         <p
-          className="mt-2 rounded border border-warning/30 bg-warningSoft/10 px-2 py-1.5 text-[10px] text-warning"
+          className="mt-2 rounded border border-warning/30 bg-warningSoft/10 px-2 py-1.5 text-fine text-warning"
           role="status"
         >
           Rules: {snapshot.intelligenceRulesReadout.error}
@@ -180,16 +180,16 @@ export function SettingsAssistantComposer({
         </button>
       </div>
       <div id={statusId} className="mt-2 min-h-[1.25rem]" role="status" aria-live="polite">
-        {applyBusy ? <p className="text-[11px] text-textSoft">Applying…</p> : null}
+        {applyBusy ? <p className="text-meta text-textSoft">Applying…</p> : null}
         {!applyBusy && applyError ? (
           <p
-            className="rounded border border-danger/35 bg-dangerSoft/10 px-2 py-1.5 text-[11px] text-danger"
+            className="rounded border border-danger/35 bg-dangerSoft/10 px-2 py-1.5 text-meta text-danger"
             role="alert"
           >
             {applyError}
           </p>
         ) : null}
-        {!applyBusy && applyHint ? <p className="text-[11px] text-success">{applyHint}</p> : null}
+        {!applyBusy && applyHint ? <p className="text-meta text-success">{applyHint}</p> : null}
       </div>
     </MobileTabSection>
   );
@@ -228,7 +228,7 @@ export function SettingsDataSafetyBlock({
         className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
       >
         Data &amp; session
-        <span className="ml-2 text-[11px] font-normal text-textSoft">Backup, import, reset</span>
+        <span className="ml-2 text-meta font-normal text-textSoft">Backup, import, reset</span>
       </summary>
       <div className="border-t border-border/40 px-3 pb-4 pt-4">
         <MobileTabSection
@@ -246,7 +246,7 @@ export function SettingsDataSafetyBlock({
           />
           {importMessage ? (
             <p
-              className="mb-2 rounded border border-border/50 bg-bgSubtle/60 px-2 py-1.5 text-[11px] text-textMuted"
+              className="mb-2 rounded border border-border/50 bg-bgSubtle/60 px-2 py-1.5 text-meta text-textMuted"
               role="status"
             >
               {importMessage}
@@ -262,7 +262,7 @@ export function SettingsDataSafetyBlock({
               />
               <span>
                 <span className="font-medium">Record operator traces locally</span>
-                <span className="mt-1 block text-[11px] font-normal leading-snug text-textSoft">
+                <span className="mt-1 block text-meta font-normal leading-snug text-textSoft">
                   Saves navigation, assistant commands, and appearance changes on this device
                   only—no automatic upload. Turn off anytime. Use export for analysis or training
                   datasets; files may include business-sensitive metadata.
@@ -389,11 +389,11 @@ export function SettingsResumeNeuralPhasePanel({
       description="Paste plain-text résumé export; we compress it into Phase R context so hosted models infer your skills and roles. Brand profile still wins on conflicts."
       descriptionVisibility="sr-only"
     >
-      <p className="mt-2 text-[11px] leading-relaxed text-textSoft">
+      <p className="mt-2 text-meta leading-relaxed text-textSoft">
         Neural phasing adds a short artifact to the hosted Ask system prompt (not the native
         on-device model). Nothing is uploaded until you send a message that calls the hosted bridge.
       </p>
-      <div className="mt-2 rounded-lg border border-border/40 bg-bgSubtle/45 px-2.5 py-2 text-[11px] text-textMuted">
+      <div className="mt-2 rounded-lg border border-border/40 bg-bgSubtle/45 px-2.5 py-2 text-meta text-textMuted">
         <span className="font-medium text-textSoft">Stored preview</span>
         <p className="mt-1 min-w-0 break-words leading-relaxed text-text">
           {snapshot.resumeNeuralPhaseArtifactPreview.trim().length > 0
@@ -451,11 +451,11 @@ export function SettingsResumeNeuralPhasePanel({
         </button>
       </div>
       <div id={statusId} className="mt-2 min-h-[1.25rem]" role="status" aria-live="polite">
-        {panelBusy ? <p className="text-[11px] text-textSoft">Saving…</p> : null}
+        {panelBusy ? <p className="text-meta text-textSoft">Saving…</p> : null}
         {!panelBusy && banner ? (
           <p
             className={
-              banner.tone === 'danger' ? 'text-[11px] text-danger' : 'text-[11px] text-success'
+              banner.tone === 'danger' ? 'text-meta text-danger' : 'text-meta text-success'
             }
             role={banner.tone === 'danger' ? 'alert' : undefined}
           >

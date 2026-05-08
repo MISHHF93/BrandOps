@@ -4,6 +4,7 @@ import { browserLocalStorage } from '../../shared/storage/browserStorage';
 import {
   ActivityNote,
   AgentAuditEntry,
+  AiAssistantTurnTrace,
   BrandProfile,
   BrandOpsData,
   BrandVault,
@@ -38,10 +39,20 @@ import {
 import { ALL_INTEGRATION_SOURCE_KINDS } from '../../shared/integrations/integrationSourceCatalog';
 import { OPERATING_PRESETS } from '../../shared/workspace/operatingProfileCatalog';
 import {
+  MAX_AI_TRACE_BUNDLES,
+  sanitizeTraceBundle
+} from '../ai/aiTracePersistence';
+import { normalizeAiPipelineRuns } from '../ai/aiPipelineRunPersistence';
+import type { TraceBundle } from '../../types/aiTraceGraph';
+import { AI_TRACE_GRAPH_SCHEMA_VERSION } from '../../types/aiTraceGraph';
+import {
   MAX_OPERATOR_TRACE_ENTRIES,
   prependOperatorTrace,
   serializeOperatorTracesJsonl
 } from '../dataset/operatorTraces';
+import { MAX_AI_ASSISTANT_TURN_TRACES } from '../ai/aiAssistantTraceLog';
+import { sanitizeOrphanInlineMarkers } from '../ai/aiInlineCitations';
+import { AI_IO_TRACE_SCHEMA_VERSION, sanitizeAiCitationChunks } from '../ai/aiIoProvenance';
 
 const DATA_KEY = 'brandops:data';
 
@@ -1376,7 +1387,19 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
     operatingProfile: normalizeOperatingProfile(
       candidate.operatingProfile,
       fallback.operatingProfile
-    )
+    ),
+    aiOperatorMode:
+      candidate.aiOperatorMode === 'fast' ||
+      candidate.aiOperatorMode === 'balanced' ||
+      candidate.aiOperatorMode === 'deep_reasoning' ||
+      candidate.aiOperatorMode === 'private_local' ||
+      candidate.aiOperatorMode === 'best_evidence'
+        ? candidate.aiOperatorMode
+        : fallback.aiOperatorMode,
+    aiRoutingDiagnosticsEnabled:
+      typeof candidate.aiRoutingDiagnosticsEnabled === 'boolean'
+        ? candidate.aiRoutingDiagnosticsEnabled
+        : fallback.aiRoutingDiagnosticsEnabled
   };
 };
 
@@ -1523,6 +1546,64 @@ const normalizeOperatorTraces = (value: unknown): NonNullable<BrandOpsData['oper
   return { entries: entries.slice(0, MAX_OPERATOR_TRACE_ENTRIES) };
 };
 
+const normalizeAiAssistantTraces = (
+  value: unknown
+): NonNullable<BrandOpsData['aiAssistantTraces']> => {
+  if (!value || typeof value !== 'object') {
+    return { entries: [] };
+  }
+  const raw = (value as { entries?: unknown }).entries;
+  if (!Array.isArray(raw)) {
+    return { entries: [] };
+  }
+  const entries: AiAssistantTurnTrace[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const e = item as Record<string, unknown>;
+    if (typeof e.id !== 'string' || typeof e.at !== 'string') continue;
+    const surface = e.surface;
+    const outcome = e.outcome;
+    if (
+      surface !== 'assistant_chat' &&
+      surface !== 'linkedin_overlay' &&
+      surface !== 'workspace_automation'
+    ) {
+      continue;
+    }
+    if (outcome !== 'success' && outcome !== 'failure') continue;
+    const orphanMarkers =
+      Array.isArray(e.orphan_inline_markers)
+        ? sanitizeOrphanInlineMarkers(
+            e.orphan_inline_markers.filter((x): x is string => typeof x === 'string')
+          )
+        : [];
+    entries.push({
+      id: e.id,
+      at: e.at,
+      trace_schema_version:
+        typeof e.trace_schema_version === 'string' && e.trace_schema_version.trim().length > 0
+          ? e.trace_schema_version.trim().slice(0, 48)
+          : AI_IO_TRACE_SCHEMA_VERSION,
+      surface,
+      outcome,
+      message_id: typeof e.message_id === 'string' ? e.message_id.trim().slice(0, 160) : undefined,
+      user_turn_preview:
+        typeof e.user_turn_preview === 'string' ? e.user_turn_preview.slice(0, 920) : '',
+      assistant_preview:
+        typeof e.assistant_preview === 'string' ? e.assistant_preview.slice(0, 920) : '',
+      citations: sanitizeAiCitationChunks(e.citations),
+      ...(orphanMarkers.length ? { orphan_inline_markers: orphanMarkers } : {}),
+      model_id: typeof e.model_id === 'string' ? e.model_id.trim().slice(0, 160) : undefined,
+      worker_id: typeof e.worker_id === 'string' ? e.worker_id.trim().slice(0, 160) : undefined,
+      duration_ms:
+        typeof e.duration_ms === 'number' && Number.isFinite(e.duration_ms)
+          ? Math.round(e.duration_ms)
+          : undefined
+    });
+  }
+  return { entries: entries.slice(0, MAX_AI_ASSISTANT_TURN_TRACES) };
+};
+
 const withFreshSeedMetadata = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   seed: {
@@ -1536,6 +1617,26 @@ const normalizeSeedSource = (raw: string | undefined): SeedDataSource => {
   if (raw === 'demo-sample' || raw === 'default-demo') return 'demo-sample';
   if (raw === 'production-empty') return 'production-empty';
   return seedData.seed.source;
+};
+
+const normalizeAiTraceGraph = (value: unknown): BrandOpsData['aiTraceGraph'] => {
+  if (!value || typeof value !== 'object') return undefined;
+  const raw = (value as { bundles?: unknown }).bundles;
+  if (!Array.isArray(raw)) return undefined;
+  const bundles: TraceBundle[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const b = item as Partial<TraceBundle>;
+    if (typeof b.trace_id !== 'string' || typeof b.created_at !== 'string') continue;
+    if (!b.trace_id.trim() || !b.created_at.trim()) continue;
+    bundles.push(sanitizeTraceBundle(b as TraceBundle));
+    if (bundles.length >= MAX_AI_TRACE_BUNDLES) break;
+  }
+  if (!bundles.length) return undefined;
+  return {
+    schema_version: AI_TRACE_GRAPH_SCHEMA_VERSION,
+    bundles
+  };
 };
 
 const withDefaults = (base: BrandOpsData): BrandOpsData => ({
@@ -1559,6 +1660,9 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   integrationHub: normalizeIntegrationHubState(base.integrationHub),
   agentAudit: normalizeAgentAudit(base.agentAudit),
   operatorTraces: normalizeOperatorTraces(base.operatorTraces),
+  aiAssistantTraces: normalizeAiAssistantTraces(base.aiAssistantTraces),
+  aiTraceGraph: normalizeAiTraceGraph(base.aiTraceGraph),
+  aiPipelineRuns: normalizeAiPipelineRuns(base.aiPipelineRuns),
   embeddingIndex: normalizeEmbeddingIndex(base.embeddingIndex),
   scheduler: normalizeSchedulerState(base.scheduler),
   seed: {

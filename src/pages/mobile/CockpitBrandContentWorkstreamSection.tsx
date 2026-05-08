@@ -16,7 +16,7 @@ const BRAND_STRIP_ITEMS = [
 ] as const;
 
 const rowChip = (btnFocus: string) =>
-  `rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-[10px] text-text ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
+  `rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-fine text-text ${btnFocus} disabled:cursor-not-allowed disabled:opacity-50`;
 
 /**
  * `id="cockpit-brand"` must stay stable for `?section=brand-content` and scroll targets.
@@ -52,7 +52,7 @@ export const CockpitBrandContentWorkstreamSection = ({
       <span className="text-text">{snapshot.queuedPublishing}</span>
     </p>
     {snapshot.nextPublishingHint ? (
-      <p className="mt-1 text-[11px] text-textMuted">Next: {snapshot.nextPublishingHint}</p>
+      <p className="mt-1 text-meta text-textMuted">Next: {snapshot.nextPublishingHint}</p>
     ) : null}
     <CockpitWorkstreamCommandStrip
       ariaLabel="Brand and content Chat starters"
@@ -76,24 +76,24 @@ export const CockpitBrandContentWorkstreamSection = ({
       if (!hasVaultPeek) return null;
       return (
         <div className="mt-3 rounded-lg border border-primary/25 bg-primary/5 p-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+          <p className="text-fine font-semibold uppercase tracking-wide text-primary">
             Brand vault (read-only)
           </p>
-          <p className="mt-1 text-[10px] text-textMuted">
+          <p className="mt-1 text-fine text-textMuted">
             {bv.filledListFieldsCount} list section{bv.filledListFieldsCount === 1 ? '' : 's'} with
             content
           </p>
           {bv.positioningPreview ? (
-            <p className="mt-2 text-[11px] leading-snug text-textMuted">{bv.positioningPreview}</p>
+            <p className="mt-2 text-meta leading-snug text-textMuted">{bv.positioningPreview}</p>
           ) : null}
           {bv.firstHeadlineOption ? (
-            <p className="mt-1 text-[10px] text-textMuted">
+            <p className="mt-1 text-fine text-textMuted">
               <span className="text-textSoft">Headline option:</span>{' '}
               <span className="text-text">{bv.firstHeadlineOption}</span>
             </p>
           ) : null}
           {bv.shortBioPreview ? (
-            <p className="mt-1 text-[10px] leading-snug text-textSoft">{bv.shortBioPreview}</p>
+            <p className="mt-1 text-fine leading-snug text-textSoft">{bv.shortBioPreview}</p>
           ) : null}
           <button
             type="button"
@@ -114,15 +114,15 @@ export const CockpitBrandContentWorkstreamSection = ({
     )}
     {snapshot.cockpitContentPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
-        <p className="text-[11px] font-medium text-textSoft">Content library (top)</p>
+        <p className="text-meta font-medium text-textSoft">Content library (top)</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitContentPeek.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
+              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-meta text-textMuted"
             >
               <p className="font-medium text-text">{row.title}</p>
-              <p className="text-[10px] text-textMuted">{row.status}</p>
+              <p className="text-fine text-textMuted">{row.status}</p>
               <div className="mt-2">
                 <button
                   type="button"
@@ -142,15 +142,15 @@ export const CockpitBrandContentWorkstreamSection = ({
     ) : null}
     {snapshot.cockpitPublishingPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
-        <p className="text-[11px] font-medium text-textSoft">Publishing queue (top)</p>
+        <p className="text-meta font-medium text-textSoft">Publishing queue (top)</p>
         <ul className="mt-2 space-y-2">
           {snapshot.cockpitPublishingPeek.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-[11px] text-textMuted"
+              className="rounded-lg border border-border/30 bg-surface/50 px-2 py-2 text-meta text-textMuted"
             >
               <p className="font-medium text-text">{row.title}</p>
-              <p className="text-[10px] text-textMuted">{row.status}</p>
+              <p className="text-fine text-textMuted">{row.status}</p>
               <button
                 type="button"
                 disabled={commandBusy}

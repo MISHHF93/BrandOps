@@ -36,7 +36,7 @@ function FreeformRunItem({
       onSelect={() => onRun(t)}
     >
       <span className="text-text">{runLeadIn}</span>
-      <span className="ml-2 min-w-0 flex-1 truncate font-mono text-[11px] text-textSoft" title={t}>
+      <span className="ml-2 min-w-0 flex-1 truncate font-mono text-meta text-textSoft" title={t}>
         {t}
       </span>
     </Command.Item>
@@ -122,7 +122,7 @@ export const WorkspaceCommandPalette = ({
             strokeWidth={2}
             aria-hidden
           />
-          <p className="min-w-0 text-[10px] font-medium leading-snug text-text">
+          <p className="min-w-0 text-fine font-medium leading-snug text-text">
             Agent is working — you can still jump tabs; new commands queue after this run.
           </p>
         </div>
@@ -133,7 +133,7 @@ export const WorkspaceCommandPalette = ({
           <div className="min-w-0">
             <p className="bo-brand-kicker">BrandOps</p>
             <p className="text-sm font-semibold leading-tight text-text">Command center</p>
-            <p className="text-[10px] text-textMuted">Search, jump, or run a workspace command.</p>
+            <p className="text-fine text-textMuted">Search, jump, or run a workspace command.</p>
           </div>
         </div>
         <Command.Input
@@ -160,7 +160,7 @@ export const WorkspaceCommandPalette = ({
           value="go"
           forceMount
           heading={
-            <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-textSoft">
+            <span className="flex items-center gap-1.5 text-fine font-semibold uppercase tracking-wide text-textSoft">
               Go
             </span>
           }
@@ -200,7 +200,7 @@ export const WorkspaceCommandPalette = ({
                 key={g.id}
                 value={`suggestions-${g.id}`}
                 heading={
-                  <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-textSoft">
+                  <span className="flex items-center gap-1.5 text-fine font-semibold uppercase tracking-wide text-textSoft">
                     {idx === 0 ? <Sparkles className="h-3 w-3" aria-hidden /> : null}
                     {g.label}
                   </span>
@@ -244,13 +244,13 @@ export const WorkspaceCommandPalette = ({
             value="agent-locked"
             forceMount
             heading={
-              <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-textSoft">
+              <span className="flex items-center gap-1.5 text-fine font-semibold uppercase tracking-wide text-textSoft">
                 <TriangleAlert className="h-3 w-3" aria-hidden />
                 Agent
               </span>
             }
           >
-            <div className="px-2 py-1.5 text-[11px] text-textMuted">{lockHint}</div>
+            <div className="px-2 py-1.5 text-meta text-textMuted">{lockHint}</div>
           </Command.Group>
         )}
 
@@ -261,7 +261,7 @@ export const WorkspaceCommandPalette = ({
               value="history"
               forceMount
               heading={
-                <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-textSoft">
+                <span className="flex items-center gap-1.5 text-fine font-semibold uppercase tracking-wide text-textSoft">
                   <History className="h-3 w-3" aria-hidden />
                   Recent
                 </span>
@@ -287,7 +287,7 @@ export const WorkspaceCommandPalette = ({
           </>
         ) : null}
       </Command.List>
-      <p className="border-t border-border/40 px-3 py-2 text-[10px] text-textSoft">
+      <p className="border-t border-border/40 px-3 py-2 text-fine text-textSoft">
         {commandRunContext === 'plan' ? (
           <>
             Commands run on device while you stay on Plan. Open Ask for the full transcript

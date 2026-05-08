@@ -23,6 +23,25 @@ import type {
 } from '../../services/intelligence/localIntelligence';
 import type { PulseTimelineRow } from './pulseTimeline';
 import { buildPulseTimeline } from './pulseTimeline';
+import type { AiOperatorMode, PipelineRun } from '../../types/aiIntegrationSuite';
+import { countPendingOperatorReviews } from '../../services/plan/reviewQueue';
+
+function formatAiOperatorMode(mode: AiOperatorMode): string {
+  const labels: Record<AiOperatorMode, string> = {
+    fast: 'Fast',
+    balanced: 'Balanced',
+    deep_reasoning: 'Deep reasoning',
+    private_local: 'Private/local',
+    best_evidence: 'Best evidence'
+  };
+  return labels[mode];
+}
+
+/** One-line caption for Assistant chrome — reflects persisted routing stance (no network). */
+export function buildAiAssistantRoutingCaption(settings: BrandOpsData['settings']): string {
+  const diag = settings.aiRoutingDiagnosticsEnabled ? ' · Diagnostics on' : '';
+  return `${formatAiOperatorMode(settings.aiOperatorMode)} hosted routing${diag} — tune in Settings → Unified workspace.`;
+}
 
 /** Compact rows for Integrations tab (full hub lives in `BrandOpsData.integrationHub`). */
 export type MobileIntegrationSourceRow = {
@@ -110,6 +129,16 @@ export type SeedSnapshotReadout = {
   seededAt: string;
   welcomeCompletedAt?: string;
   onboardingVersion?: string;
+};
+
+export type AiPipelineRunPeekRow = Pick<
+  PipelineRun,
+  'run_id' | 'pipeline_id' | 'status' | 'started_at' | 'ended_at'
+>;
+
+export type MemoryTraceSummaryReadout = {
+  bundleCount: number;
+  lastBundleAt?: string;
 };
 
 export type CockpitOutreachTemplatePeekRow = {
@@ -261,6 +290,8 @@ export interface MobileWorkspaceSnapshot {
   resumeNeuralPhaseArtifactPreview: string;
   /** Named hosted Ask copilots + active id — Assistant picker reads this without touching storage. */
   copilotWorkerRegistry: CopilotWorkerRegistrySettings;
+  /** Assistant headline helper — reflects hosted routing stance for ask:. */
+  aiAssistantRoutingCaption: string;
   cockpitOpportunityPeek: CockpitOpportunityPeekRow[];
   cockpitContentPeek: CockpitContentPeekRow[];
   cockpitPublishingPeek: CockpitPublishingPeekRow[];
@@ -280,6 +311,12 @@ export interface MobileWorkspaceSnapshot {
   settingsMessagingVaultPeek: SettingsMessagingVaultPeekRow[];
   /** Mixed follow-ups, publishing, scheduler, outreach — for Pulse tab. */
   pulseTimelineRows: PulseTimelineRow[];
+  /** Recent AI pipeline executions (`BrandOpsData.aiPipelineRuns`), newest first. */
+  recentAiPipelineRuns: AiPipelineRunPeekRow[];
+  /** Summary counts for persisted Ask trace bundles (`BrandOpsData.aiTraceGraph`). */
+  memoryTraceSummary: MemoryTraceSummaryReadout;
+  /** Operator traces flagged for human review (`reviewStatus: pending`). */
+  planPendingReviewCount: number;
 }
 
 /** Fields required by Today cockpit sections; keeps props in sync with {@link MobileWorkspaceSnapshot}. */
@@ -323,6 +360,32 @@ export type CockpitDailySnapshot = Pick<
   | 'integrationArtifactsPeek'
   | 'sshTargetsPeek'
 >;
+
+function buildRecentAiPipelineRuns(workspace: BrandOpsData): AiPipelineRunPeekRow[] {
+  const entries = workspace.aiPipelineRuns?.entries ?? [];
+  return [...entries]
+    .filter((r) => r.run_id?.trim() && r.pipeline_id?.trim())
+    .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime())
+    .slice(0, 8)
+    .map((r) => ({
+      run_id: r.run_id,
+      pipeline_id: r.pipeline_id,
+      status: r.status,
+      started_at: r.started_at,
+      ended_at: r.ended_at
+    }));
+}
+
+function buildMemoryTraceSummary(workspace: BrandOpsData): MemoryTraceSummaryReadout {
+  const bundles = workspace.aiTraceGraph?.bundles ?? [];
+  const sorted = [...bundles].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  return {
+    bundleCount: bundles.length,
+    lastBundleAt: sorted[0]?.created_at
+  };
+}
 
 export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspaceSnapshot {
   const activeOpportunities = workspace.opportunities.filter((item) => !item.archivedAt);
@@ -389,6 +452,7 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
       200
     ),
     copilotWorkerRegistry: workspace.settings.copilotWorkers,
+    aiAssistantRoutingCaption: buildAiAssistantRoutingCaption(workspace.settings),
     cockpitOpportunityPeek: activeOpportunities.slice(0, 5).map((o) => ({
       id: o.id,
       name: o.name,
@@ -511,6 +575,9 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
         title: m.title
       })),
     pulseTimelineRows: buildPulseTimeline(workspace),
+    recentAiPipelineRuns: buildRecentAiPipelineRuns(workspace),
+    memoryTraceSummary: buildMemoryTraceSummary(workspace),
+    planPendingReviewCount: countPendingOperatorReviews(workspace.operatorTraces?.entries),
     ...cockpitExtras
   };
 }

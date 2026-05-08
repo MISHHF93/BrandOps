@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import type { OperatingPresetId } from '../../types/domain';
+import type { AiOperatorMode } from '../../types/aiIntegrationSuite';
 import type { AuthProviderId, LaunchMembershipState } from '../../shared/account/launchAccess';
 import { authProviderLabel } from '../../shared/account/launchAccess';
 import { GoogleSignInButton } from '../../shared/ui/oauth/GoogleSignInButton';
@@ -32,6 +33,7 @@ import {
   SettingsResumeNeuralPhasePanel,
   SettingsTierAOverview
 } from './MobileSettingsAISurface';
+import { SettingsAiRoutingPanel } from './SettingsAiRoutingPanel';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { SettingsCockpitCapabilityDisclosure } from './SettingsCockpitCapabilityDisclosure';
 import { LocalProductUsageReadout } from './LocalProductUsageReadout';
@@ -98,7 +100,7 @@ function AccountMembershipSection({
         className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
       >
         Account
-        <span className="ml-2 text-[11px] font-normal text-textSoft">
+        <span className="ml-2 text-meta font-normal text-textSoft">
           {isAuthenticated
             ? `${authProviderLabel(provider)} · ${membershipLabel(membership.status)}`
             : 'Sign in'}
@@ -111,11 +113,11 @@ function AccountMembershipSection({
           description="Sign-in provider and membership status for this workspace."
           descriptionVisibility="sr-only"
         >
-          <p className="mt-2 text-[10px] leading-snug text-textSoft">
+          <p className="mt-2 text-fine leading-snug text-textSoft">
             Provider buttons simulate sign-in on this device for launch QA — no federated cloud
             session yet.
           </p>
-          <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
+          <dl className="mt-2 space-y-1.5 text-meta text-textMuted">
             <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
               <dt>Signed in</dt>
               <dd className="text-text">{isAuthenticated ? 'Yes' : 'No'}</dd>
@@ -177,7 +179,7 @@ function AccountMembershipSection({
             )}
           </div>
           {membership.renewalDate ? (
-            <p className="mt-2 text-[10px] text-textSoft">Renews: {membership.renewalDate}</p>
+            <p className="mt-2 text-fine text-textSoft">Renews: {membership.renewalDate}</p>
           ) : null}
         </MobileTabSection>
       </div>
@@ -200,6 +202,8 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
     ['AI bridge · embeddings endpoint', r.aiEmbeddingEndpointPreview],
     ['AI bridge · chat model id', r.aiBridgeChatModelId],
     ['AI bridge · embedding model id', r.aiBridgeEmbeddingModelId],
+    ['AI routing · operator mode', r.aiOperatorMode],
+    ['AI routing · diagnostics prompts', r.aiRoutingDiagnosticsEnabled ? 'on' : 'off'],
     ['Copilot · active worker', r.copilotActiveWorkerPreview],
     ['Copilot · registry', r.copilotWorkersListPreview],
     ['Primary identity provider', r.primaryIdentityProvider],
@@ -239,19 +243,19 @@ function OperationalModeSummaryCard({
       id="settings-operational-mode"
       className="rounded-xl border border-primary/20 bg-surface/40 px-2.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
     >
-      <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">
+      <p className="text-fine font-medium uppercase tracking-wide text-textMuted">
         Operational mode
       </p>
       <p className="mt-1 text-base font-semibold text-text">{summary.headline}</p>
-      <p className="mt-1 text-[11px] leading-snug text-textSoft">{summary.subhead}</p>
-      <ul className="mt-2 list-disc space-y-1 pl-4 text-[11px] leading-snug text-text marker:text-textMuted">
+      <p className="mt-1 text-meta leading-snug text-textSoft">{summary.subhead}</p>
+      <ul className="mt-2 list-disc space-y-1 pl-4 text-meta leading-snug text-text marker:text-textMuted">
         {summary.facets.map((line, idx) => (
           <li key={`${idx}-${line.slice(0, 48)}`}>{line}</li>
         ))}
       </ul>
       {summary.driftNote ? (
         <p
-          className={`mt-2 rounded border border-amber-500/25 bg-amber-950/15 px-2 py-1.5 text-[11px] text-amber-100/90 ${btnFocus}`}
+          className={`mt-2 rounded border border-amber-500/25 bg-amber-950/15 px-2 py-1.5 text-meta text-amber-100/90 ${btnFocus}`}
           role="status"
         >
           {summary.driftNote}
@@ -278,16 +282,16 @@ function WorkspaceModelReadout({
     >
       <details className="group mt-2 rounded-lg border border-border/30 bg-surface/45 p-2 open:border-primary/25">
         <summary
-          className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-textMuted ${btnFocus} [&::-webkit-details-marker]:hidden`}
+          className={`cursor-pointer list-none text-fine font-semibold uppercase tracking-wide text-textMuted ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >
           <span className="inline-flex items-center gap-2">
             Expand full settings readout
-            <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">
+            <span className="text-fine font-normal normal-case text-textSoft group-open:hidden">
               ({rows.length} fields)
             </span>
           </span>
         </summary>
-        <dl className="mt-3 space-y-0 text-[11px]">
+        <dl className="mt-3 space-y-0 text-meta">
           {rows.map(([label, value]) => (
             <div
               key={label}
@@ -460,14 +464,14 @@ function SettingsEditablePanel({
     >
       {applyError ? (
         <p
-          className="mb-2 rounded border border-rose-500/30 bg-rose-950/20 px-2 py-1.5 text-[11px] text-rose-200/95"
+          className="mb-2 rounded border border-rose-500/30 bg-rose-950/20 px-2 py-1.5 text-meta text-rose-200/95"
           role="alert"
         >
           {applyError}
         </p>
       ) : null}
       {applyHint ? (
-        <p className="mb-2 rounded border border-info/30 bg-info/10 px-2 py-1.5 text-[11px] text-text">
+        <p className="mb-2 rounded border border-info/30 bg-info/10 px-2 py-1.5 text-meta text-text">
           {applyHint}
         </p>
       ) : null}
@@ -475,17 +479,17 @@ function SettingsEditablePanel({
       <OperationalModeSummaryCard summary={operationalModeSummary} btnFocus={btnFocus} />
 
       <div className="rounded-xl border border-border/40 bg-surface/35 px-2.5 py-3">
-        <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">
+        <p className="text-fine font-medium uppercase tracking-wide text-textMuted">
           Operating profile
         </p>
-        <p className="mt-1 text-[11px] leading-snug text-textSoft">
+        <p className="mt-1 text-meta leading-snug text-textSoft">
           One apply updates Today cockpit layout/density and (when the preset lists them) AI adapter
           / guidance. Daily cadence is fixed to BrandOps daily cadence. Advanced controls stay in
           the disclosure below.
         </p>
         <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1">
-            <label className="text-[11px] text-textMuted" htmlFor="bo-operating-profile">
+            <label className="text-meta text-textMuted" htmlFor="bo-operating-profile">
               Apply preset
             </label>
             <select
@@ -510,27 +514,27 @@ function SettingsEditablePanel({
             Apply operating profile
           </button>
         </div>
-        <p className="mt-2 text-[10px] leading-snug text-textMuted">
+        <p className="mt-2 text-fine leading-snug text-textMuted">
           {OPERATING_PRESETS.find((p) => p.id === presetToApply)?.shortDescription}
         </p>
       </div>
 
       <details className="mt-3 rounded-xl border border-border/35 bg-bgSubtle/20 px-2.5 py-2">
         <summary
-          className={`cursor-pointer list-none text-[11px] font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+          className={`cursor-pointer list-none text-meta font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >
           Advanced operating controls
-          <span className="ml-2 text-[10px] font-normal text-textSoft">
+          <span className="ml-2 text-fine font-normal text-textSoft">
             Workday, reminders, profile &amp; appearance notes
           </span>
         </summary>
         <div className="mt-3 space-y-4 border-t border-border/25 pt-3">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-textMuted">
+          <p className="text-fine font-medium uppercase tracking-wide text-textMuted">
             Workday, tasks, weights
           </p>
           <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div>
-              <label className="text-[11px] text-textMuted" htmlFor="bo-wd-start">
+              <label className="text-meta text-textMuted" htmlFor="bo-wd-start">
                 Start (hour, 0–23)
               </label>
               <input
@@ -544,7 +548,7 @@ function SettingsEditablePanel({
               />
             </div>
             <div>
-              <label className="text-[11px] text-textMuted" htmlFor="bo-wd-end">
+              <label className="text-meta text-textMuted" htmlFor="bo-wd-end">
                 End (hour, 1–24)
               </label>
               <input
@@ -558,7 +562,7 @@ function SettingsEditablePanel({
               />
             </div>
             <div>
-              <label className="text-[11px] text-textMuted" htmlFor="bo-max-t">
+              <label className="text-meta text-textMuted" htmlFor="bo-max-t">
                 Max tasks / lane
               </label>
               <input
@@ -572,7 +576,7 @@ function SettingsEditablePanel({
               />
             </div>
             <div>
-              <label className="text-[11px] text-textMuted" htmlFor="bo-remind">
+              <label className="text-meta text-textMuted" htmlFor="bo-remind">
                 Remind before (min)
               </label>
               <input
@@ -587,7 +591,7 @@ function SettingsEditablePanel({
             </div>
           </div>
           <div className="mt-2">
-            <label className="text-[11px] text-textMuted" htmlFor="bo-mw">
+            <label className="text-meta text-textMuted" htmlFor="bo-mw">
               Business / managerial weight (%)
             </label>
             <input
@@ -609,25 +613,25 @@ function SettingsEditablePanel({
             Apply workday, tasks, remind &amp; weight
           </button>
 
-          <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-textMuted">
+          <p className="mb-1 text-fine font-medium uppercase tracking-wide text-textMuted">
             Profile
           </p>
-          <details className="mb-2 rounded-lg border border-border/30 bg-surface/40 p-2 text-[10px] text-textMuted">
+          <details className="mb-2 rounded-lg border border-border/30 bg-surface/40 p-2 text-fine text-textMuted">
             <summary className={`cursor-pointer font-medium text-textMuted ${btnFocus}`}>
               Profile field details
             </summary>
             <p className="mt-1.5 leading-snug">
               Each value is sent to the operating plan / external models with clear labels to
               prevent ambiguity. In Notification Center prompt template, use{' '}
-              <code className="text-[9px] text-textSoft">{'{{brand_context}}'}</code> for the full
+              <code className="text-overline text-textSoft">{'{{brand_context}}'}</code> for the full
               block, or{' '}
-              <code className="text-[9px] text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
-              <code className="text-[9px] text-textSoft">{'{{brand_positioning}}'}</code>, etc.
+              <code className="text-overline text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
+              <code className="text-overline text-textSoft">{'{{brand_positioning}}'}</code>, etc.
             </p>
           </details>
           <div className="space-y-2">
             <div>
-              <label className="text-[11px] text-textMuted" htmlFor="bo-op">
+              <label className="text-meta text-textMuted" htmlFor="bo-op">
                 Operator name
               </label>
               <input
@@ -641,7 +645,7 @@ function SettingsEditablePanel({
               />
             </div>
             <div>
-              <label className="text-[11px] text-textMuted" htmlFor="bo-positioning">
+              <label className="text-meta text-textMuted" htmlFor="bo-positioning">
                 Positioning
               </label>
               <textarea
@@ -657,7 +661,7 @@ function SettingsEditablePanel({
               />
             </div>
             <div>
-              <label className="text-[11px] text-textMuted" htmlFor="bo-offer">
+              <label className="text-meta text-textMuted" htmlFor="bo-offer">
                 Primary offer
               </label>
               <input
@@ -671,7 +675,7 @@ function SettingsEditablePanel({
               />
             </div>
             <div>
-              <label className="text-[11px] text-textMuted" htmlFor="bo-voice">
+              <label className="text-meta text-textMuted" htmlFor="bo-voice">
                 Brand voice
               </label>
               <textarea
@@ -687,7 +691,7 @@ function SettingsEditablePanel({
               />
             </div>
             <div>
-              <label className="text-[11px] text-textMuted" htmlFor="bo-fm">
+              <label className="text-meta text-textMuted" htmlFor="bo-fm">
                 Focus metric
               </label>
               <input
@@ -711,7 +715,7 @@ function SettingsEditablePanel({
             </button>
           </div>
 
-          <div className="rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-[11px] leading-relaxed text-textSoft">
+          <div className="rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-meta leading-relaxed text-textSoft">
             Appearance follows a DOS-inspired terminal skin: plain black or plain white canvas with
             green phosphor accents in dark mode and forest-green ink in light mode. Monospace is
             used for the shell. Motion follows the operating system reduced-motion preference, so
@@ -753,6 +757,9 @@ export interface MobileSettingsViewProps {
   onOperatingProfileApplied?: (presetId: OperatingPresetId | 'custom') => void | Promise<void>;
   /** Persist compressed résumé artifact for hosted Ask Phase R (empty clears). */
   onPersistResumeNeuralPhaseContext?: (compressed: string) => void | Promise<void>;
+  /** Hosted Ask routing stance (`ask:` model scoring). */
+  onAiOperatorModeChange: (mode: AiOperatorMode) => void | Promise<void>;
+  onAiRoutingDiagnosticsChange: (enabled: boolean) => void | Promise<void>;
   /** Bump to open Unified workspace + scroll to Résumé grounding (Assistant shortcut / deep link). */
   resumePhaseRevealKey?: number;
 }
@@ -784,6 +791,8 @@ export const MobileSettingsView = ({
   onOpenBillingPortal = () => {},
   onOperatingProfileApplied,
   onPersistResumeNeuralPhaseContext = async () => {},
+  onAiOperatorModeChange,
+  onAiRoutingDiagnosticsChange,
   resumePhaseRevealKey = 0
 }: MobileSettingsViewProps) => {
   const unifiedWorkspaceDetailsRef = useRef<HTMLDetailsElement>(null);
@@ -836,8 +845,8 @@ export const MobileSettingsView = ({
           variant="settings"
           includeKeys={['oauth', 'src', 'queue', 'fu']}
         />
-        <div className="bo-vitality-frame-body space-y-4 px-3 pb-5 pt-3 sm:px-3.5">
-          <OnDeviceTrustLine className="text-[10px] normal-case tracking-normal" />
+        <div className="bo-vitality-frame-body space-y-5 px-4 pb-6 pt-4 sm:px-5">
+          <OnDeviceTrustLine className="text-fine normal-case tracking-normal" />
 
           <SettingsTierAOverview
             snapshot={snapshot}
@@ -862,7 +871,7 @@ export const MobileSettingsView = ({
               className={`cursor-pointer list-none rounded-xl px-3 py-3 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
             >
               Unified workspace
-              <span className="ml-2 text-[11px] font-normal text-textSoft">
+              <span className="ml-2 text-meta font-normal text-textSoft">
                 Assistant and preferences
               </span>
             </summary>
@@ -872,6 +881,14 @@ export const MobileSettingsView = ({
                 applyBusy={applyBusy}
                 btnFocus={btnFocus}
                 blankStarters={buildComposerBlankStarters(snapshot)}
+              />
+
+              <SettingsAiRoutingPanel
+                btnFocus={btnFocus}
+                mode={snapshot.settingsFullReadout.aiOperatorMode}
+                diagnosticsEnabled={snapshot.settingsFullReadout.aiRoutingDiagnosticsEnabled}
+                onModeChange={(m) => void onAiOperatorModeChange(m)}
+                onDiagnosticsChange={(enabled) => void onAiRoutingDiagnosticsChange(enabled)}
               />
 
               <SettingsEditablePanel
@@ -911,7 +928,7 @@ export const MobileSettingsView = ({
             >
               <span className="inline-flex items-center gap-2">
                 Diagnostics
-                <span className="text-[11px] font-normal text-textSoft">Advanced readouts</span>
+                <span className="text-meta font-normal text-textSoft">Advanced readouts</span>
               </span>
             </summary>
             <div className="space-y-5 border-t border-border/40 px-3 pb-4 pt-4">
@@ -930,7 +947,7 @@ export const MobileSettingsView = ({
                 description="Seed metadata for this device."
                 descriptionVisibility="sr-only"
               >
-                <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
+                <dl className="mt-2 space-y-1.5 text-meta text-textMuted">
                   <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                     <dt className="shrink-0 text-textMuted">Source</dt>
                     <dd className="min-w-0 break-words text-right text-text">
@@ -974,11 +991,11 @@ export const MobileSettingsView = ({
                 description="Scoring profile used for Today digests."
               >
                 {!snapshot.intelligenceRulesReadout.initRan ? (
-                  <p className="mt-2 text-[10px] text-textMuted">
+                  <p className="mt-2 text-fine text-textMuted">
                     Status appears after first rules init.
                   </p>
                 ) : null}
-                <dl className="mt-2 space-y-1.5 text-[11px] text-textMuted">
+                <dl className="mt-2 space-y-1.5 text-meta text-textMuted">
                   <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                     <dt className="shrink-0 text-textMuted">Source</dt>
                     <dd className="min-w-0 break-words text-right text-text">
@@ -994,23 +1011,23 @@ export const MobileSettingsView = ({
                     </div>
                   ) : null}
                   {snapshot.intelligenceRulesReadout.error ? (
-                    <div className="rounded border border-warning/30 bg-warning/10 px-2 py-1.5 text-[10px] text-text">
+                    <div className="rounded border border-warning/30 bg-warning/10 px-2 py-1.5 text-fine text-text">
                       {snapshot.intelligenceRulesReadout.error}
                     </div>
                   ) : null}
                 </dl>
                 <details className="group mt-3 rounded-lg border border-border/30 bg-surface/45 p-2 open:border-primary/25">
                   <summary
-                    className={`cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-textMuted ${btnFocus} [&::-webkit-details-marker]:hidden`}
+                    className={`cursor-pointer list-none text-fine font-semibold uppercase tracking-wide text-textMuted ${btnFocus} [&::-webkit-details-marker]:hidden`}
                   >
                     <span className="inline-flex items-center gap-2">
                       Sample coefficients
-                      <span className="text-[10px] font-normal normal-case text-textSoft group-open:hidden">
+                      <span className="text-fine font-normal normal-case text-textSoft group-open:hidden">
                         (expand)
                       </span>
                     </span>
                   </summary>
-                  <dl className="mt-3 space-y-1.5 text-[11px] text-textMuted">
+                  <dl className="mt-3 space-y-1.5 text-meta text-textMuted">
                     <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
                       <dt className="shrink-0 text-textMuted">Schema version</dt>
                       <dd className="text-right text-text">
@@ -1049,9 +1066,9 @@ export const MobileSettingsView = ({
                     </div>
                   </dl>
                 </details>
-                <p className="mt-2 text-[10px] text-textSoft">
+                <p className="mt-2 text-fine text-textSoft">
                   Template:{' '}
-                  <code className="rounded bg-surface/90 px-1 text-[10px] text-textSoft">
+                  <code className="rounded bg-surface/90 px-1 text-fine text-textSoft">
                     public/brandops-intelligence-rules.example.json
                   </code>
                 </p>
@@ -1064,7 +1081,7 @@ export const MobileSettingsView = ({
                 descriptionVisibility="sr-only"
               >
                 {snapshot.settingsMessagingVaultPeek.length === 0 ? (
-                  <p className="mt-2 text-[11px] text-textMuted">
+                  <p className="mt-2 text-meta text-textMuted">
                     No messaging vault entries in this workspace.
                   </p>
                 ) : (
@@ -1072,10 +1089,10 @@ export const MobileSettingsView = ({
                     {snapshot.settingsMessagingVaultPeek.map((row) => (
                       <li
                         key={row.id}
-                        className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-[11px] text-textMuted"
+                        className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-meta text-textMuted"
                       >
                         <p className="font-medium text-text">{row.title}</p>
-                        <p className="text-[10px] text-textMuted">{row.category}</p>
+                        <p className="text-fine text-textMuted">{row.category}</p>
                         <button
                           type="button"
                           disabled={agentRouteBusy}
@@ -1105,7 +1122,7 @@ export const MobileSettingsView = ({
                 descriptionVisibility="sr-only"
               >
                 {snapshot.recentAudit.length === 0 ? (
-                  <p className="mt-2 text-[11px] text-textMuted">
+                  <p className="mt-2 text-meta text-textMuted">
                     No commands recorded yet. Run a command in Chat to populate this list.
                   </p>
                 ) : (
@@ -1113,21 +1130,21 @@ export const MobileSettingsView = ({
                     {snapshot.recentAudit.map((entry) => (
                       <li
                         key={entry.id}
-                        className="rounded-lg border border-border/30 bg-surface/45 px-2.5 py-2 text-[11px] text-textMuted"
+                        className="rounded-lg border border-border/30 bg-surface/45 px-2.5 py-2 text-meta text-textMuted"
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <code className="break-all text-left text-[10px] text-info">
+                          <code className="break-all text-left text-fine text-info">
                             {entry.commandPreview}
                           </code>
                           <span
-                            className={`shrink-0 text-[10px] font-medium uppercase ${
+                            className={`shrink-0 text-fine font-medium uppercase ${
                               entry.ok ? 'text-success' : 'text-warning'
                             }`}
                           >
                             {entry.ok ? 'ok' : 'issue'}
                           </span>
                         </div>
-                        <p className="mt-1 text-[10px] leading-snug text-textMuted">
+                        <p className="mt-1 text-fine leading-snug text-textMuted">
                           {entry.summary}
                         </p>
                         <button
@@ -1152,15 +1169,15 @@ export const MobileSettingsView = ({
                   Extension shell
                 </h3>
                 {documentSurface === 'integrations' ? (
-                  <p className="mt-1 text-[11px] text-textMuted">
+                  <p className="mt-1 text-meta text-textMuted">
                     This is the extension options page using the same shell as{' '}
                     <code>mobile.html</code>.
                   </p>
                 ) : (
                   <>
-                    <p className="mt-1 text-[11px] text-textMuted">
+                    <p className="mt-1 text-meta text-textMuted">
                       Opens{' '}
-                      <code className="rounded bg-surface/90 px-1 text-[10px] text-textMuted">
+                      <code className="rounded bg-surface/90 px-1 text-fine text-textMuted">
                         integrations.html
                       </code>{' '}
                       in a new tab (same UI as Chrome extension options).
@@ -1168,7 +1185,7 @@ export const MobileSettingsView = ({
                     <button
                       type="button"
                       onClick={() => openExtensionSurface('integrations')}
-                      className={`mt-2 w-full rounded-lg border border-borderStrong/50 bg-surface/55 px-2.5 py-2 text-left text-[12px] text-textMuted ${btnFocus}`}
+                      className={`mt-2 w-full rounded-lg border border-borderStrong/50 bg-surface/55 px-2.5 py-2 text-left text-meta text-textMuted ${btnFocus}`}
                     >
                       Open integrations page in a new tab
                     </button>

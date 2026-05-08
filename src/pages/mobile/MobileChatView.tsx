@@ -11,10 +11,14 @@ import {
   Search
 } from 'lucide-react';
 import clsx from 'clsx';
+import { AssistantEvidenceChips } from './AssistantEvidenceChips';
+import { AssistantInlineCitationBody } from './AssistantInlineCitationBody';
+import { AssistantTraceSummary } from './AssistantTraceSummary';
 import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
 import { getIntentByCommandLine } from './chatIntents';
-import type { CopilotWorkerRegistrySettings } from '../../types/domain';
+import type { AiCitationChunk, CopilotWorkerRegistrySettings } from '../../types/domain';
+import type { AssistantAskTraceSummaryUI } from '../../types/aiTraceGraph';
 
 export interface ChatMessage {
   id: string;
@@ -30,6 +34,12 @@ export interface ChatMessage {
     followUps: number;
     opportunities: number;
   };
+  /** Normalized citation envelope from hosted `ask:` responses (optional). */
+  citations?: AiCitationChunk[];
+  /** `[cite: …]` markers that did not match any citation row (optional). */
+  orphanInlineMarkers?: string[];
+  /** Compact provenance summary for this assistant turn (optional). */
+  traceSummary?: AssistantAskTraceSummaryUI;
 }
 
 const STARTER_CAP = 6;
@@ -70,6 +80,8 @@ export interface MobileChatViewProps {
   onOpenCommandPalette?: () => void;
   /** Jump to Settings → Résumé grounding (hosted Ask Phase R). */
   onOpenResumeGrounding?: () => void;
+  /** One-line hosted routing stance — surfaced below Assistant headline (optional). */
+  assistantRoutingCaption?: string;
 }
 
 /**
@@ -87,7 +99,8 @@ export const MobileChatView = ({
   btnFocus,
   transcriptEndRef,
   onOpenCommandPalette,
-  onOpenResumeGrounding
+  onOpenResumeGrounding,
+  assistantRoutingCaption
 }: MobileChatViewProps) => {
   /** Matches hero inset — keeps Copilot / starters / transcript edges aligned. */
   const assistantGutter = 'px-3 sm:px-3.5';
@@ -105,13 +118,16 @@ export const MobileChatView = ({
                 <h2 className="text-base font-semibold leading-tight tracking-tight text-text">
                   Assistant
                 </h2>
-                <p className="mt-0.5 text-[11px] leading-snug text-textMuted">
-                  <span className="whitespace-nowrap font-mono text-[10px] text-textSoft">
+                <p className="mt-0.5 text-meta leading-snug text-textMuted">
+                  <span className="whitespace-nowrap font-mono text-fine text-textSoft">
                     ask: …
                   </span>{' '}
                   for hosted answers; everything else runs on-device. Quick picks and pulse live on{' '}
                   <span className="font-medium text-textSoft">Plan</span> — ⌘K lists all commands.
                 </p>
+                {assistantRoutingCaption?.trim() ? (
+                  <p className="mt-1 text-fine leading-snug text-textSoft">{assistantRoutingCaption}</p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -125,13 +141,13 @@ export const MobileChatView = ({
                 className={clsx('bo-icon-btn-ai inline-flex items-center gap-1.5', btnFocus)}
               >
                 <Search className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-                <span className="hidden min-[380px]:inline text-[11px] font-semibold">⌘K</span>
+                <span className="hidden min-[380px]:inline text-meta font-semibold">⌘K</span>
               </button>
             </nav>
           ) : null}
         </div>
         {onOpenResumeGrounding ? (
-          <p className="mt-2 text-[10px] leading-snug text-textSoft">
+          <p className="mt-2 text-fine leading-snug text-textSoft">
             <button
               type="button"
               onClick={onOpenResumeGrounding}
@@ -140,7 +156,7 @@ export const MobileChatView = ({
               Résumé grounding for Ask (Phase R)
             </button>
             <span className="text-textMuted"> — compress CV in Settings; improves hosted </span>
-            <span className="whitespace-nowrap font-mono text-[10px] text-textSoft">ask:</span>
+            <span className="whitespace-nowrap font-mono text-fine text-textSoft">ask:</span>
             <span className="text-textMuted"> answers.</span>
           </p>
         ) : null}
@@ -153,9 +169,9 @@ export const MobileChatView = ({
           aria-label="Hosted Ask copilot"
         >
           <p className="bo-assistant-section-label">Copilot</p>
-          <p className="mb-1.5 text-[11px] leading-snug text-textSoft">
+          <p className="mb-1.5 text-meta leading-snug text-textSoft">
             Pick a worker, then send{' '}
-            <code className="rounded bg-bgSubtle px-1 py-px text-[10px]">ask: …</code> in the
+            <code className="rounded bg-bgSubtle px-1 py-px text-fine">ask: …</code> in the
             composer. Allow-listed workers may attach automation JSON after the reply.
           </p>
           <div className="bo-copilot-rail">
@@ -252,9 +268,9 @@ export const MobileChatView = ({
                   <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
                 </span>
                 <p className="text-sm font-semibold text-text">Start the thread</p>
-                <p className="max-w-[18rem] text-[12px] leading-relaxed text-textMuted">
+                <p className="max-w-[min(100%,22rem)] text-meta leading-relaxed text-textMuted">
                   Starters send workspace commands; lines beginning with{' '}
-                  <span className="font-mono text-[11px] text-textSoft">ask:</span> use the hosted
+                  <span className="font-mono text-meta text-textSoft">ask:</span> use the hosted
                   model. Planning shortcuts stay on Plan — ⌘K finds anything else.
                 </p>
               </div>
@@ -269,7 +285,7 @@ export const MobileChatView = ({
                 >
                   <span
                     className={clsx(
-                      'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                      'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-fine font-bold',
                       message.role === 'user'
                         ? 'bg-surfaceActive text-text'
                         : 'bg-accentSoft/35 text-accent'
@@ -291,7 +307,7 @@ export const MobileChatView = ({
                     {message.role === 'user' ? (
                       <div className="bo-chat-bubble-user">
                         {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
-                          <p className="mb-1 text-[9px] font-bold uppercase opacity-80">
+                          <p className="mb-1 text-overline font-bold uppercase opacity-80">
                             {message.sourceSurface}
                           </p>
                         ) : null}
@@ -301,34 +317,67 @@ export const MobileChatView = ({
                       <div className="bo-chat-bubble-assistant space-y-1">
                         <p className="bo-chat-meta-label">Hosted model</p>
                         {typeof message.ok === 'boolean' && !message.ok ? (
-                          <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-warning">
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-overline font-bold uppercase text-warning">
                             <AlertCircle size={11} aria-hidden />
                             Unavailable
                           </span>
                         ) : null}
-                        <p className="whitespace-pre-wrap break-words leading-relaxed">
-                          {message.text}
-                        </p>
+                        {message.ok !== false ? (
+                          <>
+                            <AssistantInlineCitationBody
+                              text={message.text}
+                              citations={message.citations ?? []}
+                              messageAnchorPrefix={message.id}
+                              btnFocus={btnFocus}
+                            />
+                            {message.orphanInlineMarkers?.length ? (
+                              <p className="text-fine leading-snug text-warning" role="status">
+                                Unresolved citation markers (no matching provenance row):{' '}
+                                <span className="font-mono font-semibold">
+                                  {message.orphanInlineMarkers.join(', ')}
+                                </span>
+                              </p>
+                            ) : null}
+                            {message.citations?.length ? (
+                              <AssistantEvidenceChips
+                                citations={message.citations}
+                                anchorPrefix={message.id}
+                                btnFocus={btnFocus}
+                              />
+                            ) : null}
+                            {message.traceSummary ? (
+                              <AssistantTraceSummary
+                                summary={message.traceSummary}
+                                orphanMarkerCount={message.orphanInlineMarkers?.length ?? 0}
+                                btnFocus={btnFocus}
+                              />
+                            ) : null}
+                          </>
+                        ) : (
+                          <p className="whitespace-pre-wrap break-words leading-relaxed">
+                            {message.text}
+                          </p>
+                        )}
                       </div>
                     ) : message.resultKind === 'command-result' && message.action ? (
-                      <div className="bo-chat-bubble-meta space-y-1.5 text-[13px]">
+                      <div className="bo-chat-bubble-meta space-y-1.5">
                         <div className="flex flex-wrap items-center gap-1.5">
                           {message.ok ? (
-                            <span className="inline-flex items-center gap-0.5 rounded-full bg-successSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-success">
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-successSoft px-1.5 py-0.5 text-overline font-bold uppercase text-success">
                               <CheckCircle2 size={11} aria-hidden />
                               Ok
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-[9px] font-bold uppercase text-warning">
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-warningSoft px-1.5 py-0.5 text-overline font-bold uppercase text-warning">
                               <AlertCircle size={11} aria-hidden />
                               Issue
                             </span>
                           )}
-                          <code className="rounded-md bg-bgSubtle px-1.5 py-0.5 text-[10px] text-info">
+                          <code className="rounded-md bg-bgSubtle px-1.5 py-0.5 text-fine text-info">
                             {message.action}
                           </code>
                           {message.sourceSurface && message.sourceSurface !== 'Chat' ? (
-                            <span className="text-[9px] text-textSoft">
+                            <span className="text-overline text-textSoft">
                               {message.sourceSurface}
                             </span>
                           ) : null}

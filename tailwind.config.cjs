@@ -39,15 +39,21 @@ module.exports = {
         brandCommandSoft: 'rgb(var(--brand-command-soft) / var(--alpha-brand-command-soft))'
       },
       fontSize: {
-        display: ['1.75rem', { lineHeight: '2rem', fontWeight: '600' }],
-        h1: ['1.375rem', { lineHeight: '1.75rem', fontWeight: '600' }],
-        h2: ['1.125rem', { lineHeight: '1.5rem', fontWeight: '600' }],
-        h3: ['1rem', { lineHeight: '1.375rem', fontWeight: '600' }],
-        body: ['0.9375rem', { lineHeight: '1.375rem', fontWeight: '400' }],
-        bodyStrong: ['0.9375rem', { lineHeight: '1.375rem', fontWeight: '500' }],
-        label: ['0.8125rem', { lineHeight: '1.125rem', fontWeight: '500' }],
-        meta: ['0.75rem', { lineHeight: '1rem', fontWeight: '500' }],
-        micro: ['0.75rem', { lineHeight: '1rem', fontWeight: '600' }]
+        /** Desktop-first headline scale — readable on extension tabs & Capacitor without tiny-phone assumptions. */
+        display: ['1.9375rem', { lineHeight: '2.25rem', fontWeight: '600' }],
+        h1: ['1.5rem', { lineHeight: '1.875rem', fontWeight: '600' }],
+        h2: ['1.25rem', { lineHeight: '1.625rem', fontWeight: '600' }],
+        h3: ['1.0625rem', { lineHeight: '1.375rem', fontWeight: '600' }],
+        body: ['1rem', { lineHeight: '1.5rem', fontWeight: '400' }],
+        bodyStrong: ['1rem', { lineHeight: '1.5rem', fontWeight: '500' }],
+        label: ['0.875rem', { lineHeight: '1.25rem', fontWeight: '500' }],
+        /** Secondary lists / captions (replaces most legacy `text-[11px]`). */
+        meta: ['0.8125rem', { lineHeight: '1.2rem', fontWeight: '500' }],
+        /** Tertiary / monospace helpers (replaces most legacy `text-[10px]`). */
+        fine: ['0.75rem', { lineHeight: '1.15rem', fontWeight: '400' }],
+        micro: ['0.8125rem', { lineHeight: '1.2rem', fontWeight: '600' }],
+        /** Dense uppercase chrome (replaces legacy `text-[9px]` dock/heuristic labels). */
+        overline: ['0.6875rem', { lineHeight: '1rem', fontWeight: '700', letterSpacing: '0.06em' }]
       },
       borderRadius: {
         sm: '8px',

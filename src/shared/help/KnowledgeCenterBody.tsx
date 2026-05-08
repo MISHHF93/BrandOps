@@ -34,7 +34,7 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
               key={step.title}
               className="bo-retro-card rounded-2xl border border-border bg-bg/45 p-3.5"
             >
-              <p className="text-[11px] uppercase tracking-[0.12em] text-textSoft">
+              <p className="text-meta uppercase tracking-[0.12em] text-textSoft">
                 Step {index + 1}
               </p>
               <p className="mt-1.5 text-sm font-semibold text-text">{step.title}</p>

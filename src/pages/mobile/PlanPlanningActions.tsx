@@ -30,7 +30,7 @@ export function PlanPlanningActions({
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h2
           id="plan-actions-heading"
-          className="text-[11px] font-semibold uppercase tracking-wide text-textMuted"
+          className="text-meta font-semibold uppercase tracking-wide text-textMuted"
         >
           Quick picks
         </h2>
@@ -38,7 +38,7 @@ export function PlanPlanningActions({
           type="button"
           onClick={onOpenCommandPalette}
           className={clsx(
-            'inline-flex items-center gap-1.5 rounded-lg border border-border/50 bg-bg px-2.5 py-1.5 text-[11px] font-semibold text-text',
+            'inline-flex items-center gap-1.5 rounded-lg border border-border/50 bg-bg px-2.5 py-1.5 text-meta font-semibold text-text',
             btnFocus
           )}
         >
@@ -46,12 +46,12 @@ export function PlanPlanningActions({
           All commands ⌘K
         </button>
       </div>
-      <p className="mt-1 text-[10px] leading-snug text-textSoft">
+      <p className="mt-1 text-fine leading-snug text-textSoft">
         Eight high-use lines; every other command is in the palette. Destructive phrases still
         confirm.
       </p>
       {!agentEnabled && agentLockHint ? (
-        <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/15 px-2.5 py-2 text-[11px] text-text">
+        <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/15 px-2.5 py-2 text-meta text-text">
           {agentLockHint}
         </p>
       ) : null}
@@ -75,8 +75,8 @@ export function PlanPlanningActions({
                 btnFocus
               )}
             >
-              <span className="text-[11px] font-semibold leading-tight">{intent.title}</span>
-              <span className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-textSoft">
+              <span className="text-meta font-semibold leading-tight">{intent.title}</span>
+              <span className="mt-0.5 line-clamp-1 text-fine leading-snug text-textSoft">
                 {intent.subtitle}
               </span>
             </button>

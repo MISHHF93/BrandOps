@@ -38,7 +38,11 @@ export const ML_PIPELINE_STAGES: readonly MlPipelineStage[] = [
     label: 'Hosted chat completions (OpenAI-compatible)',
     inExtensionRuntime: true,
     entry: 'src/services/ai/nlpInferenceGateway.ts → runChatCompletion',
-    consumers: ['mobileApp.tsx (ask: lines)', 'copilot optional model override']
+    consumers: [
+      'mobileApp.tsx (ask: lines)',
+      'aiIoProvenance.ts (brandOpsAiProvenance envelope)',
+      'copilot optional model override'
+    ]
   },
   {
     id: 'hosted-embeddings',

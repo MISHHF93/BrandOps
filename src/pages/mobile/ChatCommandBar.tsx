@@ -135,7 +135,7 @@ export const ChatCommandBar = ({
   return (
     <div
       className={clsx(
-        'bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1 bottom-[calc(6.15rem+env(safe-area-inset-bottom,0px))]',
+        'bo-mobile-main fixed inset-x-0 z-40 mx-auto w-full pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1 bottom-[calc(6.55rem+env(safe-area-inset-bottom,0px))]',
         MOBILE_SHELL_MAX_WIDTH_CLASS,
         MOBILE_SHELL_EDGE_PAD_CLASS
       )}
@@ -143,7 +143,7 @@ export const ChatCommandBar = ({
     >
       {commandLoading ? (
         <p
-          className="mb-1.5 text-center text-[10px] font-medium text-primary"
+          className="mb-1.5 text-center text-fine font-medium text-primary"
           role="status"
           aria-live="polite"
         >
@@ -184,7 +184,7 @@ export const ChatCommandBar = ({
 
       {routeHint ? (
         <p
-          className="mb-1.5 line-clamp-3 flex items-start gap-1.5 rounded-lg border border-border/40 bg-bgSubtle/60 px-2 py-1 text-[10px] leading-snug text-textMuted"
+          className="mb-1.5 line-clamp-3 flex items-start gap-1.5 rounded-lg border border-border/40 bg-bgSubtle/60 px-2 py-1 text-fine leading-snug text-textMuted"
           id={TIP_ID}
         >
           <Lightbulb className="mt-0.5 h-3 w-3 shrink-0 text-info" strokeWidth={2} aria-hidden />
@@ -193,7 +193,7 @@ export const ChatCommandBar = ({
       ) : null}
 
       {showTypingTip ? (
-        <p className="mb-1.5 text-[10px] text-textSoft" id={typingHintId}>
+        <p className="mb-1.5 text-fine text-textSoft" id={typingHintId}>
           Keep typing — suggestions match plain language and common jobs.
         </p>
       ) : null}
@@ -221,12 +221,12 @@ export const ChatCommandBar = ({
               >
                 <span className="flex w-full min-w-0 items-center justify-between gap-2">
                   <span className="min-w-0 font-medium text-text">{intent.title}</span>
-                  <span className="shrink-0 text-[9px] uppercase text-textSoft">
+                  <span className="shrink-0 text-overline uppercase text-textSoft">
                     {intent.groupId}
                   </span>
                 </span>
-                <span className="line-clamp-1 text-xs text-textSoft">{intent.subtitle}</span>
-                <code className="line-clamp-2 w-full text-left text-[10px] font-mono text-textSoft/90">
+                <span className="line-clamp-1 text-meta text-textSoft">{intent.subtitle}</span>
+                <code className="line-clamp-2 w-full text-left text-fine font-mono text-textSoft/90">
                   {intent.command}
                 </code>
               </button>
@@ -237,7 +237,7 @@ export const ChatCommandBar = ({
 
       {chatAttachment ? (
         <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-bgSubtle/80 px-2 py-1.5">
-          <p className="min-w-0 flex-1 truncate text-[11px] text-textMuted">
+          <p className="min-w-0 flex-1 truncate text-meta text-textMuted">
             <span className="font-medium text-text">Attached</span> · {chatAttachment.name} (
             {chatAttachment.kind === 'text' ? 'text' : 'file'})
           </p>
