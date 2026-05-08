@@ -1,15 +1,15 @@
 import clsx from 'clsx';
-import { CalendarRange, LayoutDashboard, Sparkles, X } from 'lucide-react';
+import { BookOpen, CalendarRange, LayoutDashboard, Settings, Sparkles, X } from 'lucide-react';
 import { BrandOpsMarkBadge } from '../../shared/ui/brandopsPolish';
 
 /** Current dismissal flag — bump suffix when checklist content/placement changes materially. */
-export const GETTING_STARTED_STORAGE_KEY = 'brandops:gettingStartedDismissed:v3';
+export const GETTING_STARTED_STORAGE_KEY = 'brandops:gettingStartedDismissed:v4';
 
 /**
  * Persisted on workspace `seed.onboardingVersion` when the user dismisses Getting started.
  * Keep in sync with the suffix on {@link GETTING_STARTED_STORAGE_KEY}.
  */
-export const GETTING_STARTED_CONTENT_VERSION = '3';
+export const GETTING_STARTED_CONTENT_VERSION = '4';
 
 /** Legacy key (Today-tab only card). No longer read. */
 export const LEGACY_FIRST_RUN_STORAGE_KEY = 'brandops:firstRunJourneyDismissed';
@@ -33,20 +33,24 @@ const stepTitleClass = 'text-[11px] font-semibold text-text';
 const stepBodyClass = 'mt-0.5 text-[10px] leading-snug text-textSoft';
 
 /**
- * First-session checklist on **Assistant** — numbered steps + CTAs for Plan, Today, command, and ⌘K.
+ * First-session checklist on **Assistant** — numbered steps + CTAs for Plan, Today, palette, Settings, and Help.
  */
 export function FirstRunJourneyCard({
   btnFocus,
   onDismiss,
   onTryCommand,
   onOpenPlan,
-  onOpenToday
+  onOpenToday,
+  onOpenSettings,
+  onOpenHelp
 }: {
   btnFocus: string;
   onDismiss: () => void;
   onTryCommand: (line: string) => void;
   onOpenPlan: () => void;
   onOpenToday: () => void;
+  onOpenSettings: () => void;
+  onOpenHelp: () => void;
 }) {
   return (
     <section
@@ -59,8 +63,8 @@ export function FirstRunJourneyCard({
           <div className="min-w-0">
             <p className="text-h3 text-text">Getting started</p>
             <p className="mt-1 text-meta text-textSoft">
-              Four quick steps. You can dismiss this anytime — Help in the header always has the
-              manual.
+              Five quick steps. Dismiss anytime — the header Help button opens the Knowledge Center
+              (topic <span className="font-medium text-text">First run and profile</span>).
             </p>
 
             <ol className="mt-2 list-none space-y-2 p-0 text-left" role="list">
@@ -126,13 +130,52 @@ export function FirstRunJourneyCard({
               </li>
               <li className={stepClass}>
                 <p className={stepTitleClass}>
-                  <span className="text-textSoft">4.</span> Integrations & Setup
+                  <span className="text-textSoft">4.</span> Palette & Integrations
                 </p>
                 <p className={stepBodyClass}>
                   Press <span className="whitespace-nowrap font-medium text-text">⌘K</span> /{' '}
-                  <span className="whitespace-nowrap font-medium text-text">Ctrl+K</span> to open
-                  the palette — jump to Integrations, Settings, or search commands.
+                  <span className="whitespace-nowrap font-medium text-text">Ctrl+K</span> for the
+                  command centre — jump to Integrations, Settings, Help, or run a typed command.
                 </p>
+              </li>
+              <li className={stepClass}>
+                <p className={stepTitleClass}>
+                  <span className="text-textSoft">5.</span> Tune your workspace
+                </p>
+                <p className={stepBodyClass}>
+                  In <span className="font-medium text-text">Settings → Preferences</span>, replace
+                  placeholder profile fields, then apply an{' '}
+                  <span className="font-medium text-text">operating profile</span> preset (layout,
+                  AI defaults, cadence). Use{' '}
+                  <span className="font-medium text-text">Integrations</span> for sources and sync
+                  hub rows.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    className={clsx(
+                      'inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-[11px] font-semibold text-text',
+                      btnFocus
+                    )}
+                    onClick={onOpenSettings}
+                    title="Open Settings"
+                  >
+                    <Settings className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
+                    Open Settings
+                  </button>
+                  <button
+                    type="button"
+                    className={clsx(
+                      'inline-flex items-center gap-1.5 rounded-lg border border-border/45 bg-bg px-2.5 py-1.5 text-[11px] font-semibold text-text',
+                      btnFocus
+                    )}
+                    onClick={onOpenHelp}
+                    title="Open Help — Knowledge Center"
+                  >
+                    <BookOpen className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
+                    Help — First run
+                  </button>
+                </div>
               </li>
             </ol>
           </div>

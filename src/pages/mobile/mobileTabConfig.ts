@@ -48,7 +48,19 @@ export const COMMAND_PALETTE_NAV_TARGETS: ReadonlyArray<{
   {
     tab: 'settings',
     label: 'Settings',
-    keywords: ['settings', 'preferences', 'account', 'prefs', 'configure'],
+    keywords: [
+      'settings',
+      'preferences',
+      'account',
+      'prefs',
+      'configure',
+      'setup',
+      'environment',
+      'configuration',
+      'profile',
+      'operating profile',
+      'preset'
+    ],
     Icon: Settings
   }
 ];

@@ -8,10 +8,12 @@ import { PlanDestinationGrid } from './PlanDestinationGrid';
 import { PlanIdentityHeader } from './PlanIdentityHeader';
 import { PlanJumpNav } from './PlanJumpNav';
 import { PlanProfileSummary } from './PlanProfileSummary';
+import { PlanSetupHint } from './PlanSetupHint';
 import { PlanPlanningActions } from './PlanPlanningActions';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
 import { mobileChipClass } from './mobileTabPrimitives';
+import { defaultBrandProfile } from '../../config/workspaceDefaults';
 import {
   metricToneTextClass,
   planKpiSnapshotPillClass,
@@ -53,7 +55,10 @@ export interface MobileWorkspaceHubViewProps {
   onOpenToday: () => void;
   launchAccess: LaunchAccessState;
   onOpenSettings: () => void;
+  onOpenIntegrations: () => void;
   onOpenCommandPalette: () => void;
+  /** When true, show Plan setup hint alongside profile-heuristic (Getting started still active). */
+  firstRunJourneyVisible?: boolean;
   canRunWorkspaceCommands: boolean;
   workspaceCommandLockReason: 'auth' | 'membership' | null;
 }
@@ -69,10 +74,19 @@ export const MobileWorkspaceHubView = ({
   onOpenToday,
   launchAccess,
   onOpenSettings,
+  onOpenIntegrations,
   onOpenCommandPalette,
+  firstRunJourneyVisible = false,
   canRunWorkspaceCommands,
   workspaceCommandLockReason
 }: MobileWorkspaceHubViewProps) => {
+  const profileIncomplete =
+    snapshot.operatorName.trim() === defaultBrandProfile.operatorName.trim() ||
+    !snapshot.primaryOffer.trim() ||
+    !snapshot.voiceGuide.trim() ||
+    !snapshot.focusMetric.trim();
+  const showSetupHint = firstRunJourneyVisible || profileIncomplete;
+
   const sorted = sortRowsSoonestFirst(snapshot.pulseTimelineRows);
   const todayPreviewTasks = snapshot.cockpitSchedulerTaskPeek.slice(0, 4);
   const todayPreviewDeals = snapshot.cockpitOpportunityPeek.slice(0, 2);
@@ -100,6 +114,17 @@ export const MobileWorkspaceHubView = ({
             onOpenSettings={onOpenSettings}
           />
         </div>
+
+        {showSetupHint ? (
+          <div className={ROW}>
+            <PlanSetupHint
+              btnFocus={btnFocus}
+              onOpenSettings={onOpenSettings}
+              onOpenIntegrations={onOpenIntegrations}
+              onOpenCommandPalette={onOpenCommandPalette}
+            />
+          </div>
+        ) : null}
 
         <div className={ROW}>
           <PlanProfileSummary

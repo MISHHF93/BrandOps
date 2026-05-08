@@ -45,7 +45,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onOpenToday: noop,
         launchAccess: planLaunchFixture,
         onOpenSettings: noop,
+        onOpenIntegrations: noop,
         onOpenCommandPalette: noop,
+        firstRunJourneyVisible: true,
         canRunWorkspaceCommands: true,
         workspaceCommandLockReason: null
       })
@@ -72,6 +74,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('id="plan-profile-summary"');
     expect(html).toContain('Workspace profile');
     expect(html).toContain('Edit profile');
+    expect(html).toContain('Workspace setup hint');
+    expect(html).toContain('Finish setup');
+    expect(html).toContain('Open Settings');
     expect(html).toContain('Primary offer');
     expect(html).toContain('Voice guide');
     expect(html).toContain('Focus metric');
@@ -83,6 +88,47 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Account &amp; billing');
     expect(html).toContain('Membership active');
     expect(html).toContain('operator@fixture.test');
+  });
+
+  it('Plan hub: setup hint from default seed operator without Getting started flag', () => {
+    const html = renderToString(
+      React.createElement(MobileWorkspaceHubView, {
+        snapshot: buildWorkspaceSnapshot(cloneSeedData()),
+        btnFocus: '',
+        commandBusy: false,
+        runCommand: noop,
+        onOpenToday: noop,
+        launchAccess: planLaunchFixture,
+        onOpenSettings: noop,
+        onOpenIntegrations: noop,
+        onOpenCommandPalette: noop,
+        firstRunJourneyVisible: false,
+        canRunWorkspaceCommands: true,
+        workspaceCommandLockReason: null
+      })
+    );
+    expect(html).toContain('Workspace setup hint');
+    expect(html).toContain('⌘K palette');
+  });
+
+  it('Plan hub: no setup hint on personalized demo when Getting started dismissed', () => {
+    const html = renderToString(
+      React.createElement(MobileWorkspaceHubView, {
+        snapshot: buildWorkspaceSnapshot(cloneDemoSampleData()),
+        btnFocus: '',
+        commandBusy: false,
+        runCommand: noop,
+        onOpenToday: noop,
+        launchAccess: planLaunchFixture,
+        onOpenSettings: noop,
+        onOpenIntegrations: noop,
+        onOpenCommandPalette: noop,
+        firstRunJourneyVisible: false,
+        canRunWorkspaceCommands: true,
+        workspaceCommandLockReason: null
+      })
+    );
+    expect(html).not.toContain('Workspace setup hint');
   });
 
   it('Chat: header, thread, example commands, optional recent commands', () => {
@@ -136,14 +182,20 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onDismiss: noop,
         onTryCommand: noop,
         onOpenPlan: noop,
-        onOpenToday: noop
+        onOpenToday: noop,
+        onOpenSettings: noop,
+        onOpenHelp: noop
       })
     );
     expect(html).toContain('aria-label="Start here — first session"');
     expect(html).toContain('Getting started');
+    expect(html).toContain('Five quick steps');
     expect(html).toContain('Open Plan');
     expect(html).toContain('Open Today');
     expect(html).toContain('Pipeline health');
+    expect(html).toContain('Open Settings');
+    expect(html).toContain('Help — First run');
+    expect(html).toContain('Tune your workspace');
     expect(html).toContain('Dismiss getting started');
   });
 

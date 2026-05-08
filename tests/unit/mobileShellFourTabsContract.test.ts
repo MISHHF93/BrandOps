@@ -139,12 +139,12 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*FirstRunJourneyCard/);
   });
 
-  it('does not duplicate dock tabs on Plan hub (workspace hub omits Assistant / Integrations callbacks)', () => {
+  it('threads Integrations opener into Plan hub for setup hint without dock duplication', () => {
     const workspaceJsx = mobileApp.match(/<MobileWorkspaceHubView[\s\S]*?\/>/)?.[0] ?? '';
 
     expect(workspaceJsx).not.toContain('onOpenAssistant');
 
-    expect(workspaceJsx).not.toContain('onOpenIntegrations');
+    expect(workspaceJsx).toContain('onOpenIntegrations');
   });
 
   it('does not render Getting started on Today-only branch (checklist lives on Assistant)', () => {

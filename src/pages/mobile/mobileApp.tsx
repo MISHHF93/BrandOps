@@ -43,6 +43,7 @@ import {
   GETTING_STARTED_CONTENT_VERSION,
   readFirstRunJourneyDismissed
 } from './FirstRunJourneyCard';
+import { LIQUID_INTRO_SESSION_KEY, LiquidIntroOverlay } from './LiquidIntroOverlay';
 import { getAgentCommandLock } from './agentCommandAccess';
 import { ChatCommandBar } from './ChatCommandBar';
 import { AppearanceToggle } from './AppearanceToggle';
@@ -103,10 +104,10 @@ const defaultWelcomeMessage = (
   gettingStartedChecklistVisible = true
 ): ChatMessage => {
   const mobileLine = gettingStartedChecklistVisible
-    ? 'Use the Getting started checklist above for Plan, Today, and ⌘K — then type a command or pick a starter below.'
+    ? 'Use the Getting started checklist above (five steps: Plan, Today, palette, Settings, Help) — then type a command or pick a starter below.'
     : 'Plan and Today are on the dock; ⌘K / Ctrl+K opens Integrations, Settings, and search. Type a command or pick a starter below.';
   const welcomeLine = gettingStartedChecklistVisible
-    ? 'Use Getting started above, then run a command here. ⌘K opens the palette; Plan shows pulse and queue.'
+    ? 'Use Getting started above — tune profile and presets in Settings, then run a command here. ⌘K opens the palette; Plan shows pulse and queue.'
     : 'Run a command here or pick a starter. Plan shows pulse and queue; ⌘K opens Integrations and Settings.';
   return {
     id: uid(),
@@ -389,6 +390,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [firstRunJourneyVisible, setFirstRunJourneyVisible] = useState(
     () => !readFirstRunJourneyDismissed()
   );
+  const [liquidIntroOpen, setLiquidIntroOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
@@ -429,6 +431,36 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       console.error('BrandOps: failed to persist getting-started workspace completion', err);
     }
   }, [refreshWorkspaceSnapshot]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const membershipBlocked =
+      shouldRequireLaunchMembership(launchAccess) && activeTab !== 'settings';
+    const unlocked = !shouldRequireLaunchAuth(launchAccess) && !membershipBlocked;
+    if (!unlocked) return;
+
+    try {
+      if (window.sessionStorage.getItem(LIQUID_INTRO_SESSION_KEY) === '1') return;
+    } catch {
+      /* ignore */
+    }
+
+    const reduced =
+      typeof window.matchMedia !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const motionOff = document.documentElement.getAttribute('data-motion-mode') === 'off';
+    if (reduced || motionOff) {
+      try {
+        window.sessionStorage.setItem(LIQUID_INTRO_SESSION_KEY, '1');
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+
+    setLiquidIntroOpen((prev) => prev || true);
+  }, [launchAccess, activeTab]);
 
   const selectCopilotWorker = useCallback(
     async (workerId: string) => {
@@ -1263,6 +1295,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onTryCommand={sendQuickCommand}
                 onOpenPlan={() => commitTab('workspace')}
                 onOpenToday={() => commitTab('daily')}
+                onOpenSettings={() => commitTab('settings')}
+                onOpenHelp={() => openExtensionSurface('help')}
               />
             ) : null}
             <MobileChatView
@@ -1300,7 +1334,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onOpenToday={() => commitTab('daily')}
                 launchAccess={launchAccess}
                 onOpenSettings={() => commitTab('settings')}
+                onOpenIntegrations={() => commitTab('integrations')}
                 onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+                firstRunJourneyVisible={firstRunJourneyVisible}
                 canRunWorkspaceCommands={agentCommandLock === null}
                 workspaceCommandLockReason={agentCommandLock}
               />
@@ -1557,6 +1593,19 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           </div>
         </div>
       ) : null}
+
+      <LiquidIntroOverlay
+        open={liquidIntroOpen}
+        btnFocus={btnFocus}
+        onFinished={() => {
+          setLiquidIntroOpen(false);
+          try {
+            window.sessionStorage.setItem(LIQUID_INTRO_SESSION_KEY, '1');
+          } catch {
+            /* ignore */
+          }
+        }}
+      />
 
       <MobileShellNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />
 
