@@ -579,9 +579,12 @@ html[data-app-surface='welcome'] body::after {
     background: rgb(var(--color-bg-subtle));
   }
 
+  /* Width comes from `main.bo-mobile-main` + `MOBILE_SHELL_MAX_WIDTH_CLASS` (Tailwind).
+     Do not clamp tab roots — a fixed 28rem here caused a skinny centered column inside wider mains on tablet/desktop. */
   .bo-shell-page {
-    max-width: 28rem;
-    margin-inline: auto;
+    width: 100%;
+    max-width: none;
+    margin-inline: unset;
   }
 
   .bo-mobile-sheet {
@@ -2854,6 +2857,25 @@ html[data-app-surface='welcome'] body::after {
   isolation: isolate;
   opacity: 0;
   animation: bo-liquid-intro-root-in 0.52s var(--ease-liquid-out) forwards;
+  /*
+   * Intro-only palette — decoupled from shell phosphor green (--brand-gold / --color-accent).
+   * Aurora liquid: warm metal + electric cyan + indigo depth.
+   */
+  --bo-li-gold: 255 188 96;
+  --bo-li-amber: 255 218 150;
+  --bo-li-cyan: 64 210 255;
+  --bo-li-blue: 118 158 255;
+  --bo-li-indigo: 92 108 235;
+  --bo-li-violet: 176 132 255;
+}
+
+:root[data-theme='light'] .bo-liquid-intro-root {
+  --bo-li-gold: 214 140 48;
+  --bo-li-amber: 255 206 130;
+  --bo-li-cyan: 0 162 212;
+  --bo-li-blue: 72 118 220;
+  --bo-li-indigo: 72 82 190;
+  --bo-li-violet: 130 98 210;
 }
 
 .bo-liquid-intro-root--exit {
@@ -2902,8 +2924,8 @@ html[data-app-surface='welcome'] body::after {
 .bo-liquid-intro-blob--a {
   background: radial-gradient(
     circle at 32% 30%,
-    rgb(var(--brand-gold) / 0.82),
-    rgb(var(--color-accent) / 0.52) 58%,
+    rgb(var(--bo-li-gold) / 0.88),
+    rgb(var(--bo-li-blue) / 0.45) 56%,
     transparent 74%
   );
   animation: bo-liquid-morph-a 6.8s var(--ease-liquid-in-out) infinite alternate;
@@ -2912,8 +2934,8 @@ html[data-app-surface='welcome'] body::after {
 .bo-liquid-intro-blob--b {
   background: radial-gradient(
     circle at 62% 58%,
-    rgb(var(--color-accent) / 0.72),
-    rgb(var(--color-info) / 0.42) 55%,
+    rgb(var(--bo-li-cyan) / 0.68),
+    rgb(var(--bo-li-indigo) / 0.52) 54%,
     transparent 72%
   );
   animation: bo-liquid-morph-b 8.2s var(--ease-liquid-in-out) infinite alternate;
@@ -2922,8 +2944,8 @@ html[data-app-surface='welcome'] body::after {
 .bo-liquid-intro-blob--c {
   background: radial-gradient(
     circle at 48% 44%,
-    rgb(var(--brand-gold) / 0.38),
-    rgb(var(--color-secondary) / 0.36) 52%,
+    rgb(var(--bo-li-violet) / 0.42),
+    rgb(var(--bo-li-amber) / 0.34) 52%,
     transparent 70%
   );
   opacity: 0.62;
@@ -2940,12 +2962,43 @@ html[data-app-surface='welcome'] body::after {
   z-index: 2;
   background: linear-gradient(
     118deg,
-    transparent 34%,
-    rgb(var(--flagship-sheen) / 0.18) 49%,
-    transparent 64%
+    transparent 30%,
+    rgb(var(--bo-li-cyan) / 0.14) 44%,
+    rgb(var(--bo-li-gold) / 0.12) 52%,
+    transparent 66%
   );
   pointer-events: none;
   animation: bo-liquid-shine-sweep 3.6s var(--ease-liquid-in-out) infinite;
+}
+
+.bo-liquid-intro-root .bo-liquid-intro-lockup-mark {
+  border-color: rgb(var(--bo-li-cyan) / 0.42);
+  background: linear-gradient(
+    148deg,
+    rgb(var(--bo-li-indigo) / 0.18),
+    rgb(var(--bo-li-violet) / 0.1)
+  );
+  box-shadow:
+    0 14px 48px rgb(var(--bo-li-indigo) / 0.34),
+    inset 0 1px 0 rgb(var(--bo-li-gold) / 0.15),
+    0 0 0 4px rgb(var(--bo-li-indigo) / 0.06);
+  color: rgb(var(--bo-li-gold));
+}
+
+.bo-liquid-intro-root .bo-liquid-intro-lockup-mark::after {
+  border-color: rgb(var(--bo-li-cyan) / 0.14);
+}
+
+.bo-liquid-intro-root .bo-liquid-intro-lockup-mark svg {
+  color: rgb(var(--bo-li-gold));
+}
+
+.bo-liquid-intro-lockup-sub {
+  color: rgb(var(--bo-li-blue));
+}
+
+:root[data-theme='light'] .bo-liquid-intro-lockup-sub {
+  opacity: 0.88;
 }
 
 .bo-liquid-intro-lockup {

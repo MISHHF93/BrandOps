@@ -77,11 +77,11 @@ export function LiquidIntroOverlay({ open, btnFocus, onFinished }: LiquidIntroOv
       </div>
 
       <div className="relative z-[2] flex flex-col items-center px-6 text-center bo-liquid-intro-lockup">
-        <span className="bo-mobile-brand__mark bo-mobile-brand__mark--compact mb-3 inline-flex rounded-2xl border border-accent/35 bg-accentSoft/18 p-3 shadow-[0_12px_40px_rgb(var(--color-shadow)/0.45)]">
-          <BrandOpsCrownMark className="h-10 w-10 text-accent sm:h-11 sm:w-11" />
+        <span className="bo-mobile-brand__mark bo-mobile-brand__mark--compact bo-liquid-intro-lockup-mark mb-3 inline-flex rounded-2xl p-3">
+          <BrandOpsCrownMark className="h-10 w-10 sm:h-11 sm:w-11" />
         </span>
         <p className="text-sm font-semibold tracking-wide text-text">BrandOps</p>
-        <p className="mt-1 max-w-[16rem] text-[11px] leading-snug text-textSoft">
+        <p className="bo-liquid-intro-lockup-sub mt-1 max-w-[16rem] text-[11px] leading-snug">
           Liquid workspace shell — morphing in.
         </p>
       </div>
