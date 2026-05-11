@@ -28,8 +28,27 @@ export type CommandRoute =
   | 'configure-workspace'
   | 'pipeline-health'
   | 'sync-content-embeddings'
+  | 'ai-pipeline-run'
   | 'update-opportunity'
   | 'unsupported';
+
+/**
+ * Parses `run ai pipeline <pipeline_id>` with optional acknowledgement tokens for human gates.
+ */
+export function parseAiPipelineInvocation(
+  text: string
+): { pipelineId: string; humanReviewAck: boolean } | null {
+  const t = text.trim();
+  const m = t.match(/^run\s+ai\s+pipeline\s+([a-z0-9_]+)\b/i);
+  if (!m) return null;
+  const rest = t.slice(m[0].length).trim().toLowerCase();
+  const humanReviewAck =
+    rest === 'ack' ||
+    rest.includes('--ack') ||
+    rest.includes('review ack') ||
+    rest.includes('acknowledged');
+  return { pipelineId: m[1], humanReviewAck };
+}
 
 export const parseCommandRoute = (text: string): CommandRoute => {
   const lower = text.toLowerCase();
@@ -115,6 +134,9 @@ export const parseCommandRoute = (text: string): CommandRoute => {
     lower.includes('embed content library')
   ) {
     return 'sync-content-embeddings';
+  }
+  if (parseAiPipelineInvocation(text)) {
+    return 'ai-pipeline-run';
   }
   if (
     lower.includes('pipeline health') ||

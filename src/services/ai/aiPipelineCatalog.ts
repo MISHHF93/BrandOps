@@ -143,6 +143,26 @@ export const AI_PIPELINE_LIBRARY: readonly AIPipeline[] = [
   }
 ];
 
+export const AI_PIPELINE_PALETTE_COMMANDS: readonly {
+  /** Full command line for agent / palette */
+  command: string;
+  label: string;
+  id: string;
+  keywords: string[];
+}[] = AI_PIPELINE_LIBRARY.map((p) => ({
+  command: `run ai pipeline ${p.pipeline_id}`,
+  label: p.label,
+  id: p.pipeline_id,
+  keywords: [
+    p.pipeline_id,
+    p.task_family,
+    'pipeline',
+    'ai',
+    'suite',
+    ...p.label.toLowerCase().split(/\s+/)
+  ]
+}));
+
 export function getAiPipelineDefinition(id: string): AIPipeline | undefined {
   return AI_PIPELINE_LIBRARY.find((p) => p.pipeline_id === id);
 }

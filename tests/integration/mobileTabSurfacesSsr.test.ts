@@ -49,7 +49,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onOpenCommandPalette: noop,
         firstRunJourneyVisible: true,
         canRunWorkspaceCommands: true,
-        workspaceCommandLockReason: null
+        workspaceCommandLockReason: null,
+        onDownloadPipelineRun: noop,
+        onApproveOperatorTrace: asyncNoop
       })
     );
     expect(html).toContain('aria-label="Plan"');
@@ -68,6 +70,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Quick picks');
     expect(html).toContain('Sync embeddings');
     expect(html).toContain('Execution and governance');
+    expect(html).toContain('id="plan-exec-insights"');
     expect(html).toContain('Today snapshot');
     expect(html).toContain('Open full Today');
     expect(html).toContain('Plan strip');
@@ -102,7 +105,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onOpenCommandPalette: noop,
         firstRunJourneyVisible: false,
         canRunWorkspaceCommands: true,
-        workspaceCommandLockReason: null
+        workspaceCommandLockReason: null,
+        onDownloadPipelineRun: noop,
+        onApproveOperatorTrace: asyncNoop
       })
     );
     expect(html).toContain('Workspace setup hint');
@@ -123,7 +128,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onOpenCommandPalette: noop,
         firstRunJourneyVisible: false,
         canRunWorkspaceCommands: true,
-        workspaceCommandLockReason: null
+        workspaceCommandLockReason: null,
+        onDownloadPipelineRun: noop,
+        onApproveOperatorTrace: asyncNoop
       })
     );
     expect(html).not.toContain('Workspace setup hint');

@@ -8,11 +8,13 @@ import { scheduler } from '../scheduling/scheduler';
 import { mapWorkspaceCommandSourceToActor, prependOperatorTrace } from '../dataset/operatorTraces';
 import { storageService } from '../storage/storage';
 import { applyAiSettingsOperations, buildAiSettingsPlan } from '../ai/aiSettingsMode';
-import { parseCommandRoute } from './intent/commandIntent';
+import { parseCommandRoute, parseAiPipelineInvocation } from './intent/commandIntent';
 import {
   buildBrandOpsStrategicReadout,
   resolveBrandOpsFunction
 } from '../../config/brandOpsFunctions';
+import { getAiPipelineDefinition } from '../ai/aiPipelineCatalog';
+import { runAiPipelineWithPersistence } from '../ai/aiPipelineRunner';
 
 export type AgentAction =
   | 'brand-function'
@@ -40,6 +42,7 @@ export type AgentAction =
   | 'configure-workspace'
   | 'pipeline-health'
   | 'sync-content-embeddings'
+  | 'ai-pipeline-run'
   | 'unsupported';
 
 export interface AgentWorkspaceCommand {
@@ -1084,6 +1087,37 @@ const runParsedRoute = async (
       return runPipelineHealth(workspace);
     case 'sync-content-embeddings':
       return runSyncContentEmbeddings();
+    case 'ai-pipeline-run': {
+      const inv = parseAiPipelineInvocation(command.text);
+      if (!inv) {
+        return {
+          ok: false,
+          action: 'ai-pipeline-run',
+          summary:
+            'Could not parse pipeline command. Use: run ai pipeline workspace_audit_report — add --ack to continue past human review gates.'
+        };
+      }
+      if (!getAiPipelineDefinition(inv.pipelineId)) {
+        return {
+          ok: false,
+          action: 'ai-pipeline-run',
+          summary: `Unknown pipeline "${inv.pipelineId}". Use ⌘K → AI suite pipelines for valid catalog IDs.`
+        };
+      }
+      const { data: next, run } = await runAiPipelineWithPersistence({
+        data: workspace,
+        pipelineId: inv.pipelineId,
+        humanReviewAck: inv.humanReviewAck
+      });
+      await storageService.setData(next);
+      const persistNote = next.settings.operatorTraceCollectionEnabled
+        ? ''
+        : ' Turn on operator trace collection in Settings to persist run history.';
+      const ok = run.status !== 'failure';
+      const summary =
+        `Pipeline ${run.pipeline_id} → ${run.status} (${run.run_id}).${persistNote}`.slice(0, 500);
+      return { ok, action: 'ai-pipeline-run', summary };
+    }
     case 'update-opportunity':
       if (
         opportunityUsesRichUpdate(command.text) ||
@@ -1099,7 +1133,7 @@ const runParsedRoute = async (
         ok: false,
         action: 'unsupported',
         summary:
-          'Command not recognized. Try: add note, pipeline health, sync content embeddings, ask: (hosted question), reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
+          'Command not recognized. Try: add note, pipeline health, run ai pipeline workspace_audit_report, sync content embeddings, ask: (hosted question), reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
       };
   }
 };

@@ -10,7 +10,7 @@ export const defaultCopilotWorkerRegistry = {
       description: 'Balanced strategic assistant with conservative workspace actions.',
       systemInstructions:
         'You are concise, strategic, and execution-minded. Answer the operator directly.',
-      allowedAgentCommands: ['pipeline health']
+      allowedAgentCommands: ['pipeline health', 'run ai pipeline workspace_audit_report']
     },
     {
       id: 'pipeline-coach',
@@ -18,7 +18,7 @@ export const defaultCopilotWorkerRegistry = {
       description: 'Prioritizes CRM health, ranking, and follow-up clarity.',
       systemInstructions:
         'Prioritize pipeline hygiene, opportunity ranking, urgency signals, and one concrete next action per reply.',
-      allowedAgentCommands: ['pipeline health']
+      allowedAgentCommands: ['pipeline health', 'run ai pipeline workspace_audit_report']
     },
     {
       id: 'content-strategist',

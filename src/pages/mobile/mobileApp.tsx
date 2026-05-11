@@ -33,7 +33,7 @@ import {
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import { prependOperatorTrace } from '../../services/dataset/operatorTraces';
 import type { BrandOpsData, OperatingPresetId, UiTheme } from '../../types/domain';
-import type { AiOperatorMode } from '../../types/aiIntegrationSuite';
+import type { AiOperatorMode, PipelineRun } from '../../types/aiIntegrationSuite';
 import {
   getCockpitMobileSectionHeadingId,
   type DashboardSectionId
@@ -99,6 +99,7 @@ import {
   recordLocalSessionDay,
   recordShellNavigation
 } from '../../services/usage/localProductUsage';
+import { approveOperatorTraceEntry } from '../../services/plan/reviewQueue';
 
 const uid = () => `msg-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -1159,6 +1160,46 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     }
   }, []);
 
+  const downloadPipelineRunJson = useCallback((run: PipelineRun) => {
+    try {
+      const blob = new Blob([JSON.stringify(run, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safeId = run.run_id.replace(/[^a-z0-9-_]+/gi, '_').slice(0, 80);
+      a.download = `brandops-pipeline-run-${safeId}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDataOpsHint('Pipeline run JSON downloaded.');
+    } catch (e) {
+      setDataOpsHint(e instanceof Error ? e.message : 'Download failed.');
+    }
+  }, []);
+
+  const approveOperatorTraceReview = useCallback(
+    async (traceId: string) => {
+      try {
+        const data = await storageService.getData();
+        const next = approveOperatorTraceEntry(data, traceId);
+        if (next === null) {
+          setDataOpsHint('Trace not found.');
+          return;
+        }
+        if (next === data) {
+          setDataOpsHint('That trace was not awaiting review.');
+          return;
+        }
+        await storageService.setData(next);
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint('Review approved.');
+      } catch (e) {
+        console.error('BrandOps: approve operator trace failed', e);
+        setDataOpsHint(e instanceof Error ? e.message : 'Could not approve trace.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
   const setOperatorTraceCollection = useCallback(
     async (enabled: boolean) => {
       try {
@@ -1474,6 +1515,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                   firstRunJourneyVisible={firstRunJourneyVisible}
                   canRunWorkspaceCommands={agentCommandLock === null}
                   workspaceCommandLockReason={agentCommandLock}
+                  onDownloadPipelineRun={downloadPipelineRunJson}
+                  onApproveOperatorTrace={approveOperatorTraceReview}
                 />
               </>
             ) : null}

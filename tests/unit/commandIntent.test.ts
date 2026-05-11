@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { parseCommandRoute } from '../../src/services/agent/intent/commandIntent';
+import {
+  parseCommandRoute,
+  parseAiPipelineInvocation
+} from '../../src/services/agent/intent/commandIntent';
 
 describe('parseCommandRoute', () => {
+  it('maps run ai pipeline commands before pipeline health heuristics', () => {
+    expect(parseCommandRoute('run ai pipeline workspace_audit_report')).toBe('ai-pipeline-run');
+    expect(parseAiPipelineInvocation('run ai pipeline workspace_audit_report')).toEqual({
+      pipelineId: 'workspace_audit_report',
+      humanReviewAck: false
+    });
+    expect(
+      parseAiPipelineInvocation('run ai pipeline governance_review --ack')?.humanReviewAck
+    ).toBe(true);
+  });
+
   it('prefers specific routes before general ones', () => {
     expect(parseCommandRoute('update contact relationship: trusted')).toBe(
       'update-contact-relationship'

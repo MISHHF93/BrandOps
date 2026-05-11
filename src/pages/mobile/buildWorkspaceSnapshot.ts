@@ -131,10 +131,11 @@ export type SeedSnapshotReadout = {
   onboardingVersion?: string;
 };
 
-export type AiPipelineRunPeekRow = Pick<
-  PipelineRun,
-  'run_id' | 'pipeline_id' | 'status' | 'started_at' | 'ended_at'
->;
+export type PlanPendingOperatorReviewPeek = {
+  id: string;
+  verb: string;
+  at: string;
+};
 
 export type MemoryTraceSummaryReadout = {
   bundleCount: number;
@@ -311,12 +312,14 @@ export interface MobileWorkspaceSnapshot {
   settingsMessagingVaultPeek: SettingsMessagingVaultPeekRow[];
   /** Mixed follow-ups, publishing, scheduler, outreach — for Pulse tab. */
   pulseTimelineRows: PulseTimelineRow[];
-  /** Recent AI pipeline executions (`BrandOpsData.aiPipelineRuns`), newest first. */
-  recentAiPipelineRuns: AiPipelineRunPeekRow[];
+  /** Recent AI pipeline executions (`BrandOpsData.aiPipelineRuns`), newest first — full rows for Plan exports. */
+  recentAiPipelineRuns: PipelineRun[];
   /** Summary counts for persisted Ask trace bundles (`BrandOpsData.aiTraceGraph`). */
   memoryTraceSummary: MemoryTraceSummaryReadout;
   /** Operator traces flagged for human review (`reviewStatus: pending`). */
   planPendingReviewCount: number;
+  /** Up to five newest pending traces for lightweight Plan queue UI. */
+  planPendingReviewPeek: PlanPendingOperatorReviewPeek[];
 }
 
 /** Fields required by Today cockpit sections; keeps props in sync with {@link MobileWorkspaceSnapshot}. */
@@ -361,18 +364,23 @@ export type CockpitDailySnapshot = Pick<
   | 'sshTargetsPeek'
 >;
 
-function buildRecentAiPipelineRuns(workspace: BrandOpsData): AiPipelineRunPeekRow[] {
+function buildRecentAiPipelineRuns(workspace: BrandOpsData): PipelineRun[] {
   const entries = workspace.aiPipelineRuns?.entries ?? [];
   return [...entries]
     .filter((r) => r.run_id?.trim() && r.pipeline_id?.trim())
     .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime())
-    .slice(0, 8)
-    .map((r) => ({
-      run_id: r.run_id,
-      pipeline_id: r.pipeline_id,
-      status: r.status,
-      started_at: r.started_at,
-      ended_at: r.ended_at
+    .slice(0, 8);
+}
+
+function buildPendingReviewPeek(workspace: BrandOpsData): PlanPendingOperatorReviewPeek[] {
+  return (workspace.operatorTraces?.entries ?? [])
+    .filter((e) => e.reviewStatus === 'pending')
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    .slice(0, 5)
+    .map((e) => ({
+      id: e.id,
+      verb: e.verb,
+      at: e.at
     }));
 }
 
@@ -578,6 +586,7 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     recentAiPipelineRuns: buildRecentAiPipelineRuns(workspace),
     memoryTraceSummary: buildMemoryTraceSummary(workspace),
     planPendingReviewCount: countPendingOperatorReviews(workspace.operatorTraces?.entries),
+    planPendingReviewPeek: buildPendingReviewPeek(workspace),
     ...cockpitExtras
   };
 }

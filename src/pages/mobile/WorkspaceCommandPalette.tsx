@@ -1,11 +1,12 @@
 import { Command, useCommandState } from 'cmdk';
 import clsx from 'clsx';
-import { BookOpen, History, Loader2, Sparkles, TriangleAlert } from 'lucide-react';
+import { BookOpen, History, Loader2, Sparkles, TriangleAlert, Workflow } from 'lucide-react';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
 import { COMMAND_PALETTE_NAV_TARGETS } from './mobileTabConfig';
 import { MOBILE_BTN_FOCUS } from './mobileTabPrimitives';
 import type { MobileShellTabId } from './mobileShellQuery';
 import { BrandOpsMarkBadge } from '../../shared/ui/brandopsPolish';
+import { AI_PIPELINE_PALETTE_COMMANDS } from '../../services/ai/aiPipelineCatalog';
 
 const btn = MOBILE_BTN_FOCUS;
 
@@ -224,6 +225,34 @@ export const WorkspaceCommandPalette = ({
                 ))}
               </Command.Group>
             ))}
+            <Command.Group
+              value="ai-suite-pipelines"
+              heading={
+                <span className="flex items-center gap-1.5 text-fine font-semibold uppercase tracking-wide text-textSoft">
+                  <Workflow className="h-3 w-3" aria-hidden />
+                  AI suite pipelines
+                </span>
+              }
+            >
+              {AI_PIPELINE_PALETTE_COMMANDS.map((p) => (
+                <Command.Item
+                  key={p.id}
+                  className={cmdItemClass}
+                  value={`${p.command} ${p.label}`}
+                  keywords={p.keywords}
+                  disabled={agentDisabled}
+                  onSelect={() => {
+                    if (agentDisabled) return;
+                    closeAnd(() => onRunCommand(p.command));
+                  }}
+                >
+                  <span className="min-w-0 flex-1 truncate" title={p.command}>
+                    <span className="text-textSoft">{p.label}</span>
+                    <span className="ml-2 font-mono text-meta text-textMuted">{p.id}</span>
+                  </span>
+                </Command.Item>
+              ))}
+            </Command.Group>
             <Command.Group
               value="suggestions-freeform"
               forceMount

@@ -372,6 +372,7 @@ const ROUTE_PLAIN: Record<CommandRoute, string> = {
   'configure-workspace': 'Applies workspace settings',
   'pipeline-health': 'Runs a pipeline check',
   'sync-content-embeddings': 'Syncs hosted embeddings for content library (batch)',
+  'ai-pipeline-run': 'Runs an AI suite pipeline from the catalog',
   'update-opportunity': 'Updates a deal or stage',
   unsupported: 'We will do our best to interpret or guide you to a supported request'
 };

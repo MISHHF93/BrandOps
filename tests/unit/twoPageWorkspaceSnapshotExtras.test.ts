@@ -62,6 +62,8 @@ describe('two-page workspace snapshot extras', () => {
     expect(snap.recentAiPipelineRuns[0].run_id).toBe('run-b');
     expect(snap.memoryTraceSummary.bundleCount).toBe(1);
     expect(snap.planPendingReviewCount).toBe(1);
+    expect(snap.planPendingReviewPeek).toHaveLength(1);
+    expect(snap.planPendingReviewPeek[0].id).toBe('1');
   });
 
   it('sanitizes pipeline runs with stable step ids', () => {

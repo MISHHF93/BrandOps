@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { CalendarCheck2, CirclePlay, TableProperties } from 'lucide-react';
 import type { LaunchAccessState } from '../../shared/account/launchAccess';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
+import type { PipelineRun } from '../../types/aiIntegrationSuite';
 import { workspaceQueueCommandLine } from './pulseTimeline';
 import type { PulseTimelineRow } from './pulseTimeline';
 import { PlanDestinationGrid } from './PlanDestinationGrid';
@@ -62,6 +63,8 @@ export interface MobileWorkspaceHubViewProps {
   firstRunJourneyVisible?: boolean;
   canRunWorkspaceCommands: boolean;
   workspaceCommandLockReason: 'auth' | 'membership' | null;
+  onDownloadPipelineRun: (run: PipelineRun) => void;
+  onApproveOperatorTrace: (traceId: string) => void | Promise<void>;
 }
 
 /**
@@ -79,7 +82,9 @@ export const MobileWorkspaceHubView = ({
   onOpenCommandPalette,
   firstRunJourneyVisible = false,
   canRunWorkspaceCommands,
-  workspaceCommandLockReason
+  workspaceCommandLockReason,
+  onDownloadPipelineRun,
+  onApproveOperatorTrace
 }: MobileWorkspaceHubViewProps) => {
   const profileIncomplete =
     snapshot.operatorName.trim() === defaultBrandProfile.operatorName.trim() ||
@@ -192,7 +197,14 @@ export const MobileWorkspaceHubView = ({
         </div>
 
         <div className={ROW}>
-          <PlanExecutionInsights snapshot={snapshot} />
+          <PlanExecutionInsights
+            snapshot={snapshot}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+            onDownloadPipelineRun={onDownloadPipelineRun}
+            onApproveOperatorTrace={onApproveOperatorTrace}
+          />
         </div>
 
         <section id="plan-today" className={ROW} aria-labelledby="plan-today-heading">
