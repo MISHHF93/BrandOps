@@ -4,11 +4,7 @@ import { Capacitor } from '@capacitor/core';
  * Where the BrandOps UI bundle is running. Used to branch navigation and user-facing hints.
  * Extension background shares `chrome.runtime.id`; Capacitor shell has no extension APIs.
  */
-export type BrandOpsHostKind =
-  | 'chrome-extension'
-  | 'capacitor-android'
-  | 'capacitor-ios'
-  | 'web';
+export type BrandOpsHostKind = 'chrome-extension' | 'capacitor-android' | 'capacitor-ios' | 'web';
 
 let cached: BrandOpsHostKind | undefined;
 

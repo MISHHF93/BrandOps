@@ -6,11 +6,7 @@ import { governancePoliciesFromPackagedRules } from '../../services/plan/governa
 /**
  * Operational AI + governance snapshot for **Plan** — pipelines, trace memory, reviews, packaged policies.
  */
-export function PlanExecutionInsights({
-  snapshot
-}: {
-  snapshot: MobileWorkspaceSnapshot;
-}) {
+export function PlanExecutionInsights({ snapshot }: { snapshot: MobileWorkspaceSnapshot }) {
   const runs = snapshot.recentAiPipelineRuns;
   const mem = snapshot.memoryTraceSummary;
   const pending = snapshot.planPendingReviewCount;
@@ -43,7 +39,9 @@ export function PlanExecutionInsights({
           {mem.lastBundleAt ? (
             <p className="mt-0.5 text-fine text-textMuted">Last activity · {mem.lastBundleAt}</p>
           ) : (
-            <p className="mt-0.5 text-fine text-textMuted">No graph bundles yet — run Ask with traces on.</p>
+            <p className="mt-0.5 text-fine text-textMuted">
+              No graph bundles yet — run Ask with traces on.
+            </p>
           )}
         </div>
 
@@ -55,7 +53,9 @@ export function PlanExecutionInsights({
           <p className="mt-1 text-meta text-text">
             {pending} pending operator trace{pending === 1 ? '' : 's'}
           </p>
-          <p className="mt-0.5 text-fine text-textMuted">Approve from diagnostics exports / future queue UI.</p>
+          <p className="mt-0.5 text-fine text-textMuted">
+            Approve from diagnostics exports / future queue UI.
+          </p>
         </div>
 
         <div className="rounded-xl border border-border/35 bg-bgSubtle/50 px-2.5 py-2 sm:col-span-1">
@@ -76,7 +76,9 @@ export function PlanExecutionInsights({
       </div>
 
       <div>
-        <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">Recent pipeline runs</p>
+        <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+          Recent pipeline runs
+        </p>
         {runs.length === 0 ? (
           <p className="mt-1 text-meta text-textMuted">
             No recorded runs yet — invoke catalog pipelines from the integration suite when enabled.
@@ -88,7 +90,9 @@ export function PlanExecutionInsights({
                 key={r.run_id}
                 className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-border/30 bg-bgElevated/50 px-2 py-1.5"
               >
-                <span className="min-w-0 truncate font-mono text-fine text-text">{r.pipeline_id}</span>
+                <span className="min-w-0 truncate font-mono text-fine text-text">
+                  {r.pipeline_id}
+                </span>
                 <span
                   className={clsx(
                     'inline-flex shrink-0 rounded-full border px-2 py-0.5 text-overline font-bold uppercase',

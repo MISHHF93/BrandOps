@@ -712,7 +712,13 @@ export type AiCitationSourceType =
   | 'document'
   | 'unknown';
 
-export type AiCitationModality = 'text' | 'audio' | 'image' | 'video' | 'document' | 'browser_overlay';
+export type AiCitationModality =
+  | 'text'
+  | 'audio'
+  | 'image'
+  | 'video'
+  | 'document'
+  | 'browser_overlay';
 
 /** Optional multimodal anchor — URIs are hints/ids only (no bearer tokens or secrets). */
 export interface AiMultimodalContextRef {
@@ -745,7 +751,10 @@ export interface AiCitationChunk {
   excerpt?: string;
 }
 
-export type AiAssistantTraceSurface = 'assistant_chat' | 'linkedin_overlay' | 'workspace_automation';
+export type AiAssistantTraceSurface =
+  | 'assistant_chat'
+  | 'linkedin_overlay'
+  | 'workspace_automation';
 
 /** Append-only Assistant I/O trace row (auditable; capped in storage). */
 export interface AiAssistantTurnTrace {

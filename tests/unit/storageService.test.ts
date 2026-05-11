@@ -165,9 +165,9 @@ describe('storageService', () => {
     expect(normalized.aiAssistantTraces?.entries).toHaveLength(1);
     expect(normalized.aiAssistantTraces?.entries?.[0].id).toBe('ok');
     expect(normalized.aiAssistantTraces?.entries?.[0].citations[0]?.confidence).toBe(1);
-    expect(normalized.aiAssistantTraces?.entries?.[0].citations[0]?.excerpt?.length).toBeLessThanOrEqual(
-      360
-    );
+    expect(
+      normalized.aiAssistantTraces?.entries?.[0].citations[0]?.excerpt?.length
+    ).toBeLessThanOrEqual(360);
   });
 
   it('normalizes aiTraceGraph on setData (drops invalid bundles, sanitizes governance)', async () => {
@@ -202,6 +202,8 @@ describe('storageService', () => {
     const normalized = await storageService.setData(source);
     expect(normalized.aiTraceGraph?.bundles).toHaveLength(1);
     expect(normalized.aiTraceGraph?.bundles?.[0].trace_id).toBe('ok');
-    expect(normalized.aiTraceGraph?.bundles?.[0].governance_meta?.hallucination_risk).toBeUndefined();
+    expect(
+      normalized.aiTraceGraph?.bundles?.[0].governance_meta?.hallucination_risk
+    ).toBeUndefined();
   });
 });

@@ -126,7 +126,9 @@ export const MobileChatView = ({
                   <span className="font-medium text-textSoft">Plan</span> — ⌘K lists all commands.
                 </p>
                 {assistantRoutingCaption?.trim() ? (
-                  <p className="mt-1 text-fine leading-snug text-textSoft">{assistantRoutingCaption}</p>
+                  <p className="mt-1 text-fine leading-snug text-textSoft">
+                    {assistantRoutingCaption}
+                  </p>
                 ) : null}
               </div>
             </div>
@@ -215,7 +217,6 @@ export const MobileChatView = ({
               })}
             </div>
           </section>
-
         </div>
 
         <section

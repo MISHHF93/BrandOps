@@ -1,9 +1,6 @@
 import type { AppSettings } from '../../types/domain';
 import { aiRuntimePolicy } from '../aiAdapters/runtimePolicy';
-import {
-  getOpenAiCompatibleApiKey,
-  describeAiSecretsStorageHint
-} from './aiSecretsAccess';
+import { getOpenAiCompatibleApiKey, describeAiSecretsStorageHint } from './aiSecretsAccess';
 
 export type NlpGatewayFailureCode =
   | 'adapter_disabled'

@@ -177,7 +177,10 @@ export function sanitizeAiCitationChunks(raw: unknown): AiCitationChunk[] {
   return out;
 }
 
-function collectCitationsFromJsonRoot(root: Record<string, unknown>, into: AiCitationChunk[]): void {
+function collectCitationsFromJsonRoot(
+  root: Record<string, unknown>,
+  into: AiCitationChunk[]
+): void {
   const prov = root.brandOpsAiProvenance ?? root.brand_ops_ai_provenance;
   if (prov && typeof prov === 'object') {
     const p = prov as Record<string, unknown>;
@@ -253,10 +256,10 @@ function mergeGovernanceMeta(
 export function governanceMetaNonEmpty(g: BrandOpsAiProvenanceGovernanceMeta): boolean {
   return Boolean(
     g.governance_tags?.length ||
-      g.hallucination_risk ||
-      g.evidence_completeness ||
-      g.missing_evidence_notes?.length ||
-      g.reproduction_notes
+    g.hallucination_risk ||
+    g.evidence_completeness ||
+    g.missing_evidence_notes?.length ||
+    g.reproduction_notes
   );
 }
 
@@ -317,7 +320,9 @@ export function parseHostedAskResponse(modelText: string): ParsedHostedAskRespon
       collectCitationsFromJsonRoot(root, citations);
       mergeGovernanceFromJsonRoot(root, governanceAccum);
       if (typeof root.answer === 'string') {
-        const governanceMeta = governanceMetaNonEmpty(governanceAccum) ? governanceAccum : undefined;
+        const governanceMeta = governanceMetaNonEmpty(governanceAccum)
+          ? governanceAccum
+          : undefined;
         return {
           displayText: root.answer.trim(),
           citations: mergedInto(),
@@ -361,14 +366,10 @@ export function parseHostedAskResponse(modelText: string): ParsedHostedAskRespon
 
 /** Compact chip title for tests + UI consistency. */
 export function formatEvidenceChipTitle(c: AiCitationChunk): string {
-  const cid =
-    c.chunk_id !== undefined && c.chunk_id !== null ? `#${String(c.chunk_id)}` : null;
+  const cid = c.chunk_id !== undefined && c.chunk_id !== null ? `#${String(c.chunk_id)}` : null;
   const src = c.source?.trim() || 'Source';
   const pg =
     c.page !== undefined ? (typeof c.page === 'number' ? `p.${c.page}` : String(c.page)) : null;
-  const conf =
-    typeof c.confidence === 'number'
-      ? `${Math.round(c.confidence * 100)}%`
-      : null;
+  const conf = typeof c.confidence === 'number' ? `${Math.round(c.confidence * 100)}%` : null;
   return [cid, src, pg, conf].filter(Boolean).join(' · ');
 }

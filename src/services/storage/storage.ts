@@ -38,10 +38,7 @@ import {
 } from '../../types/domain';
 import { ALL_INTEGRATION_SOURCE_KINDS } from '../../shared/integrations/integrationSourceCatalog';
 import { OPERATING_PRESETS } from '../../shared/workspace/operatingProfileCatalog';
-import {
-  MAX_AI_TRACE_BUNDLES,
-  sanitizeTraceBundle
-} from '../ai/aiTracePersistence';
+import { MAX_AI_TRACE_BUNDLES, sanitizeTraceBundle } from '../ai/aiTracePersistence';
 import { normalizeAiPipelineRuns } from '../ai/aiPipelineRunPersistence';
 import type { TraceBundle } from '../../types/aiTraceGraph';
 import { AI_TRACE_GRAPH_SCHEMA_VERSION } from '../../types/aiTraceGraph';
@@ -1571,12 +1568,11 @@ const normalizeAiAssistantTraces = (
       continue;
     }
     if (outcome !== 'success' && outcome !== 'failure') continue;
-    const orphanMarkers =
-      Array.isArray(e.orphan_inline_markers)
-        ? sanitizeOrphanInlineMarkers(
-            e.orphan_inline_markers.filter((x): x is string => typeof x === 'string')
-          )
-        : [];
+    const orphanMarkers = Array.isArray(e.orphan_inline_markers)
+      ? sanitizeOrphanInlineMarkers(
+          e.orphan_inline_markers.filter((x): x is string => typeof x === 'string')
+        )
+      : [];
     entries.push({
       id: e.id,
       at: e.at,

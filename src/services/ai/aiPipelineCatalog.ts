@@ -68,7 +68,11 @@ export const AI_PIPELINE_LIBRARY: readonly AIPipeline[] = [
     task_family: 'workspace_audit_report',
     steps: [
       { step_id: 'v', kind: 'validate_inputs', label: 'Validate workspace payload' },
-      { step_id: 'd', kind: 'deterministic_digest', label: 'Operator-facing workload audit digest' },
+      {
+        step_id: 'd',
+        kind: 'deterministic_digest',
+        label: 'Operator-facing workload audit digest'
+      },
       {
         step_id: 'e',
         kind: 'export_audit_metadata',

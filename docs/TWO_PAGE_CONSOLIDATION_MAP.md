@@ -4,31 +4,31 @@ This document maps **existing capabilities** to the **two dock-visible surfaces*
 
 ## Surface contract
 
-| Dock | Route tokens (`?section=`) | Primary modules |
-|------|---------------------------|-----------------|
-| **Ask** | `chat` | Assistant transcript, `ask:` hosted routing, citations, evidence chips, trace summaries, copilot workers, command composer |
-| **Plan** | `workspace`, `daily`, `integrations`, `settings`, workstream ids | Hub overview, Cockpit workstreams, Integrations, Settings, pulse/queue, audits, pipelines, governance/readiness |
+| Dock     | Route tokens (`?section=`)                                       | Primary modules                                                                                                            |
+| -------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Ask**  | `chat`                                                           | Assistant transcript, `ask:` hosted routing, citations, evidence chips, trace summaries, copilot workers, command composer |
+| **Plan** | `workspace`, `daily`, `integrations`, `settings`, workstream ids | Hub overview, Cockpit workstreams, Integrations, Settings, pulse/queue, audits, pipelines, governance/readiness            |
 
 The bottom dock highlights **only Ask vs Plan** (`dockTabForShellTab`). Nested Plan destinations remain URL-addressable but roll up under **Plan**.
 
 ## Canonical models (single source of truth)
 
-| Concept | Canonical type / storage | Primary UI surface |
-|--------|---------------------------|-------------------|
-| Citations / retrieval chunks | `AiCitationChunk` (`domain.ts`), alias `AICitation` / `RetrievalChunk` (`aiTraceGraph.ts`) | **Ask** — chips, inline markers |
-| Ask trace bundle (graph-shaped) | `TraceBundle`, `AIWorkspaceTraceIndexState` → `BrandOpsData.aiTraceGraph` | **Ask** — collapsible provenance; **Plan** — summary counts |
-| Turn-level assistant log | `AiAssistantTurnTrace` → `BrandOpsData.aiAssistantTraces` | **Ask** — history export / diagnostics |
-| Slim trace header | `AITrace` (`aiTraceGraph.ts`) | Shared metadata |
-| Pipeline definition | `AIPipeline`, `AIPipelineStep` (`aiIntegrationSuite.ts`) | **Plan** — catalog-driven runs |
-| Pipeline execution record | `PipelineRun`, `AiPipelineRunLogState` → `BrandOpsData.aiPipelineRuns` | **Plan** — history card |
-| Model routing / modes | `AiOperatorMode`, `resolveHostedAssistantRouting` (`aiAskRouting.ts`) | **Ask** |
-| Operator / automation audit | `AgentAuditEntry` (`domain.ts`) | **Plan** — recent audit feed (existing) |
-| Operator behavior traces + review | `OperatorTraceEntry`, `reviewStatus` (`domain.ts`) | **Plan** — pending review count |
-| Hosted evaluation rubric row | `ModelEvaluationResult` (`aiIntegrationSuite.ts`) | **Plan** (future row linkage to runs) |
-| Governance hints on I/O | `BrandOpsAiProvenanceGovernanceMeta` (`aiTraceGraph.ts`) | **Ask** — risk/evidence badges |
-| Brand voice / positioning | `BrandProfile`, `BrandVault` (`domain.ts`) | **Plan** — identity & vault sections |
-| Packaged intelligence rules | `getIntelligenceRules()` (`rules/*`) + `MobileIntelligenceRulesReadout` | **Plan** — governance/policy summary |
-| LinkedIn copilot | Worker registry + overlay tooling (existing integration paths) | **Ask** — worker picker; overlay stays isolated |
+| Concept                           | Canonical type / storage                                                                   | Primary UI surface                                          |
+| --------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| Citations / retrieval chunks      | `AiCitationChunk` (`domain.ts`), alias `AICitation` / `RetrievalChunk` (`aiTraceGraph.ts`) | **Ask** — chips, inline markers                             |
+| Ask trace bundle (graph-shaped)   | `TraceBundle`, `AIWorkspaceTraceIndexState` → `BrandOpsData.aiTraceGraph`                  | **Ask** — collapsible provenance; **Plan** — summary counts |
+| Turn-level assistant log          | `AiAssistantTurnTrace` → `BrandOpsData.aiAssistantTraces`                                  | **Ask** — history export / diagnostics                      |
+| Slim trace header                 | `AITrace` (`aiTraceGraph.ts`)                                                              | Shared metadata                                             |
+| Pipeline definition               | `AIPipeline`, `AIPipelineStep` (`aiIntegrationSuite.ts`)                                   | **Plan** — catalog-driven runs                              |
+| Pipeline execution record         | `PipelineRun`, `AiPipelineRunLogState` → `BrandOpsData.aiPipelineRuns`                     | **Plan** — history card                                     |
+| Model routing / modes             | `AiOperatorMode`, `resolveHostedAssistantRouting` (`aiAskRouting.ts`)                      | **Ask**                                                     |
+| Operator / automation audit       | `AgentAuditEntry` (`domain.ts`)                                                            | **Plan** — recent audit feed (existing)                     |
+| Operator behavior traces + review | `OperatorTraceEntry`, `reviewStatus` (`domain.ts`)                                         | **Plan** — pending review count                             |
+| Hosted evaluation rubric row      | `ModelEvaluationResult` (`aiIntegrationSuite.ts`)                                          | **Plan** (future row linkage to runs)                       |
+| Governance hints on I/O           | `BrandOpsAiProvenanceGovernanceMeta` (`aiTraceGraph.ts`)                                   | **Ask** — risk/evidence badges                              |
+| Brand voice / positioning         | `BrandProfile`, `BrandVault` (`domain.ts`)                                                 | **Plan** — identity & vault sections                        |
+| Packaged intelligence rules       | `getIntelligenceRules()` (`rules/*`) + `MobileIntelligenceRulesReadout`                    | **Plan** — governance/policy summary                        |
+| LinkedIn copilot                  | Worker registry + overlay tooling (existing integration paths)                             | **Ask** — worker picker; overlay stays isolated             |
 
 ## Features merged into **Ask** (no new page)
 
@@ -58,13 +58,13 @@ The bottom dock highlights **only Ask vs Plan** (`dockTabForShellTab`). Nested P
 
 ## Shared services & hooks to reuse
 
-| Capability | Service / helper |
-|-----------|------------------|
-| Routing | `resolveHostedAssistantRouting`, `buildHostedAskMessages` |
-| Trace build | `buildAssistantAskTraceBundle`, `prependAITraceBundle` |
-| Citation sanitize | `sanitizeAiCitationChunks`, `parseHostedAskResponse` |
-| Pipeline catalog | `AI_PIPELINE_LIBRARY`, `runAiPipelineWithPersistence` |
-| Snapshot assembly | `buildWorkspaceSnapshot` |
+| Capability        | Service / helper                                          |
+| ----------------- | --------------------------------------------------------- |
+| Routing           | `resolveHostedAssistantRouting`, `buildHostedAskMessages` |
+| Trace build       | `buildAssistantAskTraceBundle`, `prependAITraceBundle`    |
+| Citation sanitize | `sanitizeAiCitationChunks`, `parseHostedAskResponse`      |
+| Pipeline catalog  | `AI_PIPELINE_LIBRARY`, `runAiPipelineWithPersistence`     |
+| Snapshot assembly | `buildWorkspaceSnapshot`                                  |
 
 ## Blockers (explicit)
 

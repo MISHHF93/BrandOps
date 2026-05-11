@@ -13,9 +13,7 @@ export function sanitizePipelineRun(run: PipelineRun): PipelineRun {
   const pipeline_id = run.pipeline_id?.trim().slice(0, 120) || 'pipeline-unknown';
   const steps: PipelineStepRun[] = (run.steps ?? []).map((s) => {
     const step_id =
-      typeof s.step_id === 'string' && s.step_id.trim()
-        ? s.step_id.trim().slice(0, 80)
-        : 'step';
+      typeof s.step_id === 'string' && s.step_id.trim() ? s.step_id.trim().slice(0, 80) : 'step';
     return {
       step_id,
       status: validStepStatus(s.status) ? s.status : 'skipped',
@@ -54,11 +52,7 @@ function clip(v: unknown, max: number): string | undefined {
 
 function validStepStatus(s: PipelineStepRun['status']): boolean {
   return (
-    s === 'pending' ||
-    s === 'running' ||
-    s === 'success' ||
-    s === 'failure' ||
-    s === 'skipped'
+    s === 'pending' || s === 'running' || s === 'success' || s === 'failure' || s === 'skipped'
   );
 }
 

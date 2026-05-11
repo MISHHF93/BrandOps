@@ -72,8 +72,7 @@ export function deriveTrustScore(
   }
 
   const score_0_100 = Math.round(Math.min(100, Math.max(0, base)));
-  const band: TrustBand =
-    score_0_100 >= 74 ? 'high' : score_0_100 >= 42 ? 'moderate' : 'low';
+  const band: TrustBand = score_0_100 >= 74 ? 'high' : score_0_100 >= 42 ? 'moderate' : 'low';
 
   return { score_0_100, band, rationale_lines };
 }

@@ -4,10 +4,7 @@ import type {
   AiCitationChunk,
   BrandOpsData
 } from '../../types/domain';
-import {
-  AI_IO_TRACE_SCHEMA_VERSION,
-  sanitizeAiCitationChunks
-} from './aiIoProvenance';
+import { AI_IO_TRACE_SCHEMA_VERSION, sanitizeAiCitationChunks } from './aiIoProvenance';
 import { sanitizeOrphanInlineMarkers } from './aiInlineCitations';
 
 export const MAX_AI_ASSISTANT_TURN_TRACES = 400;

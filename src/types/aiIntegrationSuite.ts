@@ -57,11 +57,7 @@ export interface AIModelCapability {
   reliability_score?: number;
 }
 
-export type AiPrivacyLevel =
-  | 'cloud_unknown'
-  | 'cloud_enterprise'
-  | 'local_device'
-  | 'browser_only';
+export type AiPrivacyLevel = 'cloud_unknown' | 'cloud_enterprise' | 'local_device' | 'browser_only';
 
 export interface ProviderHealthStatus {
   provider_id: string;
@@ -88,10 +84,7 @@ export interface AIRoutingPolicy {
   primary_task: AITaskType;
   /** Relative weights for scoring (names align with AIModelCapability + latency/cost/reliability). */
   weights: Partial<
-    Record<
-      keyof AIModelCapability | 'latency_score' | 'cost_score' | 'reliability_score',
-      number
-    >
+    Record<keyof AIModelCapability | 'latency_score' | 'cost_score' | 'reliability_score', number>
   >;
   /** Lower index = higher fallback priority when scores tie */
   fallback_priority: string[];
@@ -131,12 +124,7 @@ export interface AIPipeline {
   steps: AIPipelineStep[];
 }
 
-export type PipelineStepRunStatus =
-  | 'pending'
-  | 'running'
-  | 'success'
-  | 'failure'
-  | 'skipped';
+export type PipelineStepRunStatus = 'pending' | 'running' | 'success' | 'failure' | 'skipped';
 
 export interface PipelineStepRun {
   step_id: string;

@@ -6,11 +6,11 @@
 
 ## What ships from this repo
 
-| Surface | Output | How |
-| -------- | ------ | --- |
-| **Chrome Web Store** | Unpacked / zipped **`dist/`** | `npm run build` → load unpacked or ship manifest + bundle (`scripts/copy-manifest.mjs`) |
-| **Android (Google Play)** | Capacitor app | [`capacitor.config.ts`](capacitor.config.ts) (`webDir: 'dist'`) → `npm run android:sync` / Play signing |
-| **iOS (App Store)** | Same web bundle | `npm run ios:*` on macOS with Xcode when the platform is added |
+| Surface                   | Output                        | How                                                                                                     |
+| ------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Chrome Web Store**      | Unpacked / zipped **`dist/`** | `npm run build` → load unpacked or ship manifest + bundle (`scripts/copy-manifest.mjs`)                 |
+| **Android (Google Play)** | Capacitor app                 | [`capacitor.config.ts`](capacitor.config.ts) (`webDir: 'dist'`) → `npm run android:sync` / Play signing |
+| **iOS (App Store)**       | Same web bundle               | `npm run ios:*` on macOS with Xcode when the platform is added                                          |
 
 Platform installs **different store listings**; the codebase stays single-source.
 
@@ -18,23 +18,23 @@ Platform installs **different store listings**; the codebase stays single-source
 
 ## Tech stack
 
-- **UI:** React 18, Vite 7, Tailwind CSS 3, Lucide icons, `clsx`, `cmdk` command palette patterns  
-- **Extension:** MV3 service worker (`background.js` build), content scripts (LinkedIn), `chrome.storage` / **`chrome.identity`** permissions declared in [`public/manifest.template.json`](public/manifest.template.json)  
-- **Native wrapper:** `@capacitor/core` + Android/iOS  
+- **UI:** React 18, Vite 7, Tailwind CSS 3, Lucide icons, `clsx`, `cmdk` command palette patterns
+- **Extension:** MV3 service worker (`background.js` build), content scripts (LinkedIn), `chrome.storage` / **`chrome.identity`** permissions declared in [`public/manifest.template.json`](public/manifest.template.json)
+- **Native wrapper:** `@capacitor/core` + Android/iOS
 - **Tests:** Vitest (unit + integration + performance scripts)
 
 ---
 
 ## Repository map
 
-| Area | Role |
-| ---- | ---- |
-| [`src/pages/mobile/`](src/pages/mobile/) | Primary shell: [`mobileApp.tsx`](src/pages/mobile/mobileApp.tsx), workspace hub, chat, settings, integrations, cockpit routing via [`mobileShellQuery.ts`](src/pages/mobile/mobileShellQuery.ts) |
-| [`src/services/storage/storage.ts`](src/services/storage/storage.ts) | Workspace persistence (`brandops:data`), normalization, import/export |
-| [`src/shared/storage/browserStorage.ts`](src/shared/storage/browserStorage.ts) | Adapter: extension → `chrome.storage.local`; WebView → `localStorage`; tests → memory |
-| [`src/services/ai/`](src/services/ai/) | Bridge secrets ([`aiSecretsAccess.ts`](src/services/ai/aiSecretsAccess.ts)), NLP manifests, hosted inference wiring |
-| [`src/shared/help/`](src/shared/help/) | Knowledge Center source consumed by **`help.html`** |
-| [`public/`](public/) | Static assets, OAuth landing HTML under **`public/oauth/`**, privacy policy template |
+| Area                                                                           | Role                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`src/pages/mobile/`](src/pages/mobile/)                                       | Primary shell: [`mobileApp.tsx`](src/pages/mobile/mobileApp.tsx), workspace hub, chat, settings, integrations, cockpit routing via [`mobileShellQuery.ts`](src/pages/mobile/mobileShellQuery.ts) |
+| [`src/services/storage/storage.ts`](src/services/storage/storage.ts)           | Workspace persistence (`brandops:data`), normalization, import/export                                                                                                                            |
+| [`src/shared/storage/browserStorage.ts`](src/shared/storage/browserStorage.ts) | Adapter: extension → `chrome.storage.local`; WebView → `localStorage`; tests → memory                                                                                                            |
+| [`src/services/ai/`](src/services/ai/)                                         | Bridge secrets ([`aiSecretsAccess.ts`](src/services/ai/aiSecretsAccess.ts)), NLP manifests, hosted inference wiring                                                                              |
+| [`src/shared/help/`](src/shared/help/)                                         | Knowledge Center source consumed by **`help.html`**                                                                                                                                              |
+| [`public/`](public/)                                                           | Static assets, OAuth landing HTML under **`public/oauth/`**, privacy policy template                                                                                                             |
 
 HTML entry points at repo root include **`mobile.html`** (main shell), **`help.html`**, **`welcome.html`**, **`dashboard.html`**, **`integrations.html`** (also MV3 options UI target).
 
@@ -85,8 +85,8 @@ Operator modes (**Fast / Balanced / Deep / Private / Evidence**) tune hosted **`
 
 Copy **[`.env.example`](.env.example)** → **`.env.local`** (gitignored).
 
-- **`VITE_*`** client IDs and optional **`VITE_PRIVACY_POLICY_URL`** for listings / Welcome links  
-- OAuth redirect URIs must match **local dev**, **hosted preview**, or **`chrome-extension://`** flows described in `.env.example`  
+- **`VITE_*`** client IDs and optional **`VITE_PRIVACY_POLICY_URL`** for listings / Welcome links
+- OAuth redirect URIs must match **local dev**, **hosted preview**, or **`chrome-extension://`** flows described in `.env.example`
 - Optional preview gates (`VITE_PREVIEW_*`), intelligence rules URL, membership gate flags — all documented inline in `.env.example`
 
 Privacy copy ships as **`public/privacy-policy.html`**; listings should align with that artifact unless you override with a hosted HTTPS URL.

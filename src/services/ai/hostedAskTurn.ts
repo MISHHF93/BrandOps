@@ -93,8 +93,7 @@ export function buildHostedAskMessages(
   const neuralResume = buildNeuralPhasingResumeBlock(workspace);
   const phased = neuralResume ? `\n\n${neuralResume}` : '';
 
-  let system =
-    `${persona}\n\n${structured}\n\n${citationIx}\n\n${globalBaseline}${phased}\n\nWorkspace context:\n${ctx}${scoped}`;
+  let system = `${persona}\n\n${structured}\n\n${citationIx}\n\n${globalBaseline}${phased}\n\nWorkspace context:\n${ctx}${scoped}`;
   const routingBlock = routingAugmentation?.trim();
   if (routingBlock) {
     system += `\n\nOperator routing & QA hints:\n${routingBlock}`;

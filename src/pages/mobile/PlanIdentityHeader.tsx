@@ -67,8 +67,7 @@ export function PlanIdentityHeader({
     <section
       className={clsx(
         'flex flex-col gap-3',
-        variant === 'card' &&
-          'rounded-2xl border border-border/45 bg-surface/55 px-4 py-4 sm:px-5',
+        variant === 'card' && 'rounded-2xl border border-border/45 bg-surface/55 px-4 py-4 sm:px-5',
         variant === 'sheet' && 'px-0 py-0'
       )}
       aria-labelledby="plan-identity-heading"
@@ -96,9 +95,7 @@ export function PlanIdentityHeader({
 
       <div className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-border/35 bg-bgSubtle/55 px-2.5 py-2">
         <div className="min-w-0 flex-1">
-          <p className="text-fine font-semibold uppercase tracking-wide text-textMuted">
-            Account
-          </p>
+          <p className="text-fine font-semibold uppercase tracking-wide text-textMuted">Account</p>
           <p className="mt-1 break-words text-meta text-textMuted">{accountLine}</p>
           <p
             className={clsx(

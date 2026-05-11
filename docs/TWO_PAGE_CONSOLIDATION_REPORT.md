@@ -29,13 +29,13 @@ BrandOps keeps the **Ask | Plan** dock contract while making nested destinations
 
 ## Files touched (representative)
 
-| Area | Files |
-|------|-------|
-| Docs | `docs/TWO_PAGE_CONSOLIDATION_MAP.md`, `docs/TWO_PAGE_CONSOLIDATION_REPORT.md` |
-| Types | `src/types/brandOpsUnified.ts` |
-| Services | `src/services/ai/trustScore.ts`, `src/services/plan/reviewQueue.ts`, `src/services/plan/governancePoliciesReadout.ts` |
-| Snapshot | `src/pages/mobile/buildWorkspaceSnapshot.ts` |
-| UI | `PlanSurfaceNav.tsx`, `PlanExecutionInsights.tsx`, `mobileApp.tsx`, `MobileWorkspaceHubView.tsx`, `AssistantTraceSummary.tsx`, `MobileChatView.tsx`, `shellSectionCopy.ts` |
+| Area     | Files                                                                                                                                                                      |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Docs     | `docs/TWO_PAGE_CONSOLIDATION_MAP.md`, `docs/TWO_PAGE_CONSOLIDATION_REPORT.md`                                                                                              |
+| Types    | `src/types/brandOpsUnified.ts`                                                                                                                                             |
+| Services | `src/services/ai/trustScore.ts`, `src/services/plan/reviewQueue.ts`, `src/services/plan/governancePoliciesReadout.ts`                                                      |
+| Snapshot | `src/pages/mobile/buildWorkspaceSnapshot.ts`                                                                                                                               |
+| UI       | `PlanSurfaceNav.tsx`, `PlanExecutionInsights.tsx`, `mobileApp.tsx`, `MobileWorkspaceHubView.tsx`, `AssistantTraceSummary.tsx`, `MobileChatView.tsx`, `shellSectionCopy.ts` |
 
 ## Tests added
 

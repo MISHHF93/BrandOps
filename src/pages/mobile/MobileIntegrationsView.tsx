@@ -342,9 +342,7 @@ export const MobileIntegrationsView = ({
                             </span>
                           </div>
                           <p className="mt-0.5 text-fine text-textMuted">{row.source}</p>
-                          <p className="mt-1 text-fine leading-snug text-textSoft">
-                            {row.detail}
-                          </p>
+                          <p className="mt-1 text-fine leading-snug text-textSoft">{row.detail}</p>
                           <p className="mt-1 text-fine text-textSoft">{row.happenedAt}</p>
                         </li>
                       ))}

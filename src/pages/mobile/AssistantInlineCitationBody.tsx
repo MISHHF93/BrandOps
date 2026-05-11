@@ -24,9 +24,7 @@ export function AssistantInlineCitationBody({
   const lookup = useMemo(() => buildCitationLookupMap(citations), [citations]);
 
   if (segments.length === 1 && segments[0].type === 'text') {
-    return (
-      <p className="whitespace-pre-wrap break-words leading-relaxed">{segments[0].text}</p>
-    );
+    return <p className="whitespace-pre-wrap break-words leading-relaxed">{segments[0].text}</p>;
   }
 
   return (
@@ -59,7 +57,9 @@ export function AssistantInlineCitationBody({
                 : `Unresolved citation — no provenance row for “${seg.marker}”`
             }
             aria-label={
-              resolved ? `Open evidence card for citation ${seg.marker}` : `Unresolved citation ${seg.marker}`
+              resolved
+                ? `Open evidence card for citation ${seg.marker}`
+                : `Unresolved citation ${seg.marker}`
             }
             onClick={() => {
               if (targetId) focusEvidenceElement(targetId);

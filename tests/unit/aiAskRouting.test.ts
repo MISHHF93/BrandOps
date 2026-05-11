@@ -37,10 +37,14 @@ describe('aiAskRouting', () => {
   it('includes diagnosticsDetail only when diagnostics enabled', () => {
     const base = cloneSeedData();
     base.settings.aiRoutingDiagnosticsEnabled = false;
-    expect(resolveHostedAssistantRouting({ settings: base.settings }).diagnosticsDetail).toBeUndefined();
+    expect(
+      resolveHostedAssistantRouting({ settings: base.settings }).diagnosticsDetail
+    ).toBeUndefined();
     base.settings.aiRoutingDiagnosticsEnabled = true;
     expect(
-      resolveHostedAssistantRouting({ settings: base.settings }).diagnosticsDetail?.includes('policy=')
+      resolveHostedAssistantRouting({ settings: base.settings }).diagnosticsDetail?.includes(
+        'policy='
+      )
     ).toBe(true);
   });
 });

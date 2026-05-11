@@ -13,7 +13,10 @@ import {
   sanitizeOrphanInlineMarkers
 } from '../../services/ai/aiInlineCitations';
 import { prependAiAssistantTurnTrace } from '../../services/ai/aiAssistantTraceLog';
-import { buildAssistantAskTraceBundle, toAssistantAskTraceSummaryUI } from '../../services/ai/aiTraceBundleBuilder';
+import {
+  buildAssistantAskTraceBundle,
+  toAssistantAskTraceSummaryUI
+} from '../../services/ai/aiTraceBundleBuilder';
 import {
   prependAITraceBundle,
   sanitizeAssistantAskTraceSummaryUI
@@ -167,9 +170,7 @@ const normalizeStoredMessage = (raw: unknown): ChatMessage | null => {
           }
         }
       : {}),
-    ...(Array.isArray(m.citations)
-      ? { citations: sanitizeAiCitationChunks(m.citations) }
-      : {}),
+    ...(Array.isArray(m.citations) ? { citations: sanitizeAiCitationChunks(m.citations) } : {}),
     ...((): Record<string, never> | { orphanInlineMarkers: string[] } => {
       const raw = Array.isArray(m.orphanInlineMarkers)
         ? m.orphanInlineMarkers
@@ -182,7 +183,9 @@ const normalizeStoredMessage = (raw: unknown): ChatMessage | null => {
       );
       return cleaned.length ? { orphanInlineMarkers: cleaned } : {};
     })(),
-    ...((): Record<string, never> | { traceSummary: NonNullable<ReturnType<typeof sanitizeAssistantAskTraceSummaryUI>> } => {
+    ...(():
+      | Record<string, never>
+      | { traceSummary: NonNullable<ReturnType<typeof sanitizeAssistantAskTraceSummaryUI>> } => {
       const ts = sanitizeAssistantAskTraceSummaryUI(m.traceSummary ?? m.trace_summary);
       return ts ? { traceSummary: ts } : {};
     })()

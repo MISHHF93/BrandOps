@@ -13,16 +13,16 @@ BrandOps now persists **operator-facing AI routing modes** (`settings.aiOperator
 
 ## Architecture — AI Integration Suite
 
-| Layer | Responsibility |
-| --- | --- |
-| `src/types/aiIntegrationSuite.ts` | Typed primitives: providers/health (structs), capabilities, task types, routing policies, profiles, pipelines, pipeline runs, evaluation hooks. |
-| `src/services/ai/aiAskRouting.ts` | Mode→policy weights, alternate model suggestions, scoring, max token/temperature tuning, diagnostics strings. |
-| `src/services/ai/hostedAskTurn.ts` | Appends **routing & QA hints** block into hosted Ask system prompts. |
-| `src/pages/mobile/mobileApp.tsx` | Wires routing into `runChatCompletion` (model id + decoding knobs + merged worker token cap). |
-| `src/services/ai/aiPipelineCatalog.ts` | Canonical pipeline definitions (LinkedIn content, grounded answers, audits, governance gate, etc.). |
-| `src/services/ai/aiPipelineRunner.ts` | Executes steps (deterministic digest + optional hosted completion) + constructs audit tags. |
-| `src/services/ai/aiPipelineRunPersistence.ts` | Sanitize + prepend pipeline runs; respects `operatorTraceCollectionEnabled`. |
-| `src/services/storage/storage.ts` | Normalizes settings keys + `aiPipelineRuns` bucket on workspace load/save. |
+| Layer                                         | Responsibility                                                                                                                                  |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/types/aiIntegrationSuite.ts`             | Typed primitives: providers/health (structs), capabilities, task types, routing policies, profiles, pipelines, pipeline runs, evaluation hooks. |
+| `src/services/ai/aiAskRouting.ts`             | Mode→policy weights, alternate model suggestions, scoring, max token/temperature tuning, diagnostics strings.                                   |
+| `src/services/ai/hostedAskTurn.ts`            | Appends **routing & QA hints** block into hosted Ask system prompts.                                                                            |
+| `src/pages/mobile/mobileApp.tsx`              | Wires routing into `runChatCompletion` (model id + decoding knobs + merged worker token cap).                                                   |
+| `src/services/ai/aiPipelineCatalog.ts`        | Canonical pipeline definitions (LinkedIn content, grounded answers, audits, governance gate, etc.).                                             |
+| `src/services/ai/aiPipelineRunner.ts`         | Executes steps (deterministic digest + optional hosted completion) + constructs audit tags.                                                     |
+| `src/services/ai/aiPipelineRunPersistence.ts` | Sanitize + prepend pipeline runs; respects `operatorTraceCollectionEnabled`.                                                                    |
+| `src/services/storage/storage.ts`             | Normalizes settings keys + `aiPipelineRuns` bucket on workspace load/save.                                                                      |
 
 ## Pipelines created (declarative IDs)
 

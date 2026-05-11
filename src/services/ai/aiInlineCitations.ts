@@ -21,7 +21,9 @@ export function evidenceDetailDomId(
   const p = sanitizeEvidenceAnchorPrefix(messageAnchorPrefix);
   const slug =
     c.chunk_id !== undefined && c.chunk_id !== null
-      ? String(c.chunk_id).replace(/[^a-zA-Z0-9_.-]+/g, '_').slice(0, 56)
+      ? String(c.chunk_id)
+          .replace(/[^a-zA-Z0-9_.-]+/g, '_')
+          .slice(0, 56)
       : `idx${citationIndex}`;
   return `bo-ev-${p}-${slug}`;
 }
@@ -41,7 +43,10 @@ export function buildCitationLookupMap(citations: AiCitationChunk[]): Map<string
 }
 
 export function normalizeCitationMarkerToken(raw: string): string {
-  return raw.trim().replace(/^["']|["']$/g, '').trim();
+  return raw
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .trim();
 }
 
 export function resolveCitationMarker(
@@ -54,7 +59,10 @@ export function resolveCitationMarker(
 }
 
 /** Markers in prose that do not resolve to any citation record (audit / QA). */
-export function findOrphanInlineCitationMarkers(body: string, citations: AiCitationChunk[]): string[] {
+export function findOrphanInlineCitationMarkers(
+  body: string,
+  citations: AiCitationChunk[]
+): string[] {
   const lookup = buildCitationLookupMap(citations);
   const raw: string[] = [];
   const re = new RegExp(INLINE_CITATION_PATTERN.source, 'gi');

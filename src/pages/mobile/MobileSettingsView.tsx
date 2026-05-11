@@ -623,8 +623,8 @@ function SettingsEditablePanel({
             <p className="mt-1.5 leading-snug">
               Each value is sent to the operating plan / external models with clear labels to
               prevent ambiguity. In Notification Center prompt template, use{' '}
-              <code className="text-overline text-textSoft">{'{{brand_context}}'}</code> for the full
-              block, or{' '}
+              <code className="text-overline text-textSoft">{'{{brand_context}}'}</code> for the
+              full block, or{' '}
               <code className="text-overline text-textSoft">{'{{brand_operator_name}}'}</code>,{' '}
               <code className="text-overline text-textSoft">{'{{brand_positioning}}'}</code>, etc.
             </p>

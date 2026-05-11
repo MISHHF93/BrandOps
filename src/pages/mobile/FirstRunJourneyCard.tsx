@@ -101,8 +101,8 @@ export function FirstRunJourneyCard({
                   <span className="text-textSoft">2.</span> Pulse & quick picks
                 </p>
                 <p className={stepBodyClass}>
-                  Scroll this tab for Pulse counts, Quick picks, Today snapshot, and the queue — your
-                  workspace hub.
+                  Scroll this tab for Pulse counts, Quick picks, Today snapshot, and the queue —
+                  your workspace hub.
                 </p>
                 <a
                   href="#plan-actions"
@@ -153,13 +153,14 @@ export function FirstRunJourneyCard({
                   <span className="text-textSoft">5.</span> Tune your workspace
                 </p>
                 <p className={stepBodyClass}>
-                  In <span className="font-medium text-text">Settings → Unified workspace</span>, replace
-                  placeholder profile fields, then apply an{' '}
+                  In <span className="font-medium text-text">Settings → Unified workspace</span>,
+                  replace placeholder profile fields, then apply an{' '}
                   <span className="font-medium text-text">operating profile</span> preset (layout,
-                  AI defaults, cadence). Pick a <span className="font-medium text-text">Hosted Ask routing</span>{' '}
-                  mode (Fast / Evidence / …) for hosted <span className="font-medium text-text">ask:</span>{' '}
-                  turns. Use{' '}
-                  <span className="font-medium text-text">Integrations</span> for sources and sync hub rows.
+                  AI defaults, cadence). Pick a{' '}
+                  <span className="font-medium text-text">Hosted Ask routing</span> mode (Fast /
+                  Evidence / …) for hosted <span className="font-medium text-text">ask:</span>{' '}
+                  turns. Use <span className="font-medium text-text">Integrations</span> for sources
+                  and sync hub rows.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <button

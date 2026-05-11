@@ -58,7 +58,7 @@ async function hostedAssistBrief(args: {
   const cap =
     typeof workerCap === 'number' && workerCap > 0 && routing.maxTokens
       ? Math.min(workerCap, routing.maxTokens)
-      : routing.maxTokens ?? workerCap;
+      : (routing.maxTokens ?? workerCap);
   const result = await runChatCompletion(settings, {
     messages,
     model: routing.modelId,

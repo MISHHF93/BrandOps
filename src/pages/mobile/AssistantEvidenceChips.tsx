@@ -58,7 +58,10 @@ export function AssistantEvidenceChips({
                   {title}
                 </span>
                 {ts ? (
-                  <span className="shrink-0 font-mono text-overline text-textSoft" title={c.retrieval_timestamp}>
+                  <span
+                    className="shrink-0 font-mono text-overline text-textSoft"
+                    title={c.retrieval_timestamp}
+                  >
                     {ts}
                   </span>
                 ) : null}
@@ -102,7 +105,9 @@ export function AssistantEvidenceChips({
                   </p>
                 ) : null}
                 {c.multimodal?.uri_hint ? (
-                  <p className="break-all font-mono text-overline text-textSoft">{c.multimodal.uri_hint}</p>
+                  <p className="break-all font-mono text-overline text-textSoft">
+                    {c.multimodal.uri_hint}
+                  </p>
                 ) : null}
                 {c.excerpt ? (
                   <blockquote className="border-l-2 border-accent/35 pl-2 text-textSoft italic">

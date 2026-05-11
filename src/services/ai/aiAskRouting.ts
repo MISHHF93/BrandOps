@@ -43,7 +43,12 @@ export function inferCapabilityFromModelId(modelId: string): AIModelCapability {
     cap.latency_score = 0.9;
     cap.cost_score = 0.88;
     cap.citation_support = 0.5;
-  } else if (m.includes('gpt-4') || m.includes('o1') || m.includes('opus') || m.includes('sonnet')) {
+  } else if (
+    m.includes('gpt-4') ||
+    m.includes('o1') ||
+    m.includes('opus') ||
+    m.includes('sonnet')
+  ) {
     cap.reasoning = 0.9;
     cap.drafting = 0.85;
     cap.summarization = 0.72;
@@ -152,10 +157,7 @@ function routingPolicyForMode(mode: AiOperatorMode): AIRoutingPolicy {
   }
 }
 
-function scoreCapability(
-  cap: AIModelCapability,
-  weights: AIRoutingPolicy['weights']
-): number {
+function scoreCapability(cap: AIModelCapability, weights: AIRoutingPolicy['weights']): number {
   let sum = 0;
   let wsum = 0;
   const entries = Object.entries(weights) as Array<[keyof AIModelCapability, number]>;

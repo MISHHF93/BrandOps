@@ -109,7 +109,13 @@ function sanitizeEvidenceLink(raw: unknown, fallbackTraceId: string): EvidenceLi
     'affects_workspace',
     'derived_from'
   ]);
-  if (!link_id || !from_artifact_id || !to_artifact_id || !rel || !allowed.has(rel as EvidenceLink['relation']))
+  if (
+    !link_id ||
+    !from_artifact_id ||
+    !to_artifact_id ||
+    !rel ||
+    !allowed.has(rel as EvidenceLink['relation'])
+  )
     return null;
   return {
     link_id,

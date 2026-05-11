@@ -201,9 +201,7 @@ export const CockpitPipelineWorkstreamSection = ({
                   {row.status} · {formatPeekDue(row.loggedAt)}
                 </p>
                 {row.summaryPreview ? (
-                  <p className="mt-1 text-fine leading-snug text-textMuted">
-                    {row.summaryPreview}
-                  </p>
+                  <p className="mt-1 text-fine leading-snug text-textMuted">{row.summaryPreview}</p>
                 ) : null}
                 <button
                   type="button"
