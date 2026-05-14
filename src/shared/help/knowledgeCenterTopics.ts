@@ -120,11 +120,11 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     id: 'integration-registry',
     title: 'Integration registry (what is real today)',
     summary:
-      'Hub sources are workspace records on this device. Automated vendor sync ships incrementally; the vitality strip’s Sync hub counts Google, GitHub, and LinkedIn preferences only.',
+      'Hub sources are workspace records on this device. Automated vendor sync ships incrementally; the Pulse strip’s Sync hub counts Google, GitHub, and LinkedIn preferences only.',
     paragraphs: [
       'When you use **Add via Chat** or run **connect … source:** / **add source:**, BrandOps stores an **integration hub source** in extension-local storage. That row captures kind, display name, default artifact categories, and tags so Chat, Today, and Settings stay aligned — it does **not** by itself call vendor APIs or stream live CRM/issue/doc data.',
       '**Captured artifacts** under Technical inventory are workspace objects (you or the agent add them). Treat them as structured notes until a future connector pulls from an external system.',
-      'The vitality counters **Sources** vs **Sync hub** mean different things: **Sources** counts hub rows you registered; **Sync hub** reflects Google, GitHub, and LinkedIn **preference** rows from Settings (they may still show disconnected until OAuth is completed in your build).',
+      'The Pulse counters **Sources** vs **Sync hub** mean different things: **Sources** counts hub rows you registered; **Sync hub** reflects Google, GitHub, and LinkedIn **preference** rows from Settings (they may still show disconnected until OAuth is completed in your build).',
       'For backups and audits, use **Export workspace JSON** (Settings → Data safety). Multi-device continuity is manual until optional cloud sync exists.'
     ]
   },

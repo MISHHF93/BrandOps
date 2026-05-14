@@ -1,6 +1,6 @@
 # BrandOps
 
-**BrandOps** is a **Chrome Extension (Manifest V3)** and optional **Capacitor mobile shell** for a command-first operator workspace: local-first workspace JSON, workspace vitality dashboards (Pulse / Today / Integrations), Assistant chat with **`ask:`** hooks toward OpenAI-compatible hosts when configured, and LinkedIn overlay tooling. One React + TypeScript + Tailwind tree builds **`dist/`** for extension packaging and native **`webDir`**.
+**BrandOps** is a **Chrome Extension (Manifest V3)** and optional **Capacitor mobile shell** for a command-first operator workspace: local-first workspace JSON, the **Pulse** read-only metric strip on Plan and Today (filtered summaries on Integrations and Settings), Assistant chat with **`ask:`** hooks toward OpenAI-compatible hosts when configured, and LinkedIn overlay tooling. One React + TypeScript + Tailwind tree builds **`dist/`** for extension packaging and native **`webDir`**.
 
 ---
 

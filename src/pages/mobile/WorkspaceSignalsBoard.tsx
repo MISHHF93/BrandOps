@@ -284,7 +284,6 @@ function VitalityMetricCell({ m, valueId }: { m: MetricCell; valueId: string }) 
 export type WorkspaceSignalsBoardVariant =
   | 'today'
   | 'pulse'
-  | 'workspace'
   | 'integrations'
   | 'settings'
   | 'chat';
@@ -294,7 +293,7 @@ export interface WorkspaceSignalsBoardProps {
   variant?: WorkspaceSignalsBoardVariant;
   /** Omit for the full seven-metric cockpit. */
   includeKeys?: readonly VitalityMetricKey[];
-  /** Overrides mast headline (default: Workspace vitality). */
+  /** Overrides mast headline (default: full strip → Pulse; filtered strip → Workspace vitality). */
   mastHeadline?: string;
   /** Merge labels/tooltips per metric key (e.g. Integrations tab sync-hub honesty). */
   cellOverrides?: Partial<
@@ -302,12 +301,14 @@ export interface WorkspaceSignalsBoardProps {
   >;
 }
 
+function defaultMastHeadline(filtered: boolean): string {
+  return filtered ? 'Workspace vitality' : 'Pulse';
+}
+
 function vitalitySrId(variant: WorkspaceSignalsBoardVariant) {
   switch (variant) {
     case 'pulse':
       return 'pulse-vitality-sr-title';
-    case 'workspace':
-      return 'workspace-vitality-sr-title';
     case 'integrations':
       return 'integrations-vitality-sr-title';
     case 'settings':
@@ -325,7 +326,7 @@ function vitalitySubtitle(variant: WorkspaceSignalsBoardVariant, filtered: boole
       case 'integrations':
         return 'Connection-facing counts for this workspace — expand sections below for full lists.';
       case 'settings':
-        return 'Selected counts while you configure behavior — matches Workspace / Today vitality math.';
+        return 'Selected counts while you configure behavior — matches Plan / Today pulse strip math.';
       case 'chat':
         return 'Counters from your live snapshot — run commands below to shift these.';
       default:
@@ -333,12 +334,9 @@ function vitalitySubtitle(variant: WorkspaceSignalsBoardVariant, filtered: boole
     }
   }
   if (variant === 'pulse') {
-    return 'Due-next counts only — open Today for focus lanes.';
-  }
-  if (variant === 'workspace') {
     return 'Live workspace counters — publishing pipeline, cadence, captures, and sync hub — queue below is soonest-first, not a feed.';
   }
-  return 'Read-only counters from your workspace snapshot — shared across Workspace and Today.';
+  return 'Same pulse strip as Plan — read-only counters; scroll for Today focus lanes.';
 }
 
 /**
@@ -353,7 +351,9 @@ export function WorkspaceSignalsBoard({
   cellOverrides
 }: WorkspaceSignalsBoardProps) {
   const all = buildCells(metrics);
-  const cellsRaw = includeKeys?.length ? all.filter((c) => includeKeys.includes(c.key)) : all;
+  const keys = includeKeys ?? [];
+  const filtered = keys.length > 0;
+  const cellsRaw = filtered ? all.filter((c) => keys.includes(c.key)) : all;
   const cells = cellsRaw.map((c) => ({ ...c, ...cellOverrides?.[c.key] }));
 
   if (cells.length === 0) {
@@ -362,6 +362,7 @@ export function WorkspaceSignalsBoard({
 
   const srId = vitalitySrId(variant);
   const fewBand = cells.length < 11;
+  const headline = mastHeadline ?? defaultMastHeadline(filtered);
 
   return (
     <section aria-labelledby={srId} className="bo-vitality-board">
@@ -371,17 +372,17 @@ export function WorkspaceSignalsBoard({
         </span>
         <div className="min-w-0">
           <p id={srId} className="text-label font-semibold text-text">
-            {mastHeadline ?? 'Workspace vitality'}
+            {headline}
           </p>
           <p className="text-meta text-textSoft">
-            {vitalitySubtitle(variant, Boolean(includeKeys?.length))}
+            {vitalitySubtitle(variant, filtered)}
           </p>
         </div>
       </div>
       <div
         className={clsx('bo-vitality-grid', fewBand && 'bo-vitality-grid--few')}
         role="group"
-        aria-label="Workspace metric instruments, read-only — not interactive controls"
+        aria-label="Pulse metric instruments, read-only — not interactive controls"
       >
         {cells.map((m) => (
           <VitalityMetricCell key={m.key} m={m} valueId={`vitality-val-${variant}-${m.key}`} />

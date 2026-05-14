@@ -231,8 +231,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('>Do today<');
     expect(html).toContain('>Urgent<');
     expect(html).toContain('>Momentum<');
-    expect(html).toContain('Workspace vitality');
-    expect(html).toContain('Workspace metric instruments');
+    expect(html).toContain('>Pulse<');
+    expect(html).toContain('Pulse metric instruments');
     expect(html).toContain('Publish queue');
     expect(html).toContain('Sync hub');
     expect(html).toContain('bo-metric-tile');
