@@ -24,10 +24,20 @@ interface ImportMetaEnv {
   /** Injected on Vercel builds (`VERCEL=1`); used for hosted demo routing only. */
   readonly VITE_VERCEL?: string;
   /**
+   * Optional absolute site origin (no trailing slash), e.g. `https://your-app.vercel.app`.
+   * Build-time: makes `og:image` / `twitter:image` absolute for link previews. Omit for path-only `/branding/og-image.png`.
+   */
+  readonly VITE_PUBLIC_ORIGIN?: string;
+  /**
    * If `1` or `true`, require active paid membership after sign-in (Chat, Today, Integrations, etc.).
    * Omit or `0` during local development / pre-launch builds.
    */
   readonly VITE_ENFORCE_MEMBERSHIP_GATE?: string;
+  /**
+   * If `1` or `true`, skip the launch sign-in gate so users land directly in the app (no simulated provider pick).
+   * Settings still lists account / sign-in for optional verification. Omit for Chrome Web Store / production.
+   */
+  readonly VITE_SKIP_LAUNCH_AUTH?: string;
   /**
    * Optional HTTPS URL to a JSON intelligence rules pack (partial patch over embedded defaults).
    * When unset, the client may still load `/brandops-intelligence-rules.json` from the deploy origin.
