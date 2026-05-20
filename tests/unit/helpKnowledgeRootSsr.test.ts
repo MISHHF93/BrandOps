@@ -7,7 +7,7 @@ describe('HelpKnowledgeRoot (SSR)', () => {
   it('renders Knowledge Center landmarks and manual sections', () => {
     const html = renderToString(React.createElement(HelpKnowledgeRoot));
     expect(html).toContain('Knowledge Center');
-    expect(html).toContain('Workspace');
+    expect(html).toContain('>Plan</a>');
     expect(html).toContain('Assistant');
     expect(html).toContain('>Today</a>');
     expect(html).toContain('Integrations tab');

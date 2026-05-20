@@ -2,6 +2,9 @@
  * BrandOps persisted workspace types (Chrome `storage.local` / web LocalStorage).
  * Do not duplicate these shapes elsewhere — extend here, then normalize in `storage.ts`.
  */
+import type { FocusKpiSelfCheck, OperatorTwinSettings } from '../shared/operatorTwin/operatorTwinTypes';
+
+export type { FocusKpiSelfCheck, OperatorTwinSettings };
 export type ExtensionSurface = 'dashboard' | 'integrations' | 'content';
 
 export type WorkspaceModuleId =
@@ -388,11 +391,6 @@ export interface NotificationCenterSettings {
   promptTemplate: string;
   datasetReviewEnabled: boolean;
   integrationReviewEnabled: boolean;
-  /**
-   * Compressed résumé / CV grounding for hosted Ask (sections · skills · roles · bullets).
-   * Populated from Settings; fed under explicit neural-phasing instructions so models infer expertise without overriding Brand facts.
-   */
-  resumeNeuralPhaseContext: string;
 }
 
 /** Canonical schedule only — legacy JSON variants normalize to balanced on load. */
@@ -594,6 +592,8 @@ export interface AppSettings {
   automationRules: AutomationRule[];
   syncHub: SyncHubSettings;
   notificationCenter: NotificationCenterSettings;
+  /** Operator twin: résumé Phase R artifact, ingest metadata, lightweight KPI self-checks. */
+  operatorTwin: OperatorTwinSettings;
   cadenceFlow: CadenceFlowSettings;
   aiBridge: AiBridgeSettings;
   /** Named hosted Ask copilots + active selection for Assistant. */

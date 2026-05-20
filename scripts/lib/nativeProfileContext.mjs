@@ -60,9 +60,15 @@ export function extractNativeProfileFromWorkspaceExport(data, resumeArtifact = '
     data.settings?.notificationCenter && typeof data.settings.notificationCenter === 'object'
       ? data.settings.notificationCenter
       : {};
+  const ot =
+    data.settings?.operatorTwin && typeof data.settings.operatorTwin === 'object'
+      ? data.settings.operatorTwin
+      : {};
   const pt = asNonNullStr(nc.promptTemplate).slice(0, 160);
-  /** Workspace Phase R (extension Settings); `--resume` file artifact wins when both exist. */
-  const storedPhaseR = asNonNullStr(nc.resumeNeuralPhaseContext).slice(0, 1200);
+  /** Workspace résumé artifact (`settings.operatorTwin.resumeArtifact`); CLI `--resume` wins when set. */
+  const storedPhaseR = asNonNullStr(
+    typeof ot.resumeArtifact === 'string' ? ot.resumeArtifact : ''
+  ).slice(0, 1200);
   const ra = asNonNullStr(resumeArtifact).slice(0, 1200);
   const resumeMerged = ra || storedPhaseR;
   return buildNativeProfileBlob({

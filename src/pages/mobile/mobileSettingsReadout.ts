@@ -115,8 +115,8 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
     preferredModel: nc.preferredModel || '—',
     roleContextPreview: clip(nc.roleContext, 120),
     promptTemplatePreview: clip(nc.promptTemplate, 120),
-    resumeNeuralPhasePreview: nc.resumeNeuralPhaseContext.trim().length
-      ? clip(nc.resumeNeuralPhaseContext, 140)
+    resumeNeuralPhasePreview: s.operatorTwin.resumeArtifact.trim().length
+      ? clip(s.operatorTwin.resumeArtifact, 140)
       : '—',
     datasetReviewEnabled: nc.datasetReviewEnabled,
     integrationReviewEnabled: nc.integrationReviewEnabled,

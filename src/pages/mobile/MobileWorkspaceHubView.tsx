@@ -152,6 +152,10 @@ export const MobileWorkspaceHubView = ({
               <kbd className="rounded bg-bgSubtle px-1 py-px font-mono text-fine text-text">⌘K</kbd>{' '}
               — Assistant stays on Ask.
             </p>
+            <p className="mt-2 text-fine leading-snug text-textSoft">
+              Understand résumé and operating context → keep an accurate operator/org model → act to
+              offload work and lift execution.
+            </p>
           </header>
 
           <PlanDestinationGrid

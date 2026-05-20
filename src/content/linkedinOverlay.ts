@@ -12,6 +12,7 @@ import {
 const ROOT_ID = 'brandops-linkedin-companion-root';
 const STYLE_ID = 'brandops-linkedin-companion-style';
 const PANEL_VISIBLE_KEY = 'brandops:linkedin-companion:open';
+const LAUNCHER_ICON_PATH = 'icons/48.png';
 
 type StatusTone = 'info' | 'success' | 'error';
 
@@ -178,6 +179,13 @@ const ensureStyles = () => {
         border-color var(--duration-liquid-hover) var(--ease-liquid-out);
       font-size: 18px;
       font-weight: 700;
+    }
+    .brandops-launcher img {
+      display: block;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      object-fit: cover;
     }
     .brandops-launcher:hover {
       transform: translateY(-0.5px);
@@ -670,7 +678,11 @@ const buildCompanion = async () => {
   launcher.className = 'brandops-launcher';
   launcher.setAttribute('aria-label', 'Open BrandOps LinkedIn companion');
   launcher.setAttribute('aria-expanded', 'false');
-  launcher.textContent = '♛';
+  const launcherLogo = document.createElement('img');
+  launcherLogo.src = chrome.runtime.getURL(LAUNCHER_ICON_PATH);
+  launcherLogo.alt = '';
+  launcherLogo.setAttribute('aria-hidden', 'true');
+  launcher.append(launcherLogo);
 
   const panel = await createPanel();
 

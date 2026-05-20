@@ -4,7 +4,7 @@ import {
   hrefHelpPage,
   hrefPrimaryAppChat,
   hrefPrimaryAppIntegrationsTab,
-  hrefPrimaryAppPulse,
+  hrefPrimaryAppPlanHub,
   hrefPrimaryAppSettingsTab,
   hrefPrimaryAppToday,
   hrefSignIn,
@@ -28,7 +28,7 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
   const signUpHref = hrefSignUp();
   const settingsHref = hrefPrimaryAppSettingsTab();
   const mainAppChatHref = hrefPrimaryAppChat();
-  const pulseHref = hrefPrimaryAppPulse();
+  const planHubHref = hrefPrimaryAppPlanHub();
   const todayHref = hrefPrimaryAppToday();
   const integrationsTabHref = hrefPrimaryAppIntegrationsTab();
   const integrationsHubHref = hrefExtensionIntegrationsPage();
@@ -47,8 +47,8 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       <a className={linkClass} href={signUpHref}>
         Sign up
       </a>
-      <a className={linkClass} href={pulseHref} title="mobile.html?section=workspace">
-        Workspace
+      <a className={linkClass} href={planHubHref} title="mobile.html?section=workspace">
+        Plan
       </a>
       <a className={linkClass} href={mainAppChatHref}>
         Assistant

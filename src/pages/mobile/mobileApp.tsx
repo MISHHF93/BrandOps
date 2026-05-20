@@ -69,7 +69,11 @@ import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocu
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
 import { CircleHelp, Search } from 'lucide-react';
-import { SHELL_SCREEN_TITLE, SHELL_TAB_SR_SUMMARY } from './shellSectionCopy';
+import {
+  SHELL_SCREEN_TITLE,
+  SHELL_TAB_SR_SUMMARY,
+  shellPlanStackLandmarkLabel
+} from './shellSectionCopy';
 import { runSettingsConfigure } from './runSettingsConfigure';
 import { applyDocumentThemeFromAppSettings } from '../../shared/ui/theme';
 import {
@@ -414,7 +418,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  /** Opens Unified workspace + scroll to Résumé grounding when incremented (Assistant link / URL hash). */
+  /** Opens Unified workspace + scroll to operator twin résumé ingest when incremented (Assistant link / URL hash). */
   const [resumePhaseRevealKey, setResumePhaseRevealKey] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
@@ -1316,24 +1320,63 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       try {
         const data = await storageService.getData();
         const next = compressed.trim().slice(0, 12_000);
-        if (data.settings.notificationCenter.resumeNeuralPhaseContext === next) return;
+        const ot = data.settings.operatorTwin;
+        if (ot.resumeArtifact === next) return;
         await storageService.setData({
           ...data,
           settings: {
             ...data.settings,
-            notificationCenter: {
-              ...data.settings.notificationCenter,
-              resumeNeuralPhaseContext: next
+            operatorTwin: {
+              ...ot,
+              resumeArtifact: next,
+              version: next.length ? ot.version + 1 : 0,
+              lastIngestAt: next.length ? new Date().toISOString() : undefined,
+              sourceSummary: next.length ? ot.sourceSummary : undefined
             }
           }
         });
         await refreshWorkspaceSnapshot();
         setDataOpsHint(
-          next.length > 0 ? 'Résumé grounding saved for hosted Ask.' : 'Résumé grounding cleared.'
+          next.length > 0
+            ? 'Operator twin: résumé artifact saved for hosted Ask.'
+            : 'Operator twin: résumé artifact cleared.'
         );
       } catch (err) {
-        console.error('BrandOps: resume neural phase persist failed', err);
-        setDataOpsHint('Could not update résumé grounding.');
+        console.error('BrandOps: operator twin résumé persist failed', err);
+        setDataOpsHint('Could not update operator twin ingest.');
+        throw err;
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  const persistKpiSelfCheck = useCallback(
+    async (score: 1 | 2 | 3 | 4 | 5, note: string) => {
+      try {
+        const data = await storageService.getData();
+        const ot = data.settings.operatorTwin;
+        const row = {
+          score,
+          note: note.trim().slice(0, 400),
+          recordedAt: new Date().toISOString()
+        };
+        const prev = ot.kpiSelfChecks ?? [];
+        const kpiSelfChecks = [row, ...prev].slice(0, 24);
+        await storageService.setData({
+          ...data,
+          settings: {
+            ...data.settings,
+            operatorTwin: {
+              ...ot,
+              kpiSelfChecks
+            }
+          }
+        });
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint('Focus metric check-in saved.');
+      } catch (err) {
+        console.error('BrandOps: KPI self-check persist failed', err);
+        setDataOpsHint('Could not save check-in.');
         throw err;
       }
     },
@@ -1401,7 +1444,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               <button
                 type="button"
                 onClick={() => setCommandPaletteOpen(true)}
-                aria-label="Open workspace command palette"
+                aria-label="Open command palette"
                 title="Commands & search (⌘K / Ctrl+K)"
                 className={clsx(
                   'bo-mobile-help-btn rounded-xl border border-border/45 bg-surface/50 p-2.5 text-textMuted transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive hover:text-text',
@@ -1484,7 +1527,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               'bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-4 pb-6 text-sm text-textMuted motion-reduce:animate-none',
               MOBILE_SHELL_EDGE_PAD_CLASS
             )}
-            aria-label={`${activeTab} tab`}
+            aria-label={shellPlanStackLandmarkLabel(activeTab)}
           >
             <PlanSurfaceNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />
             {activeTab === 'workspace' ? (
@@ -1531,6 +1574,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onOpenInAppSettings={() => commitTab('settings')}
                 activeWorkstream={cockpitWorkstream}
                 onSelectWorkstream={handleSelectWorkstream}
+                onRecordKpiSelfCheck={persistKpiSelfCheck}
               />
             ) : null}
 

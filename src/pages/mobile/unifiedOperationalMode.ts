@@ -68,7 +68,7 @@ function livePresetHeadline(inferredPresetId: OperatingPresetId | 'custom'): str
 
 /**
  * Single read-only summary of “how this workspace is operating” for Settings:
- * fixed daily cadence, cockpit chrome, AI policy, bridge, copilot, optional Phase R.
+ * fixed daily cadence, cockpit chrome, AI policy, bridge, copilot, optional operator twin résumé ingest.
  */
 export function buildUnifiedOperationalModeSummary(input: {
   readout: MobileSettingsFullReadout;
@@ -93,7 +93,7 @@ export function buildUnifiedOperationalModeSummary(input: {
 
   const resume = readout.resumeNeuralPhasePreview.trim();
   if (resume && resume !== '—') {
-    facets.push('Résumé Phase R grounding is saved — Ask appends compressed résumé context.');
+    facets.push('Operator twin résumé ingest is saved — hosted Ask appends the compressed artifact.');
   }
 
   const saved = readout.operatingProfileLastApplied.trim();

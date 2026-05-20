@@ -13,6 +13,7 @@ import {
   ContentItemStatus,
   ContentItemType,
   ContentLibraryItem,
+  FocusKpiSelfCheck,
   FollowUpTask,
   MessagingVaultEntry,
   Opportunity,
@@ -879,12 +880,79 @@ const normalizeNotificationCenterSettings = (
     integrationReviewEnabled:
       typeof candidate.integrationReviewEnabled === 'boolean'
         ? candidate.integrationReviewEnabled
-        : fallback.integrationReviewEnabled,
-    resumeNeuralPhaseContext:
-      typeof candidate.resumeNeuralPhaseContext === 'string'
-        ? candidate.resumeNeuralPhaseContext.trim().slice(0, 12_000)
-        : fallback.resumeNeuralPhaseContext
+        : fallback.integrationReviewEnabled
   };
+};
+
+const normalizeOperatorTwinSettings = (
+  value: unknown,
+  legacyNotificationCenter: unknown,
+  fallback: BrandOpsData['settings']['operatorTwin']
+): BrandOpsData['settings']['operatorTwin'] => {
+  const legacyResume =
+    legacyNotificationCenter &&
+    typeof legacyNotificationCenter === 'object' &&
+    typeof (legacyNotificationCenter as { resumeNeuralPhaseContext?: unknown })
+      .resumeNeuralPhaseContext === 'string'
+      ? String(
+          (legacyNotificationCenter as { resumeNeuralPhaseContext: string }).resumeNeuralPhaseContext
+        )
+          .trim()
+          .slice(0, 12_000)
+      : '';
+
+  const candidate =
+    value && typeof value === 'object'
+      ? (value as Partial<BrandOpsData['settings']['operatorTwin']>)
+      : {};
+
+  let resumeArtifact =
+    typeof candidate.resumeArtifact === 'string'
+      ? candidate.resumeArtifact.trim().slice(0, 12_000)
+      : '';
+  if (!resumeArtifact.length && legacyResume.length) {
+    resumeArtifact = legacyResume;
+  }
+
+  let version =
+    typeof candidate.version === 'number' && Number.isFinite(candidate.version)
+      ? Math.max(0, Math.min(1_000_000, Math.round(candidate.version)))
+      : 0;
+  if (resumeArtifact.length > 0 && version === 0) {
+    version = 1;
+  }
+
+  const lastIngestAt =
+    typeof candidate.lastIngestAt === 'string' && candidate.lastIngestAt.trim().length >= 10
+      ? candidate.lastIngestAt.trim().slice(0, 40)
+      : undefined;
+  const sourceSummary =
+    typeof candidate.sourceSummary === 'string'
+      ? candidate.sourceSummary.trim().slice(0, 240)
+      : undefined;
+
+  let kpiSelfChecks: FocusKpiSelfCheck[] = Array.isArray(fallback.kpiSelfChecks)
+    ? [...fallback.kpiSelfChecks]
+    : [];
+  if (Array.isArray(candidate.kpiSelfChecks)) {
+    const next: FocusKpiSelfCheck[] = [];
+    for (const row of candidate.kpiSelfChecks) {
+      if (!row || typeof row !== 'object') continue;
+      const r = row as Partial<FocusKpiSelfCheck>;
+      const score = r.score;
+      if (score !== 1 && score !== 2 && score !== 3 && score !== 4 && score !== 5) continue;
+      const recordedAt =
+        typeof r.recordedAt === 'string' && r.recordedAt.trim().length >= 10
+          ? r.recordedAt.trim().slice(0, 40)
+          : new Date().toISOString();
+      const note = typeof r.note === 'string' ? r.note.trim().slice(0, 400) : '';
+      next.push({ score, recordedAt, note });
+      if (next.length >= 24) break;
+    }
+    kpiSelfChecks = next;
+  }
+
+  return { resumeArtifact, version, lastIngestAt, sourceSummary, kpiSelfChecks };
 };
 
 const normalizeCadenceFlowSettings = (value: unknown): BrandOpsData['settings']['cadenceFlow'] => {
@@ -1375,6 +1443,11 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
       : fallback.automationRules,
     syncHub: normalizeSyncHubSettings(candidate.syncHub),
     notificationCenter: normalizeNotificationCenterSettings(candidate.notificationCenter),
+    operatorTwin: normalizeOperatorTwinSettings(
+      candidate.operatorTwin,
+      candidate.notificationCenter,
+      fallback.operatorTwin
+    ),
     cadenceFlow: normalizeCadenceFlowSettings(candidate.cadenceFlow),
     aiBridge: normalizeAiBridgeSettings(candidate.aiBridge, fallback.aiBridge),
     copilotWorkers: normalizeCopilotWorkerRegistry(

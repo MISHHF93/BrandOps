@@ -2,8 +2,9 @@ import { CalendarCheck2, LayoutDashboard, MessageCircle, PlugZap, Settings } fro
 import type { MobileShellTabId } from './mobileShellQuery';
 
 /**
- * Bottom dock: **two surfaces** — Assistant (chat) and Workspace (overview + entry to deeper panels).
- * Full URLs still expose `section=today|integrations|settings|…`.
+ * Bottom dock: **Ask | Plan** — `chat` (dock “Ask”) and `workspace` (dock “Plan” cell).
+ * Plan strip tabs (`PlanSurfaceNav`) open `daily` | `integrations` | `settings` while keeping the Plan dock lit.
+ * Tab id ↔ URL mapping: `mobileShellQuery.ts`.
  */
 export const MOBILE_SHELL_NAV_TABS: ReadonlyArray<{
   id: 'chat' | 'workspace';

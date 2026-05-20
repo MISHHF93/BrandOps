@@ -232,8 +232,12 @@ Built Python NLP pipelines for production.
       settings: {
         notificationCenter: {
           roleContext: 'Staff AI engineer',
-          promptTemplate: 'Be precise.',
-          resumeNeuralPhaseContext: ''
+          promptTemplate: 'Be precise.'
+        },
+        operatorTwin: {
+          resumeArtifact: '',
+          version: 0,
+          kpiSelfChecks: []
         }
       }
     });
@@ -241,12 +245,14 @@ Built Python NLP pipelines for production.
     expect(blob).toContain('role:Staff AI engineer');
   });
 
-  it('workspace export merges resumeNeuralPhaseContext when no explicit resumeArtifact arg', () => {
+  it('workspace export merges operatorTwin.resumeArtifact when no explicit resumeArtifact arg', () => {
     const blob = extractNativeProfileFromWorkspaceExport({
       brand: { operatorName: 'Riley', positioning: 'ML' },
       settings: {
-        notificationCenter: {
-          resumeNeuralPhaseContext: 'sections:a | skills:python'
+        operatorTwin: {
+          resumeArtifact: 'sections:a | skills:python',
+          version: 1,
+          kpiSelfChecks: []
         }
       }
     });
@@ -255,13 +261,15 @@ Built Python NLP pipelines for production.
     expect(blob.toLowerCase()).toContain('python');
   });
 
-  it('explicit resumeArtifact overrides resumeNeuralPhaseContext', () => {
+  it('explicit resumeArtifact arg overrides operatorTwin.resumeArtifact', () => {
     const blob = extractNativeProfileFromWorkspaceExport(
       {
         brand: { operatorName: 'Riley', positioning: 'ML' },
         settings: {
-          notificationCenter: {
-            resumeNeuralPhaseContext: 'sections:stored-only'
+          operatorTwin: {
+            resumeArtifact: 'sections:stored-only',
+            version: 1,
+            kpiSelfChecks: []
           }
         }
       },

@@ -78,7 +78,7 @@ export interface MobileChatViewProps {
   transcriptEndRef?: RefObject<HTMLDivElement>;
   /** Open global command palette — same catalogue as Plan and ⌘K */
   onOpenCommandPalette?: () => void;
-  /** Jump to Settings → Résumé grounding (hosted Ask Phase R). */
+  /** Jump to Settings → operator twin résumé ingest (hosted Ask). */
   onOpenResumeGrounding?: () => void;
   /** One-line hosted routing stance — surfaced below Assistant headline (optional). */
   assistantRoutingCaption?: string;
@@ -155,7 +155,7 @@ export const MobileChatView = ({
               onClick={onOpenResumeGrounding}
               className={clsx('bo-link bo-link--sm font-semibold !normal-case', btnFocus)}
             >
-              Résumé grounding for Ask (Phase R)
+              Operator twin — résumé ingest (hosted Ask)
             </button>
             <span className="text-textMuted"> — compress CV in Settings; improves hosted </span>
             <span className="whitespace-nowrap font-mono text-fine text-textSoft">ask:</span>

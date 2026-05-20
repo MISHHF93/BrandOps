@@ -6,6 +6,7 @@ import type {
   BrandVault,
   BrandVaultListField,
   CopilotWorkerRegistrySettings,
+  FocusKpiSelfCheck,
   IntegrationSourceKind,
   SchedulerTask,
   SchedulerTaskStatus
@@ -25,6 +26,7 @@ import type { PulseTimelineRow } from './pulseTimeline';
 import { buildPulseTimeline } from './pulseTimeline';
 import type { AiOperatorMode, PipelineRun } from '../../types/aiIntegrationSuite';
 import { countPendingOperatorReviews } from '../../services/plan/reviewQueue';
+import { getOperatorTwinResumeArtifact } from '../../services/operatorTwin/readResumeArtifact';
 
 function formatAiOperatorMode(mode: AiOperatorMode): string {
   const labels: Record<AiOperatorMode, string> = {
@@ -287,8 +289,10 @@ export interface MobileWorkspaceSnapshot {
   sshTargetsCount: number;
   nextPublishingHint: string | null;
   settingsFullReadout: MobileSettingsFullReadout;
-  /** Preview of persisted Phase R résumé artifact (`notificationCenter.resumeNeuralPhaseContext`). */
+  /** Preview of persisted Phase R résumé artifact (`settings.operatorTwin.resumeArtifact`). */
   resumeNeuralPhaseArtifactPreview: string;
+  /** Recent focus-metric self check-ins (operator twin KPI loop). */
+  kpiSelfChecksPreview: FocusKpiSelfCheck[];
   /** Named hosted Ask copilots + active id — Assistant picker reads this without touching storage. */
   copilotWorkerRegistry: CopilotWorkerRegistrySettings;
   /** Assistant headline helper — reflects hosted routing stance for ask:. */
@@ -362,6 +366,7 @@ export type CockpitDailySnapshot = Pick<
   | 'cockpitBrandVaultReadout'
   | 'integrationArtifactsPeek'
   | 'sshTargetsPeek'
+  | 'kpiSelfChecksPreview'
 >;
 
 function buildRecentAiPipelineRuns(workspace: BrandOpsData): PipelineRun[] {
@@ -455,10 +460,8 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     opportunitiesToClose,
     cadenceHeadline,
     settingsFullReadout: buildMobileSettingsFullReadout(workspace),
-    resumeNeuralPhaseArtifactPreview: truncatePeek(
-      workspace.settings.notificationCenter.resumeNeuralPhaseContext,
-      200
-    ),
+    resumeNeuralPhaseArtifactPreview: truncatePeek(getOperatorTwinResumeArtifact(workspace), 200),
+    kpiSelfChecksPreview: (workspace.settings.operatorTwin.kpiSelfChecks ?? []).slice(0, 5),
     copilotWorkerRegistry: workspace.settings.copilotWorkers,
     aiAssistantRoutingCaption: buildAiAssistantRoutingCaption(workspace.settings),
     cockpitOpportunityPeek: activeOpportunities.slice(0, 5).map((o) => ({

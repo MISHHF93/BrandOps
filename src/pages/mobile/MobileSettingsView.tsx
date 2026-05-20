@@ -212,7 +212,7 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
     ['Preferred model', r.preferredModel],
     ['Role context', r.roleContextPreview],
     ['Prompt template', r.promptTemplatePreview],
-    ['Résumé Phase R (preview)', r.resumeNeuralPhasePreview],
+    ['Operator twin — résumé (preview)', r.resumeNeuralPhasePreview],
     ['Dataset review', r.datasetReviewEnabled ? 'yes' : 'no'],
     ['Integration review', r.integrationReviewEnabled ? 'yes' : 'no'],
     ['Deep work blocks', String(r.deepWorkBlockCount)],
@@ -755,12 +755,12 @@ export interface MobileSettingsViewProps {
   onOpenBillingPortal?: () => void;
   /** Persist unified Operating profile choice after successful `configure:` apply. */
   onOperatingProfileApplied?: (presetId: OperatingPresetId | 'custom') => void | Promise<void>;
-  /** Persist compressed résumé artifact for hosted Ask Phase R (empty clears). */
+  /** Persist compressed résumé artifact on operator twin (empty clears). */
   onPersistResumeNeuralPhaseContext?: (compressed: string) => void | Promise<void>;
   /** Hosted Ask routing stance (`ask:` model scoring). */
   onAiOperatorModeChange: (mode: AiOperatorMode) => void | Promise<void>;
   onAiRoutingDiagnosticsChange: (enabled: boolean) => void | Promise<void>;
-  /** Bump to open Unified workspace + scroll to Résumé grounding (Assistant shortcut / deep link). */
+  /** Bump to open Unified workspace + scroll to operator twin résumé ingest (Assistant shortcut / deep link). */
   resumePhaseRevealKey?: number;
 }
 

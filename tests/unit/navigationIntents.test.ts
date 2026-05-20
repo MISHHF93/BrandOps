@@ -14,6 +14,7 @@ import {
   hrefPrimaryAppDefault,
   hrefPrimaryAppIntegrationsTab,
   hrefPrimaryAppPipeline,
+  hrefPrimaryAppPlanHub,
   hrefPrimaryAppPulse,
   hrefPrimaryAppSettingsTab,
   hrefPrimaryAppToday
@@ -30,7 +31,8 @@ describe('navigationIntents', () => {
     expect(hrefPrimaryAppSettingsTab()).toBe(r(buildMobileShellUrl({ tab: 'settings' })));
     expect(hrefPrimaryAppToday()).toBe(r(buildMobileCockpitUrl({ section: 'today' })));
     expect(hrefPrimaryAppPipeline()).toBe(r(buildMobileCockpitUrl({ section: 'pipeline' })));
-    expect(hrefPrimaryAppPulse()).toBe(r(buildMobileShellUrl({ tab: 'workspace' })));
+    expect(hrefPrimaryAppPlanHub()).toBe(r(buildMobileShellUrl({ tab: 'workspace' })));
+    expect(hrefPrimaryAppPulse()).toBe(hrefPrimaryAppPlanHub());
     expect(hrefPrimaryAppIntegrationsTab()).toBe(r(buildMobileShellUrl({ tab: 'integrations' })));
   });
 

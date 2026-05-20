@@ -24,9 +24,16 @@ export function hrefPrimaryAppChat(): string {
   return r(buildMobileShellUrl({ tab: 'chat' }));
 }
 
-/** Plan hub (`?section=workspace`) — queue + instruments on the primary app. */
-export function hrefPrimaryAppPulse(): string {
+/** Plan overview hub on the primary app (`?section=workspace` — Pulse strip, queue, Plan shell). */
+export function hrefPrimaryAppPlanHub(): string {
   return r(buildMobileShellUrl({ tab: 'workspace' }));
+}
+
+/**
+ * @deprecated Use {@link hrefPrimaryAppPlanHub}. Name referred to the Pulse strip; URL is the full Plan overview tab.
+ */
+export function hrefPrimaryAppPulse(): string {
+  return hrefPrimaryAppPlanHub();
 }
 
 /** Today tab with cockpit default scroll (`?section=today`). */

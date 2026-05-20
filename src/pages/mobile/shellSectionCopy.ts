@@ -32,3 +32,8 @@ export const SHELL_SCREEN_TITLE: Record<MobileShellTabId, string> = {
   integrations: 'Plan · Connect',
   settings: 'Plan · Setup'
 };
+
+/** Region landmark for the Plan stack `<section>` — matches header title (not internal tab ids). */
+export function shellPlanStackLandmarkLabel(tab: MobileShellTabId): string {
+  return SHELL_SCREEN_TITLE[tab];
+}

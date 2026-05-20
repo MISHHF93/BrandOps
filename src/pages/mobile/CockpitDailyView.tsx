@@ -8,6 +8,7 @@ import { CockpitConnectionsWorkstreamSection } from './CockpitConnectionsWorkstr
 import { CockpitPipelineWorkstreamSection } from './CockpitPipelineWorkstreamSection';
 import { CockpitTodayWorkstreamSection } from './CockpitTodayWorkstreamSection';
 import { CockpitWorkstreamBar } from './CockpitWorkstreamBar';
+import type { FocusKpiSelfCheck } from '../../types/domain';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 
 const dashboardAreas =
@@ -24,6 +25,7 @@ export interface CockpitDailyViewProps {
   onOpenInAppSettings: () => void;
   activeWorkstream: DashboardSectionId;
   onSelectWorkstream: (target: DashboardSectionId) => void;
+  onRecordKpiSelfCheck?: (score: FocusKpiSelfCheck['score'], note: string) => void | Promise<void>;
 }
 
 /**
@@ -42,7 +44,8 @@ export const CockpitDailyView = ({
   primeChat,
   onOpenInAppSettings,
   activeWorkstream,
-  onSelectWorkstream
+  onSelectWorkstream,
+  onRecordKpiSelfCheck
 }: CockpitDailyViewProps) => {
   const [todayMeta, pipelineMeta, brandMeta, connectionsMeta] = [
     dashboardAreas.find((x) => x.target === 'today'),
@@ -69,6 +72,7 @@ export const CockpitDailyView = ({
         commandBusy={commandBusy}
         runCommand={runCommand}
         primeChat={primeChat}
+        onRecordKpiSelfCheck={onRecordKpiSelfCheck}
       />
 
       <div role="tabpanel" aria-labelledby="cockpit-today" hidden={activeWorkstream !== 'today'}>

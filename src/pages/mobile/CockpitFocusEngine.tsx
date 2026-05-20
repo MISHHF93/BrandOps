@@ -19,7 +19,9 @@ import {
   Sparkles,
   TrendingUp
 } from 'lucide-react';
+import type { FocusKpiSelfCheck } from '../../types/domain';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
+import { KpiSelfCheckStrip } from './KpiSelfCheckStrip';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
 import { buildTodayFocusBoard } from './todayFocusModel';
 import type { TodayFocusLine } from './todayFocusModel';
@@ -105,6 +107,10 @@ type CockpitFocusEngineProps = {
   commandBusy: boolean;
   runCommand: (command: string) => void | Promise<void>;
   primeChat: (line: string) => void;
+  onRecordKpiSelfCheck?: (
+    score: FocusKpiSelfCheck['score'],
+    note: string
+  ) => void | Promise<void>;
 };
 
 /**
@@ -116,7 +122,8 @@ export const CockpitFocusEngine = ({
   btnFocus,
   commandBusy,
   runCommand,
-  primeChat
+  primeChat,
+  onRecordKpiSelfCheck
 }: CockpitFocusEngineProps) => {
   const focus = buildTodayFocusBoard(snapshot);
   const [activeFocus, setActiveFocus] = useState<FocusId>('do');
@@ -252,6 +259,16 @@ export const CockpitFocusEngine = ({
               ))}
             </ul>
           </div>
+        ) : null}
+
+        {onRecordKpiSelfCheck ? (
+          <KpiSelfCheckStrip
+            focusMetric={snapshot.focusMetric}
+            checks={snapshot.kpiSelfChecksPreview}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            onSave={onRecordKpiSelfCheck}
+          />
         ) : null}
       </div>
     </article>

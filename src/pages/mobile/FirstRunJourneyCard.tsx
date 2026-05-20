@@ -3,13 +3,13 @@ import { BookOpen, CalendarRange, LayoutDashboard, Settings, Sparkles, X } from 
 import { BrandOpsMarkBadge } from '../../shared/ui/brandopsPolish';
 
 /** Current dismissal flag — bump suffix when checklist content/placement changes materially. */
-export const GETTING_STARTED_STORAGE_KEY = 'brandops:gettingStartedDismissed:v5';
+export const GETTING_STARTED_STORAGE_KEY = 'brandops:gettingStartedDismissed:v6';
 
 /**
  * Persisted on workspace `seed.onboardingVersion` when the user dismisses Getting started.
  * Keep in sync with the suffix on {@link GETTING_STARTED_STORAGE_KEY}.
  */
-export const GETTING_STARTED_CONTENT_VERSION = '5';
+export const GETTING_STARTED_CONTENT_VERSION = '6';
 
 /** Legacy key (Today-tab only card). No longer read. */
 export const LEGACY_FIRST_RUN_STORAGE_KEY = 'brandops:firstRunJourneyDismissed';
@@ -18,7 +18,7 @@ export const LEGACY_FIRST_RUN_STORAGE_KEY = 'brandops:firstRunJourneyDismissed';
 export function readFirstRunJourneyDismissed(): boolean {
   if (typeof localStorage === 'undefined') return false;
   if (localStorage.getItem(GETTING_STARTED_STORAGE_KEY) === '1') return true;
-  const legacyKeys = ['brandops:gettingStartedDismissed:v4'];
+  const legacyKeys = ['brandops:gettingStartedDismissed:v5', 'brandops:gettingStartedDismissed:v4'];
   for (const legacy of legacyKeys) {
     if (localStorage.getItem(legacy) !== '1') continue;
     try {
@@ -75,6 +75,10 @@ export function FirstRunJourneyCard({
             <p className="mt-1 text-meta text-textSoft">
               Five quick steps. Dismiss anytime — the header Help button opens the Knowledge Center
               (topic <span className="font-medium text-text">First run and profile</span>).
+            </p>
+            <p className="mt-2 rounded-lg border border-border/30 bg-bgSubtle/25 px-2.5 py-2 text-fine leading-snug text-textSoft">
+              Understand résumé and operating context → keep an accurate operator/org model → act to
+              offload work and lift execution.
             </p>
 
             <ol className="mt-2 list-none space-y-2 p-0 text-left" role="list">
@@ -154,13 +158,15 @@ export function FirstRunJourneyCard({
                 </p>
                 <p className={stepBodyClass}>
                   In <span className="font-medium text-text">Settings → Unified workspace</span>,
-                  replace placeholder profile fields, then apply an{' '}
+                  replace placeholder profile fields, add{' '}
+                  <span className="font-medium text-text">operator twin — résumé ingest</span> if you
+                  use hosted <span className="font-medium text-text">ask:</span>, then apply an{' '}
                   <span className="font-medium text-text">operating profile</span> preset (layout,
-                  AI defaults, cadence). Pick a{' '}
-                  <span className="font-medium text-text">Hosted Ask routing</span> mode (Fast /
-                  Evidence / …) for hosted <span className="font-medium text-text">ask:</span>{' '}
-                  turns. Use <span className="font-medium text-text">Integrations</span> for sources
-                  and sync hub rows.
+                  AI defaults, cadence). Pick{' '}
+                  <span className="font-medium text-text">Hosted Ask routing</span> (Fast / Evidence /
+                  …). On <span className="font-medium text-text">Today</span>, log an execution check-in
+                  vs your focus metric. Use <span className="font-medium text-text">Integrations</span>{' '}
+                  for sources and sync hub rows.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <button

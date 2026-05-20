@@ -66,4 +66,18 @@ describe('normalizeWorkspaceSettings contract', () => {
       }).operatingProfile
     ).toEqual(defaultAppSettings.operatingProfile);
   });
+
+  it('migrates legacy notificationCenter.resumeNeuralPhaseContext into operatorTwin.resumeArtifact', () => {
+    const raw: unknown = {
+      ...defaultAppSettings,
+      operatorTwin: { ...defaultAppSettings.operatorTwin, resumeArtifact: '' },
+      notificationCenter: {
+        ...defaultAppSettings.notificationCenter,
+        resumeNeuralPhaseContext: 'sections:legacy-ingest | skills:ts'
+      }
+    };
+    const out = normalizeWorkspaceSettings(raw);
+    expect(out.operatorTwin.resumeArtifact).toContain('legacy-ingest');
+    expect(out.operatorTwin.resumeArtifact).toContain('ts');
+  });
 });

@@ -4,27 +4,9 @@ import { AlertCircle, CheckCircle2, Info, Loader2, Shield } from 'lucide-react';
 
 type DataOpsFeedbackTone = 'info' | 'success' | 'caution';
 
-/** System mark — hex core / circuit motif (cyber shell identity; replaces legacy crown glyph). */
+/** Official BrandOps mark. The legacy component name stays stable for existing call sites. */
 export function BrandOpsCrownMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden className={className}>
-      <path
-        d="M32 9 52 21v22L32 55 12 43V21L32 9z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3.25"
-        strokeLinejoin="round"
-      />
-      <circle cx="32" cy="32" r="5.5" fill="currentColor" opacity={0.82} />
-      <path
-        d="M32 9v8m23 12h-8m0 13h8M32 55v-8M11 34h8m0-13h-8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.75"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <img src="/branding/brandops-logo.png" alt="" aria-hidden="true" className={className} />;
 }
 
 export function BrandOpsMarkBadge({
@@ -149,7 +131,7 @@ export function AgentWorkingState({ label = 'BrandOps is working' }: { label?: s
             strokeWidth={2}
             aria-hidden
           />
-          <BrandOpsCrownMark className="bo-brand-mark__logo h-4 w-4" />
+          <BrandOpsCrownMark className="bo-brand-mark__logo" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-text">{label}</p>

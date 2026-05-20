@@ -92,8 +92,12 @@ export const defaultAppSettings = {
     promptTemplate:
       "You are BrandOps, my strategic personal brand engine. Build today's plan using my tasks, integrations, and workspace state. A labeled Workspace brand block is appended to this prompt—treat the operator, positioning, offer, voice, and focus metric there as source of truth. Prioritize positioning, proof, offer logic, content angle, commercial relevance, CTA direction, and next actions. Avoid generic marketing language and shallow AI hype. Keep sequencing practical and end with one review question.",
     datasetReviewEnabled: true,
-    integrationReviewEnabled: true,
-    resumeNeuralPhaseContext: ''
+    integrationReviewEnabled: true
+  },
+  operatorTwin: {
+    resumeArtifact: '',
+    version: 0,
+    kpiSelfChecks: []
   },
   cadenceFlow: {
     mode: 'balanced',

@@ -5,19 +5,25 @@ import {
 } from '../../shared/config/dashboardNavigation';
 
 /**
- * Full-screen panels inside the shell (URL-synced). Dock shows **Assistant** + **Workspace** only;
- * Today / Integrations / Settings open from Workspace or deep links.
+ * Full-screen shell tabs (URL-synced `?section=`).
+ *
+ * **Product model — Ask | Plan (two dock cells)** — see `MOBILE_SHELL_NAV_TABS` in `mobileTabConfig.ts`:
+ * - **Ask** → internal id `chat` → Assistant / command + hosted Ask.
+ * - **Plan** → dock highlights internal id `workspace`; **Plan strip** then selects
+ *   `workspace` (Overview hub), `daily` (Workstreams / Cockpit), `integrations`, or `settings`.
+ *
+ * Internal name `workspace` is the Plan overview tab id (queue + Pulse strip), not “workspace app.”
  */
 export type MobileShellTabId = 'workspace' | 'chat' | 'daily' | 'integrations' | 'settings';
 
 /**
- * Stable `id` on Settings → Résumé grounding (`MobileTabSection`). Deep-link after navigating:
+ * Stable `id` on Settings → operator twin résumé ingest (`MobileTabSection`). Deep-link after navigating:
  * `mobile.html?section=settings#settings-resume-neural-phase`.
  */
 export const SETTINGS_RESUME_PHASE_SECTION_ID = 'settings-resume-neural-phase';
 
 /**
- * Bottom dock highlight: everything except Chat rolls up under Workspace.
+ * Bottom dock highlight: everything except **Ask** (`chat`) rolls up under the **Plan** dock cell (`workspace`).
  */
 export function dockTabForShellTab(tab: MobileShellTabId): 'chat' | 'workspace' {
   return tab === 'chat' ? 'chat' : 'workspace';

@@ -341,7 +341,7 @@ export function SettingsResumeNeuralPhasePanel({
     try {
       await onPersistResumeNeuralPhaseContext(artifact);
       setDraft('');
-      setBanner({ msg: 'Compressed résumé saved for hosted Ask.', tone: 'success' });
+      setBanner({ msg: 'Operator twin résumé artifact saved for hosted Ask.', tone: 'success' });
     } catch {
       setBanner({ msg: 'Save failed — try again.', tone: 'danger' });
     } finally {
@@ -355,7 +355,7 @@ export function SettingsResumeNeuralPhasePanel({
     setBanner(null);
     try {
       await onPersistResumeNeuralPhaseContext('');
-      setBanner({ msg: 'Résumé grounding cleared.', tone: 'success' });
+      setBanner({ msg: 'Operator twin résumé ingest cleared.', tone: 'success' });
     } catch {
       setBanner({ msg: 'Clear failed — try again.', tone: 'danger' });
     } finally {
@@ -385,12 +385,12 @@ export function SettingsResumeNeuralPhasePanel({
   return (
     <MobileTabSection
       id="settings-resume-neural-phase"
-      title="Résumé grounding (hosted Ask)"
-      description="Paste plain-text résumé export; we compress it into Phase R context so hosted models infer your skills and roles. Brand profile still wins on conflicts."
+      title="Operator twin — résumé ingest (hosted Ask)"
+      description="Encode step: paste plain-text résumé; we compress it into the twin résumé artifact so hosted models infer skills and roles. Brand profile still wins on conflicts."
       descriptionVisibility="sr-only"
     >
       <p className="mt-2 text-meta leading-relaxed text-textSoft">
-        Neural phasing adds a short artifact to the hosted Ask system prompt (not the native
+        The compressed artifact is appended to the hosted Ask system prompt only (not the native
         on-device model). Nothing is uploaded until you send a message that calls the hosted bridge.
       </p>
       <div className="mt-2 rounded-lg border border-border/40 bg-bgSubtle/45 px-2.5 py-2 text-meta text-textMuted">

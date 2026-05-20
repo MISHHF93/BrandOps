@@ -24,11 +24,15 @@ describe('hostedAskTurn', () => {
     );
   });
 
-  it('appends Phase R résumé block under neural-phasing instructions when context is stored', () => {
+  it('appends operator twin résumé block when twin resume artifact is stored', () => {
     const ws = cloneSeedData();
-    ws.settings.notificationCenter.resumeNeuralPhaseContext = 'sections:a | skills:b';
+    ws.settings.operatorTwin = {
+      ...ws.settings.operatorTwin,
+      resumeArtifact: 'sections:a | skills:b',
+      version: 1
+    };
     const msgs = buildHostedAskMessages(ws, 'Hello', null);
-    expect(msgs[0].content).toContain('Neural phasing');
+    expect(msgs[0].content).toContain('Operator twin');
     expect(msgs[0].content).toContain('sections:a');
     expect(msgs[0].content).toContain('Global prompt scaffold');
   });

@@ -26,7 +26,7 @@ export interface KnowledgeCenterDailyPlaybook {
 export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
   title: 'Every day in BrandOps (mobile shell)',
   intro:
-    'You land on **Assistant**. Open **Plan** on the dock for the dismissible **Getting started** checklist (five steps): pipeline health, Pulse / Quick picks, **Today**, **⌘K / Ctrl+K**, then **Settings** and **Help — First run**. Assistant stays focused on chat — pulse and curated commands stay on Plan. The dock is **Ask** and **Plan** only.',
+    'You land on **Assistant**. Open **Plan** on the dock for the dismissible **Getting started** checklist (five steps): pipeline health, Pulse / Quick picks, **Today**, **⌘K / Ctrl+K**, then **Settings** and **Help — First run**. Assistant stays focused on chat — pulse and curated commands stay on Plan. The dock is **Ask** and **Plan** only. Help → **Operator twin (Encode → Align → Decode)** names the spine: ingest context, keep the model accurate, act from Today and Chat.',
   steps: [
     {
       title: 'Run one command from Assistant',
@@ -76,9 +76,21 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     paragraphs: [
       'On **welcome.html** / **mobile.html** you start on **Assistant**. The **Getting started** checklist is on **Plan**: pipeline health, Pulse / Quick picks, **Today**, palette (**⌘K** / **Ctrl+K**), then **Settings** and **Help → First run and profile**.',
       '**Plan** can show **Finish setup** after you dismiss Getting started if placeholder identity fields remain — same destinations as **Edit profile** / Integrations / ⌘K.',
+      'The **Operator twin (Encode → Align → Decode)** topic explains ingest (résumé + brand), precedence on hosted **ask:**, and how Today closes the execution loop.',
       'Sign-in and account creation share welcome.html: default is sign in (no query). Create account: welcome.html?flow=signup. Legacy ?auth= is still accepted where implemented.',
       'Under **Settings → Preferences**, pick an **Operating profile** preset (launch sprint, focused builder, etc.) and tap **Apply operating profile** — one action aligns cockpit layout/density, AI defaults, and cadence to match how you work.',
       'Operator and brand fields also surface on Today and in Settings forms; tune cadence and reminders under Settings when you need workspace-level changes.'
+    ]
+  },
+  {
+    id: 'operator-twin',
+    title: 'Operator twin (Encode → Align → Decode)',
+    summary:
+      'One mental model: ingest résumé and operating context, keep an accurate operator model, then act to offload work and lift execution.',
+    paragraphs: [
+      '**Encode** — résumé / CV plain text, brand profile fields, live workspace entities, and integration signals all feed the same **operator twin** story (not disconnected “notification” blobs). Twin ingest for résumé lives under **Settings → Unified workspace** (same deep link: **mobile.html?section=settings#settings-resume-neural-phase**).',
+      '**Align** — curated **Brand profile** wins on conflicts vs the compressed résumé artifact; the artifact supplements hosted **ask:** turns only. Nothing is uploaded until you send a hosted line; native / on-device paths do not silently ship the résumé blob.',
+      '**Decode / act** — hosted Ask receives one assembled **operator twin** appendix in the system prompt; Today and Chat are where you close the loop (commands, digest, and optional **Execution check-in** vs your focus metric). See **Today: cockpit digest** for the read-only digest pattern.'
     ]
   },
   {
@@ -91,7 +103,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
       'Starters in the Assistant tab are curated to these patterns; identical Quick picks stay on Plan so Ask is not cluttered. If a phrase is unsupported, the assistant explains what is available.',
       'Destructive phrases such as archive opportunity may ask for confirmation before running.',
       'Lines beginning with **ask:** use your configured **hosted** OpenAI-compatible endpoint when enabled; everything else stays on-device.',
-      '**Résumé grounding (Phase R)** is under **Settings → Unified workspace**. Paste or load plain text, then **Compress & save** — the artifact is sent only with hosted **ask:** lines (Brand profile still wins on conflicts). From Assistant use **Résumé grounding for Ask (Phase R)** or **mobile.html?section=settings#settings-resume-neural-phase**.'
+      '**Operator twin — résumé ingest** is under **Settings → Unified workspace** (Phase R artifact). Paste or load plain text, then **Compress & save** — the artifact is sent only with hosted **ask:** lines (Brand profile still wins on conflicts). From Assistant use the twin ingest shortcut or **mobile.html?section=settings#settings-resume-neural-phase**. Help topic **Operator twin (Encode → Align → Decode)** explains precedence end-to-end.'
     ]
   },
   {

@@ -14,7 +14,7 @@
  * Optional: --structured-json — attach JSON artifact package (parallel graphs + fusion mirrors).
  *
  * With `--workspace` only (no `--resume`), fused résumé text comes from
- * `settings.notificationCenter.resumeNeuralPhaseContext` when set (same blob as hosted Ask Phase R).
+ * `settings.operatorTwin.resumeArtifact` when set (same blob as hosted Ask operator twin block).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -120,10 +120,10 @@ else if (workspace) {
 
 profileBlob = coerceArtifactBlob(profileBlob);
 
-const ncPhaseR = workspaceData?.settings?.notificationCenter?.resumeNeuralPhaseContext;
+const twinResumeArtifact = workspaceData?.settings?.operatorTwin?.resumeArtifact;
 const resumeFusedForTrace = resumeArtifact
   ? resumeArtifact
-  : asNonNullStr(ncPhaseR ?? '')
+  : asNonNullStr(twinResumeArtifact ?? '')
       .trim()
       .slice(0, 1400);
 

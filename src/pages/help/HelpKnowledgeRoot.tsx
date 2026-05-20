@@ -5,7 +5,7 @@ import {
   hrefExtensionIntegrationsPage,
   hrefPrimaryAppChat,
   hrefPrimaryAppIntegrationsTab,
-  hrefPrimaryAppPulse,
+  hrefPrimaryAppPlanHub,
   hrefPrimaryAppSettingsTab,
   hrefPrimaryAppToday
 } from '../../shared/navigation/navigationIntents';
@@ -24,7 +24,7 @@ export function HelpKnowledgeRoot() {
     return () => window.clearTimeout(t);
   }, []);
 
-  const pulseHref = hrefPrimaryAppPulse();
+  const planHubHref = hrefPrimaryAppPlanHub();
   const chatHref = hrefPrimaryAppChat();
   const settingsHref = hrefPrimaryAppSettingsTab();
   const integrationsTabHref = hrefPrimaryAppIntegrationsTab();
@@ -40,8 +40,8 @@ export function HelpKnowledgeRoot() {
             aria-label="Primary app entry points"
             className="flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-medium text-textMuted"
           >
-            <a href={pulseHref} className={navLinkClass}>
-              Workspace
+            <a href={planHubHref} className={navLinkClass}>
+              Plan
             </a>
             <a href={chatHref} className={navLinkClass}>
               Assistant

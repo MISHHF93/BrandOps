@@ -206,4 +206,16 @@ describe('storageService', () => {
       normalized.aiTraceGraph?.bundles?.[0].governance_meta?.hallucination_risk
     ).toBeUndefined();
   });
+
+  it('migrates legacy notificationCenter.resumeNeuralPhaseContext into operatorTwin on normalize', async () => {
+    const source = cloneSeedData();
+    const nc = source.settings.notificationCenter as Record<string, unknown>;
+    nc.resumeNeuralPhaseContext = 'sections:legacy | skills:rust';
+    source.settings.operatorTwin = { ...source.settings.operatorTwin, resumeArtifact: '' };
+
+    const normalized = await storageService.setData(source);
+
+    expect(normalized.settings.operatorTwin.resumeArtifact).toContain('legacy');
+    expect(normalized.settings.operatorTwin.resumeArtifact).toContain('rust');
+  });
 });
