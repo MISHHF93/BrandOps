@@ -165,7 +165,7 @@ export function SettingsAssistantComposer({
             if (e.key === 'Enter') void submit();
           }}
           placeholder="What should we change about how this workspace runs?"
-          className="min-w-0 flex-1 touch-manipulation bg-transparent px-2 py-2 text-base text-text outline-none placeholder:text-textSoft sm:text-sm"
+          className="min-w-0 flex-1 touch-manipulation bg-transparent px-2 py-2 text-base text-text outline-none placeholder:text-textMuted sm:text-sm"
         />
         <button
           type="button"
@@ -412,7 +412,7 @@ export function SettingsResumeNeuralPhasePanel({
         rows={5}
         spellCheck={false}
         placeholder="Paste résumé or CV as plain text…"
-        className="mt-3 w-full resize-y rounded-lg border border-border/55 bg-surface/55 px-2.5 py-2 text-sm text-text outline-none placeholder:text-textSoft disabled:opacity-60"
+        className="mt-3 w-full resize-y rounded-lg border border-border/55 bg-surface/55 px-2.5 py-2 text-sm text-text outline-none placeholder:text-textMuted disabled:opacity-60"
       />
       <input
         ref={resumeFileInputRef}

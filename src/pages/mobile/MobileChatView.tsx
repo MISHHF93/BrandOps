@@ -264,15 +264,20 @@ export const MobileChatView = ({
             ) : null}
 
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center sm:py-14">
+              <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border/60 bg-bgSubtle/55 px-3 py-12 text-center sm:px-4 sm:py-14">
                 <span className="bo-assistant-empty-state-icon">
                   <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
                 </span>
-                <p className="text-sm font-semibold text-text">Start the thread</p>
+                <p className="text-sm font-semibold text-text">Run commands or ask for guidance</p>
                 <p className="max-w-[min(100%,22rem)] text-meta leading-relaxed text-textMuted">
                   Starters send workspace commands; lines beginning with{' '}
                   <span className="font-mono text-meta text-textSoft">ask:</span> use the hosted
                   model. Planning shortcuts stay on Plan — ⌘K finds anything else.
+                </p>
+                <p className="max-w-[min(100%,22rem)] text-fine leading-relaxed text-textSoft">
+                  Try: <span className="font-mono">today plan</span>,{' '}
+                  <span className="font-mono">create linkedin post</span>, or{' '}
+                  <span className="font-mono">ask: summarize my weekly priorities</span>.
                 </p>
               </div>
             ) : (

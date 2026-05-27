@@ -143,7 +143,7 @@ export const WorkspaceCommandPalette = ({
           placeholder="Type a command or tab name…"
           className={clsx(
             'mt-2.5 w-full rounded-lg border border-border/60 bg-bgSubtle/80 px-3 py-2 text-sm text-text',
-            'placeholder:text-textSoft outline-none',
+            'placeholder:text-textMuted outline-none',
             'focus:border-borderStrong focus:ring-1 focus:ring-focusRing/80',
             btn
           )}

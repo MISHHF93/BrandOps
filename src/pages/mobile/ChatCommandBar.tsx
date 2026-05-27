@@ -292,7 +292,7 @@ export const ChatCommandBar = ({
           }}
           onKeyDown={onKeyDown}
           disabled={commandLoading}
-          className="min-w-0 flex-1 bg-transparent px-1 py-1.5 text-base leading-snug text-text outline-none placeholder:text-textSoft disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-w-0 flex-1 bg-transparent px-1 py-1.5 text-base leading-snug text-text outline-none placeholder:text-textMuted disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="Ask BrandOps anything…"
           aria-label="Assistant command input"
           aria-autocomplete="list"

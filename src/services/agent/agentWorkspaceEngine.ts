@@ -384,7 +384,7 @@ const addOutreachDraft = async (
         id: uid('out'),
         category: 'follow-up',
         targetName: 'New lead',
-        company: 'TBD',
+        company: 'Unassigned company',
         role: 'Decision maker',
         messageBody: body,
         outreachGoal: 'Start a conversation',

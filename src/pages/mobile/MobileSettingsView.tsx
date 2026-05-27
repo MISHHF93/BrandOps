@@ -60,7 +60,7 @@ const settingsRunChipClass = (btnFocus: string) =>
   `${mobileChipClass(btnFocus)} disabled:cursor-not-allowed disabled:opacity-50`;
 
 const fieldClass = (btnFocus: string) =>
-  `w-full rounded-lg border border-border/70 bg-bgElevated/90 px-2.5 py-2 text-base text-text placeholder:text-textSoft focus:border-borderStrong focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm touch-manipulation ${btnFocus}`;
+  `w-full rounded-lg border border-border/70 bg-bgElevated/90 px-2.5 py-2 text-base text-text placeholder:text-textMuted focus:border-borderStrong focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm touch-manipulation ${btnFocus}`;
 
 const primaryBtn = (btnFocus: string) =>
   `mt-2 inline-flex w-full sm:w-auto justify-center rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-xs font-medium text-text hover:bg-surfaceHover disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
@@ -114,8 +114,8 @@ function AccountMembershipSection({
           descriptionVisibility="sr-only"
         >
           <p className="mt-2 text-fine leading-snug text-textSoft">
-            Provider buttons simulate sign-in on this device for launch QA — no federated cloud
-            session yet.
+            Provider buttons set BrandOps access state for this workspace and unlock gated
+            operator actions. Provider status is stored on-device in this build.
           </p>
           <dl className="mt-2 space-y-1.5 text-meta text-textMuted">
             <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
