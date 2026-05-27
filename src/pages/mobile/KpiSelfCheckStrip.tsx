@@ -76,7 +76,7 @@ export function KpiSelfCheckStrip({
             disabled={commandBusy}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Optional note (what moved the needle?)"
-            className="w-full rounded-lg border border-border/55 bg-surface/55 px-2 py-1.5 text-sm text-text outline-none placeholder:text-textSoft"
+            className="w-full rounded-lg border border-border/55 bg-surface/55 px-2 py-1.5 text-sm text-text outline-none placeholder:text-textMuted"
           />
         </label>
         <button
