@@ -18,6 +18,10 @@ import { buildWorkflowPredictionLayerReadout } from '../plan/workflowPredictionL
 import { buildPredictiveContentIdeationReadout } from '../plan/predictiveContentIdeationEngine';
 import { buildPositioningIntelligenceReadout } from '../plan/positioningIntelligence';
 import { buildBuyerPersonaIntelligenceReadout } from '../plan/buyerPersonaIntelligence';
+import {
+  buildOperatingTimelineEventsFromAiCoreResponse,
+  prependOperatingTimelineEvents
+} from '../operatingTimeline/operatingTimeline';
 
 export const BRANDOPS_AI_CORE_SCHEMA_VERSION = '1.0.0';
 export const MAX_BRANDOPS_AI_CORE_ARTIFACTS = 160;
@@ -193,7 +197,7 @@ function synthesizeContent(args: {
     )
   );
 
-  if (generatedText && (type === 'operational plan' || type === 'approval item')) {
+  if (generatedText) {
     return {
       content: generatedText.slice(0, 5000),
       confidence: baseConfidence,
@@ -484,7 +488,11 @@ export function prependBrandOpsAICoreResult(
       schemaVersion: BRANDOPS_AI_CORE_SCHEMA_VERSION,
       artifacts,
       batchRuns
-    }
+    },
+    operatingTimeline: prependOperatingTimelineEvents(
+      workspace.operatingTimeline,
+      buildOperatingTimelineEventsFromAiCoreResponse(response)
+    )
   };
 }
 

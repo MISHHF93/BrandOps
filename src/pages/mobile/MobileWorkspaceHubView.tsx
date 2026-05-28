@@ -12,10 +12,14 @@ import {
   Download,
   Eye,
   FileText,
+  FlaskConical,
   Gauge,
   GitBranch,
+  GitFork,
+  History,
   Layers,
   Lightbulb,
+  LineChart,
   Moon,
   Network,
   Radar,
@@ -25,6 +29,7 @@ import {
   ShieldCheck,
   Sparkles,
   Timer,
+  UserRound,
   WandSparkles,
   XCircle
 } from 'lucide-react';
@@ -213,6 +218,83 @@ interface DeepWorkState {
   simplifiedTimeline: string;
   command: string;
   tone: BoardTone;
+}
+
+interface OperatingTimelineEvent {
+  id: string;
+  label: string;
+  detail: string;
+  category: string;
+  at: string;
+  tone: BoardTone;
+  command?: string;
+}
+
+interface OperationalGraphNode {
+  id: string;
+  label: string;
+  kind: string;
+  detail: string;
+  strength: number;
+  tone: BoardTone;
+}
+
+interface OperationalGraphEdge {
+  from: string;
+  to: string;
+  label: string;
+}
+
+interface StrategicReflection {
+  id: string;
+  insight: string;
+  evidence: string;
+  recommendation: string;
+  tone: BoardTone;
+  command: string;
+}
+
+interface AdaptiveLayoutState {
+  name: string;
+  reason: string;
+  elevatedSurfaces: string[];
+  minimizedSurfaces: string[];
+  tone: BoardTone;
+}
+
+interface IntelligenceScore {
+  label: string;
+  value: number;
+  interpretation: string;
+  evidence: string;
+  tone: BoardTone;
+}
+
+interface SandboxScenario {
+  id: string;
+  title: string;
+  simulation: string;
+  safeBecause: string;
+  expectedLearning: string;
+  command: string;
+}
+
+interface CofounderInsight {
+  id: string;
+  challenge: string;
+  gap: string;
+  priority: string;
+  tone: BoardTone;
+  command: string;
+}
+
+interface PreparationAsset {
+  id: string;
+  title: string;
+  assetType: string;
+  preparedFor: string;
+  approvalPath: string;
+  command: string;
 }
 
 export interface MobileWorkspaceHubViewProps {
@@ -1423,6 +1505,591 @@ function buildDeepWorkState(
   };
 }
 
+function buildOperatingTimelineEvents(
+  snapshot: MobileWorkspaceSnapshot,
+  pulseItems: WorkspacePulseItem[],
+  composerDrafts: WorkflowComposerDraft[],
+  autonomousDrafts: AutonomousDraft[]
+): OperatingTimelineEvent[] {
+  const events: OperatingTimelineEvent[] = [];
+  const push = (event: OperatingTimelineEvent) => {
+    events.push(event);
+  };
+
+  for (const event of snapshot.recentOperatingTimelineEvents.slice(0, 8)) {
+    push({
+      id: `persisted-${event.id}`,
+      label: event.title,
+      detail: `${event.detail} Source: ${event.source}.`,
+      category: event.category.replace(/-/g, ' '),
+      at: event.at,
+      tone: event.tone,
+      command: event.replayCommand
+    });
+  }
+
+  for (const artifact of snapshot.recentAiCoreArtifacts.slice(0, 4)) {
+    push({
+      id: `ai-core-${artifact.id}`,
+      label: artifact.title,
+      detail: `${artifact.type} captured by BrandOps AI Core with ${artifact.confidenceScore}% confidence.`,
+      category: artifact.status,
+      at: artifact.createdAt,
+      tone: artifact.status === 'rejected' ? 'danger' : artifact.status === 'approved' ? 'success' : 'primary',
+      command: `ask: Replay this AI Core artifact as part of my operating memory timeline. Explain source facts, experts used, approval status, next actions, and strategic meaning.\n\nArtifact: ${artifact.title}\nType: ${artifact.type}\nContent: ${artifact.content.slice(0, 1200)}`
+    });
+  }
+
+  for (const item of snapshot.planPendingReviewPeek.slice(0, 3)) {
+    push({
+      id: `approval-${item.id}`,
+      label: item.verb,
+      detail: item.preview || 'Approval item waiting for review.',
+      category: 'approval',
+      at: item.at,
+      tone: 'warning',
+      command: approvalPrompt('Replay this approval decision', item)
+    });
+  }
+
+  for (const receipt of snapshot.planExecutionReceipts.slice(0, 3)) {
+    push({
+      id: `receipt-${receipt.id}`,
+      label: receipt.action,
+      detail: receipt.reasoningSummary,
+      category: receipt.executionStatus,
+      at: receipt.startedAt,
+      tone: receiptTone(receipt.executionStatus),
+      command: receiptPreviewCommand(receipt)
+    });
+  }
+
+  for (const event of snapshot.crossPlatformOperationalTimeline.items.slice(0, 3)) {
+    push({
+      id: `timeline-${event.id}`,
+      label: event.whatHappened,
+      detail: `${event.whereItHappened}: ${event.whatAiDid}`,
+      category: event.kind,
+      at: event.at,
+      tone: timelineTone(event),
+      command: event.command
+    });
+  }
+
+  for (const [index, item] of pulseItems.slice(0, 2).entries()) {
+    push({
+      id: `recommendation-${item.id}`,
+      label: item.title,
+      detail: item.detail,
+      category: 'AI recommendation',
+      at: new Date(Date.now() - index * 60_000).toISOString(),
+      tone: item.tone,
+      command: item.command
+    });
+  }
+
+  for (const draft of autonomousDrafts.slice(0, 2)) {
+    push({
+      id: `prepared-${draft.id}`,
+      label: draft.title,
+      detail: `Prepared ahead: ${draft.preparedBecause}`,
+      category: draft.type,
+      at: new Date().toISOString(),
+      tone: 'info',
+      command: draft.command
+    });
+  }
+
+  for (const workflow of composerDrafts.slice(0, 2)) {
+    push({
+      id: `workflow-${workflow.id}`,
+      label: workflow.title,
+      detail: `Workflow evolution: ${workflow.trigger}`,
+      category: 'workflow evolution',
+      at: new Date().toISOString(),
+      tone: confidenceTone(workflow.confidence),
+      command: workflow.command
+    });
+  }
+
+  return events
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    .slice(0, 12);
+}
+
+function buildOperationalGraphIntelligence(
+  snapshot: MobileWorkspaceSnapshot,
+  contextualSurface: ContextualSurface,
+  connectedPlatforms: string[]
+): { nodes: OperationalGraphNode[]; edges: OperationalGraphEdge[] } {
+  const rawNodes: OperationalGraphNode[] = [
+    {
+      id: 'operator',
+      label: snapshot.operatorName || 'Workspace operator',
+      kind: 'person',
+      detail: snapshot.positioning || 'Professional identity is still being refined.',
+      strength: snapshot.activeDigitalTwin?.confidenceScore ?? 42,
+      tone: 'primary'
+    },
+    {
+      id: 'goals',
+      label: 'Active goals',
+      kind: 'goals',
+      detail: snapshot.focusMetric || contextualSurface.signal,
+      strength: snapshot.memoryContextEngine.entriesByCategory.goals.length ? 72 : 44,
+      tone: contextualSurface.tone
+    },
+    {
+      id: 'workflows',
+      label: 'Workflows',
+      kind: 'workflow',
+      detail:
+        snapshot.workflowPredictionLayer.predictions[0]?.title ||
+        'Workflow suggestions will strengthen as repeated operations appear.',
+      strength: snapshot.workflowPredictionLayer.averageConfidence || 40,
+      tone: 'info'
+    },
+    {
+      id: 'opportunities',
+      label: 'Opportunities',
+      kind: 'opportunity',
+      detail:
+        snapshot.predictiveOpportunityLayer.suggestions[0]?.title ||
+        `${snapshot.activeOpportunities} active opportunities`,
+      strength:
+        snapshot.predictiveOpportunityLayer.averageConfidence ||
+        Math.min(70, snapshot.pipelineProjection.activeDealCount * 15),
+      tone: 'success'
+    },
+    {
+      id: 'content',
+      label: 'Content',
+      kind: 'content',
+      detail:
+        snapshot.predictiveContentIdeationEngine.allIdeas[0]?.title ||
+        `${snapshot.publishingQueue} content assets`,
+      strength: snapshot.predictiveContentIdeationEngine.averageConfidence || 48,
+      tone: 'primary'
+    },
+    {
+      id: 'outreach',
+      label: 'Outreach',
+      kind: 'outreach',
+      detail:
+        snapshot.outreachUrgencyTop[0]?.label ||
+        `${snapshot.outreachDrafts} drafts and ${snapshot.incompleteFollowUps} follow-ups`,
+      strength: averageScore(snapshot.outreachUrgencyTop) || 46,
+      tone: 'warning'
+    },
+    {
+      id: 'time',
+      label: 'Tasks + meetings',
+      kind: 'time',
+      detail: `${snapshot.dueTodayTasks} due today, ${snapshot.missedTasks} missed, ${snapshot.cockpitSchedulerTaskPeek.length} visible tasks.`,
+      strength: snapshot.missedTasks ? 72 : snapshot.dueTodayTasks ? 64 : 38,
+      tone: snapshot.missedTasks ? 'danger' : snapshot.dueTodayTasks ? 'info' : 'muted'
+    },
+    {
+      id: 'approvals',
+      label: 'Approvals',
+      kind: 'approval',
+      detail: `${snapshot.planPendingReviewCount} pending decisions`,
+      strength: snapshot.planPendingReviewCount ? 82 : 32,
+      tone: snapshot.planPendingReviewCount ? 'warning' : 'success'
+    },
+    {
+      id: 'platforms',
+      label: 'Connected platforms',
+      kind: 'platform',
+      detail: connectedPlatforms.length ? connectedPlatforms.join(', ') : 'Workspace-only context',
+      strength: connectedPlatforms.length ? Math.min(92, 52 + connectedPlatforms.length * 8) : 30,
+      tone: connectedPlatforms.length ? 'info' : 'muted'
+    }
+  ];
+  const nodes = rawNodes.map((node) => ({ ...node, strength: clampPercent(node.strength) }));
+
+  const edges: OperationalGraphEdge[] = [
+    { from: 'operator', to: 'goals', label: 'drives' },
+    { from: 'goals', to: 'workflows', label: 'shapes' },
+    { from: 'workflows', to: 'approvals', label: 'requires' },
+    { from: 'opportunities', to: 'outreach', label: 'activates' },
+    { from: 'content', to: 'opportunities', label: 'creates demand' },
+    { from: 'time', to: 'workflows', label: 'constrains' },
+    { from: 'platforms', to: 'outreach', label: 'informs' },
+    { from: 'approvals', to: 'operator', label: 'teaches memory' }
+  ];
+
+  return { nodes, edges };
+}
+
+function buildStrategicReflections(
+  snapshot: MobileWorkspaceSnapshot,
+  energyMetrics: EnergyMetric[],
+  contextualSurface: ContextualSurface
+): StrategicReflection[] {
+  const executionGap = energyMetrics.find((metric) => metric.label === 'Execution gap');
+  const overload = energyMetrics.find((metric) => metric.label === 'Overload pressure');
+  const timingPattern = snapshot.behavioralIntelligenceEngine.patterns.find(
+    (pattern) => pattern.kind === 'operational-timing'
+  );
+  const contentSignal = snapshot.predictiveContentIdeationEngine.allIdeas[0];
+  const workflow = snapshot.workflowPredictionLayer.predictions[0];
+
+  const reflections: StrategicReflection[] = [
+    {
+      id: 'reflection-planning-execution',
+      insight:
+        executionGap && executionGap.value >= 48
+          ? 'You are planning faster than you are moving work through approval and execution.'
+          : 'Planning and execution are close to balanced right now.',
+      evidence: executionGap?.detail || 'No execution gap signal is active.',
+      recommendation:
+        executionGap && executionGap.value >= 48
+          ? 'Pick one high-confidence plan, approve the next gate, and defer lower-confidence suggestions.'
+          : 'Keep using PLAN to preserve execution clarity.',
+      tone: executionGap && executionGap.value >= 48 ? 'warning' : 'success',
+      command: suggestionCommand('Strategic reflection: planning to execution', executionGap?.detail || contextualSurface.signal)
+    },
+    {
+      id: 'reflection-overload',
+      insight:
+        overload && overload.value >= 60
+          ? 'Operational pressure is high enough that more suggestions may create drag.'
+          : 'Operational load is manageable; keep the surface calm.',
+      evidence: overload?.detail || 'No overload signal is active.',
+      recommendation:
+        overload && overload.value >= 60
+          ? 'Use Deep Work Mode or reduce the queue before adding new workflows.'
+          : 'Let ambient intelligence surface only the strongest next action.',
+      tone: overload && overload.value >= 60 ? 'warning' : 'muted',
+      command: suggestionCommand('Strategic reflection: operational load', overload?.detail || contextualSurface.signal)
+    }
+  ];
+
+  if (timingPattern) {
+    reflections.push({
+      id: 'reflection-timing',
+      insight: `Your operational timing clusters around ${timingPattern.label.replace(/^Operational timing cluster around /, '')}.`,
+      evidence: timingPattern.evidence.join(' '),
+      recommendation: 'Use this rhythm for follow-ups, reviews, and focused execution windows.',
+      tone: confidenceTone(timingPattern.confidence),
+      command: snapshot.behavioralIntelligenceEngine.predictions.find(
+        (prediction) => prediction.type === 'schedule-adjustment'
+      )?.suggestedCommand || suggestionCommand('Strategic timing reflection', timingPattern.evidence.join(' | '))
+    });
+  }
+
+  if (contentSignal) {
+    reflections.push({
+      id: 'reflection-content-positioning',
+      insight: 'Your content direction should stay anchored to positioning and audience proof.',
+      evidence: `${contentSignal.title}: ${contentSignal.whyNow}`,
+      recommendation: 'Convert the strongest content signal into a reviewed PLAN before expanding more themes.',
+      tone: confidenceTone(contentSignal.confidence),
+      command: contentSignal.askToPlanCommand
+    });
+  }
+
+  if (workflow) {
+    reflections.push({
+      id: 'reflection-repeat-workflow',
+      insight: 'You repeat similar workflows often enough to consider a reusable operating pattern.',
+      evidence: workflow.repeatedPattern,
+      recommendation: 'Save a workflow draft with approvals instead of automating it immediately.',
+      tone: confidenceTone(workflow.confidence),
+      command: workflow.controls.saveCommand
+    });
+  }
+
+  return reflections.slice(0, 5);
+}
+
+function buildAdaptiveLayoutState(
+  snapshot: MobileWorkspaceSnapshot,
+  contextualSurface: ContextualSurface,
+  deepWorkState: DeepWorkState,
+  energyMetrics: EnergyMetric[]
+): AdaptiveLayoutState {
+  const outreachActive =
+    snapshot.outreachUrgencyTop.length > 0 || snapshot.incompleteFollowUps > 0 || snapshot.outreachDrafts > 0;
+  const creatorActive =
+    snapshot.expertOperator.professionPath === 'creator' ||
+    snapshot.predictiveContentIdeationEngine.allIdeas.length > snapshot.outreachDrafts;
+  const founderActive =
+    snapshot.expertOperator.professionPath === 'founder' ||
+    /fundrais|investor|founder/i.test(`${snapshot.positioning} ${snapshot.focusMetric}`);
+  const planningPressure = (energyMetrics.find((metric) => metric.label === 'Execution gap')?.value ?? 0) > 40;
+
+  if (deepWorkState.active) {
+    return {
+      name: 'Deep Work layout',
+      reason: 'Execution pressure or overload suggests collapsing the workspace around one objective.',
+      elevatedSurfaces: ['Deep Work Mode', 'Approvals', 'Operational Time', 'AI Core artifacts'],
+      minimizedSurfaces: ['Low-confidence suggestions', 'Secondary platform activity', 'Exploratory simulations'],
+      tone: 'primary'
+    };
+  }
+  if (founderActive) {
+    return {
+      name: 'Founder Fundraising layout',
+      reason: 'Founder/fundraising signals are active in profession, goals, or positioning.',
+      elevatedSurfaces: ['Opportunity Radar', 'Outreach', 'Pitch/positioning', 'Meeting prep'],
+      minimizedSurfaces: ['Generic dashboards', 'Unrelated content ideas', 'Low-priority tasks'],
+      tone: 'primary'
+    };
+  }
+  if (creatorActive) {
+    return {
+      name: 'Creator Publishing layout',
+      reason: 'Content and audience cadence signals are strongest.',
+      elevatedSurfaces: ['Content pipeline', 'Publishing cadence', 'Audience hooks', 'Sponsor opportunities'],
+      minimizedSurfaces: ['Pipeline-only views', 'Unrelated admin work', 'Raw metrics blocks'],
+      tone: 'success'
+    };
+  }
+  if (outreachActive) {
+    return {
+      name: 'Outreach Sprint layout',
+      reason: 'Follow-up, outreach, or relationship movement needs attention.',
+      elevatedSurfaces: ['Warm follow-ups', 'Draft review', 'Pipeline context', 'Timing intelligence'],
+      minimizedSurfaces: ['Exploratory strategy', 'Non-critical content', 'Long audit lists'],
+      tone: 'warning'
+    };
+  }
+  if (planningPressure) {
+    return {
+      name: 'Planning Focus layout',
+      reason: 'Planning volume is outpacing active execution.',
+      elevatedSurfaces: ['PLAN cards', 'Approval gates', 'Workflow Composer', 'Receipts'],
+      minimizedSurfaces: ['New idea intake', 'Optional simulations', 'Disconnected suggestions'],
+      tone: 'info'
+    };
+  }
+  return {
+    name: 'Personal Operating System layout',
+    reason: contextualSurface.signal,
+    elevatedSurfaces: ['Command Center', 'Memory Timeline', 'Workspace Brain', 'Next best action'],
+    minimizedSurfaces: ['Static dashboards', 'Duplicate panels', 'Unsupported actions'],
+    tone: contextualSurface.tone
+  };
+}
+
+function buildIntelligenceScores(
+  snapshot: MobileWorkspaceSnapshot,
+  energyMetrics: EnergyMetric[],
+  timelineEvents: OperatingTimelineEvent[]
+): IntelligenceScore[] {
+  const approvalsTotal =
+    snapshot.planPendingReviewCount +
+    snapshot.planExecutionReceipts.filter((receipt) => receipt.approvals.length > 0).length;
+  const approvedReceipts = snapshot.planExecutionReceipts.filter((receipt) =>
+    receipt.approvals.some((approval) => /approved|recorded|generated/i.test(approval))
+  ).length;
+  const executionMomentum = energyMetrics.find((metric) => metric.label === 'Operational momentum')?.value ?? 42;
+  const executionGap = energyMetrics.find((metric) => metric.label === 'Execution gap')?.value ?? 0;
+  const bottleneckPressure = snapshot.predictiveOperationsDashboard.operationalBottlenecks.length;
+
+  return [
+    {
+      label: 'Workflow consistency',
+      value: clampPercent(snapshot.workflowPredictionLayer.averageConfidence || timelineEvents.length * 6),
+      interpretation: 'How clearly repeatable operating patterns are emerging.',
+      evidence: snapshot.workflowPredictionLayer.headline,
+      tone: confidenceTone(snapshot.workflowPredictionLayer.averageConfidence || 48)
+    },
+    {
+      label: 'Approval efficiency',
+      value: clampPercent(approvalsTotal ? (approvedReceipts / approvalsTotal) * 100 : snapshot.planPendingReviewCount ? 36 : 72),
+      interpretation: 'Whether decisions are clearing or collecting in the review queue.',
+      evidence: `${snapshot.planPendingReviewCount} pending approvals and ${approvedReceipts} approval-backed receipts.`,
+      tone: snapshot.planPendingReviewCount ? 'warning' : 'success'
+    },
+    {
+      label: 'Execution speed',
+      value: executionMomentum,
+      interpretation: 'Whether plans are becoming action and receipts.',
+      evidence: energyMetrics.find((metric) => metric.label === 'Operational momentum')?.detail || 'Momentum is learning.',
+      tone: confidenceTone(executionMomentum)
+    },
+    {
+      label: 'Content cadence',
+      value: clampPercent(snapshot.queuedPublishing * 14 + snapshot.predictiveContentIdeationEngine.averageConfidence / 2),
+      interpretation: 'Whether content ideas, plans, and publishing rhythm are coherent.',
+      evidence: `${snapshot.queuedPublishing} queued publishing items; ${snapshot.predictiveContentIdeationEngine.allIdeas.length} predictive ideas.`,
+      tone: snapshot.queuedPublishing ? 'primary' : 'muted'
+    },
+    {
+      label: 'Outreach follow-through',
+      value: clampPercent(72 - snapshot.incompleteFollowUps * 10 + averageScore(snapshot.outreachUrgencyTop) / 4),
+      interpretation: 'Whether relationship actions are being carried forward.',
+      evidence: `${snapshot.incompleteFollowUps} incomplete follow-ups and ${snapshot.outreachDrafts} outreach drafts.`,
+      tone: snapshot.incompleteFollowUps ? 'warning' : 'success'
+    },
+    {
+      label: 'Organizational clarity',
+      value: clampPercent(
+        snapshot.memoryContextEngine.averageConfidence / 2 +
+          snapshot.predictiveOperationsDashboard.liveScore / 2 -
+          bottleneckPressure * 4 -
+          executionGap / 5
+      ),
+      interpretation: 'How clearly BrandOps can prioritize without adding noise.',
+      evidence: `${snapshot.memoryContextEngine.entries.length} memory entries, ${bottleneckPressure} bottleneck signals.`,
+      tone: bottleneckPressure ? 'warning' : 'primary'
+    }
+  ];
+}
+
+function buildSandboxScenarios(
+  snapshot: MobileWorkspaceSnapshot,
+  contextualSurface: ContextualSurface,
+  simulations: StrategicSimulation[]
+): SandboxScenario[] {
+  const scenarioCommand = (title: string, simulation: string) =>
+    `ask: Run Workspace Sandbox Mode. Simulate this safely without mutating live data. Include assumptions, expected outcomes, risks, dependencies, what would change if approved, and what should remain untouched.\n\nScenario: ${title}\nSimulation: ${simulation}`;
+
+  const topWorkflow = snapshot.workflowPredictionLayer.predictions[0];
+  const topOpportunity = snapshot.predictiveOpportunityLayer.suggestions[0];
+  const topContent = snapshot.predictiveContentIdeationEngine.allIdeas[0];
+
+  return [
+    {
+      id: 'sandbox-workflow',
+      title: topWorkflow ? `Simulate ${topWorkflow.reusableTemplateName}` : 'Simulate a reusable workflow',
+      simulation: topWorkflow?.repeatedPattern || 'Test a workflow sequence before saving it.',
+      safeBecause: 'Sandbox mode does not save, schedule, send, or mutate workspace records.',
+      expectedLearning: 'Which steps, approvals, and dependencies would matter before execution.',
+      command: scenarioCommand(
+        topWorkflow ? `Simulate ${topWorkflow.reusableTemplateName}` : 'Simulate a reusable workflow',
+        topWorkflow?.repeatedPattern || contextualSurface.signal
+      )
+    },
+    {
+      id: 'sandbox-outreach',
+      title: 'Simulate an outreach campaign',
+      simulation: topOpportunity?.suggestion || 'Compare outreach angles before drafting messages.',
+      safeBecause: 'No messages are sent and no contacts are changed.',
+      expectedLearning: 'Likely conversion path, proof gaps, timing risks, and approval needs.',
+      command: scenarioCommand('Simulate an outreach campaign', topOpportunity?.suggestion || contextualSurface.signal)
+    },
+    {
+      id: 'sandbox-content',
+      title: 'Simulate a content plan',
+      simulation: topContent?.idea || simulations[0]?.forecast || 'Test a content direction against positioning.',
+      safeBecause: 'No posts are created, queued, or published.',
+      expectedLearning: 'Best content lane, cadence pressure, audience fit, and positioning drift risk.',
+      command: scenarioCommand('Simulate a content plan', topContent?.idea || contextualSurface.signal)
+    },
+    {
+      id: 'sandbox-positioning',
+      title: 'Simulate a positioning pivot',
+      simulation: snapshot.positioningIntelligence.positioningStatements[0]?.statement || contextualSurface.signal,
+      safeBecause: 'The active profile and twin memory remain unchanged until approved.',
+      expectedLearning: 'What opportunities, content, and workflows would shift if the pivot were adopted.',
+      command: scenarioCommand('Simulate a positioning pivot', snapshot.positioningIntelligence.headline)
+    }
+  ];
+}
+
+function buildCofounderInsights(
+  snapshot: MobileWorkspaceSnapshot,
+  reflections: StrategicReflection[],
+  energyMetrics: EnergyMetric[],
+  contextualSurface: ContextualSurface
+): CofounderInsight[] {
+  const bottleneck = snapshot.predictiveOperationsDashboard.operationalBottlenecks[0];
+  const opportunity = snapshot.predictiveOpportunityLayer.suggestions[0];
+  const executionGap = energyMetrics.find((metric) => metric.label === 'Execution gap');
+  const reflection = reflections[0];
+  const command = (challenge: string, gap: string, priority: string) =>
+    `ask: Act as BrandOps AI Co-Founder Mode. Challenge assumptions, identify gaps, recommend priorities, monitor risks, and propose an approval-gated PLAN. Keep tone strategic and direct; do not mutate records.\n\nChallenge: ${challenge}\nGap: ${gap}\nPriority: ${priority}`;
+
+  return [
+    {
+      id: 'cofounder-assumption',
+      challenge:
+        reflection?.insight ||
+        'The current operating surface may be optimizing for activity instead of strategic progress.',
+      gap: reflection?.evidence || contextualSurface.signal,
+      priority: reflection?.recommendation || contextualSurface.nextActions[0],
+      tone: reflection?.tone || contextualSurface.tone,
+      command: command(
+        reflection?.insight || 'Validate the current operating assumption.',
+        reflection?.evidence || contextualSurface.signal,
+        reflection?.recommendation || contextualSurface.nextActions[0]
+      )
+    },
+    {
+      id: 'cofounder-bottleneck',
+      challenge: bottleneck
+        ? `Operational bottleneck: ${bottleneck.title}`
+        : 'No major bottleneck is obvious, but execution still needs a next decisive move.',
+      gap: bottleneck?.detail || executionGap?.detail || 'No bottleneck detail is active.',
+      priority: bottleneck ? 'Resolve the bottleneck before adding new work.' : 'Choose one strategic next action.',
+      tone: bottleneck ? urgencyTone(bottleneck.urgency) : 'muted',
+      command: command(
+        bottleneck ? `Resolve ${bottleneck.title}` : 'Find the next decisive move.',
+        bottleneck?.detail || executionGap?.detail || contextualSurface.signal,
+        bottleneck ? 'Resolve before adding work.' : contextualSurface.nextActions[0]
+      )
+    },
+    {
+      id: 'cofounder-opportunity',
+      challenge: opportunity
+        ? `Missed opportunity risk: ${opportunity.title}`
+        : 'Opportunity signal is still forming.',
+      gap: opportunity?.whyThisAppeared || 'More approved memory and platform context would sharpen opportunity detection.',
+      priority: opportunity?.expectedImpact || 'Strengthen the input signals before acting.',
+      tone: opportunity ? confidenceTone(opportunity.confidence) : 'muted',
+      command: opportunity?.previewCommand || command('Review opportunity signal', contextualSurface.signal, contextualSurface.nextActions[0])
+    }
+  ];
+}
+
+function buildPreparationAssets(
+  snapshot: MobileWorkspaceSnapshot,
+  sortedQueue: PulseTimelineRow[],
+  autonomousDrafts: AutonomousDraft[],
+  contextualSurface: ContextualSurface
+): PreparationAsset[] {
+  const assets: PreparationAsset[] = [];
+  const nextQueue = sortedQueue[0];
+  if (nextQueue) {
+    assets.push({
+      id: `prep-queue-${nextQueue.id}`,
+      title: `${nextQueue.title} prep brief`,
+      assetType: 'next operational brief',
+      preparedFor: nextQueue.subtitle,
+      approvalPath: 'Review brief, confirm objective, then approve follow-up actions.',
+      command: workspaceQueueCommandLine(nextQueue)
+    });
+  }
+
+  for (const draft of autonomousDrafts.slice(0, 3)) {
+    assets.push({
+      id: `prep-${draft.id}`,
+      title: draft.title,
+      assetType: draft.type,
+      preparedFor: draft.preparedBecause,
+      approvalPath: draft.reviewNeed,
+      command: draft.command
+    });
+  }
+
+  assets.push({
+    id: 'prep-next-day-brief',
+    title: 'Next-day operational brief',
+    assetType: 'daily brief',
+    preparedFor:
+      snapshot.predictiveOperationsDashboard.stateLine ||
+      `${contextualSurface.title}: ${contextualSurface.signal}`,
+    approvalPath: 'Review priorities, pending approvals, risks, opportunities, and timing before operating.',
+    command: `ask: Prepare my next-day operational brief. Include priorities, pending approvals, meetings/tasks, workflow risks, opportunities, recommended actions, and what not to focus on. Do not mutate records.\n\nContext: ${contextualSurface.signal}`
+  });
+
+  return assets.slice(0, 5);
+}
+
 function SummaryTile({
   label,
   value,
@@ -1529,7 +2196,15 @@ function WorkspaceOSLayer({
   autonomousDrafts,
   brainSignals,
   searchLenses,
-  deepWorkState
+  deepWorkState,
+  operatingTimeline,
+  operationalGraph,
+  strategicReflections,
+  adaptiveLayout,
+  intelligenceScores,
+  sandboxScenarios,
+  cofounderInsights,
+  preparationAssets
 }: {
   snapshot: MobileWorkspaceSnapshot;
   btnFocus: string;
@@ -1556,6 +2231,14 @@ function WorkspaceOSLayer({
   brainSignals: BrainSignal[];
   searchLenses: SearchLens[];
   deepWorkState: DeepWorkState;
+  operatingTimeline: OperatingTimelineEvent[];
+  operationalGraph: { nodes: OperationalGraphNode[]; edges: OperationalGraphEdge[] };
+  strategicReflections: StrategicReflection[];
+  adaptiveLayout: AdaptiveLayoutState;
+  intelligenceScores: IntelligenceScore[];
+  sandboxScenarios: SandboxScenario[];
+  cofounderInsights: CofounderInsight[];
+  preparationAssets: PreparationAsset[];
 }) {
   const activePersonas = personaModes.filter((persona) => persona.active);
   const radarItems = snapshot.predictiveOpportunityLayer.suggestions.slice(0, 4);
@@ -1596,6 +2279,103 @@ function WorkspaceOSLayer({
             >
               Edit controls
             </button>
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-3 xl:grid-cols-3">
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
+            <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+              <FlaskConical className="h-4 w-4" aria-hidden />
+              Workspace Simulation Sandbox
+            </p>
+            <p className="mt-1 text-meta leading-snug text-textMuted">
+              Experiment with workflows, campaigns, content plans, team structures, and positioning
+              pivots without affecting live operational data.
+            </p>
+            <div className="mt-3 space-y-2">
+              {sandboxScenarios.map((scenario) => (
+                <article key={scenario.id} className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <h4 className="text-label font-semibold leading-tight text-text">{scenario.title}</h4>
+                  <p className="mt-1 text-fine leading-snug text-textMuted">{scenario.simulation}</p>
+                  <p className="mt-2 rounded-lg border border-success/30 bg-successSoft/10 px-2 py-1.5 text-fine leading-snug text-success">
+                    Safe: {scenario.safeBecause}
+                  </p>
+                  <p className="mt-1 text-fine leading-snug text-textSoft">{scenario.expectedLearning}</p>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => void runCommand(scenario.command)}
+                    className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                  >
+                    Open sandbox
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
+            <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+              <UserRound className="h-4 w-4" aria-hidden />
+              AI Co-Founder / Operator Mode
+            </p>
+            <p className="mt-1 text-meta leading-snug text-textMuted">
+              BrandOps proactively challenges assumptions, identifies gaps, recommends priorities,
+              monitors risks, and points to missed opportunities.
+            </p>
+            <div className="mt-3 space-y-2">
+              {cofounderInsights.map((insight) => (
+                <article key={insight.id} className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-label font-semibold leading-tight text-text">{insight.challenge}</h4>
+                    <span className={clsx('shrink-0 rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(insight.tone))}>
+                      operator
+                    </span>
+                  </div>
+                  <p className="mt-2 text-fine leading-snug text-textMuted">Gap: {insight.gap}</p>
+                  <p className="mt-1 text-fine leading-snug text-textSoft">Priority: {insight.priority}</p>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => void runCommand(insight.command)}
+                    className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                  >
+                    Challenge assumptions
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
+            <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+              <WandSparkles className="h-4 w-4" aria-hidden />
+              Operational Preparation Layer
+            </p>
+            <p className="mt-1 text-meta leading-snug text-textMuted">
+              Likely-needed assets are quietly prepared ahead of time while staying reviewable and
+              approval-gated.
+            </p>
+            <div className="mt-3 space-y-2">
+              {preparationAssets.map((asset) => (
+                <article key={asset.id} className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-primary">{asset.assetType}</p>
+                  <h4 className="mt-1 text-label font-semibold leading-tight text-text">{asset.title}</h4>
+                  <p className="mt-1 text-fine leading-snug text-textMuted">Prepared for: {asset.preparedFor}</p>
+                  <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/10 px-2 py-1.5 text-fine leading-snug text-warning">
+                    Approval path: {asset.approvalPath}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => void runCommand(asset.command)}
+                    className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                  >
+                    Review prep
+                  </button>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1654,6 +2434,216 @@ function WorkspaceOSLayer({
               }
               tone={snapshot.recentAiCoreArtifacts.length ? 'success' : 'muted'}
             />
+          </div>
+          {snapshot.recentAiCoreBatchRuns.length ? (
+            <div className="mt-3 rounded-xl border border-primary/25 bg-primarySoft/10 px-3 py-2.5">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                    AI Batch Run progress
+                  </p>
+                  <p className="mt-1 text-meta leading-snug text-textMuted">
+                    {snapshot.recentAiCoreBatchRuns[0].finalSummary}
+                  </p>
+                </div>
+                <span className="rounded-full border border-border/40 bg-bgElevated px-2 py-1 text-fine font-semibold text-textMuted">
+                  {snapshot.recentAiCoreBatchRuns[0].status} ·{' '}
+                  {snapshot.recentAiCoreBatchRuns[0].completedArtifacts.length}/
+                  {snapshot.recentAiCoreBatchRuns[0].steps.length}
+                </span>
+              </div>
+              <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
+                {snapshot.recentAiCoreBatchRuns[0].steps.slice(0, 6).map((step) => (
+                  <div
+                    key={step.id}
+                    className="rounded-lg border border-border/35 bg-bgSubtle/45 px-2 py-1.5"
+                  >
+                    <p className="text-fine font-semibold text-text">{step.artifactType}</p>
+                    <p className="mt-0.5 text-fine text-textMuted">
+                      {step.status}
+                      {step.error ? ` · ${step.error}` : ''}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {snapshot.recentAiCoreBatchRuns[0].failedArtifacts.length ? (
+                <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/10 px-2 py-1.5 text-fine text-warning">
+                  Retry: {snapshot.recentAiCoreBatchRuns[0].failedArtifacts.map((item) => item.retryCommand).join(' · ')}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mt-3 grid gap-3 xl:grid-cols-[1.2fr_1fr]">
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+                  <History className="h-4 w-4" aria-hidden />
+                  AI Operating Memory Timeline
+                </p>
+                <h3 className="mt-1 text-label font-semibold leading-tight text-text">
+                  Replay the strategic evolution of the workspace
+                </h3>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  Decisions, plans, approvals, rejected ideas, workflow evolution, positioning
+                  changes, recommendations, and platform events become a living memory stream.
+                </p>
+              </div>
+              <span className="rounded-full border border-border/35 bg-bgSubtle px-2 py-1 text-fine font-semibold text-textMuted">
+                {operatingTimeline.length} memory events
+              </span>
+            </div>
+            <div className="bo-operating-timeline mt-3 space-y-2">
+              {operatingTimeline.map((event) => (
+                <article key={event.id} className="bo-operating-timeline__item rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                        {event.category} · {compactTime(event.at)}
+                      </p>
+                      <h4 className="mt-1 text-label font-semibold leading-tight text-text">{event.label}</h4>
+                      <p className="mt-1 text-fine leading-snug text-textMuted">{event.detail}</p>
+                    </div>
+                    <span className={clsx('shrink-0 rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(event.tone))}>
+                      memory
+                    </span>
+                  </div>
+                  {event.command ? (
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => void runCommand(event.command!)}
+                      className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                    >
+                      Replay
+                    </button>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
+            <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+              <GitFork className="h-4 w-4" aria-hidden />
+              Operational Graph Intelligence
+            </p>
+            <p className="mt-1 text-meta leading-snug text-textMuted">
+              People, goals, workflows, content, opportunities, outreach, tasks, approvals, and
+              platforms are linked into lightweight intelligence for prediction and search.
+            </p>
+            <div className="bo-operational-graph mt-3" aria-label="Operational graph intelligence">
+              {operationalGraph.nodes.map((node) => (
+                <article key={node.id} className={clsx('rounded-xl border px-2.5 py-2', toneClass(node.tone))}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-overline font-bold uppercase tracking-wide opacity-80">{node.kind}</p>
+                      <h4 className="mt-1 text-label font-semibold leading-tight text-text">{node.label}</h4>
+                    </div>
+                    <span className="shrink-0 rounded-full border border-border/35 bg-bg/50 px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
+                      {node.strength}
+                    </span>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-fine leading-snug text-textMuted">{node.detail}</p>
+                </article>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {operationalGraph.edges.slice(0, 8).map((edge) => (
+                <span key={`${edge.from}-${edge.to}`} className="rounded-full border border-border/35 bg-bgSubtle px-2 py-1 text-fine text-textMuted">
+                  {edge.from} {edge.label} {edge.to}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-3 xl:grid-cols-3">
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
+            <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+              <LineChart className="h-4 w-4" aria-hidden />
+              AI Strategic Reflection
+            </p>
+            <p className="mt-1 text-meta leading-snug text-textMuted">
+              Executive-level reflection turns behavior, workflow efficiency, positioning,
+              consistency, and bottlenecks into calm recommendations.
+            </p>
+            <div className="mt-3 space-y-2">
+              {strategicReflections.map((reflection) => (
+                <article key={reflection.id} className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-label font-semibold leading-tight text-text">{reflection.insight}</h4>
+                    <span className={clsx('shrink-0 rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(reflection.tone))}>
+                      reflect
+                    </span>
+                  </div>
+                  <p className="mt-2 text-fine leading-snug text-textMuted">Evidence: {reflection.evidence}</p>
+                  <p className="mt-1 text-fine leading-snug text-textSoft">{reflection.recommendation}</p>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => void runCommand(reflection.command)}
+                    className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                  >
+                    Reflect deeper
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
+            <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+              <Layers className="h-4 w-4" aria-hidden />
+              Adaptive Workspace Layout
+            </p>
+            <h3 className="mt-1 text-label font-semibold leading-tight text-text">{adaptiveLayout.name}</h3>
+            <p className="mt-1 text-meta leading-snug text-textMuted">{adaptiveLayout.reason}</p>
+            <div className="mt-3 grid gap-2">
+              <div className="rounded-xl border border-border/30 bg-bgSubtle/45 px-2.5 py-2">
+                <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">Elevated</p>
+                <p className="mt-1 text-fine leading-snug text-textMuted">{adaptiveLayout.elevatedSurfaces.join(' · ')}</p>
+              </div>
+              <div className="rounded-xl border border-border/30 bg-bgSubtle/45 px-2.5 py-2">
+                <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">Minimized</p>
+                <p className="mt-1 text-fine leading-snug text-textMuted">{adaptiveLayout.minimizedSurfaces.join(' · ')}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenCommandPalette}
+              className={clsx(mobileChipClass(btnFocus), 'mt-3 text-fine')}
+            >
+              Open focused commands
+            </button>
+          </div>
+
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
+            <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+              <Gauge className="h-4 w-4" aria-hidden />
+              Operational Intelligence Scoring
+            </p>
+            <p className="mt-1 text-meta leading-snug text-textMuted">
+              Strategic operating indicators help you improve execution without gamifying the work.
+            </p>
+            <div className="mt-3 space-y-2">
+              {intelligenceScores.map((score) => (
+                <div key={score.label} className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-label font-semibold leading-tight text-text">{score.label}</p>
+                      <p className="mt-1 text-fine leading-snug text-textMuted">{score.interpretation}</p>
+                    </div>
+                    <span className={clsx('rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(score.tone))}>
+                      {score.value}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-fine leading-snug text-textSoft">{score.evidence}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -2535,6 +3525,42 @@ export const MobileWorkspaceHubView = ({
     energyMetrics,
     sortedQueue
   );
+  const operatingTimeline = buildOperatingTimelineEvents(
+    snapshot,
+    pulseItems,
+    composerDrafts,
+    autonomousDrafts
+  );
+  const operationalGraph = buildOperationalGraphIntelligence(
+    snapshot,
+    contextualSurface,
+    connectedPlatforms
+  );
+  const strategicReflections = buildStrategicReflections(
+    snapshot,
+    energyMetrics,
+    contextualSurface
+  );
+  const adaptiveLayout = buildAdaptiveLayoutState(
+    snapshot,
+    contextualSurface,
+    deepWorkState,
+    energyMetrics
+  );
+  const intelligenceScores = buildIntelligenceScores(snapshot, energyMetrics, operatingTimeline);
+  const sandboxScenarios = buildSandboxScenarios(snapshot, contextualSurface, simulations);
+  const cofounderInsights = buildCofounderInsights(
+    snapshot,
+    strategicReflections,
+    energyMetrics,
+    contextualSurface
+  );
+  const preparationAssets = buildPreparationAssets(
+    snapshot,
+    sortedQueue,
+    autonomousDrafts,
+    contextualSurface
+  );
 
   return (
     <div className="space-y-3" aria-label="Plan">
@@ -2758,6 +3784,14 @@ export const MobileWorkspaceHubView = ({
           brainSignals={brainSignals}
           searchLenses={searchLenses}
           deepWorkState={deepWorkState}
+          operatingTimeline={operatingTimeline}
+          operationalGraph={operationalGraph}
+          strategicReflections={strategicReflections}
+          adaptiveLayout={adaptiveLayout}
+          intelligenceScores={intelligenceScores}
+          sandboxScenarios={sandboxScenarios}
+          cofounderInsights={cofounderInsights}
+          preparationAssets={preparationAssets}
         />
 
         <div className={ROW}>

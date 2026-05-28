@@ -672,6 +672,16 @@ export function SettingsTwinDashboard({
     ['generate_pitch_email', 'Create Pitch'],
     ['improve_profile_gaps', 'Improve Twin Profile']
   ] as const;
+  const twinCoreArtifacts = snapshot.recentAiCoreArtifacts
+    .filter((artifact) => artifact.twinId === twin.id)
+    .slice(0, 4);
+  const latestBatch = snapshot.recentAiCoreBatchRuns.find((run) =>
+    run.completedArtifacts.some((artifactId) =>
+      snapshot.recentAiCoreArtifacts.some(
+        (artifact) => artifact.id === artifactId && artifact.twinId === twin.id
+      )
+    )
+  );
   const exportTwin = () => {
     const blob = new Blob([JSON.stringify(twin, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -729,6 +739,67 @@ export function SettingsTwinDashboard({
             </button>
           </div>
         </section>
+
+        {(twinCoreArtifacts.length > 0 || latestBatch) ? (
+          <section className="rounded-xl border border-primary/30 bg-primarySoft/10 p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-label font-semibold text-text">AI Core continuity</p>
+                <p className="mt-1 text-fine leading-snug text-textMuted">
+                  Twin actions, ASK outputs, PLAN conversions, and batch runs resolve into the same
+                  BrandOps AI Core artifact ledger.
+                </p>
+              </div>
+              {latestBatch ? (
+                <span className="rounded-full border border-border/45 bg-bgElevated px-2 py-1 text-fine font-semibold text-textMuted">
+                  {latestBatch.status} · {latestBatch.completedArtifacts.length}/{latestBatch.steps.length}
+                </span>
+              ) : null}
+            </div>
+            {latestBatch ? (
+              <div className="mt-2 rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textMuted">
+                <p className="font-semibold text-text">Latest batch</p>
+                <p className="mt-1">{latestBatch.finalSummary}</p>
+                {latestBatch.failedArtifacts.length ? (
+                  <p className="mt-1 text-warning">
+                    Retry needed: {latestBatch.failedArtifacts.map((item) => item.artifactType).join(', ')}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+            {twinCoreArtifacts.length ? (
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {twinCoreArtifacts.map((artifact) => (
+                  <article
+                    key={artifact.id}
+                    className="rounded-lg border border-border/35 bg-bgElevated/55 px-2.5 py-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                          {artifact.type}
+                        </p>
+                        <p className="mt-1 text-meta font-semibold leading-tight text-text">
+                          {artifact.title}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-border/35 bg-bg/50 px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
+                        {artifact.confidenceScore}%
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-fine leading-snug text-textMuted">
+                      {artifact.content}
+                    </p>
+                    <p className="mt-1 text-fine text-textSoft">
+                      Status: {artifact.status} · Approval:{' '}
+                      {artifact.auditReceipt.approvalRequired ? 'required' : 'not required'}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
         <div className="grid gap-3 sm:grid-cols-2">
           <section className="rounded-xl border border-primary/35 bg-primarySoft/10 p-3 sm:col-span-2">

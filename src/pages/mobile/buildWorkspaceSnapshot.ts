@@ -27,6 +27,7 @@ import type { PulseTimelineRow } from './pulseTimeline';
 import { buildPulseTimeline } from './pulseTimeline';
 import type { AiOperatorMode, PipelineRun } from '../../types/aiIntegrationSuite';
 import type { BrandOpsAIArtifact, BrandOpsAIBatchRun } from '../../types/brandOpsAiCore';
+import type { BrandOpsOperatingTimelineEvent } from '../../types/operatingTimeline';
 import { countPendingOperatorReviews } from '../../services/plan/reviewQueue';
 import { getOperatorTwinResumeArtifact } from '../../services/operatorTwin/readResumeArtifact';
 import { getActiveDigitalTwin } from '../../services/digitalTwin/digitalTwin';
@@ -452,6 +453,8 @@ export interface MobileWorkspaceSnapshot {
   recentAiCoreArtifacts: BrandOpsAIArtifact[];
   /** Recent unified AI batch runs, newest first. */
   recentAiCoreBatchRuns: BrandOpsAIBatchRun[];
+  /** Persistent AI Operating Timeline events, newest first. */
+  recentOperatingTimelineEvents: BrandOpsOperatingTimelineEvent[];
   /** Summary counts for persisted Ask trace bundles (`BrandOpsData.aiTraceGraph`). */
   memoryTraceSummary: MemoryTraceSummaryReadout;
   /** Operator traces flagged for human review (`reviewStatus: pending`). */
@@ -887,6 +890,9 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     recentAiCoreBatchRuns: [...(workspace.aiCore?.batchRuns ?? [])]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5),
+    recentOperatingTimelineEvents: [...(workspace.operatingTimeline?.events ?? [])]
+      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+      .slice(0, 24),
     memoryTraceSummary: buildMemoryTraceSummary(workspace),
     planPendingReviewCount: countPendingOperatorReviews(workspace.operatorTraces?.entries),
     planPendingReviewPeek: buildPendingReviewPeek(workspace),

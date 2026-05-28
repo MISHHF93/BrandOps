@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:mobile": "node scripts/dev.mjs --open /mobile.html",
+    "dev:fullstack": "node scripts/full-stack-dev.mjs --open /mobile.html",
     "bridge:proxy": "node scripts/bridge-proxy.mjs",
+    "bridge:proxy:local": "node scripts/bridge-proxy-local.mjs",
     "prebuild": "npm run brand:assets",
     "build": "tsc -b && vite build && node scripts/copy-manifest.mjs",
     "build:mobile": "tsc -b && vite build",

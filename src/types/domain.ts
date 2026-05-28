@@ -993,6 +993,8 @@ export interface BrandOpsData {
   aiPipelineRuns?: import('./aiIntegrationSuite').AiPipelineRunLogState;
   /** Unified BrandOps AI Core artifacts and batch runs. */
   aiCore?: import('./brandOpsAiCore').BrandOpsAICoreState;
+  /** Persistent AI Operating Timeline — strategic workspace memory stream. */
+  operatingTimeline?: import('./operatingTimeline').BrandOpsOperatingTimelineState;
   /** Resume/profile-derived AI digital twins. Local-first; exported/deleted with workspace data. */
   digitalTwins?: DigitalTwinState;
   /** Consent-gated identity learning signals derived from local platform metadata/summaries. */

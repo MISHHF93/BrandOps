@@ -2819,6 +2819,7 @@ html[data-app-surface='welcome'] body::after {
   .bo-operational-pulse,
   .bo-operating-score,
   .bo-memory-graph__node,
+  .bo-operating-timeline__item,
   .bo-mobile-app::before,
   .bo-shell-tab-root::after,
   .bo-mobile-nav__spotlight {
@@ -3202,6 +3203,58 @@ html[data-app-surface='welcome'] body::after {
     inset: 0 auto 0 0;
     width: 2px;
     background: rgb(var(--color-primary) / 0.28);
+  }
+
+  .bo-operating-timeline {
+    position: relative;
+  }
+
+  .bo-operating-timeline::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0.55rem;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      rgb(var(--color-primary) / 0.36),
+      rgb(var(--color-border) / 0.12)
+    );
+    pointer-events: none;
+  }
+
+  .bo-operating-timeline__item {
+    position: relative;
+    margin-left: 1rem;
+  }
+
+  .bo-operating-timeline__item::before {
+    content: '';
+    position: absolute;
+    left: -1.28rem;
+    top: 0.9rem;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    border: 1px solid rgb(var(--color-primary) / 0.48);
+    background: rgb(var(--color-bg));
+    box-shadow: 0 0 0 3px rgb(var(--color-primary) / 0.08);
+  }
+
+  .bo-operational-graph {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid rgb(var(--color-border) / 0.3);
+    background:
+      radial-gradient(circle at 50% 50%, rgb(var(--color-primary) / 0.1), transparent 42%),
+      linear-gradient(90deg, rgb(var(--color-border) / 0.1) 1px, transparent 1px),
+      linear-gradient(180deg, rgb(var(--color-border) / 0.08) 1px, transparent 1px);
+    background-size:
+      auto,
+      28px 28px,
+      28px 28px;
+    padding: 0.65rem;
   }
 
   /* One subtle decorative radial behind section headers. */

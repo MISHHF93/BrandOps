@@ -134,6 +134,28 @@ describe('BrandOps AI Core', () => {
 
     expect(normalized.artifacts).toHaveLength(1);
     expect(snapshot.recentAiCoreArtifacts[0].content).toContain('grounded answer');
+    expect(snapshot.recentOperatingTimelineEvents[0].title).toContain('Operational plan');
+    expect(snapshot.recentOperatingTimelineEvents[0].source).toBe('BrandOps AI Core');
+  });
+
+  it('captures generated text for all artifact types instead of disconnected surface copies', async () => {
+    const workspace = cloneSeedData();
+    const response = await runBrandOpsAI({
+      workspace,
+      request: {
+        intent: 'Convert a content planning surface into AI Core',
+        mode: 'plan',
+        userInput: 'Convert content plan',
+        requiredOutputs: ['content plan'],
+        safetyLevel: 'review',
+        approvalRequired: true
+      },
+      generatedText: 'PLAN conversion payload with preview, approval gate, retry path, and export summary.'
+    });
+
+    expect(response.artifacts[0].type).toBe('content plan');
+    expect(response.artifacts[0].content).toContain('PLAN conversion payload');
+    expect(response.requiredApprovals).toHaveLength(1);
   });
 
   it('routes AI Core batch commands through the supported command map', () => {

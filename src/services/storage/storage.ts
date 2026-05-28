@@ -61,6 +61,7 @@ import {
 import { MAX_AI_ASSISTANT_TURN_TRACES } from '../ai/aiAssistantTraceLog';
 import { sanitizeOrphanInlineMarkers } from '../ai/aiInlineCitations';
 import { AI_IO_TRACE_SCHEMA_VERSION, sanitizeAiCitationChunks } from '../ai/aiIoProvenance';
+import { normalizeOperatingTimelineState } from '../operatingTimeline/operatingTimeline';
 
 const DATA_KEY = 'brandops:data';
 
@@ -2055,6 +2056,7 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   aiTraceGraph: normalizeAiTraceGraph(base.aiTraceGraph),
   aiPipelineRuns: normalizeAiPipelineRuns(base.aiPipelineRuns),
   aiCore: normalizeBrandOpsAICoreState(base.aiCore),
+  operatingTimeline: normalizeOperatingTimelineState(base.operatingTimeline),
   digitalTwins: normalizeDigitalTwinState(base.digitalTwins),
   connectedIdentityEngine: normalizeConnectedIdentityEngine(
     base.connectedIdentityEngine,

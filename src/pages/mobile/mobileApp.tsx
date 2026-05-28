@@ -39,6 +39,7 @@ import type {
   OperatingPresetId,
   UiTheme
 } from '../../types/domain';
+import type { BrandOpsAIArtifactType } from '../../types/brandOpsAiCore';
 import type { AiOperatorMode, PipelineRun } from '../../types/aiIntegrationSuite';
 import {
   getCockpitMobileSectionHeadingId,
@@ -290,6 +291,22 @@ const buildStripFromWorkspace = (data: BrandOpsData) => ({
   followUps: data.followUps.filter((f) => !f.completed).length,
   opportunities: data.opportunities.filter((o) => !o.archivedAt).length
 });
+
+function aiCoreOutputsForAskPlanKind(kind: AskPlanConversionKind): BrandOpsAIArtifactType[] {
+  switch (kind) {
+    case 'content-schedule':
+      return ['content plan'];
+    case 'outreach-draft':
+      return ['outreach draft'];
+    case 'workflow':
+    case 'follow-up-sequence':
+      return ['workflow plan'];
+    case 'action-queue':
+    case 'execution-plan':
+    default:
+      return ['operational plan'];
+  }
+}
 
 /** Max size for inlining text file contents into the command string (agent is text-only). */
 const MAX_CHAT_TEXT_ATTACHMENT = 32_000;
@@ -1097,6 +1114,41 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     sendQuickCommand(command);
   };
 
+  const capturePlanArtifactInAiCore = useCallback(
+    async (args: {
+      intent: string;
+      userInput: string;
+      generatedText: string;
+      requiredOutputs: BrandOpsAIArtifactType[];
+      approvalRequired?: boolean;
+    }) => {
+      try {
+        const data = await storageService.getData();
+        const activeTwin = getActiveDigitalTwin(data);
+        const response = await runBrandOpsAI({
+          workspace: data,
+          request: {
+            intent: args.intent,
+            mode: 'plan',
+            twinId: activeTwin?.id,
+            workspaceId: activeTwin?.workspaceId,
+            userInput: args.userInput,
+            requiredOutputs: args.requiredOutputs,
+            safetyLevel: 'review',
+            approvalRequired: args.approvalRequired ?? true
+          },
+          generatedText: args.generatedText
+        });
+        await storageService.setData(prependBrandOpsAICoreResult(data, response));
+        await refreshWorkspaceSnapshot();
+      } catch (err) {
+        console.error('BrandOps: AI Core PLAN artifact capture failed', err);
+        setDataOpsHint('PLAN preview created, but AI Core artifact capture failed.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
   const convertAskOutputToPlan = useCallback(
     (kind: AskPlanConversionKind, askOutput: string, messageId: string) => {
       const excerpt = askOutput.replace(/\s+/g, ' ').trim().slice(0, 1200);
@@ -1168,40 +1220,68 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         }
       };
       setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+      void capturePlanArtifactInAiCore({
+        intent: `Convert ASK output to ${labelByKind[kind]}`,
+        userInput: excerpt,
+        generatedText: JSON.stringify(card, null, 2),
+        requiredOutputs: aiCoreOutputsForAskPlanKind(kind),
+        approvalRequired: true
+      });
       commitTab('workspace');
       setDataOpsHint('ASK output converted to PLAN. Preview, approve, edit, retry, or export it.');
     },
-    [commitTab, snapshot.activeDigitalTwin]
+    [capturePlanArtifactInAiCore, commitTab, snapshot.activeDigitalTwin]
   );
 
   const convertPredictiveOpportunityToPlan = useCallback(
     (suggestion: PredictiveOpportunitySuggestion) => {
       const card = buildOperationalPlanFromPredictiveSuggestion(suggestion);
       setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+      void capturePlanArtifactInAiCore({
+        intent: `Convert predictive opportunity "${suggestion.title}" to PLAN`,
+        userInput: `${suggestion.title}\n${suggestion.whyThisAppeared}\n${suggestion.expectedImpact}`,
+        generatedText: JSON.stringify(card, null, 2),
+        requiredOutputs: ['opportunity analysis', 'operational plan'],
+        approvalRequired: true
+      });
       commitTab('workspace');
       setDataOpsHint('Predictive opportunity converted to PLAN. Preview, approve, edit, retry, or export it.');
     },
-    [commitTab]
+    [capturePlanArtifactInAiCore, commitTab]
   );
 
   const convertContentIdeationToPlan = useCallback(
     (item: ContentIdeationItem) => {
       const card = buildOperationalPlanFromContentIdeation(item);
       setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+      void capturePlanArtifactInAiCore({
+        intent: `Convert content idea "${item.title}" to PLAN`,
+        userInput: `${item.title}\n${item.idea}\n${item.whyNow}`,
+        generatedText: JSON.stringify(card, null, 2),
+        requiredOutputs: ['content idea', 'content plan'],
+        approvalRequired: true
+      });
       commitTab('workspace');
       setDataOpsHint('Content ideation converted to PLAN. Preview, approve, edit, retry, or export it.');
     },
-    [commitTab]
+    [capturePlanArtifactInAiCore, commitTab]
   );
 
   const convertWorkflowPredictionToPlan = useCallback(
     (prediction: WorkflowPrediction) => {
       const card = buildOperationalPlanFromWorkflowPrediction(prediction);
       setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+      void capturePlanArtifactInAiCore({
+        intent: `Convert workflow prediction "${prediction.title}" to PLAN`,
+        userInput: `${prediction.title}\n${prediction.repeatedPattern}`,
+        generatedText: JSON.stringify(card, null, 2),
+        requiredOutputs: ['workflow plan'],
+        approvalRequired: true
+      });
       commitTab('workspace');
       setDataOpsHint('Workflow prediction converted to PLAN. Save, edit, reuse, template, or automate only after approval.');
     },
-    [commitTab]
+    [capturePlanArtifactInAiCore, commitTab]
   );
 
   const onSignInProvider = useCallback((provider: AuthProviderId) => {
@@ -1672,10 +1752,24 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           twin,
           resumeArtifact
         });
-        await storageService.setData(hydrated.workspace);
+        const aiCoreResponse = await runBrandOpsAI({
+          workspace: hydrated.workspace,
+          request: {
+            intent: `Generate BrandOps AI Core launch kit for ${twin.displayName}`,
+            mode: 'batch',
+            twinId: twin.id,
+            workspaceId: twin.workspaceId,
+            userInput: input.rawText.slice(0, MAX_CHAT_TEXT_ATTACHMENT),
+            safetyLevel: 'review',
+            approvalRequired: true
+          },
+          generatedText: resumeArtifact
+        });
+        const nextWorkspace = prependBrandOpsAICoreResult(hydrated.workspace, aiCoreResponse);
+        await storageService.setData(nextWorkspace);
         await refreshWorkspaceSnapshot();
         setDataOpsHint(
-          `Digital twin ready for ${twin.displayName}; captured ${hydrated.capturedArtifactCount} profile artifacts.`
+          `Digital twin ready for ${twin.displayName}; captured ${hydrated.capturedArtifactCount} profile artifacts and ${aiCoreResponse.artifacts.length} AI Core artifacts.`
         );
       } catch (err) {
         console.error('BrandOps: digital twin create failed', err);
