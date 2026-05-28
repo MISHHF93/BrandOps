@@ -10,6 +10,7 @@ import { resolveHostedAssistantRouting } from './aiAskRouting';
 import { runChatCompletion } from './nlpInferenceGateway';
 import { buildHostedAskMessages } from './hostedAskTurn';
 import { resolveActiveCopilotWorker } from './copilotWorkers';
+import { prependBrandOpsAICoreResult, runBrandOpsAI } from './brandOpsAiCore';
 
 function uid() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -193,6 +194,22 @@ export async function runAiPipelineWithPersistence(args: {
     humanReviewAck: args.humanReviewAck,
     completionPrompt: args.completionPrompt
   });
-  const next = prependAiPipelineRun(args.data, run);
+  let next = prependAiPipelineRun(args.data, run);
+  const aiCore = await runBrandOpsAI({
+    workspace: next,
+    request: {
+      intent: args.completionPrompt || `AI pipeline ${args.pipelineId}`,
+      mode: 'operate',
+      twinId: next.digitalTwins?.activeTwinId ?? undefined,
+      workspaceId: next.digitalTwins?.twins.find((twin) => twin.id === next.digitalTwins?.activeTwinId)
+        ?.workspaceId,
+      userInput: args.completionPrompt || args.pipelineId,
+      requiredOutputs: ['approval item', 'timeline event'],
+      safetyLevel: 'review',
+      approvalRequired: true
+    },
+    generatedText: run.steps.map((step) => `${step.step_id}: ${step.status} ${step.detail ?? ''}`).join('\n')
+  });
+  next = prependBrandOpsAICoreResult(next, aiCore);
   return { data: next, run };
 }

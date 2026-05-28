@@ -26,6 +26,7 @@ import type {
 import type { PulseTimelineRow } from './pulseTimeline';
 import { buildPulseTimeline } from './pulseTimeline';
 import type { AiOperatorMode, PipelineRun } from '../../types/aiIntegrationSuite';
+import type { BrandOpsAIArtifact, BrandOpsAIBatchRun } from '../../types/brandOpsAiCore';
 import { countPendingOperatorReviews } from '../../services/plan/reviewQueue';
 import { getOperatorTwinResumeArtifact } from '../../services/operatorTwin/readResumeArtifact';
 import { getActiveDigitalTwin } from '../../services/digitalTwin/digitalTwin';
@@ -447,6 +448,10 @@ export interface MobileWorkspaceSnapshot {
   pulseTimelineRows: PulseTimelineRow[];
   /** Recent AI pipeline executions (`BrandOpsData.aiPipelineRuns`), newest first — full rows for Plan exports. */
   recentAiPipelineRuns: PipelineRun[];
+  /** Unified BrandOps AI Core artifacts, newest first. */
+  recentAiCoreArtifacts: BrandOpsAIArtifact[];
+  /** Recent unified AI batch runs, newest first. */
+  recentAiCoreBatchRuns: BrandOpsAIBatchRun[];
   /** Summary counts for persisted Ask trace bundles (`BrandOpsData.aiTraceGraph`). */
   memoryTraceSummary: MemoryTraceSummaryReadout;
   /** Operator traces flagged for human review (`reviewStatus: pending`). */
@@ -876,6 +881,12 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
       })),
     pulseTimelineRows: buildPulseTimeline(workspace),
     recentAiPipelineRuns: buildRecentAiPipelineRuns(workspace),
+    recentAiCoreArtifacts: [...(workspace.aiCore?.artifacts ?? [])]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 8),
+    recentAiCoreBatchRuns: [...(workspace.aiCore?.batchRuns ?? [])]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5),
     memoryTraceSummary: buildMemoryTraceSummary(workspace),
     planPendingReviewCount: countPendingOperatorReviews(workspace.operatorTraces?.entries),
     planPendingReviewPeek: buildPendingReviewPeek(workspace),

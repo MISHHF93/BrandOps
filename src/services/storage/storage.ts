@@ -50,6 +50,7 @@ import { ALL_INTEGRATION_SOURCE_KINDS } from '../../shared/integrations/integrat
 import { OPERATING_PRESETS } from '../../shared/workspace/operatingProfileCatalog';
 import { MAX_AI_TRACE_BUNDLES, sanitizeTraceBundle } from '../ai/aiTracePersistence';
 import { normalizeAiPipelineRuns } from '../ai/aiPipelineRunPersistence';
+import { normalizeBrandOpsAICoreState } from '../ai/brandOpsAiCore';
 import type { TraceBundle } from '../../types/aiTraceGraph';
 import { AI_TRACE_GRAPH_SCHEMA_VERSION } from '../../types/aiTraceGraph';
 import {
@@ -2053,6 +2054,7 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   aiAssistantTraces: normalizeAiAssistantTraces(base.aiAssistantTraces),
   aiTraceGraph: normalizeAiTraceGraph(base.aiTraceGraph),
   aiPipelineRuns: normalizeAiPipelineRuns(base.aiPipelineRuns),
+  aiCore: normalizeBrandOpsAICoreState(base.aiCore),
   digitalTwins: normalizeDigitalTwinState(base.digitalTwins),
   connectedIdentityEngine: normalizeConnectedIdentityEngine(
     base.connectedIdentityEngine,

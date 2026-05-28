@@ -8,13 +8,18 @@ import { scheduler } from '../scheduling/scheduler';
 import { mapWorkspaceCommandSourceToActor, prependOperatorTrace } from '../dataset/operatorTraces';
 import { storageService } from '../storage/storage';
 import { applyAiSettingsOperations, buildAiSettingsPlan } from '../ai/aiSettingsMode';
-import { parseCommandRoute, parseAiPipelineInvocation } from './intent/commandIntent';
+import {
+  parseCommandRoute,
+  parseAiPipelineInvocation,
+  parseBrandOpsAIBatchInvocation
+} from './intent/commandIntent';
 import {
   buildBrandOpsStrategicReadout,
   resolveBrandOpsFunction
 } from '../../config/brandOpsFunctions';
 import { getAiPipelineDefinition } from '../ai/aiPipelineCatalog';
 import { runAiPipelineWithPersistence } from '../ai/aiPipelineRunner';
+import { prependBrandOpsAICoreResult, runBrandOpsAI } from '../ai/brandOpsAiCore';
 
 export type AgentAction =
   | 'brand-function'
@@ -43,6 +48,7 @@ export type AgentAction =
   | 'pipeline-health'
   | 'sync-content-embeddings'
   | 'ai-pipeline-run'
+  | 'ai-core-batch-run'
   | 'unsupported';
 
 export interface AgentWorkspaceCommand {
@@ -1118,6 +1124,36 @@ const runParsedRoute = async (
         `Pipeline ${run.pipeline_id} → ${run.status} (${run.run_id}).${persistNote}`.slice(0, 500);
       return { ok, action: 'ai-pipeline-run', summary };
     }
+    case 'ai-core-batch-run': {
+      const inv = parseBrandOpsAIBatchInvocation(command.text);
+      if (!inv) {
+        return {
+          ok: false,
+          action: 'ai-core-batch-run',
+          summary: 'Could not parse AI Core batch command. Use: ai core batch: generate my launch kit.'
+        };
+      }
+      const activeTwinId = workspace.digitalTwins?.activeTwinId ?? undefined;
+      const aiCore = await runBrandOpsAI({
+        workspace,
+        request: {
+          intent: inv.intent,
+          mode: 'batch',
+          twinId: activeTwinId,
+          workspaceId: workspace.digitalTwins?.twins.find((twin) => twin.id === activeTwinId)?.workspaceId,
+          userInput: inv.intent,
+          safetyLevel: 'review',
+          approvalRequired: true
+        }
+      });
+      const next = prependBrandOpsAICoreResult(workspace, aiCore);
+      await storageService.setData(next);
+      return {
+        ok: true,
+        action: 'ai-core-batch-run',
+        summary: `AI Core batch ${aiCore.batchRun?.status ?? 'completed'}: ${aiCore.artifacts.length} artifact(s), ${aiCore.requiredApprovals.length} approval(s).`
+      };
+    }
     case 'update-opportunity':
       if (
         opportunityUsesRichUpdate(command.text) ||
@@ -1133,7 +1169,7 @@ const runParsedRoute = async (
         ok: false,
         action: 'unsupported',
         summary:
-          'Command not recognized. Try: add note, pipeline health, run ai pipeline workspace_audit_report, sync content embeddings, ask: (hosted question), reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
+          'Command not recognized. Try: add note, pipeline health, run ai pipeline workspace_audit_report, ai core batch, sync content embeddings, ask: (hosted question), reschedule posts, connect source, draft outreach, draft post, or update opportunity stage.'
       };
   }
 };

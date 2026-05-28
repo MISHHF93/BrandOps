@@ -21,6 +21,7 @@ import {
   prependAITraceBundle,
   sanitizeAssistantAskTraceSummaryUI
 } from '../../services/ai/aiTracePersistence';
+import { prependBrandOpsAICoreResult, runBrandOpsAI } from '../../services/ai/brandOpsAiCore';
 import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
 import { resolveHostedAssistantRouting } from '../../services/ai/aiAskRouting';
 import { isAllowedForWorker } from '../../services/ai/llmStructuredApply';
@@ -880,6 +881,22 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               durationMs
             });
             nextWorkspace = prependAITraceBundle(nextWorkspace, traceBundle);
+            const activeTwinForCore = getActiveDigitalTwin(nextWorkspace);
+            const aiCoreResponse = await runBrandOpsAI({
+              workspace: nextWorkspace,
+              request: {
+                intent: question,
+                mode: 'ask',
+                twinId: activeTwinForCore?.id,
+                workspaceId: activeTwinForCore?.workspaceId,
+                userInput: question,
+                requiredOutputs: ['operational plan'],
+                safetyLevel: 'review',
+                approvalRequired: false
+              },
+              generatedText: parsed.displayText
+            });
+            nextWorkspace = prependBrandOpsAICoreResult(nextWorkspace, aiCoreResponse);
             const traceSummary = toAssistantAskTraceSummaryUI(traceBundle);
             await storageService.setData(nextWorkspace);
             setMessages((prev) => [

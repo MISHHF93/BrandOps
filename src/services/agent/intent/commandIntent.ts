@@ -29,6 +29,7 @@ export type CommandRoute =
   | 'pipeline-health'
   | 'sync-content-embeddings'
   | 'ai-pipeline-run'
+  | 'ai-core-batch-run'
   | 'update-opportunity'
   | 'unsupported';
 
@@ -48,6 +49,15 @@ export function parseAiPipelineInvocation(
     rest.includes('review ack') ||
     rest.includes('acknowledged');
   return { pipelineId: m[1], humanReviewAck };
+}
+
+export function parseBrandOpsAIBatchInvocation(text: string): { intent: string } | null {
+  const t = text.trim();
+  if (!/^(run\s+)?(brandops\s+)?ai\s+(core\s+)?batch\b/i.test(t)) return null;
+  const intent = t
+    .replace(/^(run\s+)?(brandops\s+)?ai\s+(core\s+)?batch\b:?\s*/i, '')
+    .trim();
+  return { intent: intent || 'Generate a grounded BrandOps AI Core batch from the active workspace.' };
 }
 
 export const parseCommandRoute = (text: string): CommandRoute => {
@@ -137,6 +147,9 @@ export const parseCommandRoute = (text: string): CommandRoute => {
   }
   if (parseAiPipelineInvocation(text)) {
     return 'ai-pipeline-run';
+  }
+  if (parseBrandOpsAIBatchInvocation(text)) {
+    return 'ai-core-batch-run';
   }
   if (
     lower.includes('pipeline health') ||

@@ -991,6 +991,8 @@ export interface BrandOpsData {
   aiTraceGraph?: import('./aiTraceGraph').AIWorkspaceTraceIndexState;
   /** Declarative AI pipeline executions — capped audit-only rows (optional). */
   aiPipelineRuns?: import('./aiIntegrationSuite').AiPipelineRunLogState;
+  /** Unified BrandOps AI Core artifacts and batch runs. */
+  aiCore?: import('./brandOpsAiCore').BrandOpsAICoreState;
   /** Resume/profile-derived AI digital twins. Local-first; exported/deleted with workspace data. */
   digitalTwins?: DigitalTwinState;
   /** Consent-gated identity learning signals derived from local platform metadata/summaries. */
