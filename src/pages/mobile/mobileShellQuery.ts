@@ -10,7 +10,7 @@ import {
  * **Product model — Ask | Plan (two dock cells)** — see `MOBILE_SHELL_NAV_TABS` in `mobileTabConfig.ts`:
  * - **Ask** → internal id `chat` → Assistant / command + hosted Ask.
  * - **Plan** → dock highlights internal id `workspace`; **Plan strip** then selects
- *   `workspace` (Overview hub), `daily` (Workstreams / Cockpit), `integrations`, or `settings`.
+ *   `workspace` (Overview hub), `daily` (Today), `integrations`, or `settings`.
  *
  * Internal name `workspace` is the Plan overview tab id (queue + Pulse strip), not “workspace app.”
  */

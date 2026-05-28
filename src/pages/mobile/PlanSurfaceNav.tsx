@@ -8,7 +8,7 @@ const PLAN_NAV_ITEMS: ReadonlyArray<{
   Icon: typeof LayoutDashboard;
 }> = [
   { tab: 'workspace', label: 'Overview', Icon: LayoutDashboard },
-  { tab: 'daily', label: 'Workstreams', Icon: CalendarRange },
+  { tab: 'daily', label: 'Today', Icon: CalendarRange },
   { tab: 'integrations', label: 'Connect', Icon: PlugZap },
   { tab: 'settings', label: 'Setup', Icon: Settings }
 ];

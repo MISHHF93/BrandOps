@@ -85,7 +85,9 @@ function twinPlanPrefix(snapshot: MobileWorkspaceSnapshot): string {
 
 function twinAwareAsk(snapshot: MobileWorkspaceSnapshot, task: string): string {
   const prefix = twinPlanPrefix(snapshot);
-  return `ask: ${prefix ? `${prefix}\n\n` : ''}${task}`;
+  const expert = snapshot.expertOperator;
+  const planningContext = `Planning context: ${expert.professionPath} profile, ${expert.workflowType.replace(/_/g, ' ')} workflow. Recommended sequence: ${expert.plan.guidance.slice(0, 3).join(' | ')}. Execution guidance: ${expert.operate.guidance.slice(0, 3).join(' | ')}. Keep execution approval-gated.`;
+  return `ask: ${prefix ? `${prefix}\n\n` : ''}${planningContext}\n\n${task}`;
 }
 
 export function buildOperationalPlanCards(
@@ -103,7 +105,7 @@ export function buildOperationalPlanCards(
       id: 'workflow-reasoning',
       title: 'Workflow Plan',
       kind: 'workflow',
-      promise: 'Turn a strategic idea into executable steps, dependencies, risks, and artifacts.',
+      promise: `${snapshot.expertOperator.plan.headline}: turn a strategic idea into executable steps, dependencies, risks, and artifacts.`,
       previewCommand: twinAwareAsk(
         snapshot,
         'Turn my next best idea into an execution workflow with risks, dependencies, artifacts, decision gates, and follow-up questions for any missing facts.'
@@ -112,7 +114,12 @@ export function buildOperationalPlanCards(
       editTarget: 'palette',
       status: profileReady ? 'ready' : 'needs-input',
       progress: Math.min(100, Math.round((snapshot.notes + snapshot.integrationArtifactCount) * 8)),
-      timeline: ['Idea intake', 'Preview workflow', 'Approve next actions', 'Track in Today'],
+      timeline: [
+        'Expert route',
+        ...snapshot.expertOperator.plan.guidance.slice(0, 2),
+        'Approve next actions',
+        'Track in Today'
+      ],
       exportPayload: {
         type: 'workflow',
         profileReady,
@@ -173,7 +180,7 @@ export function buildOperationalPlanCards(
       id: 'execution-sequence',
       title: 'Execution Sequence',
       kind: 'execution-sequence',
-      promise: 'Sequence tasks, pipeline moves, scheduler items, and daily operating priorities.',
+      promise: `${snapshot.expertOperator.operate.headline}: sequence tasks, pipeline moves, scheduler items, and daily operating priorities.`,
       previewCommand: twinAwareAsk(
         snapshot,
         'Build an execution sequence for today using my queue, follow-ups, opportunities, constraints, twin voice, and positioning.'
@@ -182,7 +189,12 @@ export function buildOperationalPlanCards(
       editTarget: 'today',
       status: queueCount > 0 ? 'in-progress' : 'needs-input',
       progress: Math.min(100, queueCount * 12 + snapshot.dueTodayTasks * 10),
-      timeline: ['Read queue', 'Prioritize sequence', 'Run command', 'Measure progress'],
+      timeline: [
+        'Read expert guidance',
+        ...snapshot.expertOperator.operate.guidance.slice(0, 2),
+        'Run approved command',
+        'Measure progress'
+      ],
       exportPayload: {
         type: 'execution-sequence',
         queueRows: queueCount,

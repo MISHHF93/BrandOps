@@ -7,7 +7,7 @@ export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
   workspace:
     'Plan / Operate — AI planning, trust controls, operational timeline, receipts, Pulse, and queue.',
   chat: 'ASK — AI twin intelligence for profession identity, connected tools, and planning.',
-  daily: 'Plan — Today lanes and workstreams.',
+  daily: 'Plan — Today lanes and scheduled work.',
   integrations: 'Plan — integration readiness and sync.',
   settings: 'Plan — account and workspace preferences.'
 };
@@ -28,7 +28,7 @@ export const SHELL_TAB_SR_SUMMARY: Record<MobileShellTabId, string> = {
 export const SHELL_SCREEN_TITLE: Record<MobileShellTabId, string> = {
   workspace: 'Plan / Operate',
   chat: 'ASK',
-  daily: 'Plan · Workstreams',
+  daily: 'Plan · Today',
   integrations: 'Plan · Connect',
   settings: 'Plan · Setup'
 };

@@ -1,73 +1,60 @@
 import clsx from 'clsx';
-import { CalendarCheck2, CirclePlay, TableProperties } from 'lucide-react';
+import {
+  AlertTriangle,
+  CalendarCheck2,
+  CheckCircle2,
+  CirclePlay,
+  Clock3,
+  Download,
+  Eye,
+  FileText,
+  Lightbulb,
+  Pencil,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  XCircle
+} from 'lucide-react';
 import type { LaunchAccessState } from '../../shared/account/launchAccess';
-import type { MobileWorkspaceSnapshot, PlanExecutionReceipt } from './buildWorkspaceSnapshot';
+import type {
+  MobileWorkspaceSnapshot,
+  PlanExecutionReceipt,
+  PlanPendingOperatorReviewPeek
+} from './buildWorkspaceSnapshot';
 import type { PipelineRun } from '../../types/aiIntegrationSuite';
 import type { PredictiveOpportunitySuggestion } from '../../services/plan/predictiveOpportunityLayer';
 import type { ContentIdeationItem } from '../../services/plan/predictiveContentIdeationEngine';
 import type { WorkflowPrediction } from '../../services/plan/workflowPredictionLayer';
+import type { CrossPlatformTimelineItem } from '../../services/plan/crossPlatformOperationalTimeline';
 import { workspaceQueueCommandLine } from './pulseTimeline';
 import type { PulseTimelineRow } from './pulseTimeline';
-import { PlanDestinationGrid } from './PlanDestinationGrid';
 import { PlanIdentityHeader } from './PlanIdentityHeader';
-import { PlanJumpNav } from './PlanJumpNav';
-import { PlanProfileSummary } from './PlanProfileSummary';
-import { PlanSetupHint } from './PlanSetupHint';
-import { PlanPlanningActions } from './PlanPlanningActions';
-import { PlanHumanApprovalQueue } from './PlanHumanApprovalQueue';
-import { PlanExecutionReceipts } from './PlanExecutionReceipts';
-import { PlanExecutionInsights } from './PlanExecutionInsights';
-import { PlanOperationalStudio, type OperationalPlanCard } from './PlanOperationalStudio';
-import { PlanOperationalTimeline } from './PlanOperationalTimeline';
-import { PlanCrossPlatformPlanner } from './PlanCrossPlatformPlanner';
-import { PlanUnifiedOperationalInbox } from './PlanUnifiedOperationalInbox';
-import { PlanBehavioralIntelligenceEngine } from './PlanBehavioralIntelligenceEngine';
-import { PlanMemoryContextEngine } from './PlanMemoryContextEngine';
-import { PlanPredictiveOpportunityLayer } from './PlanPredictiveOpportunityLayer';
-import { PlanBuyerPersonaIntelligence } from './PlanBuyerPersonaIntelligence';
-import { PlanPositioningIntelligence } from './PlanPositioningIntelligence';
-import { PlanPredictiveContentIdeationEngine } from './PlanPredictiveContentIdeationEngine';
-import { PlanWorkflowPredictionLayer } from './PlanWorkflowPredictionLayer';
-import { PlanOpportunityEngine } from './PlanOpportunityEngine';
-import { PlanPlatformActionCards } from './PlanPlatformActionCards';
-import { PlanHumanTrustLayer } from './PlanHumanTrustLayer';
-import { PlanPredictiveOperationsDashboard } from './PlanPredictiveOperationsDashboard';
+import {
+  buildOperationalPlanCards,
+  type OperationalPlanCard,
+  type OperationalPlanStatus
+} from './PlanOperationalStudio';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
 import { mobileChipClass } from './mobileTabPrimitives';
 import { defaultBrandProfile } from '../../config/workspaceDefaults';
 import { twinActionPrompt } from '../../services/digitalTwin/digitalTwin';
-import {
-  metricToneTextClass,
-  planKpiSnapshotPillClass,
-  pulseQueueBadgeSurfaceClass,
-  pulseTimelineKindTone,
-  toneDueTodayTasks,
-  toneFollowUpsOpen,
-  toneMissedTasks
-} from './workspaceSignalTones';
-
-function sortRowsSoonestFirst(rows: PulseTimelineRow[]): PulseTimelineRow[] {
-  return [...rows].sort((a, b) => {
-    const ta = new Date(a.sortKey).getTime();
-    const tb = new Date(b.sortKey).getTime();
-    const na = Number.isNaN(ta) ? Number.MAX_SAFE_INTEGER : ta;
-    const nb = Number.isNaN(tb) ? Number.MAX_SAFE_INTEGER : tb;
-    return na - nb;
-  });
-}
-
-function planAgentLockCopy(reason: 'auth' | 'membership' | null): string | null {
-  if (reason === 'auth') {
-    return 'Sign in from Settings to run workspace commands from Plan.';
-  }
-  if (reason === 'membership') {
-    return 'Activate membership to run workspace commands from Plan.';
-  }
-  return null;
-}
 
 const SHEET = 'bo-plan-flat-root overflow-hidden rounded-2xl bg-bg';
 const ROW = 'scroll-mt-28 px-4 py-4 sm:px-5';
+
+type BoardTone = 'success' | 'warning' | 'danger' | 'info' | 'muted' | 'primary';
+
+interface PlanBoardSuggestion {
+  id: string;
+  source: string;
+  title: string;
+  detail: string;
+  why: string;
+  confidence?: number;
+  command: string;
+  primaryLabel: string;
+  onPrimary?: () => void;
+}
 
 export interface MobileWorkspaceHubViewProps {
   snapshot: MobileWorkspaceSnapshot;
@@ -96,9 +83,201 @@ export interface MobileWorkspaceHubViewProps {
   convertedOperationalPlans?: OperationalPlanCard[];
 }
 
-/**
- * Plan hub — single flat scroll: identity, navigation, **wired planning actions**, Pulse, snapshot, queue.
- */
+function sortRowsSoonestFirst(rows: PulseTimelineRow[]): PulseTimelineRow[] {
+  return [...rows].sort((a, b) => {
+    const ta = new Date(a.sortKey).getTime();
+    const tb = new Date(b.sortKey).getTime();
+    const na = Number.isNaN(ta) ? Number.MAX_SAFE_INTEGER : ta;
+    const nb = Number.isNaN(tb) ? Number.MAX_SAFE_INTEGER : tb;
+    return na - nb;
+  });
+}
+
+function compactTime(value: string): string {
+  const text = value.trim();
+  if (!text) return 'Now';
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) return text;
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function planAgentLockCopy(reason: 'auth' | 'membership' | null): string | null {
+  if (reason === 'auth') return 'Sign in from Settings to run workspace commands from Plan.';
+  if (reason === 'membership') return 'Activate membership to run workspace commands from Plan.';
+  return null;
+}
+
+function statusLabel(status: OperationalPlanStatus): string {
+  switch (status) {
+    case 'needs-input':
+      return 'Needs input';
+    case 'in-progress':
+      return 'In progress';
+    case 'blocked':
+      return 'Blocked';
+    default:
+      return 'Ready';
+  }
+}
+
+function toneClass(tone: BoardTone): string {
+  switch (tone) {
+    case 'success':
+      return 'border-success/45 bg-successSoft/20 text-success';
+    case 'warning':
+      return 'border-warning/45 bg-warningSoft/20 text-warning';
+    case 'danger':
+      return 'border-danger/45 bg-dangerSoft/15 text-danger';
+    case 'info':
+      return 'border-info/45 bg-infoSoft/15 text-info';
+    case 'primary':
+      return 'border-primary/45 bg-primarySoft/20 text-primary';
+    default:
+      return 'border-border/45 bg-bgSubtle/70 text-textMuted';
+  }
+}
+
+function planTone(status: OperationalPlanStatus): BoardTone {
+  if (status === 'blocked') return 'warning';
+  if (status === 'in-progress') return 'info';
+  if (status === 'ready') return 'success';
+  return 'muted';
+}
+
+function receiptTone(status: string): BoardTone {
+  const s = status.toLowerCase();
+  if (s.includes('fail') || s.includes('reject') || s.includes('error')) return 'danger';
+  if (s.includes('pending') || s.includes('review') || s.includes('running')) return 'warning';
+  if (s.includes('success') || s.includes('approved') || s.includes('recorded')) return 'success';
+  return 'muted';
+}
+
+function timelineTone(item: CrossPlatformTimelineItem): BoardTone {
+  if (item.kind === 'failed-operation') return 'danger';
+  if (item.kind === 'approval') return 'warning';
+  if (item.kind === 'scheduled-workflow' || item.kind === 'completed-operation') return 'success';
+  if (item.kind === 'connected-platform-action') return 'info';
+  if (item.kind === 'ai-recommendation') return 'primary';
+  return 'muted';
+}
+
+function approvalPrompt(action: string, item: PlanPendingOperatorReviewPeek): string {
+  return `ask: ${action} for this pending BrandOps approval item. Do not execute externally. Require human confirmation before sending, posting, publishing, scheduling, syncing, or changing workspace records.\n\nItem: ${item.verb}\nSource: ${item.source}\nPreview: ${item.preview || 'No preview available.'}`;
+}
+
+function receiptPreviewCommand(receipt: PlanExecutionReceipt): string {
+  return `ask: Explain this PLAN receipt in plain language. Include what happened, why it matters, what data was used, approval status, warnings, and the safest next step. Do not claim anything external happened unless the receipt says so.\n\n${JSON.stringify(receipt, null, 2)}`;
+}
+
+function activeNextStep(plan: OperationalPlanCard): string {
+  if (plan.status === 'blocked') return 'Review what is blocking it, then approve or reject.';
+  if (plan.status === 'needs-input') return 'Preview it and fill in the missing context.';
+  if (plan.status === 'in-progress') return 'Check progress, then run the next approved step.';
+  return 'Preview it, edit if needed, then approve execution.';
+}
+
+function suggestionCommand(title: string, detail: string): string {
+  return `ask: Turn this recommendation into a PLAN preview only. Explain what it is, why it matters, next steps, approval needs, risks, and receipt expectations. Do not execute externally or mutate workspace records.\n\nTitle: ${title}\nDetail: ${detail}`;
+}
+
+function buildBoardSuggestions(args: {
+  snapshot: MobileWorkspaceSnapshot;
+  onConvertPredictiveOpportunityToPlan: (suggestion: PredictiveOpportunitySuggestion) => void;
+  onConvertContentIdeationToPlan: (item: ContentIdeationItem) => void;
+  onConvertWorkflowPredictionToPlan: (prediction: WorkflowPrediction) => void;
+}): PlanBoardSuggestion[] {
+  const suggestions: PlanBoardSuggestion[] = [];
+
+  for (const item of args.snapshot.predictiveOpportunityLayer.suggestions.slice(0, 2)) {
+    suggestions.push({
+      id: `opportunity-${item.id}`,
+      source: 'Opportunity',
+      title: item.title,
+      detail: item.suggestion,
+      why: item.whyThisAppeared,
+      confidence: item.confidence,
+      command: item.previewCommand,
+      primaryLabel: 'Add to plans',
+      onPrimary: () => args.onConvertPredictiveOpportunityToPlan(item)
+    });
+  }
+
+  for (const item of args.snapshot.predictiveContentIdeationEngine.allIdeas.slice(0, 2)) {
+    suggestions.push({
+      id: `content-${item.id}`,
+      source: 'Content',
+      title: item.title,
+      detail: item.idea,
+      why: item.whyNow,
+      confidence: item.confidence,
+      command: item.askToPlanCommand,
+      primaryLabel: 'Make plan',
+      onPrimary: () => args.onConvertContentIdeationToPlan(item)
+    });
+  }
+
+  for (const item of args.snapshot.workflowPredictionLayer.predictions.slice(0, 2)) {
+    suggestions.push({
+      id: `workflow-${item.id}`,
+      source: 'Reusable plan',
+      title: item.title,
+      detail: item.suggestion,
+      why: item.repeatedPattern,
+      confidence: item.confidence,
+      command: item.controls.saveCommand,
+      primaryLabel: 'Save draft',
+      onPrimary: () => args.onConvertWorkflowPredictionToPlan(item)
+    });
+  }
+
+  for (const item of args.snapshot.platformActionCards.slice(0, 2)) {
+    suggestions.push({
+      id: `platform-${item.id}`,
+      source: item.platform,
+      title: item.title,
+      detail: item.description,
+      why: item.approvalRequirement,
+      command: item.command,
+      primaryLabel: 'Preview'
+    });
+  }
+
+  for (const [index, guidance] of args.snapshot.expertOperator.operate.guidance.slice(0, 1).entries()) {
+    suggestions.push({
+      id: `ai-guidance-${index}`,
+      source: 'AI recommendation',
+      title: 'Next operating move',
+      detail: guidance,
+      why: 'Based on your current PLAN context and approval gates.',
+      confidence: args.snapshot.expertOperator.operate.confidence,
+      command: suggestionCommand('Next operating move', guidance),
+      primaryLabel: 'Preview'
+    });
+  }
+
+  return suggestions.slice(0, 6);
+}
+
+function SummaryTile({
+  label,
+  value,
+  detail,
+  tone
+}: {
+  label: string;
+  value: number | string;
+  detail: string;
+  tone: BoardTone;
+}) {
+  return (
+    <div className={clsx('rounded-xl border px-3 py-2.5', toneClass(tone))}>
+      <p className="text-fine font-semibold uppercase tracking-wide opacity-85">{label}</p>
+      <p className="mt-1 text-xl font-semibold leading-none text-text">{value}</p>
+      <p className="mt-1 text-fine leading-snug text-textMuted">{detail}</p>
+    </div>
+  );
+}
+
 export const MobileWorkspaceHubView = ({
   snapshot,
   btnFocus,
@@ -112,14 +291,14 @@ export const MobileWorkspaceHubView = ({
   firstRunJourneyVisible = false,
   canRunWorkspaceCommands,
   workspaceCommandLockReason,
-  onDownloadPipelineRun,
+  onDownloadPipelineRun: _onDownloadPipelineRun,
   onApproveOperatorTrace,
   onRejectOperatorTrace = () => {},
   onConvertPredictiveOpportunityToPlan = () => {},
   onConvertContentIdeationToPlan = () => {},
   onConvertWorkflowPredictionToPlan = () => {},
-  onDeleteMemoryContext = () => {},
-  onDisableMemoryContext = () => {},
+  onDeleteMemoryContext: _onDeleteMemoryContext = () => {},
+  onDisableMemoryContext: _onDisableMemoryContext = () => {},
   onExportOperationalPlan = () => {},
   onExportExecutionReceipt = () => {},
   convertedOperationalPlans = []
@@ -130,21 +309,37 @@ export const MobileWorkspaceHubView = ({
     !snapshot.voiceGuide.trim() ||
     !snapshot.focusMetric.trim();
   const showSetupHint = profileIncomplete && !firstRunJourneyVisible;
-
-  const sorted = sortRowsSoonestFirst(snapshot.pulseTimelineRows);
-  const todayPreviewTasks = snapshot.cockpitSchedulerTaskPeek.slice(0, 4);
-  const todayPreviewDeals = snapshot.cockpitOpportunityPeek.slice(0, 2);
-  const hasTodayPeekLists = todayPreviewTasks.length > 0 || todayPreviewDeals.length > 0;
   const lockHint = planAgentLockCopy(workspaceCommandLockReason);
-  const dueSnapTone = toneDueTodayTasks(snapshot.dueTodayTasks);
-  const missedSnapTone = toneMissedTasks(snapshot.missedTasks);
-  const fuSnapTone = toneFollowUpsOpen(snapshot.incompleteFollowUps);
+  const disabled = commandBusy || !canRunWorkspaceCommands;
+  const twin = snapshot.activeDigitalTwin;
+  const planCards = [...convertedOperationalPlans, ...buildOperationalPlanCards(snapshot)];
+  const activePlans = planCards.slice(0, 6);
+  const suggestions = buildBoardSuggestions({
+    snapshot,
+    onConvertPredictiveOpportunityToPlan,
+    onConvertContentIdeationToPlan,
+    onConvertWorkflowPredictionToPlan
+  });
+  const sortedQueue = sortRowsSoonestFirst(snapshot.pulseTimelineRows).slice(0, 5);
+  const approvals = snapshot.planPendingReviewPeek.slice(0, 4);
+  const timelineItems = snapshot.crossPlatformOperationalTimeline.items.slice(0, 6);
+  const receipts = snapshot.planExecutionReceipts.slice(0, 4);
+  const failedCount =
+    snapshot.crossPlatformOperationalTimeline.countsByKind['failed-operation'] +
+    snapshot.planExecutionReceipts.filter((receipt) => receipt.warningsErrors.length > 0).length +
+    snapshot.recentAiPipelineRuns.filter((run) => run.status === 'failure').length;
+  const scheduledCount =
+    snapshot.crossPlatformOperationalTimeline.countsByKind['scheduled-workflow'] +
+    snapshot.dueTodayTasks +
+    snapshot.queuedPublishing;
+  const inProgressCount = planCards.filter((plan) => plan.status === 'in-progress').length;
+  const readyCount = planCards.filter((plan) => plan.status === 'ready').length;
 
   return (
     <div className="space-y-3" aria-label="Plan">
       <span className="sr-only">
-        Plan and Operate — AI planning plus controlled execution for digital twin outputs, connected
-        platforms, approvals, receipts, and operational timelines.
+        Plan turns ASK ideas into structured workflows, approvals, timelines, receipts, and
+        execution steps.
       </span>
 
       <div className={SHEET}>
@@ -159,486 +354,566 @@ export const MobileWorkspaceHubView = ({
           />
         </div>
 
-        {showSetupHint ? (
-          <div className={ROW}>
-            <PlanSetupHint
-              btnFocus={btnFocus}
-              onOpenSettings={onOpenSettings}
-              onOpenIntegrations={onOpenIntegrations}
-              onOpenCommandPalette={onOpenCommandPalette}
-            />
-          </div>
-        ) : null}
-
-        <div className={ROW}>
-          <PlanProfileSummary
-            btnFocus={btnFocus}
-            primaryOffer={snapshot.primaryOffer}
-            voiceGuide={snapshot.voiceGuide}
-            focusMetric={snapshot.focusMetric}
-            onEditProfile={onOpenSettings}
-          />
-        </div>
-
-        <section className={ROW} aria-labelledby="plan-twin-heading">
-          <div className="rounded-2xl border border-primary/30 bg-primarySoft/10 p-3.5">
+        <section className={clsx(ROW, 'pt-1')} aria-labelledby="plan-board-heading">
+          <div className="rounded-2xl border border-primary/25 bg-primarySoft/10 p-3.5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p
-                  id="plan-twin-heading"
-                  className="text-meta font-semibold uppercase tracking-wide text-textMuted"
-                >
-                  Resume-to-Digital-Twin
+                <p className="text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                  PLAN command board
                 </p>
-                <h2 className="mt-1 text-h3 text-text">
-                  {snapshot.activeDigitalTwin
-                    ? snapshot.activeDigitalTwin.displayName
-                    : 'Upload your resume. Build your AI twin.'}
+                <h1 id="plan-board-heading" className="mt-1 text-h2 text-text">
+                  Turn ideas into approved next steps
+                </h1>
+                <p className="mt-1.5 max-w-2xl text-meta leading-snug text-textMuted">
+                  ASK is where you think with the AI. PLAN is where those ideas become structured
+                  workflows, approvals, timelines, and safe execution steps.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={onOpenCommandPalette}
+                  className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
+                >
+                  New plan
+                </button>
+                <button
+                  type="button"
+                  onClick={onOpenToday}
+                  className={clsx(mobileChipClass(btnFocus), 'text-meta')}
+                >
+                  Open Today
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-5">
+              <SummaryTile
+                label="Active plans"
+                value={planCards.length}
+                detail={`${readyCount} ready, ${inProgressCount} in progress`}
+                tone="primary"
+              />
+              <SummaryTile
+                label="Approvals"
+                value={snapshot.planPendingReviewCount}
+                detail="Need human review before action"
+                tone={snapshot.planPendingReviewCount ? 'warning' : 'success'}
+              />
+              <SummaryTile
+                label="Scheduled"
+                value={scheduledCount}
+                detail="Due, queued, or on the timeline"
+                tone={scheduledCount ? 'info' : 'muted'}
+              />
+              <SummaryTile
+                label="Needs attention"
+                value={failedCount}
+                detail="Failed, rejected, or warning receipts"
+                tone={failedCount ? 'danger' : 'success'}
+              />
+              <SummaryTile
+                label="AI suggestions"
+                value={suggestions.length}
+                detail="Ready to preview as plans"
+                tone={suggestions.length ? 'primary' : 'muted'}
+              />
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-[1.4fr_1fr]">
+              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
+                <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                  Operator context
+                </p>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  {twin
+                    ? `${twin.displayName} is active with ${twin.confidenceScore}% confidence. PLAN uses approved profile facts, voice, memory, and current workspace context.`
+                    : 'No active digital twin yet. PLAN still works, but profile, voice, and proof improve after setup.'}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={onOpenSettings}
+                    className={clsx(mobileChipClass(btnFocus), 'text-fine')}
+                  >
+                    {twin ? 'Improve twin' : 'Set up profile'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onOpenIntegrations}
+                    className={clsx(mobileChipClass(btnFocus), 'text-fine')}
+                  >
+                    Connect tools
+                  </button>
+                  {twin ? (
+                    <>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() =>
+                          void runCommand(twinActionPrompt('draft_outreach', twin))
+                        }
+                        className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
+                      >
+                        Create outreach plan
+                      </button>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() =>
+                          void runCommand(twinActionPrompt('create_30_day_content_plan', twin))
+                        }
+                        className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
+                      >
+                        Build content plan
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
+                <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                  Safety rule
+                </p>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  Nothing sends, posts, syncs, schedules, or changes workspace records until you
+                  preview and approve it.
+                </p>
+                {lockHint ? (
+                  <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/15 px-2 py-1.5 text-fine text-warning">
+                    {lockHint}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            {showSetupHint ? (
+              <p className="mt-3 rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2 text-meta text-textMuted">
+                Add your offer, voice, and focus metric in Setup to make plans more specific.
+              </p>
+            ) : null}
+          </div>
+        </section>
+
+        <section className={ROW} aria-labelledby="active-plans-heading">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                Active plans
+              </p>
+              <h2 id="active-plans-heading" className="mt-1 text-h3 text-text">
+                What exists and what happens next
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenCommandPalette}
+              className={clsx(mobileChipClass(btnFocus), 'text-meta')}
+            >
+              Create another
+            </button>
+          </div>
+
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {activePlans.map((plan) => (
+              <article
+                key={plan.id}
+                className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5"
+                aria-labelledby={`${plan.id}-heading`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                      {plan.sourceLabel ?? 'Plan'}
+                    </p>
+                    <h3 id={`${plan.id}-heading`} className="mt-1 text-label font-semibold text-text">
+                      {plan.title}
+                    </h3>
+                  </div>
+                  <span
+                    className={clsx(
+                      'shrink-0 rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
+                      toneClass(planTone(plan.status))
+                    )}
+                  >
+                    {statusLabel(plan.status)}
+                  </span>
+                </div>
+
+                <div className="mt-3 grid gap-2 text-meta">
+                  <div className="rounded-xl border border-border/30 bg-bgSubtle/45 px-2.5 py-2">
+                    <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                      What this is
+                    </p>
+                    <p className="mt-1 leading-snug text-textMuted">{plan.promise}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/30 bg-bgSubtle/45 px-2.5 py-2">
+                    <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                      Next step
+                    </p>
+                    <p className="mt-1 leading-snug text-textMuted">{activeNextStep(plan)}</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-1.5 text-meta">
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => void runCommand(plan.previewCommand)}
+                    className={clsx(
+                      'rounded-lg border border-border/45 bg-surface/60 px-2 py-1.5 text-text disabled:opacity-45',
+                      btnFocus
+                    )}
+                  >
+                    <Eye className="mr-1 inline h-3.5 w-3.5" aria-hidden />
+                    Preview
+                  </button>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => void runCommand(plan.approveCommand)}
+                    className={clsx(
+                      'rounded-lg border border-success/45 bg-successSoft/20 px-2 py-1.5 text-success disabled:opacity-45',
+                      btnFocus
+                    )}
+                  >
+                    <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" aria-hidden />
+                    Approve
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (plan.editTarget === 'settings') onOpenSettings();
+                      else if (plan.editTarget === 'today') onOpenToday();
+                      else onOpenCommandPalette();
+                    }}
+                    className={clsx(
+                      'rounded-lg border border-border/45 bg-bgSubtle/60 px-2 py-1.5 text-text',
+                      btnFocus
+                    )}
+                  >
+                    <Pencil className="mr-1 inline h-3.5 w-3.5" aria-hidden />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onExportOperationalPlan(plan)}
+                    className={clsx(
+                      'rounded-lg border border-border/45 bg-bgSubtle/60 px-2 py-1.5 text-text',
+                      btnFocus
+                    )}
+                  >
+                    <Download className="mr-1 inline h-3.5 w-3.5" aria-hidden />
+                    Export
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className={ROW} aria-labelledby="pending-approvals-heading">
+          <div className="rounded-2xl border border-warning/35 bg-warningSoft/10 p-3.5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-[0.14em] text-warning">
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
+                  Pending approvals
+                </p>
+                <h2 id="pending-approvals-heading" className="mt-1 text-h3 text-text">
+                  Review before anything changes
                 </h2>
                 <p className="mt-1 text-meta leading-snug text-textMuted">
-                  {snapshot.activeDigitalTwin
-                    ? `${snapshot.activeDigitalTwin.status} · ${snapshot.activeDigitalTwin.confidenceScore}% confidence · ${snapshot.activeDigitalTwin.memory.missingInfo.length} profile gaps`
-                    : 'Paste a resume, profile, or brand bio in Settings. BrandOps extracts identity, skills, voice, goals, and safe action context.'}
+                  These items need your decision before BrandOps takes the next step.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={onOpenSettings}
-                className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
-              >
-                {snapshot.activeDigitalTwin ? 'Improve Twin Profile' : 'Create Twin'}
-              </button>
+              <span className="rounded-full border border-warning/35 bg-bgElevated px-2 py-1 text-fine font-semibold text-warning">
+                {snapshot.planPendingReviewCount} pending
+              </span>
             </div>
-            {snapshot.activeDigitalTwin ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(
-                  [
-                    ['generate_professional_bio', 'Generate Bio'],
-                    ['draft_outreach', 'Create Outreach Plan'],
-                    ['create_30_day_content_plan', 'Build Content Plan']
-                  ] as const
-                ).map(([actionType, label]) => (
-                  <button
-                    key={actionType}
-                    type="button"
-                    disabled={commandBusy || !canRunWorkspaceCommands}
-                    onClick={() =>
-                      runCommand(twinActionPrompt(actionType, snapshot.activeDigitalTwin!))
-                    }
-                    className={clsx(mobileChipClass(btnFocus), 'disabled:opacity-50')}
-                  >
-                    {label}
-                  </button>
+
+            {approvals.length === 0 ? (
+              <p className="mt-3 rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2 text-meta text-textMuted">
+                No pending approvals. New drafts, scheduled actions, and generated outputs that need
+                your review will appear here.
+              </p>
+            ) : (
+              <div className="mt-3 grid gap-2">
+                {approvals.map((item) => (
+                  <article key={item.id} className="rounded-xl border border-border/40 bg-bgElevated/65 p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-label font-semibold text-text">{item.verb}</h3>
+                        <p className="mt-1 text-meta leading-snug text-textMuted">
+                          {item.preview || 'No preview captured yet.'}
+                        </p>
+                      </div>
+                      <span className={clsx('rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass('warning'))}>
+                        Waiting
+                      </span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-1.5 text-meta">
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void runCommand(approvalPrompt('Preview the item', item))}
+                        className={clsx('rounded-lg border border-border/45 bg-surface/60 px-2 py-1.5 text-text disabled:opacity-45', btnFocus)}
+                      >
+                        Preview
+                      </button>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void onRejectOperatorTrace(item.id)}
+                        className={clsx('rounded-lg border border-danger/40 bg-dangerSoft/15 px-2 py-1.5 text-danger disabled:opacity-45', btnFocus)}
+                      >
+                        <XCircle className="mr-1 inline h-3.5 w-3.5" aria-hidden />
+                        Reject
+                      </button>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void onApproveOperatorTrace(item.id)}
+                        className={clsx('rounded-lg border border-success/45 bg-successSoft/20 px-2 py-1.5 text-success disabled:opacity-45', btnFocus)}
+                      >
+                        <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" aria-hidden />
+                        Approve
+                      </button>
+                    </div>
+                  </article>
                 ))}
               </div>
-            ) : (
-              <p className="mt-3 rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textMuted">
-                Manual paste and TXT/Markdown files are supported today. PDF/DOCX parsing is shown
-                as unavailable until a real parser is added.
-              </p>
             )}
           </div>
         </section>
 
-        <div className={clsx(ROW, 'space-y-3')}>
-          <header>
-            <h1 className="text-meta font-semibold uppercase tracking-[0.14em] text-textMuted">
-              PLAN / OPERATE
-            </h1>
-            <h2 className="mt-1 text-h3 text-text">Your AI operating loop</h2>
-            <p className="mt-1.5 text-meta leading-snug text-textMuted">
-              Your AI digital twin understands your profession, connects to your tools, and helps
-              operate your workflows. Use the Plan strip (Overview · Workstreams · Connect · Setup)
-              or{' '}
-              <kbd className="rounded bg-bgSubtle px-1 py-px font-mono text-fine text-text">⌘K</kbd>{' '}
-              — ASK stays the intelligence layer.
-            </p>
-            <p className="mt-2 text-fine leading-snug text-textSoft">
-              PLAN turns strategy into AI planning artifacts. OPERATE runs the controlled layer:
-              connected platform actions, human trust gates, receipts, audit history, and timelines.
-            </p>
-            <div className="mt-3 grid gap-1.5 sm:grid-cols-3" aria-label="ASK PLAN OPERATE loop">
-              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-2.5 py-2">
-                <p className="text-fine font-semibold uppercase tracking-wide text-primary">ASK</p>
-                <p className="mt-1 text-meta leading-snug text-textMuted">
-                  Twin-aware intelligence for profession identity and connected context.
-                </p>
-              </div>
-              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-2.5 py-2">
-                <p className="text-fine font-semibold uppercase tracking-wide text-primary">PLAN</p>
-                <p className="mt-1 text-meta leading-snug text-textMuted">
-                  AI planning for workflows, outreach, content, schedules, and queues.
-                </p>
-              </div>
-              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-2.5 py-2">
-                <p className="text-fine font-semibold uppercase tracking-wide text-primary">
-                  OPERATE
-                </p>
-                <p className="mt-1 text-meta leading-snug text-textMuted">
-                  Controlled execution with approval, retry, receipts, audit, and timeline.
-                </p>
-              </div>
-            </div>
-          </header>
-
-          <PlanUnifiedOperationalInbox
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-
-          <PlanBehavioralIntelligenceEngine
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-
-          <PlanMemoryContextEngine
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-            onDeleteMemory={onDeleteMemoryContext}
-            onDisableMemory={onDisableMemoryContext}
-          />
-
-          <PlanPredictiveOpportunityLayer
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-            onConvertToPlan={onConvertPredictiveOpportunityToPlan}
-          />
-
-          <PlanBuyerPersonaIntelligence
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-
-          <PlanPositioningIntelligence
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-
-          <PlanPredictiveContentIdeationEngine
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-            onConvertToPlan={onConvertContentIdeationToPlan}
-          />
-
-          <PlanWorkflowPredictionLayer
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-            onConvertToPlan={onConvertWorkflowPredictionToPlan}
-          />
-
-          <PlanOpportunityEngine
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-
-          <PlanPlatformActionCards
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-
-          <PlanHumanTrustLayer
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-
-          <PlanCrossPlatformPlanner
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-
-          <PlanOperationalStudio
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            agentEnabled={canRunWorkspaceCommands}
-            agentLockHint={lockHint}
-            runCommand={runCommand}
-            onOpenSettings={onOpenSettings}
-            onOpenToday={onOpenToday}
-            onOpenCommandPalette={onOpenCommandPalette}
-            onExportOperationalPlan={onExportOperationalPlan}
-            convertedPlans={convertedOperationalPlans}
-          />
-
-          <PlanOperationalTimeline
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-
-          <PlanHumanApprovalQueue
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-            onApproveOperatorTrace={onApproveOperatorTrace}
-            onRejectOperatorTrace={onRejectOperatorTrace}
-          />
-
-          <PlanExecutionReceipts
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-            onExportExecutionReceipt={onExportExecutionReceipt}
-          />
-
-          <PlanDestinationGrid
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            runCommand={runCommand}
-            onOpenToday={onOpenToday}
-          />
-
-          <p className="text-meta leading-snug text-textMuted">
-            <span className="font-medium text-textSoft">Palette:</span> still lists commands and
-            deep targets — the strip above keeps everyday navigation inside Plan.
-          </p>
-
-          <PlanJumpNav btnFocus={btnFocus} />
-        </div>
-
-        <div className={ROW}>
-          <PlanPredictiveOperationsDashboard
-            snapshot={snapshot}
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-          />
-        </div>
-
-        <div className={ROW}>
-          <PlanPlanningActions
-            btnFocus={btnFocus}
-            commandBusy={commandBusy}
-            agentEnabled={canRunWorkspaceCommands}
-            agentLockHint={lockHint}
-            runCommand={runCommand}
-            onOpenCommandPalette={onOpenCommandPalette}
-          />
-        </div>
-
-        <div className={ROW}>
-          <PlanExecutionInsights
-            snapshot={snapshot}
-            commandBusy={commandBusy}
-            canRunWorkspaceCommands={canRunWorkspaceCommands}
-            runCommand={runCommand}
-            onDownloadPipelineRun={onDownloadPipelineRun}
-            onApproveOperatorTrace={onApproveOperatorTrace}
-          />
-        </div>
-
-        <section id="plan-today" className={ROW} aria-labelledby="plan-today-heading">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <h2
-                id="plan-today-heading"
-                className="flex items-center gap-2 text-meta font-semibold uppercase tracking-wide text-textMuted"
-              >
-                <CalendarCheck2 className="h-3.5 w-3.5 shrink-0 text-textSoft" aria-hidden />
-                Today snapshot
-              </h2>
-              <p className="mt-1 text-meta leading-snug text-textSoft line-clamp-3">
-                {snapshot.cadenceHeadline.trim()
-                  ? snapshot.cadenceHeadline
-                  : 'Cadence and peek rows — full cockpit lives on Today.'}
+        <section className={ROW} aria-labelledby="suggested-plans-heading">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                <Sparkles className="h-4 w-4" aria-hidden />
+                Suggested next plans
               </p>
+              <h2 id="suggested-plans-heading" className="mt-1 text-h3 text-text">
+                What the AI recommends next
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenCommandPalette}
+              className={clsx(mobileChipClass(btnFocus), 'text-meta')}
+            >
+              Browse commands
+            </button>
+          </div>
+
+          {suggestions.length === 0 ? (
+            <div className="mt-3">
+              <EmptyState
+                title="No suggestions yet"
+                body="Ask a question, connect a tool, or add workspace activity and new plan suggestions will appear here."
+              />
+            </div>
+          ) : (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {suggestions.map((item) => (
+                <article key={item.id} className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                        {item.source}
+                      </p>
+                      <h3 className="mt-1 text-label font-semibold text-text">{item.title}</h3>
+                    </div>
+                    {typeof item.confidence === 'number' ? (
+                      <span className="rounded-full border border-border/45 bg-bgSubtle px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
+                        {item.confidence}% fit
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 text-meta leading-snug text-textMuted">{item.detail}</p>
+                  <p className="mt-2 rounded-xl border border-border/30 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textSoft">
+                    Why now: {item.why}
+                  </p>
+                  <div className="mt-3 grid grid-cols-2 gap-1.5 text-meta">
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => void runCommand(item.command)}
+                      className={clsx('rounded-lg border border-border/45 bg-surface/60 px-2 py-1.5 text-text disabled:opacity-45', btnFocus)}
+                    >
+                      Preview
+                    </button>
+                    <button
+                      type="button"
+                      disabled={commandBusy}
+                      onClick={() => {
+                        if (item.onPrimary) item.onPrimary();
+                        else void runCommand(item.command);
+                      }}
+                      className={clsx('rounded-lg border border-success/45 bg-successSoft/20 px-2 py-1.5 text-success disabled:opacity-45', btnFocus)}
+                    >
+                      <Lightbulb className="mr-1 inline h-3.5 w-3.5" aria-hidden />
+                      {item.primaryLabel}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className={ROW} aria-labelledby="timeline-heading">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                <Clock3 className="h-4 w-4" aria-hidden />
+                Timeline and activity
+              </p>
+              <h2 id="timeline-heading" className="mt-1 text-h3 text-text">
+                What is scheduled, in progress, or failed
+              </h2>
             </div>
             <button
               type="button"
               onClick={onOpenToday}
-              className={clsx(
-                'shrink-0 rounded-lg bg-bgElevated px-2.5 py-1 text-meta font-semibold text-text',
-                btnFocus
-              )}
+              className={clsx(mobileChipClass(btnFocus), 'text-meta')}
             >
               Open full Today
             </button>
           </div>
-          <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Today snapshot counts">
-            <span className={planKpiSnapshotPillClass(dueSnapTone)}>
-              Due & soon{' '}
-              <span className={clsx('font-semibold', metricToneTextClass(dueSnapTone))}>
-                {snapshot.dueTodayTasks}
-              </span>
-            </span>
-            <span className={planKpiSnapshotPillClass(missedSnapTone)}>
-              Missed{' '}
-              <span className={clsx('font-semibold', metricToneTextClass(missedSnapTone))}>
-                {snapshot.missedTasks}
-              </span>
-            </span>
-            <span className={planKpiSnapshotPillClass(fuSnapTone)}>
-              Follow-ups open{' '}
-              <span className={clsx('font-semibold', metricToneTextClass(fuSnapTone))}>
-                {snapshot.incompleteFollowUps}
-              </span>
-            </span>
-          </div>
-          {hasTodayPeekLists ? (
-            <div className="mt-3 space-y-2 pt-1">
-              {todayPreviewTasks.length > 0 ? (
-                <div>
-                  <p className="text-fine font-medium uppercase tracking-wide text-textSoft">
-                    Scheduler
-                  </p>
-                  <ul className="mt-1 space-y-1 text-meta text-textMuted">
-                    {todayPreviewTasks.map((t) => (
-                      <li key={t.id} className="flex items-start justify-between gap-2">
-                        <span className="min-w-0 flex-1 truncate font-medium text-text">
-                          {t.title}
-                        </span>
-                        <span className="max-w-[45%] shrink-0 text-end text-fine text-textSoft">
-                          {t.dueAt ? `${t.dueAt} · ` : ''}
-                          {t.status}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              {todayPreviewDeals.length > 0 ? (
-                <div>
-                  <p className="text-fine font-medium uppercase tracking-wide text-textSoft">
-                    Pipeline
-                  </p>
-                  <ul className="mt-1 space-y-1 text-meta text-textMuted">
-                    {todayPreviewDeals.map((d) => (
-                      <li key={d.id} className="flex flex-col gap-0.5">
-                        <span className="truncate font-medium text-text">{d.name}</span>
-                        <span className="truncate text-fine text-textSoft">{d.company}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <p className="mt-3 pt-1 text-fine text-textSoft">
-              Nothing peeking yet — open Today for scheduler lanes and pipeline detail.
-            </p>
-          )}
-        </section>
 
-        <section id="plan-queue" className={ROW} aria-labelledby="plan-queue-heading">
-          <h2
-            id="plan-queue-heading"
-            className="flex flex-wrap items-center gap-2 text-meta font-semibold uppercase tracking-wide text-textMuted"
-          >
-            <TableProperties className="h-3.5 w-3.5 shrink-0 text-textSoft" aria-hidden />
-            Soonest queue
-            <span
-              className={clsx(
-                'tabular-nums text-fine font-medium normal-case',
-                sorted.length > 0 ? 'text-info' : 'text-textSoft'
-              )}
-            >
-              {sorted.length} row{sorted.length === 1 ? '' : 's'}
-            </span>
-          </h2>
-          {sorted.length === 0 ? (
-            <div className="mt-2">
-              <EmptyState
-                title="Nothing queued"
-                body="Use ASK to shape the idea, then approve execution here — follow-ups, publishing slots, and outreach land as structured rows."
-              />
-            </div>
-          ) : (
-            <div className="bo-scroll-x-lane mt-2">
-              <table className="w-full min-w-[280px] border-collapse text-left text-meta">
-                <thead>
-                  <tr className="border-b border-border/35 text-fine uppercase tracking-wide text-textSoft">
-                    <th className="py-1.5 pe-2 font-medium">Type</th>
-                    <th className="py-1.5 pe-2 font-medium">Item</th>
-                    <th className="py-1.5 font-medium">When / status</th>
-                    <th className="w-[1%] py-1.5 ps-2 font-medium whitespace-nowrap">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sorted.slice(0, 14).map((row) => (
-                    <tr key={row.id} className="align-top text-textMuted">
-                      <td className="py-2 pe-2 align-middle">
-                        <span
-                          className={pulseQueueBadgeSurfaceClass(pulseTimelineKindTone(row.kind))}
-                          title={row.badge ?? row.kind}
-                        >
-                          {row.badge ?? row.kind}
-                        </span>
-                      </td>
-                      <td className="max-w-[10rem] py-2 pe-2">
-                        <span className="line-clamp-2 font-medium text-text" title={row.title}>
-                          {row.title}
-                        </span>
-                      </td>
-                      <td className="py-2 pe-2 text-fine leading-snug text-textSoft">
-                        {row.subtitle}
-                      </td>
-                      <td className="py-2 ps-2 text-end whitespace-nowrap">
-                        <button
-                          type="button"
-                          disabled={commandBusy}
-                          title="Run this queue line on device (stay on Plan)"
-                          onClick={() => runCommand(workspaceQueueCommandLine(row))}
-                          className={clsx(mobileChipClass(btnFocus), 'text-fine')}
-                        >
-                          <CirclePlay className="me-1 inline h-3 w-3 align-text-bottom" />
-                          Run
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {sorted.length > 14 ? (
-                <p className="mt-2 text-fine text-textSoft">
-                  Showing 14 of {sorted.length}. Run narrower commands in ASK or PLAN to trim the
-                  queue.
+          <div className="mt-3 grid gap-3 lg:grid-cols-[1.4fr_1fr]">
+            <div className="space-y-2">
+              {timelineItems.length === 0 ? (
+                <p className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2 text-meta text-textMuted">
+                  No activity yet. Approved plans, scheduled tasks, drafts, and platform previews
+                  will appear here.
                 </p>
+              ) : (
+                timelineItems.map((item) => (
+                  <article key={item.id} className="rounded-xl border border-border/40 bg-bgElevated/65 p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-label font-semibold text-text">{item.whatHappened}</h3>
+                        <p className="mt-0.5 text-fine text-textSoft">
+                          {item.whereItHappened} - {compactTime(item.at)}
+                        </p>
+                      </div>
+                      <span className={clsx('rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(timelineTone(item)))}>
+                        {item.status}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-meta leading-snug text-textMuted">{item.whatAiDid}</p>
+                    {item.command ? (
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void runCommand(item.command!)}
+                        className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                      >
+                        {item.kind === 'failed-operation' ? (
+                          <RefreshCw className="me-1 inline h-3 w-3 align-text-bottom" aria-hidden />
+                        ) : (
+                          <CirclePlay className="me-1 inline h-3 w-3 align-text-bottom" aria-hidden />
+                        )}
+                        {item.kind === 'failed-operation' ? 'Retry' : 'Inspect'}
+                      </button>
+                    ) : null}
+                  </article>
+                ))
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3">
+                <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+                  <CalendarCheck2 className="h-4 w-4" aria-hidden />
+                  Soonest queue
+                </p>
+                {sortedQueue.length === 0 ? (
+                  <p className="mt-2 text-meta text-textMuted">Nothing queued yet.</p>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    {sortedQueue.map((row) => (
+                      <div key={row.id} className="rounded-xl border border-border/30 bg-bgSubtle/45 px-2.5 py-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="line-clamp-1 text-label font-semibold text-text">{row.title}</p>
+                            <p className="mt-0.5 text-fine leading-snug text-textSoft">{row.subtitle}</p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={commandBusy}
+                            onClick={() => void runCommand(workspaceQueueCommandLine(row))}
+                            className={clsx(mobileChipClass(btnFocus), 'shrink-0 text-fine disabled:opacity-50')}
+                          >
+                            Run
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3">
+                <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
+                  <FileText className="h-4 w-4" aria-hidden />
+                  Recent receipts
+                </p>
+                {receipts.length === 0 ? (
+                  <p className="mt-2 text-meta text-textMuted">No receipts yet.</p>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    {receipts.map((receipt) => (
+                      <article key={receipt.id} className="rounded-xl border border-border/30 bg-bgSubtle/45 px-2.5 py-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="line-clamp-1 text-label font-semibold text-text">{receipt.action}</p>
+                            <p className="mt-0.5 line-clamp-2 text-fine leading-snug text-textSoft">
+                              {receipt.reasoningSummary}
+                            </p>
+                          </div>
+                          <span className={clsx('shrink-0 rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(receiptTone(receipt.executionStatus)))}>
+                            {receipt.executionStatus}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => void runCommand(receiptPreviewCommand(receipt))}
+                            className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
+                          >
+                            Explain
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onExportExecutionReceipt(receipt)}
+                            className={clsx(mobileChipClass(btnFocus), 'text-fine')}
+                          >
+                            Export
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {failedCount ? (
+                <div className="rounded-2xl border border-danger/35 bg-dangerSoft/10 p-3">
+                  <p className="flex items-start gap-2 text-meta leading-snug text-danger">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                    {failedCount} item{failedCount === 1 ? '' : 's'} need attention. Review the
+                    failed activity or receipt before retrying.
+                  </p>
+                </div>
               ) : null}
             </div>
-          )}
+          </div>
         </section>
       </div>
     </div>

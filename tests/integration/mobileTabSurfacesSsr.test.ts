@@ -81,7 +81,7 @@ const approvalSnapshot = () => {
 };
 
 describe('Mobile tab surfaces (SSR integration)', () => {
-  it('Plan hub: destinations, jump links, Pulse, Today snapshot, queue landmarks', () => {
+  it('Plan hub: renders the flat command board landmarks', () => {
     const html = renderToString(
       React.createElement(MobileWorkspaceHubView, {
         snapshot: buildWorkspaceSnapshot(cloneDemoSampleData()),
@@ -101,48 +101,15 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Plan"');
-    expect(html).toContain('id="plan-pulse"');
-    expect(html).toContain('id="plan-today"');
-    expect(html).toContain('id="plan-queue"');
-    expect(html).toContain('>Pulse<');
-    expect(html).toContain(
-      'Live workspace counters — publishing pipeline, cadence, captures, and sync hub — queue below is soonest-first, not a feed.'
-    );
+    expect(html).toContain('PLAN command board');
+    expect(html).toContain('Turn ideas into approved next steps');
+    expect(html).toContain('Active plans');
+    expect(html).toContain('Pending approvals');
+    expect(html).toContain('Suggested next plans');
+    expect(html).toContain('Timeline and activity');
     expect(html).toContain('Soonest queue');
-    expect(html).toContain('bo-plan-destination-grid');
-    expect(html).toContain('aria-label="Plan destinations"');
-    expect(html).toContain('Jump within Plan');
-    expect(html).toContain('id="plan-actions"');
-    expect(html).toContain('Operational execution layer');
-    expect(html).toContain('Turn ideas into executable plans');
-    expect(html).toContain('PLAN / OPERATE');
-    expect(html).toContain('Your AI operating loop');
-    expect(html).toContain('Your AI digital twin understands your profession');
-    expect(html).toContain('OPERATE');
-    expect(html).toContain('id="plan-operational-timeline"');
-    expect(html).toContain('Operational command center');
-    expect(html).toContain('Cross-platform operational timeline');
-    expect(html).toContain('What AI did');
-    expect(html).toContain('id="plan-human-approval-queue"');
-    expect(html).toContain('Human Approval Queue');
-    expect(html).toContain('Trust gate before execution');
-    expect(html).toContain('Nothing external executes automatically');
-    expect(html).toContain('id="plan-execution-receipts"');
-    expect(html).toContain('Execution receipts');
-    expect(html).toContain('What happened, why, and what data was used');
-    expect(html).toContain('Receipts');
-    expect(html).toContain('id="plan-human-trust-layer"');
-    expect(html).toContain('Human Trust Layer');
-    expect(html).toContain('Safe, controlled, transparent execution');
-    expect(html).toContain('Generated drafts');
-    expect(html).toContain('Approvals');
-    expect(html).toContain('Sent actions');
-    expect(html).toContain('Scheduled workflows');
-    expect(html).toContain('Platform actions');
-    expect(html).toContain('AI recommendations');
-    expect(html).toContain('Completed operations');
-    expect(html).toContain('Ops timeline');
-    expect(html).toContain('Approvals');
+    expect(html).toContain('Recent receipts');
+    expect(html).toContain('Safety rule');
     expect(html).toContain('Workflow Plan');
     expect(html).toContain('Outreach Plan');
     expect(html).toContain('Content Calendar');
@@ -151,33 +118,13 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Preview');
     expect(html).toContain('Approve');
     expect(html).toContain('Edit');
-    expect(html).toContain('Retry');
-    expect(html).toContain('Export plan JSON');
-    expect(html).toContain('Execution picks');
-    expect(html).toContain('Sync embeddings');
-    expect(html).toContain('Execution and governance');
-    expect(html).toContain('id="plan-exec-insights"');
-    expect(html).toContain('Today snapshot');
+    expect(html).toContain('Export');
     expect(html).toContain('Open full Today');
-    expect(html).toContain('Plan strip');
-    expect(html).toContain('id="plan-profile-summary"');
-    expect(html).toContain('Workspace profile');
-    expect(html).toContain('Edit profile');
-    expect(html).toContain('Resume-to-Digital-Twin');
-    expect(html).toContain('Upload your resume. Build your AI twin.');
-    expect(html).toContain('PDF/DOCX parsing is shown');
-    expect(html).toContain('Primary offer');
-    expect(html).toContain('Voice guide');
-    expect(html).toContain('Focus metric');
-    expect(html).toContain('>Today<');
-    expect(html).toContain('>Pipeline<');
-    expect(html).toContain('<table');
     expect(html).toContain('>Run<');
-    expect(html).toContain('bo-icon-chip');
     expect(html).toContain('Account &amp; billing');
     expect(html).toContain('Membership active');
     expect(html).toContain('operator@fixture.test');
-    expect(html).not.toContain('Workspace setup hint');
+    expect(html).not.toContain('Workstreams');
   });
 
   it('Plan hub: setup hint when profile placeholders remain (Getting started checklist dismissed)', () => {
@@ -199,8 +146,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onApproveOperatorTrace: asyncNoop
       })
     );
-    expect(html).toContain('Workspace setup hint');
-    expect(html).toContain('⌘K palette');
+    expect(html).toContain('Add your offer, voice, and focus metric');
+    expect(html).toContain('Set up profile');
   });
 
   it('Plan hub: no setup hint on personalized demo when profile is complete', () => {
@@ -222,7 +169,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onApproveOperatorTrace: asyncNoop
       })
     );
-    expect(html).not.toContain('Workspace setup hint');
+    expect(html).not.toContain('Add your offer, voice, and focus metric');
   });
 
   it('Plan hub: renders converted ASK cards in the operational studio', () => {
@@ -263,8 +210,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
 
     expect(html).toContain('Converted Execution Plan');
     expect(html).toContain('Converted from ASK');
-    expect(html).toContain('ASK output');
-    expect(html).toContain('PLAN preview');
+    expect(html).toContain('What this is');
+    expect(html).toContain('Next step');
   });
 
   it('Plan hub: human approval queue exposes trust controls for pending outputs', () => {
@@ -289,14 +236,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     );
 
     expect(html).toContain('draft outreach');
-    expect(html).toContain('Output preview');
     expect(html).toContain('Preview this outreach before sending.');
-    expect(html).toContain('external-action');
     expect(html).toContain('Preview');
-    expect(html).toContain('Edit');
     expect(html).toContain('Reject');
-    expect(html).toContain('Regenerate');
-    expect(html).toContain('Compare versions');
     expect(html).toContain('Approve');
   });
 
@@ -321,15 +263,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
 
-    expect(html).toContain('Execution receipts');
-    expect(html).toContain('Every PLAN execution gets a readable receipt');
-    expect(html).toContain('Source facts used');
-    expect(html).toContain('Generated outputs');
-    expect(html).toContain('Approvals');
-    expect(html).toContain('Warnings / errors');
-    expect(html).toContain('Pending human approval');
-    expect(html).toContain('Preview receipt');
-    expect(html).toContain('Export receipt JSON');
+    expect(html).toContain('Recent receipts');
+    expect(html).toContain('pending approval');
+    expect(html).toContain('Explain');
+    expect(html).toContain('Export');
   });
 
   it('ASK: intelligence layer, prompt categories, execution shortcuts, and recent commands', () => {
@@ -461,13 +398,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
 
-    expect(html).toContain('PLAN active twin context');
-    expect(html).toContain('Active twin for PLAN:');
+    expect(html).toContain('Operator context');
     expect(html).toContain('Maya Rivera');
-    expect(html).toContain('Verified data usage');
-    expect(html).toContain('Memory usage');
-    expect(html).toContain('Twin-aware plan');
-    expect(html).toContain('voice, positioning, suggestions, workflows');
+    expect(html).toContain('Improve twin');
+    expect(html).toContain('Create outreach plan');
   });
 
   it('Getting started card: Plan onboarding landmarks', () => {

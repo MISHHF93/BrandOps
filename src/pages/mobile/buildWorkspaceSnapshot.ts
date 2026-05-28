@@ -93,6 +93,10 @@ import {
   buildMemoryContextEngineReadout,
   type MemoryContextEngineReadout
 } from '../../services/memory/memoryContextEngine';
+import {
+  buildExpertOperatorIntegrationReadout,
+  type ExpertOperatorIntegrationReadout
+} from '../../services/ai/expertOperatorIntegration';
 
 function formatAiOperatorMode(mode: AiOperatorMode): string {
   const labels: Record<AiOperatorMode, string> = {
@@ -414,6 +418,8 @@ export interface MobileWorkspaceSnapshot {
   workflowPredictionLayer: WorkflowPredictionLayerReadout;
   /** Predictive Operations Dashboard: live Pulse lanes and next best action signals. */
   predictiveOperationsDashboard: PredictiveOperationsDashboardReadout;
+  /** MoE expert operator integration across ASK, PLAN, and OPERATE. */
+  expertOperator: ExpertOperatorIntegrationReadout;
   /** Platform-specific action cards shown only for connected/supported platform context. */
   platformActionCards: PlatformActionCard[];
   /** Cross-platform operational event feed with what/where/AI-did provenance. */
@@ -551,8 +557,33 @@ function detailFacts(
     .slice(0, 6);
 }
 
-function buildPlanExecutionReceipts(workspace: BrandOpsData): PlanExecutionReceipt[] {
-  const receipts: PlanExecutionReceipt[] = [];
+function buildExpertPlanReceipts(
+  expertReceipts: ExpertOperatorIntegrationReadout['receipts']
+): PlanExecutionReceipt[] {
+  return expertReceipts.map((receipt) => ({
+    id: `receipt-${receipt.id}`,
+    action: `${receipt.mode} expert execution`,
+    reasoningSummary: receipt.summary,
+    sourceFactsUsed: [
+      `experts: ${receipt.activatedExperts.join(', ') || 'none'}`,
+      receipt.confidenceLabel,
+      receipt.qualityLabel,
+      receipt.fallbackNotice ?? ''
+    ].filter(Boolean),
+    generatedOutputs: [receipt.title, receipt.latencyLabel],
+    approvals: [receipt.approvalStatus],
+    startedAt: receipt.generatedAt,
+    executionStatus: receipt.failureNotice ? 'needs_review' : 'recorded',
+    warningsErrors: [receipt.failureNotice ?? ''].filter(Boolean),
+    sourceLabel: 'Expert operator'
+  }));
+}
+
+function buildPlanExecutionReceipts(
+  workspace: BrandOpsData,
+  expertReceipts: ExpertOperatorIntegrationReadout['receipts']
+): PlanExecutionReceipt[] {
+  const receipts: PlanExecutionReceipt[] = [...buildExpertPlanReceipts(expertReceipts)];
 
   for (const run of buildRecentAiPipelineRuns(workspace)) {
     const stepDetails = run.steps
@@ -648,6 +679,7 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
   const opportunitiesToClose = localIntelligence.opportunitiesToClose(workspace.opportunities);
   const cadenceHeadline = operatorCadenceFlow.build(workspace).headline;
   const cockpitExtras = buildCockpitIntelligenceExtras(workspace);
+  const expertOperator = buildExpertOperatorIntegrationReadout(workspace);
 
   return {
     notes: workspace.notes.length,
@@ -719,6 +751,7 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     predictiveContentIdeationEngine: buildPredictiveContentIdeationReadout(workspace),
     workflowPredictionLayer: buildWorkflowPredictionLayerReadout(workspace),
     predictiveOperationsDashboard: buildPredictiveOperationsDashboardReadout(workspace),
+    expertOperator,
     platformActionCards: buildPlatformActionCards(workspace),
     cockpitOpportunityPeek: activeOpportunities.slice(0, 5).map((o) => ({
       id: o.id,
@@ -846,7 +879,7 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     memoryTraceSummary: buildMemoryTraceSummary(workspace),
     planPendingReviewCount: countPendingOperatorReviews(workspace.operatorTraces?.entries),
     planPendingReviewPeek: buildPendingReviewPeek(workspace),
-    planExecutionReceipts: buildPlanExecutionReceipts(workspace),
+    planExecutionReceipts: buildPlanExecutionReceipts(workspace, expertOperator.receipts),
     crossPlatformOperationalTimeline: buildCrossPlatformOperationalTimeline(workspace),
     humanTrustLayer: buildHumanTrustLayer(workspace),
     ...cockpitExtras
