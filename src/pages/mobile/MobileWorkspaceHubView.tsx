@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { CalendarCheck2, CirclePlay, TableProperties } from 'lucide-react';
 import type { LaunchAccessState } from '../../shared/account/launchAccess';
-import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
+import type { MobileWorkspaceSnapshot, PlanExecutionReceipt } from './buildWorkspaceSnapshot';
 import type { PipelineRun } from '../../types/aiIntegrationSuite';
 import { workspaceQueueCommandLine } from './pulseTimeline';
 import type { PulseTimelineRow } from './pulseTimeline';
@@ -11,11 +11,21 @@ import { PlanJumpNav } from './PlanJumpNav';
 import { PlanProfileSummary } from './PlanProfileSummary';
 import { PlanSetupHint } from './PlanSetupHint';
 import { PlanPlanningActions } from './PlanPlanningActions';
+import { PlanHumanApprovalQueue } from './PlanHumanApprovalQueue';
+import { PlanExecutionReceipts } from './PlanExecutionReceipts';
 import { PlanExecutionInsights } from './PlanExecutionInsights';
+import { PlanOperationalStudio, type OperationalPlanCard } from './PlanOperationalStudio';
+import { PlanOperationalTimeline } from './PlanOperationalTimeline';
+import { PlanCrossPlatformPlanner } from './PlanCrossPlatformPlanner';
+import { PlanUnifiedOperationalInbox } from './PlanUnifiedOperationalInbox';
+import { PlanOpportunityEngine } from './PlanOpportunityEngine';
+import { PlanPlatformActionCards } from './PlanPlatformActionCards';
+import { PlanHumanTrustLayer } from './PlanHumanTrustLayer';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
 import { mobileChipClass } from './mobileTabPrimitives';
 import { defaultBrandProfile } from '../../config/workspaceDefaults';
+import { twinActionPrompt } from '../../services/digitalTwin/digitalTwin';
 import {
   metricToneTextClass,
   planKpiSnapshotPillClass,
@@ -65,6 +75,10 @@ export interface MobileWorkspaceHubViewProps {
   workspaceCommandLockReason: 'auth' | 'membership' | null;
   onDownloadPipelineRun: (run: PipelineRun) => void;
   onApproveOperatorTrace: (traceId: string) => void | Promise<void>;
+  onRejectOperatorTrace?: (traceId: string) => void | Promise<void>;
+  onExportOperationalPlan?: (plan: OperationalPlanCard) => void;
+  onExportExecutionReceipt?: (receipt: PlanExecutionReceipt) => void;
+  convertedOperationalPlans?: OperationalPlanCard[];
 }
 
 /**
@@ -84,7 +98,11 @@ export const MobileWorkspaceHubView = ({
   canRunWorkspaceCommands,
   workspaceCommandLockReason,
   onDownloadPipelineRun,
-  onApproveOperatorTrace
+  onApproveOperatorTrace,
+  onRejectOperatorTrace = () => {},
+  onExportOperationalPlan = () => {},
+  onExportExecutionReceipt = () => {},
+  convertedOperationalPlans = []
 }: MobileWorkspaceHubViewProps) => {
   const profileIncomplete =
     snapshot.operatorName.trim() === defaultBrandProfile.operatorName.trim() ||
@@ -105,8 +123,8 @@ export const MobileWorkspaceHubView = ({
   return (
     <div className="space-y-3" aria-label="Plan">
       <span className="sr-only">
-        Plan — workspace command center; profile summary and Account actions above; pulse, quick
-        picks, Today snapshot, and queue below. Cross-tab destinations use the dock or ⌘K palette.
+        Plan and Operate — AI planning plus controlled execution for digital twin outputs, connected
+        platforms, approvals, receipts, and operational timelines.
       </span>
 
       <div className={SHEET}>
@@ -142,21 +160,187 @@ export const MobileWorkspaceHubView = ({
           />
         </div>
 
+        <section className={ROW} aria-labelledby="plan-twin-heading">
+          <div className="rounded-2xl border border-primary/30 bg-primarySoft/10 p-3.5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p
+                  id="plan-twin-heading"
+                  className="text-meta font-semibold uppercase tracking-wide text-textMuted"
+                >
+                  Resume-to-Digital-Twin
+                </p>
+                <h2 className="mt-1 text-h3 text-text">
+                  {snapshot.activeDigitalTwin
+                    ? snapshot.activeDigitalTwin.displayName
+                    : 'Upload your resume. Build your AI twin.'}
+                </h2>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  {snapshot.activeDigitalTwin
+                    ? `${snapshot.activeDigitalTwin.status} · ${snapshot.activeDigitalTwin.confidenceScore}% confidence · ${snapshot.activeDigitalTwin.memory.missingInfo.length} profile gaps`
+                    : 'Paste a resume, profile, or brand bio in Settings. BrandOps extracts identity, skills, voice, goals, and safe action context.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenSettings}
+                className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
+              >
+                {snapshot.activeDigitalTwin ? 'Improve Twin Profile' : 'Create Twin'}
+              </button>
+            </div>
+            {snapshot.activeDigitalTwin ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(
+                  [
+                    ['generate_professional_bio', 'Generate Bio'],
+                    ['draft_outreach', 'Create Outreach Plan'],
+                    ['create_30_day_content_plan', 'Build Content Plan']
+                  ] as const
+                ).map(([actionType, label]) => (
+                  <button
+                    key={actionType}
+                    type="button"
+                    disabled={commandBusy || !canRunWorkspaceCommands}
+                    onClick={() =>
+                      runCommand(twinActionPrompt(actionType, snapshot.activeDigitalTwin!))
+                    }
+                    className={clsx(mobileChipClass(btnFocus), 'disabled:opacity-50')}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textMuted">
+                Manual paste and TXT/Markdown files are supported today. PDF/DOCX parsing is shown
+                as unavailable until a real parser is added.
+              </p>
+            )}
+          </div>
+        </section>
+
         <div className={clsx(ROW, 'space-y-3')}>
           <header>
             <h1 className="text-meta font-semibold uppercase tracking-[0.14em] text-textMuted">
-              Plan
+              PLAN / OPERATE
             </h1>
+            <h2 className="mt-1 text-h3 text-text">Your AI operating loop</h2>
             <p className="mt-1.5 text-meta leading-snug text-textMuted">
-              Use the Plan strip (Overview · Workstreams · Connect · Setup) or{' '}
+              Your AI digital twin understands your profession, connects to your tools, and helps
+              operate your workflows. Use the Plan strip (Overview · Workstreams · Connect · Setup)
+              or{' '}
               <kbd className="rounded bg-bgSubtle px-1 py-px font-mono text-fine text-text">⌘K</kbd>{' '}
-              — Assistant stays on Ask.
+              — ASK stays the intelligence layer.
             </p>
             <p className="mt-2 text-fine leading-snug text-textSoft">
-              Understand résumé and operating context → keep an accurate operator/org model → act to
-              offload work and lift execution.
+              PLAN turns strategy into AI planning artifacts. OPERATE runs the controlled layer:
+              connected platform actions, human trust gates, receipts, audit history, and timelines.
             </p>
+            <div className="mt-3 grid gap-1.5 sm:grid-cols-3" aria-label="ASK PLAN OPERATE loop">
+              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-2.5 py-2">
+                <p className="text-fine font-semibold uppercase tracking-wide text-primary">ASK</p>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  Twin-aware intelligence for profession identity and connected context.
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-2.5 py-2">
+                <p className="text-fine font-semibold uppercase tracking-wide text-primary">PLAN</p>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  AI planning for workflows, outreach, content, schedules, and queues.
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-2.5 py-2">
+                <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                  OPERATE
+                </p>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  Controlled execution with approval, retry, receipts, audit, and timeline.
+                </p>
+              </div>
+            </div>
           </header>
+
+          <PlanUnifiedOperationalInbox
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+
+          <PlanOpportunityEngine
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+
+          <PlanPlatformActionCards
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+
+          <PlanHumanTrustLayer
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+
+          <PlanCrossPlatformPlanner
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+
+          <PlanOperationalStudio
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            agentEnabled={canRunWorkspaceCommands}
+            agentLockHint={lockHint}
+            runCommand={runCommand}
+            onOpenSettings={onOpenSettings}
+            onOpenToday={onOpenToday}
+            onOpenCommandPalette={onOpenCommandPalette}
+            onExportOperationalPlan={onExportOperationalPlan}
+            convertedPlans={convertedOperationalPlans}
+          />
+
+          <PlanOperationalTimeline
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+
+          <PlanHumanApprovalQueue
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+            onApproveOperatorTrace={onApproveOperatorTrace}
+            onRejectOperatorTrace={onRejectOperatorTrace}
+          />
+
+          <PlanExecutionReceipts
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+            onExportExecutionReceipt={onExportExecutionReceipt}
+          />
 
           <PlanDestinationGrid
             btnFocus={btnFocus}
@@ -322,7 +506,7 @@ export const MobileWorkspaceHubView = ({
             <div className="mt-2">
               <EmptyState
                 title="Nothing queued"
-                body="Use Assistant to add follow-ups, publishing slots, or outreach — they land here as structured rows."
+                body="Use ASK to shape the idea, then approve execution here — follow-ups, publishing slots, and outreach land as structured rows."
               />
             </div>
           ) : (
@@ -373,7 +557,7 @@ export const MobileWorkspaceHubView = ({
               </table>
               {sorted.length > 14 ? (
                 <p className="mt-2 text-fine text-textSoft">
-                  Showing 14 of {sorted.length}. Run narrower commands in Assistant to trim the
+                  Showing 14 of {sorted.length}. Run narrower commands in ASK or PLAN to trim the
                   queue.
                 </p>
               ) : null}

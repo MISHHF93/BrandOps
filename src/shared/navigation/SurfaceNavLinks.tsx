@@ -51,7 +51,7 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
         Plan
       </a>
       <a className={linkClass} href={mainAppChatHref}>
-        Assistant
+        ASK
       </a>
       <a className={linkClass} href={todayHref} title="mobile.html?section=today">
         Today

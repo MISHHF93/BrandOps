@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
-import type { OperatingPresetId } from '../../types/domain';
+import type { DigitalTwinSourceType, OperatingPresetId } from '../../types/domain';
 import type { AiOperatorMode } from '../../types/aiIntegrationSuite';
 import type { AuthProviderId, LaunchMembershipState } from '../../shared/account/launchAccess';
 import { authProviderLabel } from '../../shared/account/launchAccess';
@@ -31,7 +31,8 @@ import {
   SettingsAssistantComposer,
   SettingsDataSafetyBlock,
   SettingsResumeNeuralPhasePanel,
-  SettingsTierAOverview
+  SettingsTierAOverview,
+  SettingsTwinDashboard
 } from './MobileSettingsAISurface';
 import { SettingsAiRoutingPanel } from './SettingsAiRoutingPanel';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
@@ -114,8 +115,8 @@ function AccountMembershipSection({
           descriptionVisibility="sr-only"
         >
           <p className="mt-2 text-fine leading-snug text-textSoft">
-            Provider buttons set BrandOps access state for this workspace and unlock gated
-            operator actions. Provider status is stored on-device in this build.
+            Provider buttons set BrandOps access state for this workspace and unlock gated operator
+            actions. Provider status is stored on-device in this build.
           </p>
           <dl className="mt-2 space-y-1.5 text-meta text-textMuted">
             <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
@@ -743,6 +744,7 @@ export interface MobileSettingsViewProps {
   onImportWorkspace: (raw: string) => Promise<void>;
   onRequestResetWorkspace: () => void;
   onOperatorTraceCollectionChange: (enabled: boolean) => void | Promise<void>;
+  onConnectedIdentityLearningChange: (enabled: boolean) => void | Promise<void>;
   /** Host document; avoids offering a duplicate `integrations.html` tab when already there. */
   documentSurface: AppDocumentSurfaceId | 'chatbot';
   isAuthenticated?: boolean;
@@ -757,6 +759,19 @@ export interface MobileSettingsViewProps {
   onOperatingProfileApplied?: (presetId: OperatingPresetId | 'custom') => void | Promise<void>;
   /** Persist compressed résumé artifact on operator twin (empty clears). */
   onPersistResumeNeuralPhaseContext?: (compressed: string) => void | Promise<void>;
+  /** Create a visible digital twin from reviewed resume/profile text. */
+  onCreateDigitalTwinFromText?: (input: {
+    rawText: string;
+    sourceType: DigitalTwinSourceType;
+    sourceSummary?: string;
+    reviewOverrides?: {
+      displayName?: string;
+      headline?: string;
+      summary?: string;
+      professionalPositioning?: string;
+    };
+  }) => void | Promise<void>;
+  onDeleteActiveDigitalTwin?: () => void | Promise<void>;
   /** Hosted Ask routing stance (`ask:` model scoring). */
   onAiOperatorModeChange: (mode: AiOperatorMode) => void | Promise<void>;
   onAiRoutingDiagnosticsChange: (enabled: boolean) => void | Promise<void>;
@@ -776,6 +791,7 @@ export const MobileSettingsView = ({
   onImportWorkspace,
   onRequestResetWorkspace,
   onOperatorTraceCollectionChange,
+  onConnectedIdentityLearningChange,
   documentSurface,
   runCommand,
   applySettingsConfigure,
@@ -791,6 +807,8 @@ export const MobileSettingsView = ({
   onOpenBillingPortal = () => {},
   onOperatingProfileApplied,
   onPersistResumeNeuralPhaseContext = async () => {},
+  onCreateDigitalTwinFromText = async () => {},
+  onDeleteActiveDigitalTwin = async () => {},
   onAiOperatorModeChange,
   onAiRoutingDiagnosticsChange,
   resumePhaseRevealKey = 0
@@ -904,6 +922,15 @@ export const MobileSettingsView = ({
                 btnFocus={btnFocus}
                 applyBusy={agentRouteBusy}
                 onPersistResumeNeuralPhaseContext={onPersistResumeNeuralPhaseContext}
+                onCreateDigitalTwinFromText={onCreateDigitalTwinFromText}
+              />
+
+              <SettingsTwinDashboard
+                snapshot={snapshot}
+                btnFocus={btnFocus}
+                disabled={agentRouteBusy}
+                runCommand={runCommand}
+                onDeleteActiveDigitalTwin={onDeleteActiveDigitalTwin}
               />
             </div>
           </details>
@@ -919,7 +946,11 @@ export const MobileSettingsView = ({
             operatorTraceCollectionEnabled={
               snapshot.settingsFullReadout.operatorTraceCollectionEnabled
             }
+            connectedIdentityLearningEnabled={
+              snapshot.settingsFullReadout.connectedIdentityLearningEnabled
+            }
             onOperatorTraceCollectionChange={onOperatorTraceCollectionChange}
+            onConnectedIdentityLearningChange={onConnectedIdentityLearningChange}
           />
 
           <details className="bo-disclosure group">
@@ -1123,7 +1154,7 @@ export const MobileSettingsView = ({
               >
                 {snapshot.recentAudit.length === 0 ? (
                   <p className="mt-2 text-meta text-textMuted">
-                    No commands recorded yet. Run a command in Chat to populate this list.
+                    No commands recorded yet. Run a command in ASK or PLAN to populate this list.
                   </p>
                 ) : (
                   <ul className="mt-2 space-y-2">

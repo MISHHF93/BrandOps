@@ -101,7 +101,11 @@ export function buildOperatorTraceEntry(input: OperatorTraceInput): OperatorTrac
       .filter(Boolean)
       .slice(0, 12);
   }
-  if (input.reviewStatus === 'pending' || input.reviewStatus === 'approved') {
+  if (
+    input.reviewStatus === 'pending' ||
+    input.reviewStatus === 'approved' ||
+    input.reviewStatus === 'rejected'
+  ) {
     entry.reviewStatus = input.reviewStatus;
   }
   if (typeof input.annotatorNote === 'string' && input.annotatorNote.trim()) {

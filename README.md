@@ -53,6 +53,10 @@ Production-ish bundle:
 npm run build
 ```
 
+`npm run build` regenerates deterministic icons and social preview assets from the committed
+`public/brandops-crown.svg` fallback or `public/branding/brandops-logo.png` when you add a higher
+fidelity source logo.
+
 Load **`dist/`** as an unpacked extension in Chrome or Edge (Developer mode).
 
 ---
@@ -86,8 +90,14 @@ Operator modes (**Fast / Balanced / Deep / Private / Evidence**) tune hosted **`
 Copy **[`.env.example`](.env.example)** → **`.env.local`** (gitignored).
 
 - **`VITE_*`** client IDs and optional **`VITE_PRIVACY_POLICY_URL`** for listings / Welcome links
+- Optional **`VITE_STRIPE_CHECKOUT_URL`** and **`VITE_STRIPE_BILLING_PORTAL_URL`** power the
+  membership CTAs when billing is enforced
 - OAuth redirect URIs must match **local dev**, **hosted preview**, or **`chrome-extension://`** flows described in `.env.example`
 - Optional preview gates (`VITE_PREVIEW_*`), intelligence rules URL, membership gate flags — all documented inline in `.env.example`
+
+The current repo is a local-first extension/Capacitor app, not a hosted SaaS backend. Webhook bridge
+scripts are optional server-side helpers and require a real `BRIDGE_TARGET_URL` receiver to dispatch
+signed envelopes into your own backend or extension messaging bridge.
 
 Privacy copy ships as **`public/privacy-policy.html`**; listings should align with that artifact unless you override with a hosted HTTPS URL.
 

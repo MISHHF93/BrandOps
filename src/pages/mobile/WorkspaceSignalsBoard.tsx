@@ -281,12 +281,7 @@ function VitalityMetricCell({ m, valueId }: { m: MetricCell; valueId: string }) 
   );
 }
 
-export type WorkspaceSignalsBoardVariant =
-  | 'today'
-  | 'pulse'
-  | 'integrations'
-  | 'settings'
-  | 'chat';
+export type WorkspaceSignalsBoardVariant = 'today' | 'pulse' | 'integrations' | 'settings' | 'chat';
 
 export interface WorkspaceSignalsBoardProps {
   metrics: WorkspaceSignalsPick;
@@ -374,9 +369,7 @@ export function WorkspaceSignalsBoard({
           <p id={srId} className="text-label font-semibold text-text">
             {headline}
           </p>
-          <p className="text-meta text-textSoft">
-            {vitalitySubtitle(variant, filtered)}
-          </p>
+          <p className="text-meta text-textSoft">{vitalitySubtitle(variant, filtered)}</p>
         </div>
       </div>
       <div

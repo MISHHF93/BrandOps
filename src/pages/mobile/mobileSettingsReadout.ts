@@ -37,6 +37,7 @@ export interface MobileSettingsFullReadout {
   automationRulesSummary: string;
   brandVoiceGuidePreview: string;
   operatorTraceCollectionEnabled: boolean;
+  connectedIdentityLearningEnabled: boolean;
   /** Masked OpenAI-compatible inference root (no secrets). */
   aiInferenceEndpointPreview: string;
   /** Masked embeddings root when set, else same as inference preview when embedding URL empty. */
@@ -137,6 +138,7 @@ export function buildMobileSettingsFullReadout(workspace: BrandOpsData): MobileS
         : rules.map((r) => (r.enabled ? r.name : `${r.name} (off)`)).join(', '),
     brandVoiceGuidePreview: clip(workspace.brand.voiceGuide, 100),
     operatorTraceCollectionEnabled: s.operatorTraceCollectionEnabled,
+    connectedIdentityLearningEnabled: s.connectedIdentityLearningEnabled,
     aiInferenceEndpointPreview: inferPreview,
     aiEmbeddingEndpointPreview: embedPreview,
     aiBridgeChatModelId: bridge.chatModelId || '—',

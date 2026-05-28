@@ -32,8 +32,8 @@ export function KpiSelfCheckStrip({
         Execution check-in
       </p>
       <p className="mt-1 line-clamp-3 text-meta leading-snug text-textSoft" title={focusMetric}>
-        Rate yourself vs <span className="font-medium text-text">{focusMetric.trim() || 'focus metric'}</span>
-        .
+        Rate yourself vs{' '}
+        <span className="font-medium text-text">{focusMetric.trim() || 'focus metric'}</span>.
       </p>
       {checks.length > 0 ? (
         <ul className="mt-2 space-y-1 text-fine text-textMuted" aria-label="Recent check-ins">
@@ -42,12 +42,16 @@ export function KpiSelfCheckStrip({
               <span className="font-semibold text-text">{c.score}/5</span>
               <span className="text-textSoft"> · </span>
               <span>{new Date(c.recordedAt).toLocaleDateString()}</span>
-              {c.note.trim() ? <span className="text-textSoft"> — {c.note.trim().slice(0, 80)}</span> : null}
+              {c.note.trim() ? (
+                <span className="text-textSoft"> — {c.note.trim().slice(0, 80)}</span>
+              ) : null}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-fine text-textSoft">No check-ins yet — log one to track momentum.</p>
+        <p className="mt-2 text-fine text-textSoft">
+          No check-ins yet — log one to track momentum.
+        </p>
       )}
       <div className="mt-3 flex flex-wrap items-end gap-2">
         <label className="flex flex-col gap-1">
@@ -86,7 +90,10 @@ export function KpiSelfCheckStrip({
             void onSave(score, note.trim());
             setNote('');
           }}
-          className={clsx('rounded-lg bg-accentSoft/35 px-3 py-1.5 text-sm font-semibold text-text', btnFocus)}
+          className={clsx(
+            'rounded-lg bg-accentSoft/35 px-3 py-1.5 text-sm font-semibold text-text',
+            btnFocus
+          )}
         >
           Save check-in
         </button>

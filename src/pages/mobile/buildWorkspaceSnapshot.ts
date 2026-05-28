@@ -6,6 +6,7 @@ import type {
   BrandVault,
   BrandVaultListField,
   CopilotWorkerRegistrySettings,
+  DigitalTwin,
   FocusKpiSelfCheck,
   IntegrationSourceKind,
   SchedulerTask,
@@ -27,6 +28,39 @@ import { buildPulseTimeline } from './pulseTimeline';
 import type { AiOperatorMode, PipelineRun } from '../../types/aiIntegrationSuite';
 import { countPendingOperatorReviews } from '../../services/plan/reviewQueue';
 import { getOperatorTwinResumeArtifact } from '../../services/operatorTwin/readResumeArtifact';
+import { getActiveDigitalTwin } from '../../services/digitalTwin/digitalTwin';
+import {
+  buildConnectedIdentityEngineReadout,
+  type ConnectedIdentityEngineReadout
+} from '../../services/connectedIdentity/connectedIdentityEngine';
+import {
+  buildPlatformAwareAskReadout,
+  type PlatformAwareAskReadout
+} from '../../services/ai/platformAwareAskContext';
+import {
+  buildCrossPlatformOperationalPlans,
+  type CrossPlatformOperationalPlan
+} from '../../services/plan/crossPlatformPlanner';
+import {
+  buildUnifiedOperationalInbox,
+  type UnifiedOperationalInboxReadout
+} from '../../services/plan/unifiedOperationalInbox';
+import {
+  buildOpportunityEngineReadout,
+  type OpportunityEngineReadout
+} from '../../services/plan/opportunityEngine';
+import {
+  buildPlatformActionCards,
+  type PlatformActionCard
+} from '../../services/plan/platformActionCards';
+import {
+  buildCrossPlatformOperationalTimeline,
+  type CrossPlatformOperationalTimelineReadout
+} from '../../services/plan/crossPlatformOperationalTimeline';
+import {
+  buildHumanTrustLayer,
+  type HumanTrustLayerReadout
+} from '../../services/plan/humanTrustLayer';
 
 function formatAiOperatorMode(mode: AiOperatorMode): string {
   const labels: Record<AiOperatorMode, string> = {
@@ -137,6 +171,29 @@ export type PlanPendingOperatorReviewPeek = {
   id: string;
   verb: string;
   at: string;
+  source: string;
+  surface?: string;
+  route?: string;
+  entityType?: string;
+  entityId?: string;
+  outcome?: string;
+  labels: string[];
+  preview: string;
+  annotatorNote?: string;
+};
+
+export type PlanExecutionReceipt = {
+  id: string;
+  action: string;
+  reasoningSummary: string;
+  sourceFactsUsed: string[];
+  generatedOutputs: string[];
+  approvals: string[];
+  startedAt: string;
+  endedAt?: string;
+  executionStatus: string;
+  warningsErrors: string[];
+  sourceLabel: string;
 };
 
 export type MemoryTraceSummaryReadout = {
@@ -291,12 +348,30 @@ export interface MobileWorkspaceSnapshot {
   settingsFullReadout: MobileSettingsFullReadout;
   /** Preview of persisted Phase R résumé artifact (`settings.operatorTwin.resumeArtifact`). */
   resumeNeuralPhaseArtifactPreview: string;
+  /** Active digital twin, if the user has created one from résumé/profile data. */
+  activeDigitalTwin: DigitalTwin | null;
+  /** Consent-gated identity signals from connected platform metadata and approved summaries. */
+  connectedIdentityEngine: ConnectedIdentityEngineReadout;
   /** Recent focus-metric self check-ins (operator twin KPI loop). */
   kpiSelfChecksPreview: FocusKpiSelfCheck[];
   /** Named hosted Ask copilots + active id — Assistant picker reads this without touching storage. */
   copilotWorkerRegistry: CopilotWorkerRegistrySettings;
   /** Assistant headline helper — reflects hosted routing stance for ask:. */
   aiAssistantRoutingCaption: string;
+  /** Truthful connected-app/workflow context used by hosted ASK. */
+  platformAwareAsk: PlatformAwareAskReadout;
+  /** Cross-platform operational plans for PLAN. */
+  crossPlatformPlans: CrossPlatformOperationalPlan[];
+  /** Unified PLAN inbox aggregating approvals, alerts, drafts, notifications, and AI opportunities. */
+  unifiedOperationalInbox: UnifiedOperationalInboxReadout;
+  /** Profession/twin/platform-aware opportunity suggestions for PLAN. */
+  opportunityEngine: OpportunityEngineReadout;
+  /** Platform-specific action cards shown only for connected/supported platform context. */
+  platformActionCards: PlatformActionCard[];
+  /** Cross-platform operational event feed with what/where/AI-did provenance. */
+  crossPlatformOperationalTimeline: CrossPlatformOperationalTimelineReadout;
+  /** Shared safety controls for preview, approval, edit, reject, retry, receipts, and audit. */
+  humanTrustLayer: HumanTrustLayerReadout;
   cockpitOpportunityPeek: CockpitOpportunityPeekRow[];
   cockpitContentPeek: CockpitContentPeekRow[];
   cockpitPublishingPeek: CockpitPublishingPeekRow[];
@@ -324,6 +399,8 @@ export interface MobileWorkspaceSnapshot {
   planPendingReviewCount: number;
   /** Up to five newest pending traces for lightweight Plan queue UI. */
   planPendingReviewPeek: PlanPendingOperatorReviewPeek[];
+  /** Receipts explain what happened, why it happened, and what data was used. */
+  planExecutionReceipts: PlanExecutionReceipt[];
 }
 
 /** Fields required by Today cockpit sections; keeps props in sync with {@link MobileWorkspaceSnapshot}. */
@@ -381,12 +458,28 @@ function buildPendingReviewPeek(workspace: BrandOpsData): PlanPendingOperatorRev
   return (workspace.operatorTraces?.entries ?? [])
     .filter((e) => e.reviewStatus === 'pending')
     .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
-    .slice(0, 5)
-    .map((e) => ({
-      id: e.id,
-      verb: e.verb,
-      at: e.at
-    }));
+    .slice(0, 8)
+    .map((e) => {
+      const details = e.details
+        ? Object.entries(e.details)
+            .map(([key, value]) => `${key}: ${String(value)}`)
+            .join(' · ')
+        : '';
+      return {
+        id: e.id,
+        verb: e.verb,
+        at: e.at,
+        source: e.source,
+        surface: e.surface,
+        route: e.route,
+        entityType: e.entityType,
+        entityId: e.entityId,
+        outcome: e.outcome,
+        labels: e.labels ?? [],
+        preview: truncatePeek(details || e.annotatorNote || e.route || e.entityId || e.verb, 220),
+        annotatorNote: e.annotatorNote
+      };
+    });
 }
 
 function buildMemoryTraceSummary(workspace: BrandOpsData): MemoryTraceSummaryReadout {
@@ -398,6 +491,106 @@ function buildMemoryTraceSummary(workspace: BrandOpsData): MemoryTraceSummaryRea
     bundleCount: bundles.length,
     lastBundleAt: sorted[0]?.created_at
   };
+}
+
+function detailFacts(
+  details: Record<string, string | number | boolean | null> | undefined
+): string[] {
+  if (!details) return [];
+  return Object.entries(details)
+    .map(([key, value]) => `${key}: ${String(value)}`)
+    .filter(Boolean)
+    .slice(0, 6);
+}
+
+function buildPlanExecutionReceipts(workspace: BrandOpsData): PlanExecutionReceipt[] {
+  const receipts: PlanExecutionReceipt[] = [];
+
+  for (const run of buildRecentAiPipelineRuns(workspace)) {
+    const stepDetails = run.steps
+      .map((step) => [step.step_id, step.status, step.detail].filter(Boolean).join(' · '))
+      .filter(Boolean);
+    const warningsErrors = [
+      run.error_message,
+      ...run.steps
+        .filter((step) => step.status === 'failure' || step.status === 'skipped')
+        .map((step) => step.detail || `${step.step_id} ${step.status}`)
+    ].filter((item): item is string => Boolean(item));
+    receipts.push({
+      id: `receipt-pipeline-${run.run_id}`,
+      action: run.pipeline_id,
+      reasoningSummary: `AI pipeline executed ${run.steps.length} step${run.steps.length === 1 ? '' : 's'} in ${run.operator_mode ?? 'configured'} mode.`,
+      sourceFactsUsed: run.audit_tags?.length ? run.audit_tags : stepDetails.slice(0, 4),
+      generatedOutputs: stepDetails.slice(0, 5),
+      approvals: ['Pipeline receipt generated from run log'],
+      startedAt: run.started_at,
+      endedAt: run.ended_at,
+      executionStatus: run.status,
+      warningsErrors,
+      sourceLabel: 'AI pipeline run'
+    });
+  }
+
+  for (const trace of (workspace.operatorTraces?.entries ?? []).slice(0, 12)) {
+    const facts = detailFacts(trace.details);
+    const approval =
+      trace.reviewStatus === 'pending'
+        ? 'Pending human approval'
+        : trace.reviewStatus === 'approved'
+          ? 'Approved by human reviewer'
+          : trace.reviewStatus === 'rejected'
+            ? 'Rejected by human reviewer'
+            : 'No explicit approval recorded';
+    receipts.push({
+      id: `receipt-trace-${trace.id}`,
+      action: trace.verb,
+      reasoningSummary: `Operator trace recorded from ${trace.source}${trace.surface ? ` on ${trace.surface}` : ''}.`,
+      sourceFactsUsed: [
+        trace.route ? `route: ${trace.route}` : '',
+        trace.capabilityId ? `capability: ${trace.capabilityId}` : '',
+        trace.entityType
+          ? `entity: ${trace.entityType}${trace.entityId ? `/${trace.entityId}` : ''}`
+          : '',
+        ...facts
+      ]
+        .filter(Boolean)
+        .slice(0, 6),
+      generatedOutputs: [
+        trace.details?.['output'] ? String(trace.details['output']) : '',
+        trace.details?.['commandPreview'] ? String(trace.details['commandPreview']) : '',
+        trace.annotatorNote ?? ''
+      ].filter(Boolean),
+      approvals: [approval],
+      startedAt: trace.at,
+      executionStatus: trace.outcome ?? trace.reviewStatus ?? 'recorded',
+      warningsErrors: [
+        trace.outcome === 'failure' ? 'Execution outcome recorded as failure' : '',
+        trace.reviewStatus === 'rejected' ? (trace.annotatorNote ?? 'Rejected') : ''
+      ].filter(Boolean),
+      sourceLabel: 'Operator trace'
+    });
+  }
+
+  for (const audit of (workspace.agentAudit?.entries ?? []).slice(0, 12)) {
+    receipts.push({
+      id: `receipt-audit-${audit.id}`,
+      action: audit.action,
+      reasoningSummary: audit.summary || 'Command execution audit recorded.',
+      sourceFactsUsed: [`source: ${audit.source}`, `command: ${audit.commandPreview}`],
+      generatedOutputs: [audit.summary].filter(Boolean),
+      approvals: [
+        'Command audit recorded; external actions still require explicit approval gates.'
+      ],
+      startedAt: audit.at,
+      executionStatus: audit.ok ? 'success' : 'failure',
+      warningsErrors: audit.ok ? [] : [audit.summary || 'Command reported an issue'],
+      sourceLabel: 'Command audit'
+    });
+  }
+
+  return receipts
+    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+    .slice(0, 12);
 }
 
 export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspaceSnapshot {
@@ -461,9 +654,16 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     cadenceHeadline,
     settingsFullReadout: buildMobileSettingsFullReadout(workspace),
     resumeNeuralPhaseArtifactPreview: truncatePeek(getOperatorTwinResumeArtifact(workspace), 200),
+    activeDigitalTwin: getActiveDigitalTwin(workspace),
+    connectedIdentityEngine: buildConnectedIdentityEngineReadout(workspace),
     kpiSelfChecksPreview: (workspace.settings.operatorTwin.kpiSelfChecks ?? []).slice(0, 5),
     copilotWorkerRegistry: workspace.settings.copilotWorkers,
     aiAssistantRoutingCaption: buildAiAssistantRoutingCaption(workspace.settings),
+    platformAwareAsk: buildPlatformAwareAskReadout(workspace),
+    crossPlatformPlans: buildCrossPlatformOperationalPlans(workspace),
+    unifiedOperationalInbox: buildUnifiedOperationalInbox(workspace),
+    opportunityEngine: buildOpportunityEngineReadout(workspace),
+    platformActionCards: buildPlatformActionCards(workspace),
     cockpitOpportunityPeek: activeOpportunities.slice(0, 5).map((o) => ({
       id: o.id,
       name: o.name,
@@ -590,6 +790,9 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     memoryTraceSummary: buildMemoryTraceSummary(workspace),
     planPendingReviewCount: countPendingOperatorReviews(workspace.operatorTraces?.entries),
     planPendingReviewPeek: buildPendingReviewPeek(workspace),
+    planExecutionReceipts: buildPlanExecutionReceipts(workspace),
+    crossPlatformOperationalTimeline: buildCrossPlatformOperationalTimeline(workspace),
+    humanTrustLayer: buildHumanTrustLayer(workspace),
     ...cockpitExtras
   };
 }

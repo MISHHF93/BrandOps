@@ -147,7 +147,9 @@ export const ChatCommandBar = ({
           role="status"
           aria-live="polite"
         >
-          Applying your command on-device…
+          {assistantChrome
+            ? 'ASK is reasoning with your twin context…'
+            : 'Applying your command on-device…'}
         </p>
       ) : null}
       {empty && smartChips.length > 0 && !commandLoading && !hideSmartChips ? (
@@ -293,8 +295,8 @@ export const ChatCommandBar = ({
           onKeyDown={onKeyDown}
           disabled={commandLoading}
           className="min-w-0 flex-1 bg-transparent px-1 py-1.5 text-base leading-snug text-text outline-none placeholder:text-textMuted disabled:cursor-not-allowed disabled:opacity-50"
-          placeholder="Ask BrandOps anything…"
-          aria-label="Assistant command input"
+          placeholder={assistantChrome ? 'Ask your AI twin…' : 'Ask BrandOps anything…'}
+          aria-label={assistantChrome ? 'ASK prompt input' : 'Assistant command input'}
           aria-autocomplete="list"
           aria-controls={controls}
           aria-expanded={expanded}
@@ -307,8 +309,8 @@ export const ChatCommandBar = ({
             disabled={commandLoading}
             onClick={() => onSubmit()}
             className={clsx('bo-chat-send-fab', btn)}
-            title={commandLoading ? 'Working' : 'Send'}
-            aria-label={commandLoading ? 'Command running' : 'Send message'}
+            title={commandLoading ? 'ASK is reasoning' : 'Ask twin'}
+            aria-label={commandLoading ? 'ASK is reasoning' : 'Ask twin'}
           >
             {commandLoading ? (
               <Loader2

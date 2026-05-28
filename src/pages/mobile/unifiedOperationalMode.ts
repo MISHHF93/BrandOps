@@ -93,7 +93,7 @@ export function buildUnifiedOperationalModeSummary(input: {
 
   const resume = readout.resumeNeuralPhasePreview.trim();
   if (resume && resume !== '—') {
-    facets.push('Operator twin résumé ingest is saved — hosted Ask appends the compressed artifact.');
+    facets.push('Phase R résumé ingest is saved — hosted Ask appends the compressed artifact.');
   }
 
   const saved = readout.operatingProfileLastApplied.trim();

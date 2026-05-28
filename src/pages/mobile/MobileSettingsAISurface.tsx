@@ -2,6 +2,8 @@ import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent } fro
 import clsx from 'clsx';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import { extractResumeNeuralPhaseArtifact } from '../../services/ai/resumeNeuralPhaseExtract';
+import type { DigitalTwinSourceType } from '../../types/domain';
+import { twinActionPrompt } from '../../services/digitalTwin/digitalTwin';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { ComposerBlankStarter } from './configurationStarters';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
@@ -204,7 +206,9 @@ export function SettingsDataSafetyBlock({
   onRequestClearChat,
   importMessage,
   operatorTraceCollectionEnabled,
-  onOperatorTraceCollectionChange
+  connectedIdentityLearningEnabled,
+  onOperatorTraceCollectionChange,
+  onConnectedIdentityLearningChange
 }: {
   btnFocus: string;
   onExportWorkspace: () => Promise<void>;
@@ -214,7 +218,9 @@ export function SettingsDataSafetyBlock({
   onRequestClearChat: () => void;
   importMessage: string | null;
   operatorTraceCollectionEnabled: boolean;
+  connectedIdentityLearningEnabled: boolean;
   onOperatorTraceCollectionChange: (enabled: boolean) => void;
+  onConnectedIdentityLearningChange: (enabled: boolean) => void;
 }) {
   const importRef = useRef<HTMLInputElement>(null);
   const dataBtn = clsx(
@@ -269,6 +275,23 @@ export function SettingsDataSafetyBlock({
                 </span>
               </span>
             </label>
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-primary/35 bg-primarySoft/10 px-2.5 py-2.5 text-left text-body text-text">
+              <input
+                type="checkbox"
+                className="border-border mt-0.5"
+                checked={connectedIdentityLearningEnabled}
+                onChange={(e) => onConnectedIdentityLearningChange(e.target.checked)}
+              />
+              <span>
+                <span className="font-medium">Enable Connected Identity Engine</span>
+                <span className="mt-1 block text-meta font-normal leading-snug text-textSoft">
+                  Explicit opt-in. BrandOps may evolve the digital twin from connected platform
+                  metadata, approved summaries, content patterns, workflow behavior, calendar
+                  patterns, and operational habits. It must not automatically ingest raw private
+                  Gmail, Slack, Notion, or calendar content.
+                </span>
+              </span>
+            </label>
             <button type="button" onClick={() => void onExportWorkspace()} className={dataBtn}>
               Export workspace JSON
             </button>
@@ -303,17 +326,35 @@ export function SettingsResumeNeuralPhasePanel({
   snapshot,
   btnFocus,
   applyBusy,
-  onPersistResumeNeuralPhaseContext
+  onPersistResumeNeuralPhaseContext,
+  onCreateDigitalTwinFromText
 }: {
   snapshot: MobileWorkspaceSnapshot;
   btnFocus: string;
   applyBusy: boolean;
   onPersistResumeNeuralPhaseContext: (compressed: string) => void | Promise<void>;
+  onCreateDigitalTwinFromText: (input: {
+    rawText: string;
+    sourceType: DigitalTwinSourceType;
+    sourceSummary?: string;
+    reviewOverrides?: {
+      displayName?: string;
+      headline?: string;
+      summary?: string;
+      professionalPositioning?: string;
+    };
+  }) => void | Promise<void>;
 }) {
   const MAX_RESUME_PLAINTEXT_BYTES = 196608;
   const statusId = useId();
   const resumeFileInputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState('');
+  const [review, setReview] = useState<{
+    displayName: string;
+    headline: string;
+    summary: string;
+    professionalPositioning: string;
+  } | null>(null);
   const [panelBusy, setPanelBusy] = useState(false);
   const [banner, setBanner] = useState<{ msg: string; tone: 'success' | 'danger' } | null>(null);
 
@@ -324,6 +365,42 @@ export function SettingsResumeNeuralPhasePanel({
   }, [banner]);
 
   const disabled = applyBusy || panelBusy;
+
+  const buildReview = useCallback(() => {
+    const raw = draft.trim();
+    if (!raw || disabled) return;
+    const lines = raw
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines.length < 2) {
+      setBanner({ msg: 'Add more profile detail before review.', tone: 'danger' });
+      return;
+    }
+    const displayName =
+      lines.find((line) => line.length <= 70 && !/[@:/\\]|\d{3,}/.test(line)) ||
+      snapshot.operatorName ||
+      'Digital Twin';
+    const headline =
+      lines.find((line) =>
+        /(engineer|operator|founder|creator|manager|designer|consultant|lead)/i.test(line)
+      ) ||
+      snapshot.positioning ||
+      'Professional operator';
+    const summary =
+      lines.find((line) => line.length > 80 && !/^[-•*▪▸]/.test(line)) ||
+      lines.slice(0, 4).join(' ');
+    setReview({
+      displayName,
+      headline,
+      summary: summary.slice(0, 700),
+      professionalPositioning: snapshot.positioning || headline
+    });
+    setBanner({
+      msg: 'Profile extracted for review. Edit facts before generating the twin.',
+      tone: 'success'
+    });
+  }, [disabled, draft, snapshot.operatorName, snapshot.positioning]);
 
   const compressAndSave = useCallback(async () => {
     const raw = draft.trim();
@@ -355,6 +432,7 @@ export function SettingsResumeNeuralPhasePanel({
     setBanner(null);
     try {
       await onPersistResumeNeuralPhaseContext('');
+      setReview(null);
       setBanner({ msg: 'Operator twin résumé ingest cleared.', tone: 'success' });
     } catch {
       setBanner({ msg: 'Clear failed — try again.', tone: 'danger' });
@@ -362,6 +440,33 @@ export function SettingsResumeNeuralPhasePanel({
       setPanelBusy(false);
     }
   }, [disabled, onPersistResumeNeuralPhaseContext]);
+
+  const generateTwin = useCallback(async () => {
+    if (!review || disabled) return;
+    setPanelBusy(true);
+    setBanner(null);
+    try {
+      await onCreateDigitalTwinFromText({
+        rawText: draft,
+        sourceType: 'resume',
+        sourceSummary: 'Manual paste or plain-text resume file',
+        reviewOverrides: review
+      });
+      setDraft('');
+      setReview(null);
+      setBanner({
+        msg: 'Digital twin generated and BrandOps profile artifacts updated. Review the Twin Dashboard below.',
+        tone: 'success'
+      });
+    } catch {
+      setBanner({
+        msg: 'Digital twin generation failed — check the text and retry.',
+        tone: 'danger'
+      });
+    } finally {
+      setPanelBusy(false);
+    }
+  }, [disabled, draft, onCreateDigitalTwinFromText, review]);
 
   const chip = clsx(mobileChipClass(btnFocus), 'disabled:cursor-not-allowed disabled:opacity-50');
 
@@ -376,6 +481,7 @@ export function SettingsResumeNeuralPhasePanel({
     const reader = new FileReader();
     reader.onload = () => {
       setDraft(String(reader.result ?? ''));
+      setReview(null);
       setBanner(null);
     };
     reader.onerror = () => setBanner({ msg: 'Could not read file.', tone: 'danger' });
@@ -390,11 +496,22 @@ export function SettingsResumeNeuralPhasePanel({
       descriptionVisibility="sr-only"
     >
       <p className="mt-2 text-meta leading-relaxed text-textSoft">
-        The compressed artifact is appended to the hosted Ask system prompt only (not the native
-        on-device model). Nothing is uploaded until you send a message that calls the hosted bridge.
+        Paste plain-text résumé/profile details, review the extracted facts, then generate a local
+        AI digital twin. PDF/DOCX parsing is not bundled yet; convert those files to text first.
       </p>
+      <div className="mt-2 rounded-lg border border-primary/35 bg-primarySoft/15 px-2.5 py-2 text-meta leading-relaxed text-textMuted">
+        <span className="font-semibold text-text">Consent:</span> uploaded or pasted profile data
+        stays in this workspace by default. It is exported/deleted with workspace JSON. Hosted AI
+        only receives twin context when you send an <code className="font-mono">ask:</code> line.
+      </div>
       <div className="mt-2 rounded-lg border border-border/40 bg-bgSubtle/45 px-2.5 py-2 text-meta text-textMuted">
-        <span className="font-medium text-textSoft">Stored preview</span>
+        <span className="font-medium text-textSoft">Twin status</span>
+        <p className="mt-1 text-text">
+          {snapshot.activeDigitalTwin
+            ? `${snapshot.activeDigitalTwin.displayName} · ${snapshot.activeDigitalTwin.status} · ${snapshot.activeDigitalTwin.confidenceScore}% confidence`
+            : 'No digital twin yet'}
+        </p>
+        <span className="mt-2 block font-medium text-textSoft">Stored Phase R preview</span>
         <p className="mt-1 min-w-0 break-words leading-relaxed text-text">
           {snapshot.resumeNeuralPhaseArtifactPreview.trim().length > 0
             ? snapshot.resumeNeuralPhaseArtifactPreview
@@ -432,6 +549,22 @@ export function SettingsResumeNeuralPhasePanel({
         </button>
         <button
           type="button"
+          disabled
+          className={chip}
+          title="PDF/DOCX parsing is not bundled yet. Convert to plain text first."
+        >
+          PDF/DOCX parsing unavailable
+        </button>
+        <button
+          type="button"
+          disabled={disabled || !draft.trim()}
+          onClick={buildReview}
+          className={chip}
+        >
+          Extract &amp; review
+        </button>
+        <button
+          type="button"
           disabled={disabled || !draft.trim()}
           onClick={() => void compressAndSave()}
           className={clsx(
@@ -443,6 +576,14 @@ export function SettingsResumeNeuralPhasePanel({
         </button>
         <button
           type="button"
+          disabled={disabled || !review}
+          onClick={() => void generateTwin()}
+          className={clsx('bo-btn-primary bo-btn-primary--sm disabled:opacity-50', btnFocus)}
+        >
+          Generate Digital Twin
+        </button>
+        <button
+          type="button"
           disabled={disabled}
           onClick={() => void clearStored()}
           className={chip}
@@ -450,6 +591,46 @@ export function SettingsResumeNeuralPhasePanel({
           Clear stored
         </button>
       </div>
+      {review ? (
+        <section
+          className="mt-3 rounded-xl border border-border/50 bg-surface/45 p-3"
+          aria-label="Extracted profile review"
+        >
+          <p className="text-label font-semibold text-text">Review extracted profile</p>
+          <p className="mt-1 text-fine text-textMuted">
+            Edit anything that is wrong. Unverified fields remain marked as needing review in the
+            twin.
+          </p>
+          <div className="mt-3 grid gap-2">
+            {(
+              [
+                ['displayName', 'Display name'],
+                ['headline', 'Headline'],
+                ['professionalPositioning', 'Positioning'],
+                ['summary', 'Summary']
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key} className="grid gap-1 text-meta text-textMuted">
+                {label}
+                {key === 'summary' ? (
+                  <textarea
+                    value={review[key]}
+                    onChange={(e) => setReview({ ...review, [key]: e.target.value })}
+                    rows={3}
+                    className="rounded-lg border border-border/55 bg-bgElevated px-2.5 py-2 text-sm text-text outline-none focus:border-borderStrong"
+                  />
+                ) : (
+                  <input
+                    value={review[key]}
+                    onChange={(e) => setReview({ ...review, [key]: e.target.value })}
+                    className="rounded-lg border border-border/55 bg-bgElevated px-2.5 py-2 text-sm text-text outline-none focus:border-borderStrong"
+                  />
+                )}
+              </label>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <div id={statusId} className="mt-2 min-h-[1.25rem]" role="status" aria-live="polite">
         {panelBusy ? <p className="text-meta text-textSoft">Saving…</p> : null}
         {!panelBusy && banner ? (
@@ -462,6 +643,190 @@ export function SettingsResumeNeuralPhasePanel({
             {banner.msg}
           </p>
         ) : null}
+      </div>
+    </MobileTabSection>
+  );
+}
+
+export function SettingsTwinDashboard({
+  snapshot,
+  btnFocus,
+  disabled,
+  runCommand,
+  onDeleteActiveDigitalTwin
+}: {
+  snapshot: MobileWorkspaceSnapshot;
+  btnFocus: string;
+  disabled: boolean;
+  runCommand: (command: string) => void | Promise<void>;
+  onDeleteActiveDigitalTwin: () => void | Promise<void>;
+}) {
+  const twin = snapshot.activeDigitalTwin;
+  if (!twin) return null;
+  const connectedIdentity = snapshot.connectedIdentityEngine;
+  const actionCards = [
+    ['generate_professional_bio', 'Generate Bio'],
+    ['generate_linkedin_about', 'LinkedIn About'],
+    ['draft_outreach', 'Create Outreach Plan'],
+    ['create_30_day_content_plan', 'Build Content Plan'],
+    ['generate_pitch_email', 'Create Pitch'],
+    ['improve_profile_gaps', 'Improve Twin Profile']
+  ] as const;
+  const exportTwin = () => {
+    const blob = new Blob([JSON.stringify(twin, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `brandops-digital-twin-${twin.displayName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <MobileTabSection
+      id="settings-digital-twin-dashboard"
+      title="Twin Dashboard"
+      description="Review the active AI digital twin, confidence, missing information, and safe action studio."
+      descriptionVisibility="sr-only"
+    >
+      <div className="mt-2 grid gap-3">
+        <section className="rounded-xl border border-primary/35 bg-primarySoft/15 p-3">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-h3 text-text">{twin.displayName}</p>
+              <p className="mt-1 text-meta text-textMuted">{twin.identity.headline}</p>
+            </div>
+            <span className="rounded-full border border-border/50 bg-bgElevated px-2 py-1 text-fine font-semibold text-text">
+              {twin.confidenceScore}% confidence
+            </span>
+          </div>
+          <p className="mt-2 text-meta leading-relaxed text-text">
+            {twin.identity.summary || 'No summary yet.'}
+          </p>
+          <div className="mt-3 rounded-lg border border-border/40 bg-bgSubtle/55 px-2.5 py-2 text-fine leading-snug text-textMuted">
+            <span className="font-semibold text-text">Captured into BrandOps:</span> workspace
+            profile, brand vault, messaging vault, content seeds, local integration artifacts,
+            hosted Ask résumé artifact, and twin audit trail.
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={exportTwin}
+              className={clsx(mobileChipClass(btnFocus), 'text-text')}
+            >
+              Export twin data
+            </button>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => void onDeleteActiveDigitalTwin()}
+              className={clsx(
+                mobileChipClass(btnFocus),
+                'border-danger/40 text-danger disabled:opacity-50'
+              )}
+            >
+              Delete twin
+            </button>
+          </div>
+        </section>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <section className="rounded-xl border border-primary/35 bg-primarySoft/10 p-3 sm:col-span-2">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="text-label font-semibold text-text">Connected Identity Engine</p>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  {connectedIdentity.evolutionSummary}
+                </p>
+              </div>
+              <span className="rounded-full border border-border/45 bg-bgElevated px-2 py-1 text-fine font-semibold text-textMuted">
+                {connectedIdentity.consentGranted ? 'Opted in' : 'Consent required'}
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5 text-fine">
+              <span className="rounded-full border border-border/35 bg-bgSubtle/60 px-2 py-1 text-textMuted">
+                {connectedIdentity.signalCount} identity signals
+              </span>
+              {connectedIdentity.platformCoverage.slice(0, 6).map((source) => (
+                <span
+                  key={source}
+                  className="rounded-full border border-border/35 bg-bgSubtle/60 px-2 py-1 text-textMuted"
+                >
+                  {source}
+                </span>
+              ))}
+            </div>
+            <p className="mt-2 rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textSoft">
+              Safety rule: no automatic ingestion of sensitive/private platform data. Gmail,
+              Calendar, Slack, and Notion use metadata or user-approved summaries only.
+            </p>
+          </section>
+          <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
+            <p className="text-label font-semibold text-text">Identity Summary</p>
+            <p className="mt-1 text-meta text-textMuted">
+              {twin.identity.professionalPositioning || 'Needs positioning review.'}
+            </p>
+            <p className="mt-2 text-fine text-textSoft">Voice: {twin.identity.toneOfVoice}</p>
+          </section>
+          <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
+            <p className="text-label font-semibold text-text">Skills & Experience</p>
+            <p className="mt-1 text-meta text-textMuted">
+              {twin.resumeProfile.skills.slice(0, 10).join(' · ') || 'No skills extracted yet.'}
+            </p>
+            <p className="mt-2 text-fine text-textSoft">
+              {twin.resumeProfile.experience.length} experience rows ·{' '}
+              {twin.resumeProfile.projects.length} projects
+            </p>
+          </section>
+          <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
+            <p className="text-label font-semibold text-text">Missing Information</p>
+            {twin.memory.missingInfo.length ? (
+              <ul className="mt-1 list-disc space-y-1 pl-4 text-meta text-textMuted">
+                {twin.memory.missingInfo.slice(0, 6).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 text-meta text-success">No obvious gaps in the current profile.</p>
+            )}
+          </section>
+          <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
+            <p className="text-label font-semibold text-text">Recent Twin Activity</p>
+            <ul className="mt-1 space-y-1 text-meta text-textMuted">
+              {twin.actions.auditTrail.slice(0, 4).map((entry) => (
+                <li key={entry.id}>{entry.summary}</li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
+          <p className="text-label font-semibold text-text">Twin Action Studio</p>
+          <p className="mt-1 text-fine text-textMuted">
+            Input → preview happens in Chat via hosted <code className="font-mono">ask:</code>.
+            Confirm before external outreach or publishing. Results can be copied or saved from the
+            transcript/workspace.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {actionCards.map(([actionType, label]) => (
+              <button
+                key={actionType}
+                type="button"
+                disabled={disabled}
+                onClick={() => runCommand(twinActionPrompt(actionType, twin))}
+                className={clsx(
+                  'rounded-xl border border-border/55 bg-bgElevated/70 px-3 py-2 text-left text-meta font-semibold text-text hover:border-borderStrong disabled:cursor-not-allowed disabled:opacity-50',
+                  btnFocus
+                )}
+              >
+                {label}
+                <span className="mt-1 block text-fine font-normal text-textMuted">
+                  Preview → confirm → copy/save.
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
     </MobileTabSection>
   );

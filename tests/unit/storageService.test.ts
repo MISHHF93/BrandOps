@@ -218,4 +218,69 @@ describe('storageService', () => {
     expect(normalized.settings.operatorTwin.resumeArtifact).toContain('legacy');
     expect(normalized.settings.operatorTwin.resumeArtifact).toContain('rust');
   });
+
+  it('normalizes digital twins and keeps active twin export/delete data in workspace JSON', async () => {
+    const source = cloneSeedData();
+    source.digitalTwins = {
+      activeTwinId: 'twin-1',
+      twins: [
+        {
+          id: 'twin-1',
+          ownerUserId: '',
+          workspaceId: '',
+          displayName: '  Resume Twin  ',
+          sourceType: 'resume',
+          status: 'ready',
+          confidenceScore: 250,
+          createdAt: 'invalid',
+          updatedAt: 'invalid',
+          identity: {
+            headline: 'Operator',
+            summary: 'Builds AI systems.',
+            professionalPositioning: '',
+            targetAudience: '',
+            goals: [],
+            toneOfVoice: '',
+            strengths: [],
+            differentiators: []
+          },
+          resumeProfile: {
+            contactInfo: { name: 'Resume Twin', links: ['https://example.test'] },
+            experience: [],
+            education: [],
+            skills: ['TypeScript'],
+            certifications: [],
+            projects: [],
+            achievements: [],
+            industries: [],
+            tools: [],
+            keywords: []
+          },
+          memory: {
+            facts: ['Builds AI systems.'],
+            preferences: [],
+            voiceExamples: [],
+            approvedClaims: [],
+            rejectedClaims: [],
+            missingInfo: ['Add education.']
+          },
+          actions: {
+            supportedActionTypes: ['generate_professional_bio', 'not-real' as never],
+            generatedAssets: [],
+            pendingApprovals: [],
+            auditTrail: []
+          }
+        }
+      ]
+    };
+
+    const normalized = await storageService.setData(source);
+
+    expect(normalized.digitalTwins?.activeTwinId).toBe('twin-1');
+    expect(normalized.digitalTwins?.twins[0]?.displayName).toBe('Resume Twin');
+    expect(normalized.digitalTwins?.twins[0]?.confidenceScore).toBe(100);
+    expect(normalized.digitalTwins?.twins[0]?.actions.supportedActionTypes).toEqual([
+      'generate_professional_bio'
+    ]);
+  });
 });

@@ -2,7 +2,10 @@
  * BrandOps persisted workspace types (Chrome `storage.local` / web LocalStorage).
  * Do not duplicate these shapes elsewhere — extend here, then normalize in `storage.ts`.
  */
-import type { FocusKpiSelfCheck, OperatorTwinSettings } from '../shared/operatorTwin/operatorTwinTypes';
+import type {
+  FocusKpiSelfCheck,
+  OperatorTwinSettings
+} from '../shared/operatorTwin/operatorTwinTypes';
 
 export type { FocusKpiSelfCheck, OperatorTwinSettings };
 export type ExtensionSurface = 'dashboard' | 'integrations' | 'content';
@@ -513,6 +516,46 @@ export interface IntegrationHubState {
   artifacts: ExternalArtifactRecord[];
 }
 
+export type ConnectedIdentitySignalSource =
+  | 'linkedin'
+  | 'gmail'
+  | 'google-calendar'
+  | 'notion'
+  | 'slack'
+  | 'content'
+  | 'workflow'
+  | 'integration-hub';
+
+export type ConnectedIdentitySignalKind =
+  | 'professional_positioning'
+  | 'communication_tone'
+  | 'operational_schedule'
+  | 'knowledge_memory'
+  | 'team_collaboration_style'
+  | 'content_pattern'
+  | 'workflow_behavior'
+  | 'operational_habit';
+
+export interface ConnectedIdentitySignal {
+  id: string;
+  source: ConnectedIdentitySignalSource;
+  kind: ConnectedIdentitySignalKind;
+  summary: string;
+  evidence: string[];
+  confidence: number;
+  sensitivity: 'metadata_only' | 'user_approved_summary' | 'private_data_blocked';
+  lastObservedAt: string;
+}
+
+export interface ConnectedIdentityEngineState {
+  schemaVersion: number;
+  consentGranted: boolean;
+  lastUpdatedAt: string | null;
+  signals: ConnectedIdentitySignal[];
+  sensitiveDataPolicy: string;
+  blockedPrivateSources: ConnectedIdentitySignalSource[];
+}
+
 /** Dashboard: one mounted area vs single long scroll with anchors. */
 export type CockpitLayoutMode = 'sections' | 'unified-scroll';
 
@@ -586,6 +629,11 @@ export interface AppSettings {
    * Stored in workspace only; no automatic network upload.
    */
   operatorTraceCollectionEnabled: boolean;
+  /**
+   * Explicit consent gate for evolving the digital twin from connected platform metadata,
+   * summaries, traces, and habits. Raw private data is never pulled automatically.
+   */
+  connectedIdentityLearningEnabled: boolean;
   /** Which linked OAuth profile drives “Signed in as …” in the cockpit. */
   primaryIdentityProvider: IdentityProviderId | null;
   overlay: OverlayPreferences;
@@ -637,6 +685,136 @@ export interface BrandProfile {
   focusMetric: string;
 }
 
+export type DigitalTwinSourceType = 'resume' | 'linkedin' | 'portfolio' | 'brand' | 'manual';
+export type DigitalTwinStatus = 'draft' | 'processing' | 'ready' | 'needs_review' | 'failed';
+export type TwinFactStatus = 'verified' | 'unverified' | 'rejected';
+
+export interface TwinIdentity {
+  headline: string;
+  summary: string;
+  professionalPositioning: string;
+  targetAudience: string;
+  goals: string[];
+  toneOfVoice: string;
+  strengths: string[];
+  differentiators: string[];
+}
+
+export interface TwinExperienceItem {
+  id: string;
+  role: string;
+  organization: string;
+  timeframe: string;
+  highlights: string[];
+  verificationStatus: TwinFactStatus;
+}
+
+export interface TwinEducationItem {
+  id: string;
+  institution: string;
+  credential: string;
+  timeframe: string;
+  verificationStatus: TwinFactStatus;
+}
+
+export interface TwinProjectItem {
+  id: string;
+  name: string;
+  summary: string;
+  tools: string[];
+  verificationStatus: TwinFactStatus;
+}
+
+export interface TwinResumeProfile {
+  contactInfo: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    links?: string[];
+  };
+  experience: TwinExperienceItem[];
+  education: TwinEducationItem[];
+  skills: string[];
+  certifications: string[];
+  projects: TwinProjectItem[];
+  achievements: string[];
+  industries: string[];
+  tools: string[];
+  keywords: string[];
+}
+
+export interface TwinMemory {
+  facts: string[];
+  preferences: string[];
+  voiceExamples: string[];
+  approvedClaims: string[];
+  rejectedClaims: string[];
+  missingInfo: string[];
+}
+
+export type TwinSupportedActionType =
+  | 'generate_professional_bio'
+  | 'generate_linkedin_about'
+  | 'generate_positioning'
+  | 'draft_outreach'
+  | 'create_30_day_content_plan'
+  | 'generate_pitch_email'
+  | 'create_media_kit_copy'
+  | 'summarize_resume'
+  | 'find_strongest_opportunities'
+  | 'improve_profile_gaps';
+
+export interface TwinGeneratedAsset {
+  id: string;
+  actionType: TwinSupportedActionType;
+  title: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface TwinPendingApproval {
+  id: string;
+  actionType: TwinSupportedActionType;
+  summary: string;
+  createdAt: string;
+}
+
+export interface TwinAuditEntry {
+  id: string;
+  at: string;
+  action: string;
+  summary: string;
+}
+
+export interface TwinActions {
+  supportedActionTypes: TwinSupportedActionType[];
+  generatedAssets: TwinGeneratedAsset[];
+  pendingApprovals: TwinPendingApproval[];
+  auditTrail: TwinAuditEntry[];
+}
+
+export interface DigitalTwin {
+  id: string;
+  ownerUserId: string;
+  workspaceId: string;
+  displayName: string;
+  sourceType: DigitalTwinSourceType;
+  status: DigitalTwinStatus;
+  confidenceScore: number;
+  createdAt: string;
+  updatedAt: string;
+  identity: TwinIdentity;
+  resumeProfile: TwinResumeProfile;
+  memory: TwinMemory;
+  actions: TwinActions;
+}
+
+export interface DigitalTwinState {
+  activeTwinId: string | null;
+  twins: DigitalTwin[];
+}
+
 /** Append-only log for command execution and bridge ingress (capped in storage). */
 export interface AgentAuditEntry {
   id: string;
@@ -654,7 +832,7 @@ export interface AgentAuditState {
 
 export type OperatorTraceActor = 'user' | 'assistant' | 'automation' | 'bridge';
 
-export type OperatorTraceReviewStatus = 'pending' | 'approved';
+export type OperatorTraceReviewStatus = 'pending' | 'approved' | 'rejected';
 
 /** Append-only operator behavior traces for local analysis and future annotation (not integration hub artifacts). */
 export interface OperatorTraceEntry {
@@ -813,4 +991,8 @@ export interface BrandOpsData {
   aiTraceGraph?: import('./aiTraceGraph').AIWorkspaceTraceIndexState;
   /** Declarative AI pipeline executions — capped audit-only rows (optional). */
   aiPipelineRuns?: import('./aiIntegrationSuite').AiPipelineRunLogState;
+  /** Resume/profile-derived AI digital twins. Local-first; exported/deleted with workspace data. */
+  digitalTwins?: DigitalTwinState;
+  /** Consent-gated identity learning signals derived from local platform metadata/summaries. */
+  connectedIdentityEngine?: ConnectedIdentityEngineState;
 }

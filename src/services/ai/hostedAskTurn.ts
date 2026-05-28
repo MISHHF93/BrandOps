@@ -2,6 +2,7 @@ import type { BrandOpsData, CopilotWorker } from '../../types/domain';
 import type { ChatCompletionMessage } from './nlpInferenceGateway';
 import { buildCopilotContextHintBlock } from './copilotWorkers';
 import { buildNeuralPhasingResumeBlock } from './neuralPhasing';
+import { buildPlatformAwareAskReadout } from './platformAwareAskContext';
 
 const GLOBAL_ROLE_LABEL = 'Global operator role (notificationCenter.roleContext)';
 
@@ -92,8 +93,9 @@ export function buildHostedAskMessages(
   const scoped = buildCopilotContextHintBlock(workspace, worker);
   const neuralResume = buildNeuralPhasingResumeBlock(workspace);
   const phased = neuralResume ? `\n\n${neuralResume}` : '';
+  const platformContext = buildPlatformAwareAskReadout(workspace).contextBlock;
 
-  let system = `${persona}\n\n${structured}\n\n${citationIx}\n\n${globalBaseline}${phased}\n\nWorkspace context:\n${ctx}${scoped}`;
+  let system = `${persona}\n\n${structured}\n\n${citationIx}\n\n${globalBaseline}${phased}\n\nWorkspace context:\n${ctx}${scoped}\n\n${platformContext}`;
   const routingBlock = routingAugmentation?.trim();
   if (routingBlock) {
     system += `\n\nOperator routing & QA hints:\n${routingBlock}`;

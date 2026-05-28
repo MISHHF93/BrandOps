@@ -18,8 +18,8 @@
   --color-border: 42 72 52;
   --color-border-strong: 62 102 74;
   --color-text: 198 255 210;
-  --color-text-muted: 102 158 122;
-  --color-text-soft: 74 118 92;
+  --color-text-muted: 122 178 142;
+  --color-text-soft: 104 158 124;
   --color-primary: 163 230 180;
   --color-primary-hover: 206 255 220;
   --color-primary-soft: 163 230 180;
@@ -156,7 +156,7 @@
   --color-border-strong: 130 168 144;
   --color-text: 12 42 26;
   --color-text-muted: 38 92 62;
-  --color-text-soft: 72 118 88;
+  --color-text-soft: 48 98 68;
   --color-primary: 18 72 44;
   --color-primary-hover: 12 52 32;
   --color-primary-soft: 18 72 44;
@@ -395,7 +395,7 @@ html[data-app-surface='welcome'] body::after {
     border-radius: 0.5rem;
     border: 1px solid rgb(var(--color-border) / 0.85);
     background: rgb(var(--color-bg-elevated) / 0.98);
-    color: rgb(var(--color-text));
+    color: rgb(var(--brand-ink));
     font-size: 0.75rem;
     font-weight: 600;
     transform: translateY(calc(-100% - 1rem));
@@ -869,7 +869,7 @@ html[data-app-surface='welcome'] body::after {
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: rgb(var(--color-text-soft) / 1);
+    color: rgb(var(--color-text-muted) / 1);
   }
 
   /* Flush to shell horizontal gutter (parent section px); avoid negative margin so Assistant aligns with Plan/Today. */
@@ -940,6 +940,15 @@ html[data-app-surface='welcome'] body::after {
     padding-inline: 0.05rem;
   }
 
+  .bo-scroll-x-lane::after,
+  .bo-copilot-rail::after,
+  .bo-assistant-quick-strip::after,
+  .bo-focus-tabs::after,
+  .bo-workstream-pill-strip::after {
+    content: '';
+    flex: 0 0 0.25rem;
+  }
+
   .bo-copilot-chip {
     flex-shrink: 0;
     scroll-snap-align: start;
@@ -986,7 +995,7 @@ html[data-app-surface='welcome'] body::after {
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: rgb(var(--color-text-soft) / 1);
+    color: rgb(var(--color-text-muted) / 1);
   }
 
   .bo-assistant-recents-clear {
@@ -1358,7 +1367,7 @@ html[data-app-surface='welcome'] body::after {
       rgb(var(--color-accent) / 1),
       rgb(var(--color-accent-hover) / 0.92)
     );
-    color: rgb(255 255 255);
+    color: rgb(var(--brand-ink));
     box-shadow:
       0 2px 0 rgb(var(--color-text) / 0.12),
       0 8px 22px rgb(var(--color-accent) / 0.35);
@@ -1373,6 +1382,10 @@ html[data-app-surface='welcome'] body::after {
   .bo-chat-send-fab:focus-visible {
     outline: 2px solid rgb(var(--color-focus-ring) / 0.95);
     outline-offset: 2px;
+  }
+
+  :root[data-theme='light'] .bo-chat-send-fab {
+    color: #fff;
   }
 
   .bo-chat-send-fab:active:not(:disabled) {
@@ -2985,6 +2998,14 @@ html[data-app-surface='welcome'] body::after {
   .bo-btn-ghost:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .bo-btn-primary:focus-visible,
+  .bo-btn-ghost:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgb(var(--color-focus-ring) / var(--alpha-focus-ring)),
+      0 0 18px rgb(var(--color-focus-ring) / 0.22);
   }
 
   /* Visual stat card — the "Workspace at a glance" hero tile. */

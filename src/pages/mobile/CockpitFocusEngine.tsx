@@ -107,10 +107,7 @@ type CockpitFocusEngineProps = {
   commandBusy: boolean;
   runCommand: (command: string) => void | Promise<void>;
   primeChat: (line: string) => void;
-  onRecordKpiSelfCheck?: (
-    score: FocusKpiSelfCheck['score'],
-    note: string
-  ) => void | Promise<void>;
+  onRecordKpiSelfCheck?: (score: FocusKpiSelfCheck['score'], note: string) => void | Promise<void>;
 };
 
 /**

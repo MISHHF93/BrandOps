@@ -21,16 +21,14 @@ export function PlanSetupHint({
       aria-label="Workspace setup hint"
     >
       <p className="text-meta font-semibold leading-snug text-text">
-        Finish setup — profile here is read-only
+        Finish your AI operating system setup
       </p>
       <p className="mt-1 text-fine leading-snug text-textSoft">
-        Use <span className="font-medium text-text">Edit profile</span> below for{' '}
-        <span className="font-medium text-text">Settings → Preferences</span> (operator, offer,
-        voice, focus). Pick an <span className="font-medium text-text">operating profile</span>{' '}
-        preset there. Connect sources under{' '}
-        <span className="font-medium text-text">Integrations</span> or press{' '}
+        Create your digital twin in <span className="font-medium text-text">Settings</span>, ASK it
+        for strategy, convert outputs into PLANs, approve actions, and connect sources under{' '}
+        <span className="font-medium text-text">Integrations</span>. Use{' '}
         <span className="whitespace-nowrap font-medium text-text">⌘K</span> /{' '}
-        <span className="whitespace-nowrap font-medium text-text">Ctrl+K</span>.
+        <span className="whitespace-nowrap font-medium text-text">Ctrl+K</span> for deeper commands.
       </p>
       <div className="mt-2 flex flex-wrap gap-1.5">
         <button

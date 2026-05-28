@@ -64,6 +64,12 @@ describe('two-page workspace snapshot extras', () => {
     expect(snap.planPendingReviewCount).toBe(1);
     expect(snap.planPendingReviewPeek).toHaveLength(1);
     expect(snap.planPendingReviewPeek[0].id).toBe('1');
+    expect(snap.planExecutionReceipts.length).toBeGreaterThanOrEqual(3);
+    expect(snap.planExecutionReceipts.some((r) => r.action === 'p-test')).toBe(true);
+    expect(
+      snap.planExecutionReceipts.some((r) => r.approvals.includes('Pending human approval'))
+    ).toBe(true);
+    expect(snap.planExecutionReceipts.some((r) => r.warningsErrors.includes('x'))).toBe(true);
   });
 
   it('sanitizes pipeline runs with stable step ids', () => {

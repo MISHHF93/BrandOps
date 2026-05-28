@@ -5,8 +5,8 @@ import type { MobileShellTabId } from './mobileShellQuery';
  */
 export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
   workspace:
-    'Plan — overview, execution insights, Pulse, queue; strip jumps to Workstreams, Connect, Setup.',
-  chat: 'Assistant — workspace commands and hosted Ask; ⌘K jumps anywhere.',
+    'Plan / Operate — AI planning, trust controls, operational timeline, receipts, Pulse, and queue.',
+  chat: 'ASK — AI twin intelligence for profession identity, connected tools, and planning.',
   daily: 'Plan — Today lanes and workstreams.',
   integrations: 'Plan — integration readiness and sync.',
   settings: 'Plan — account and workspace preferences.'
@@ -17,8 +17,8 @@ export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
  */
 export const SHELL_TAB_SR_SUMMARY: Record<MobileShellTabId, string> = {
   workspace:
-    'Plan — Today and Pipeline tiles; ⌘K opens Integrations, Setup, and commands; jump links below.',
-  chat: 'Assistant — command entry and Ask.',
+    'Plan and Operate — AI planning, human trust controls, connected platform actions, timelines, and receipts.',
+  chat: 'ASK — command entry and AI twin intelligence.',
   daily: 'Plan — Today lanes and work areas.',
   integrations: 'Plan — Connect tools and sync readiness.',
   settings: 'Plan — Account and workspace setup.'
@@ -26,8 +26,8 @@ export const SHELL_TAB_SR_SUMMARY: Record<MobileShellTabId, string> = {
 
 /** Sticky header wordmark — distinct from dock abbreviations. */
 export const SHELL_SCREEN_TITLE: Record<MobileShellTabId, string> = {
-  workspace: 'Plan',
-  chat: 'Assistant',
+  workspace: 'Plan / Operate',
+  chat: 'ASK',
   daily: 'Plan · Workstreams',
   integrations: 'Plan · Connect',
   settings: 'Plan · Setup'

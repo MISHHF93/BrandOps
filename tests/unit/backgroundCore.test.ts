@@ -86,6 +86,11 @@ describe('scheduleBrandOpsAlarms', () => {
           baseTask({ id: 't-scheduled', status: 'scheduled' }),
           baseTask({ id: 't-soon', status: 'due-soon' }),
           baseTask({ id: 't-snoozed', status: 'snoozed' }),
+          baseTask({
+            id: 't-already-notified',
+            status: 'due-soon',
+            lastNotifiedAt: new Date(fixedNow + 1_000).toISOString()
+          }),
           baseTask({ id: 't-done', status: 'completed' }),
           baseTask({ id: 't-missed', status: 'missed' })
         ],
@@ -124,7 +129,7 @@ describe('scheduleBrandOpsAlarms', () => {
       expect(entry.when).toBeGreaterThanOrEqual(minWhen);
     }
     expect(setSnapshots).toHaveLength(1);
-    expect(setSnapshots[0]?.scheduler.tasks).toHaveLength(5);
+    expect(setSnapshots[0]?.scheduler.tasks).toHaveLength(6);
   });
 });
 
@@ -204,6 +209,46 @@ describe('sendTaskReminderNotification', () => {
       })
     );
     expect(markNotified).toHaveBeenCalled();
+    expect(setData).toHaveBeenCalled();
+  });
+
+  it('does not fire duplicate notifications for the same reminder window', async () => {
+    const workspace = cloneSeedData();
+    const task = baseTask({
+      id: 't-soon',
+      status: 'due-soon',
+      title: 'Ping',
+      detail: 'Do thing',
+      lastNotifiedAt: new Date(new Date(iso).getTime() + 1_000).toISOString()
+    });
+
+    const reconcileWorkspace = (_data: BrandOpsData) => ({
+      ...workspace,
+      scheduler: {
+        tasks: [task],
+        updatedAt: iso,
+        lastHydratedAt: iso
+      }
+    });
+
+    const notifications = { create: vi.fn(async () => {}) };
+    const markNotified = vi.fn((state: BrandOpsData['scheduler']) => state);
+    const setData = vi.fn(async (d: BrandOpsData) => d);
+
+    await sendTaskReminderNotification({
+      storage: {
+        getData: vi.fn(async () => workspace),
+        resetToSeed: vi.fn(async () => workspace),
+        setData
+      },
+      notifications,
+      reconcileWorkspace,
+      markNotified,
+      taskId: 't-soon'
+    });
+
+    expect(notifications.create).not.toHaveBeenCalled();
+    expect(markNotified).not.toHaveBeenCalled();
     expect(setData).toHaveBeenCalled();
   });
 });

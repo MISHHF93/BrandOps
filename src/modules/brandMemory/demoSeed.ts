@@ -630,6 +630,6 @@ Slide 7: CTA to request audit checklist`,
     seededAt: now.toISOString(),
     source: 'demo-sample',
     version: '1.2.0',
-    onboardingVersion: '2'
+    onboardingVersion: '8'
   }
 };

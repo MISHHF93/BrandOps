@@ -12,7 +12,7 @@ export interface PlanPlanningActionsProps {
 }
 
 /**
- * Compact Plan hub — curated picks in canonical Plan order; full list in ⌘K only.
+ * Compact Plan execution picks — curated commands in canonical Plan order; full list in ⌘K only.
  */
 export function PlanPlanningActions({
   btnFocus,
@@ -32,7 +32,7 @@ export function PlanPlanningActions({
           id="plan-actions-heading"
           className="text-meta font-semibold uppercase tracking-wide text-textMuted"
         >
-          Quick picks
+          Execution picks
         </h2>
         <button
           type="button"
@@ -47,8 +47,8 @@ export function PlanPlanningActions({
         </button>
       </div>
       <p className="mt-1 text-fine leading-snug text-textSoft">
-        Eight high-use lines; every other command is in the palette. Destructive phrases still
-        confirm.
+        Real BrandOps commands that move plans into workspace execution. Destructive phrases still
+        confirm; external sending remains approval-gated.
       </p>
       {!agentEnabled && agentLockHint ? (
         <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/15 px-2.5 py-2 text-meta text-text">
@@ -59,7 +59,7 @@ export function PlanPlanningActions({
       <ul
         className="mt-2.5 grid list-none grid-cols-1 gap-1.5 p-0 sm:grid-cols-2"
         role="list"
-        aria-label="Curated planning commands"
+        aria-label="Curated execution commands"
       >
         {intents.map((intent) => (
           <li key={intent.id}>

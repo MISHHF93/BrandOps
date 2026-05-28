@@ -60,19 +60,29 @@ async function main() {
   mkdirSync(iconsDir, { recursive: true });
   mkdirSync(brandingDir, { recursive: true });
 
-  if (!existsSync(sourceLogoPath)) {
-    console.error(`[brand:assets] Missing source logo at ${sourceLogoPath}`);
+  const sourcePath = existsSync(sourceLogoPath) ? sourceLogoPath : compatSvgPath;
+  const sourceIsPng = sourcePath === sourceLogoPath;
+
+  if (!existsSync(sourcePath)) {
+    console.error(
+      `[brand:assets] Missing source logo. Add ${sourceLogoPath} or keep ${compatSvgPath}.`
+    );
     process.exit(1);
   }
 
-  const input = readFileSync(sourceLogoPath);
+  const input = readFileSync(sourcePath);
   const metadata = await logoSharp(sharp, input).metadata();
   const sourceWidth = metadata.width ?? 1024;
   const sourceHeight = metadata.height ?? 1024;
-  writeCompatSvg(input, sourceWidth, sourceHeight);
+  if (sourceIsPng) {
+    writeCompatSvg(input, sourceWidth, sourceHeight);
+  }
 
   const writeIcon = async (size, file) => {
-    await logoSharp(sharp, input).resize(size, size, { fit: 'cover', position: 'centre' }).png().toFile(file);
+    await logoSharp(sharp, input)
+      .resize(size, size, { fit: 'cover', position: 'centre' })
+      .png()
+      .toFile(file);
   };
 
   for (const s of [16, 32, 48, 128, 192, 512]) {
@@ -81,7 +91,10 @@ async function main() {
 
   await writeIcon(180, join(brandingDir, 'apple-touch-icon.png'));
 
-  const logoOg = await logoSharp(sharp, input).resize(420, 420, { fit: 'contain' }).png().toBuffer();
+  const logoOg = await logoSharp(sharp, input)
+    .resize(420, 420, { fit: 'contain' })
+    .png()
+    .toBuffer();
   await sharp({
     create: {
       width: 1200,
@@ -90,7 +103,9 @@ async function main() {
       background: { r: 0, g: 0, b: 0 }
     }
   })
-    .composite([{ input: logoOg, left: Math.floor((1200 - 420) / 2), top: Math.floor((630 - 420) / 2) }])
+    .composite([
+      { input: logoOg, left: Math.floor((1200 - 420) / 2), top: Math.floor((630 - 420) / 2) }
+    ])
     .png()
     .toFile(join(brandingDir, 'og-image.png'));
 

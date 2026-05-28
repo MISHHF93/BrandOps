@@ -68,10 +68,23 @@ export const seedData: BrandOpsData = {
   embeddingIndex: {
     entries: []
   },
+  digitalTwins: {
+    activeTwinId: null,
+    twins: []
+  },
+  connectedIdentityEngine: {
+    schemaVersion: 1,
+    consentGranted: false,
+    lastUpdatedAt: null,
+    signals: [],
+    sensitiveDataPolicy:
+      'Connected Identity Engine is opt-in. It may derive identity signals from local metadata, summaries, and approved traces, but it must not automatically ingest raw private messages, files, or calendar details.',
+    blockedPrivateSources: ['gmail', 'google-calendar', 'slack', 'notion']
+  },
   seed: {
     seededAt: isoNow,
     source: 'production-empty',
     version: '2.0.0',
-    onboardingVersion: '2'
+    onboardingVersion: '8'
   }
 };

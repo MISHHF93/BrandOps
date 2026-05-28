@@ -7,7 +7,6 @@ import {
   History,
   User,
   Sparkles,
-  MessageCircle,
   Search
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -17,8 +16,15 @@ import { AssistantTraceSummary } from './AssistantTraceSummary';
 import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
 import { CHAT_QUICK_STARTER_GROUPS } from './chatCommandStarters';
 import { getIntentByCommandLine } from './chatIntents';
-import type { AiCitationChunk, CopilotWorkerRegistrySettings } from '../../types/domain';
+import type {
+  AiCitationChunk,
+  CopilotWorkerRegistrySettings,
+  DigitalTwin,
+  TwinSupportedActionType
+} from '../../types/domain';
 import type { AssistantAskTraceSummaryUI } from '../../types/aiTraceGraph';
+import { twinActionPrompt } from '../../services/digitalTwin/digitalTwin';
+import type { PlatformAwareAskReadout } from '../../services/ai/platformAwareAskContext';
 
 export interface ChatMessage {
   id: string;
@@ -42,7 +48,137 @@ export interface ChatMessage {
   traceSummary?: AssistantAskTraceSummaryUI;
 }
 
+export type AskPlanConversionKind =
+  | 'execution-plan'
+  | 'workflow'
+  | 'action-queue'
+  | 'content-schedule'
+  | 'outreach-draft'
+  | 'follow-up-sequence';
+
 const STARTER_CAP = 6;
+
+const ASK_TO_PLAN_CONVERSIONS: ReadonlyArray<{
+  kind: AskPlanConversionKind;
+  label: string;
+  description: string;
+}> = [
+  {
+    kind: 'execution-plan',
+    label: 'Convert to Plan',
+    description: 'Create an executable PLAN card'
+  },
+  {
+    kind: 'workflow',
+    label: 'Workflow',
+    description: 'Steps, dependencies, risks'
+  },
+  {
+    kind: 'action-queue',
+    label: 'Action queue',
+    description: 'Prioritized operating queue'
+  },
+  {
+    kind: 'content-schedule',
+    label: 'Content schedule',
+    description: 'Calendar and draft path'
+  },
+  {
+    kind: 'outreach-draft',
+    label: 'Outreach draft',
+    description: 'Draft message for approval'
+  },
+  {
+    kind: 'follow-up-sequence',
+    label: 'Follow-ups',
+    description: 'Sequence next touches'
+  }
+];
+
+const ASK_PROMPT_GROUPS = [
+  {
+    id: 'platforms',
+    label: 'Platform-aware ops',
+    prompts: [
+      'ask: What should I prioritize today using my connected apps, recent activity, workflow state, and operational context?',
+      'ask: Draft a LinkedIn outreach based on my recent Gmail conversations. If Gmail summaries are unavailable, say what is missing.',
+      'ask: Turn my Notion notes into a content plan. If Notion is not connected or no notes exist, ask for approved notes.',
+      'ask: Summarize my upcoming founder meetings using connected calendar context only.'
+    ]
+  },
+  {
+    id: 'brainstorm',
+    label: 'Brainstorm',
+    prompts: [
+      'ask: Brainstorm 10 high-leverage directions for my AI twin based on my verified strengths.',
+      'ask: What are three unconventional angles I should explore this week?'
+    ]
+  },
+  {
+    id: 'profile',
+    label: 'Resume/profile',
+    prompts: [
+      'ask: Explain what my resume/profile says I am strongest at. Flag any missing evidence.',
+      'ask: What facts are still unverified or missing from my digital twin?'
+    ]
+  },
+  {
+    id: 'positioning',
+    label: 'Positioning',
+    prompts: [
+      'ask: Sharpen my positioning into a premium one-line professional identity.',
+      'ask: Compare three positioning angles for my target audience and recommend one.'
+    ]
+  },
+  {
+    id: 'bio',
+    label: 'Bio generation',
+    prompts: [
+      'ask: Generate a concise professional bio using only verified twin facts.',
+      'ask: Write a LinkedIn About section with proof, voice, and a clear CTA.'
+    ]
+  },
+  {
+    id: 'opportunity',
+    label: 'Opportunity analysis',
+    prompts: [
+      'ask: Analyze the strongest opportunities for this twin and explain why.',
+      'ask: Which outreach targets or roles best match my profile, proof, and goals?'
+    ]
+  },
+  {
+    id: 'content',
+    label: 'Content ideation',
+    prompts: [
+      'ask: Generate content ideas from my verified skills, proof points, and voice.',
+      'ask: Create a 30-day content plan grounded in my twin profile.'
+    ]
+  },
+  {
+    id: 'outreach',
+    label: 'Outreach drafting',
+    prompts: [
+      'ask: Draft an outreach message that uses verified twin facts and asks before missing claims.',
+      'ask: Create a follow-up sequence for a high-trust professional opportunity.'
+    ]
+  },
+  {
+    id: 'workflow',
+    label: 'Workflow reasoning',
+    prompts: [
+      'ask: Turn this idea into an execution workflow with risks, next steps, and artifacts.',
+      'ask: Reason through my next operational move and convert it into a plan.'
+    ]
+  },
+  {
+    id: 'strategy',
+    label: 'Strategic thinking',
+    prompts: [
+      'ask: Act as my AI strategist and operator. What should I focus on next?',
+      'ask: What is the highest-leverage move for my positioning, growth, and execution?'
+    ]
+  }
+] as const;
 
 const ASSISTANT_QUICK_PICKS = (() => {
   const seen = new Set<string>();
@@ -82,10 +218,16 @@ export interface MobileChatViewProps {
   onOpenResumeGrounding?: () => void;
   /** One-line hosted routing stance — surfaced below Assistant headline (optional). */
   assistantRoutingCaption?: string;
+  /** Active digital twin, if created from reviewed resume/profile data. */
+  activeDigitalTwin?: DigitalTwin | null;
+  /** Connected-app/workflow context readout that hosted ASK receives. */
+  platformAwareAsk?: PlatformAwareAskReadout;
+  onTwinAction?: (actionType: TwinSupportedActionType, prompt: string) => void;
+  onConvertAskToPlan?: (kind: AskPlanConversionKind, askOutput: string, messageId: string) => void;
 }
 
 /**
- * Assistant tab — full-height conversational layout: one scroll container (shell `main`),
+ * ASK tab — full-height conversational intelligence layout: one scroll container (shell `main`),
  * fixed composer below. Avoids nested transcript panes that trap touch / keyboard scroll.
  */
 export const MobileChatView = ({
@@ -100,30 +242,68 @@ export const MobileChatView = ({
   transcriptEndRef,
   onOpenCommandPalette,
   onOpenResumeGrounding,
-  assistantRoutingCaption
+  assistantRoutingCaption,
+  activeDigitalTwin,
+  platformAwareAsk,
+  onTwinAction,
+  onConvertAskToPlan
 }: MobileChatViewProps) => {
   /** Matches hero inset — keeps Copilot / starters / transcript edges aligned. */
   const assistantGutter = 'px-3 sm:px-3.5';
 
+  const twinMemoryFacts = activeDigitalTwin
+    ? [
+        ...activeDigitalTwin.memory.approvedClaims,
+        ...activeDigitalTwin.memory.facts,
+        ...activeDigitalTwin.resumeProfile.skills
+      ].filter(Boolean)
+    : [];
+  const twinMemoryPreview = Array.from(new Set(twinMemoryFacts.map((item) => item.trim())))
+    .filter(Boolean)
+    .slice(0, 6);
+  const verifiedDataCount = activeDigitalTwin
+    ? new Set(
+        [
+          activeDigitalTwin.identity.headline,
+          activeDigitalTwin.identity.professionalPositioning,
+          ...activeDigitalTwin.resumeProfile.skills,
+          ...activeDigitalTwin.resumeProfile.achievements,
+          ...activeDigitalTwin.memory.approvedClaims
+        ]
+          .map((item) => item?.trim())
+          .filter(Boolean)
+      ).size
+    : 0;
+  const memoryUsageCount = activeDigitalTwin
+    ? activeDigitalTwin.memory.facts.length +
+      activeDigitalTwin.memory.preferences.length +
+      activeDigitalTwin.memory.voiceExamples.length +
+      activeDigitalTwin.memory.approvedClaims.length
+    : 0;
+  const platformConnected = platformAwareAsk?.connectedApps ?? [];
+  const platformRecentActivityCount = platformAwareAsk?.recentActivity.length ?? 0;
+  const platformWorkflowCount = platformAwareAsk?.workflowState.length ?? 0;
+  const promptGroups = ASK_PROMPT_GROUPS;
+
   return (
-    <div aria-label="Assistant" className="bo-assistant-surface flex flex-col gap-3">
+    <div aria-label="ASK intelligence layer" className="bo-assistant-surface flex flex-col gap-3">
       <header className={clsx('bo-assistant-hero bo-dos-hero py-3 sm:py-3.5', assistantGutter)}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 text-text">
               <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-bgElevated text-accent">
-                <MessageCircle className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                <Bot className="h-4 w-4" strokeWidth={2.25} aria-hidden />
               </span>
               <div className="min-w-0">
                 <h2 className="text-base font-semibold leading-tight tracking-tight text-text">
-                  Assistant
+                  ASK
                 </h2>
                 <p className="mt-0.5 text-meta leading-snug text-textMuted">
-                  <span className="whitespace-nowrap font-mono text-fine text-textSoft">
-                    ask: …
-                  </span>{' '}
-                  for hosted answers; everything else runs on-device. Quick picks and pulse live on{' '}
-                  <span className="font-medium text-textSoft">Plan</span> — ⌘K lists all commands.
+                  Ask your AI digital twin. It understands your profession identity, uses connected
+                  platform context, and turns intelligence into plans.
+                </p>
+                <p className="mt-1 text-fine leading-snug text-textSoft">
+                  ASK is not a chatbot thread. It is the intelligence layer before PLAN and OPERATE.
                 </p>
                 {assistantRoutingCaption?.trim() ? (
                   <p className="mt-1 text-fine leading-snug text-textSoft">
@@ -134,7 +314,7 @@ export const MobileChatView = ({
             </div>
           </div>
           {onOpenCommandPalette ? (
-            <nav aria-label="Assistant shortcuts" className="flex shrink-0 items-start">
+            <nav aria-label="ASK shortcuts" className="flex shrink-0 items-start">
               <button
                 type="button"
                 onClick={onOpenCommandPalette}
@@ -155,26 +335,145 @@ export const MobileChatView = ({
               onClick={onOpenResumeGrounding}
               className={clsx('bo-link bo-link--sm font-semibold !normal-case', btnFocus)}
             >
-              Operator twin — résumé ingest (hosted Ask)
+              Build or improve your AI twin
             </button>
-            <span className="text-textMuted"> — compress CV in Settings; improves hosted </span>
+            <span className="text-textMuted">
+              {' '}
+              — ingest resume/profile context so ASK can reason from your profession identity and
+              proof; improves hosted{' '}
+            </span>
             <span className="whitespace-nowrap font-mono text-fine text-textSoft">ask:</span>
             <span className="text-textMuted"> answers.</span>
           </p>
         ) : null}
+        {activeDigitalTwin ? (
+          <section
+            className="mt-3 rounded-xl border border-primary/35 bg-primarySoft/15 p-3"
+            aria-label="Active digital twin"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-label font-semibold text-text">
+                  Active twin: {activeDigitalTwin.displayName}
+                </p>
+                <p className="text-fine text-textMuted">
+                  {activeDigitalTwin.status} · {activeDigitalTwin.confidenceScore}% confidence ·
+                  {activeDigitalTwin.memory.missingInfo.length
+                    ? ' asks before missing facts'
+                    : ' grounded in reviewed profile data'}
+                </p>
+              </div>
+              <span className="rounded-full border border-border/50 bg-bgElevated px-2 py-1 text-fine font-semibold text-textMuted">
+                Twin Context Mode
+              </span>
+            </div>
+            <p className="mt-2 text-fine leading-snug text-textMuted">
+              Safe output rule: BrandOps will not invent résumé claims. Missing facts should become
+              follow-up questions before outreach or publishing.
+            </p>
+            <dl className="mt-2 grid grid-cols-2 gap-1.5 text-fine sm:grid-cols-4">
+              <div className="rounded-lg border border-border/35 bg-bgSubtle/50 px-2 py-1.5">
+                <dt className="text-textSoft">Confidence score</dt>
+                <dd className="font-semibold text-text">{activeDigitalTwin.confidenceScore}%</dd>
+              </div>
+              <div className="rounded-lg border border-border/35 bg-bgSubtle/50 px-2 py-1.5">
+                <dt className="text-textSoft">Verified data usage</dt>
+                <dd className="font-semibold text-text">{verifiedDataCount} facts</dd>
+              </div>
+              <div className="rounded-lg border border-border/35 bg-bgSubtle/50 px-2 py-1.5">
+                <dt className="text-textSoft">Memory usage</dt>
+                <dd className="font-semibold text-text">{memoryUsageCount} memories</dd>
+              </div>
+              <div className="rounded-lg border border-border/35 bg-bgSubtle/50 px-2 py-1.5">
+                <dt className="text-textSoft">Clarification guardrail</dt>
+                <dd className="font-semibold text-text">
+                  {activeDigitalTwin.memory.missingInfo.length ? 'Ask first' : 'Grounded'}
+                </dd>
+              </div>
+            </dl>
+            <div className="mt-2 rounded-lg border border-border/35 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textMuted">
+              <span className="font-semibold text-text">Twin influence:</span> voice, positioning,
+              suggestions, workflows, opportunities, content direction, and outreach style inherit
+              from the active twin. Missing facts trigger follow-up questions.
+            </div>
+            {twinMemoryPreview.length ? (
+              <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Twin memory preview">
+                {twinMemoryPreview.map((fact) => (
+                  <span
+                    key={fact}
+                    className="max-w-full rounded-full border border-border/40 bg-bgElevated/70 px-2 py-1 text-fine text-textMuted"
+                    title={fact}
+                  >
+                    <span className="line-clamp-1">{fact}</span>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+        <section
+          className="mt-3 rounded-xl border border-border/45 bg-surface/45 p-3"
+          aria-label="Platform-aware ASK"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-label font-semibold text-text">Platform-aware context</p>
+              <p className="mt-1 text-fine leading-snug text-textMuted">
+                ASK can reason over connected apps, recent activity, workflow state, and operational
+                context. It must say when Gmail, Notion, Calendar, Slack, or LinkedIn data is not
+                connected or approved.
+              </p>
+            </div>
+            <span className="rounded-full border border-border/50 bg-bgElevated px-2 py-1 text-fine font-semibold text-textMuted">
+              {platformConnected.length} apps visible
+            </span>
+          </div>
+          <dl className="mt-2 grid grid-cols-3 gap-1.5 text-fine">
+            <div className="rounded-lg border border-border/35 bg-bgSubtle/50 px-2 py-1.5">
+              <dt className="text-textSoft">Connected apps</dt>
+              <dd className="font-semibold text-text">{platformConnected.length}</dd>
+            </div>
+            <div className="rounded-lg border border-border/35 bg-bgSubtle/50 px-2 py-1.5">
+              <dt className="text-textSoft">Recent activity</dt>
+              <dd className="font-semibold text-text">{platformRecentActivityCount}</dd>
+            </div>
+            <div className="rounded-lg border border-border/35 bg-bgSubtle/50 px-2 py-1.5">
+              <dt className="text-textSoft">Workflow state</dt>
+              <dd className="font-semibold text-text">{platformWorkflowCount}</dd>
+            </div>
+          </dl>
+          {platformConnected.length ? (
+            <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Connected apps visible to ASK">
+              {platformConnected.slice(0, 8).map((app) => (
+                <span
+                  key={app}
+                  className="rounded-full border border-border/35 bg-bgSubtle/60 px-2 py-1 text-fine text-textMuted"
+                >
+                  {app}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/10 px-2.5 py-2 text-fine leading-snug text-warning">
+              No connected app context is available yet. ASK can still use workspace state, but it
+              should not claim access to external apps.
+            </p>
+          )}
+        </section>
       </header>
 
       <div className={clsx('flex min-w-0 flex-col gap-3', assistantGutter)}>
-        <section
-          id="assistant-copilot"
-          className="scroll-mt-28 min-w-0"
-          aria-label="Hosted Ask copilot"
-        >
-          <p className="bo-assistant-section-label">Copilot</p>
+        <section id="assistant-copilot" className="scroll-mt-28 min-w-0" aria-label="ASK copilot">
+          <p className="bo-assistant-section-label">Strategist mode</p>
           <p className="mb-1.5 text-meta leading-snug text-textSoft">
-            Pick a worker, then send{' '}
-            <code className="rounded bg-bgSubtle px-1 py-px text-fine">ask: …</code> in the
-            composer. Allow-listed workers may attach automation JSON after the reply.
+            Pick a reasoning worker, then ask for strategy, positioning, content, outreach, or
+            workflow judgment. Hosted calls require your configured OpenAI-compatible endpoint and
+            key.
+          </p>
+          <p className="mb-1.5 rounded-lg border border-border/40 bg-bgSubtle/45 px-2 py-1.5 text-fine leading-snug text-textMuted">
+            Structured response target: insight → evidence → recommendation → next action → save to
+            Plan. Use <code className="rounded bg-bgSubtle px-1 py-px text-fine">ask: …</code> in
+            the composer for hosted reasoning.
           </p>
           <div className="bo-copilot-rail">
             {copilotWorkerRegistry.workers.map((w) => {
@@ -184,6 +483,7 @@ export const MobileChatView = ({
                   key={w.id}
                   type="button"
                   title={w.description ?? w.name}
+                  aria-pressed={active}
                   onClick={() => onSelectCopilotWorker(w.id)}
                   className={clsx('bo-copilot-chip', active && 'bo-copilot-chip--active', btnFocus)}
                 >
@@ -195,9 +495,83 @@ export const MobileChatView = ({
         </section>
 
         <div id="assistant-commands" className="scroll-mt-28 space-y-3">
+          <section aria-labelledby="ask-prompts-label" className="min-w-0">
+            <p id="ask-prompts-label" className="bo-assistant-section-label">
+              Suggested prompts
+            </p>
+            <p className="mt-1 text-meta leading-snug text-textSoft">
+              Start with a strategic question. ASK can brainstorm, challenge assumptions, create
+              drafts, ask follow-ups, and convert useful outputs into operational next steps.
+            </p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {promptGroups.map((group) => (
+                <section
+                  key={group.id}
+                  className="rounded-xl border border-border/45 bg-surface/45 p-2.5"
+                  aria-label={`${group.label} prompts`}
+                >
+                  <p className="text-label font-semibold text-text">{group.label}</p>
+                  <div className="mt-2 grid gap-1.5">
+                    {group.prompts.map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        onClick={() => onQuickCommand(prompt)}
+                        className={clsx(
+                          'rounded-lg border border-border/35 bg-bgSubtle/55 px-2.5 py-2 text-left text-meta leading-snug text-textMuted hover:border-borderStrong hover:text-text',
+                          btnFocus
+                        )}
+                      >
+                        {prompt.replace(/^ask:\s*/i, '')}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </section>
+
+          {activeDigitalTwin && onTwinAction ? (
+            <section aria-labelledby="assistant-twin-actions-label" className="min-w-0">
+              <p id="assistant-twin-actions-label" className="bo-assistant-section-label">
+                Actionable outputs
+              </p>
+              <p className="mt-1 text-meta leading-snug text-textSoft">
+                Generate structured outputs from twin memory, then confirm before sending,
+                publishing, or saving externally.
+              </p>
+              <div className="bo-assistant-quick-strip mt-1.5">
+                {(
+                  [
+                    ['generate_professional_bio', 'Generate bio'],
+                    ['draft_outreach', 'Draft outreach'],
+                    ['create_30_day_content_plan', '30-day content plan'],
+                    ['improve_profile_gaps', 'Improve profile gaps']
+                  ] as const
+                ).map(([actionType, label]) => {
+                  const prompt = twinActionPrompt(actionType, activeDigitalTwin);
+                  return (
+                    <button
+                      key={actionType}
+                      type="button"
+                      onClick={() => onTwinAction(actionType, prompt)}
+                      className={clsx('bo-chat-starter-chip touch-manipulation', btnFocus)}
+                      title="Preview in Chat; external sending or posting requires explicit approval."
+                    >
+                      <span className="line-clamp-1">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
           <section aria-labelledby="assistant-starters-label" className="min-w-0">
             <p id="assistant-starters-label" className="bo-assistant-section-label">
-              Starters
+              Execution shortcuts
+            </p>
+            <p className="mt-1 text-meta leading-snug text-textSoft">
+              These are real BrandOps actions. Use them when a strategy is ready to become workspace
+              execution.
             </p>
             <div className="bo-assistant-quick-strip mt-1.5">
               {ASSISTANT_QUICK_PICKS.map((command) => {
@@ -222,9 +596,9 @@ export const MobileChatView = ({
         <section
           id="assistant-thread"
           className="bo-assistant-thread-shell scroll-mt-28 min-w-0 py-3 sm:py-3.5"
-          aria-label="Transcript and recent commands"
+          aria-label="ASK transcript and recent prompts"
         >
-          <h3 className="sr-only">Conversation transcript</h3>
+          <h3 className="sr-only">ASK conversation transcript</h3>
           <div
             className="flex flex-col gap-3"
             role="log"
@@ -233,7 +607,7 @@ export const MobileChatView = ({
             aria-atomic="false"
           >
             {commandHistory.length > 0 ? (
-              <div className="pb-3" aria-label="Recent commands">
+              <div className="pb-3" aria-label="Recent ASK prompts and commands">
                 <div className="flex items-center justify-between gap-2">
                   <span className="bo-assistant-recents-label">
                     <History className="h-3 w-3" strokeWidth={2} aria-hidden />
@@ -268,16 +642,20 @@ export const MobileChatView = ({
                 <span className="bo-assistant-empty-state-icon">
                   <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
                 </span>
-                <p className="text-sm font-semibold text-text">Run commands or ask for guidance</p>
+                <p className="text-sm font-semibold text-text">
+                  Ask your AI strategist and operator
+                </p>
                 <p className="max-w-[min(100%,22rem)] text-meta leading-relaxed text-textMuted">
-                  Starters send workspace commands; lines beginning with{' '}
+                  Ask for brainstorming, profile understanding, positioning, bios, opportunity
+                  analysis, content ideas, outreach drafts, workflow reasoning, or strategic next
+                  moves. Lines beginning with{' '}
                   <span className="font-mono text-meta text-textSoft">ask:</span> use the hosted
-                  model. Planning shortcuts stay on Plan — ⌘K finds anything else.
+                  model when configured.
                 </p>
                 <p className="max-w-[min(100%,22rem)] text-fine leading-relaxed text-textSoft">
-                  Try: <span className="font-mono">today plan</span>,{' '}
-                  <span className="font-mono">create linkedin post</span>, or{' '}
-                  <span className="font-mono">ask: summarize my weekly priorities</span>.
+                  Try:{' '}
+                  <span className="font-mono">ask: what is my strongest positioning angle?</span> or{' '}
+                  <span className="font-mono">ask: turn this idea into an executable plan</span>.
                 </p>
               </div>
             ) : (
@@ -357,6 +735,45 @@ export const MobileChatView = ({
                                 orphanMarkerCount={message.orphanInlineMarkers?.length ?? 0}
                                 btnFocus={btnFocus}
                               />
+                            ) : null}
+                            {onConvertAskToPlan ? (
+                              <section
+                                className="mt-2 rounded-xl border border-primary/30 bg-primarySoft/10 p-2"
+                                aria-label="Convert ASK output to PLAN"
+                              >
+                                <div className="flex flex-wrap items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <p className="text-label font-semibold text-text">
+                                      Convert to Plan
+                                    </p>
+                                    <p className="mt-0.5 text-fine leading-snug text-textMuted">
+                                      Ask → Plan → Approve → Execute. Create a PLAN card or launch a
+                                      real workspace action from this output.
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                                  {ASK_TO_PLAN_CONVERSIONS.map((item) => (
+                                    <button
+                                      key={item.kind}
+                                      type="button"
+                                      onClick={() =>
+                                        onConvertAskToPlan(item.kind, message.text, message.id)
+                                      }
+                                      className={clsx(
+                                        'rounded-lg border border-border/40 bg-bgElevated/65 px-2.5 py-2 text-left text-meta text-text hover:border-borderStrong',
+                                        btnFocus
+                                      )}
+                                      title={item.description}
+                                    >
+                                      <span className="block font-semibold">{item.label}</span>
+                                      <span className="mt-0.5 block text-fine font-normal leading-snug text-textMuted">
+                                        {item.description}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </section>
                             ) : null}
                           </>
                         ) : (

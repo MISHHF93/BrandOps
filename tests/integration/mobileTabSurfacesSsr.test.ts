@@ -20,6 +20,10 @@ import {
 import type { LaunchAccessState } from '../../src/shared/account/launchAccess';
 import type { ChatMessage } from '../../src/pages/mobile/MobileChatView';
 import { cloneDemoSampleData, cloneSeedData } from '../helpers/fixtures';
+import {
+  createDigitalTwinFromText,
+  hydrateWorkspaceFromDigitalTwin
+} from '../../src/services/digitalTwin/digitalTwin';
 
 const planLaunchFixture: LaunchAccessState = {
   auth: {
@@ -33,6 +37,48 @@ const planLaunchFixture: LaunchAccessState = {
 const snapshot = () => buildWorkspaceSnapshot(cloneSeedData());
 const noop = () => {};
 const asyncNoop = async () => {};
+
+const twinSnapshot = () => {
+  const data = cloneSeedData();
+  const { twin, resumeArtifact } = createDigitalTwinFromText({
+    workspace: data,
+    rawText: `Maya Rivera
+Senior AI Product Operator | 2020 - Present
+Skills
+TypeScript, React, Python, NLP, leadership
+- Built AI workflow systems for creator operations`,
+    sourceType: 'resume',
+    reviewOverrides: { displayName: 'Maya Rivera', headline: 'Senior AI Product Operator' }
+  });
+  return buildWorkspaceSnapshot(
+    hydrateWorkspaceFromDigitalTwin({ workspace: data, twin, resumeArtifact }).workspace
+  );
+};
+
+const approvalSnapshot = () => {
+  const data = cloneSeedData();
+  data.operatorTraces = {
+    entries: [
+      {
+        id: 'approval-1',
+        at: '2026-01-01T12:00:00.000Z',
+        source: 'assistant',
+        verb: 'draft outreach',
+        surface: 'plan',
+        route: 'outreach-workspace',
+        entityType: 'outreach',
+        entityId: 'draft-1',
+        details: {
+          output: 'Preview this outreach before sending.',
+          version: 'v2'
+        },
+        labels: ['external-action', 'human-gated'],
+        reviewStatus: 'pending'
+      }
+    ]
+  };
+  return buildWorkspaceSnapshot(data);
+};
 
 describe('Mobile tab surfaces (SSR integration)', () => {
   it('Plan hub: destinations, jump links, Pulse, Today snapshot, queue landmarks', () => {
@@ -67,7 +113,47 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('aria-label="Plan destinations"');
     expect(html).toContain('Jump within Plan');
     expect(html).toContain('id="plan-actions"');
-    expect(html).toContain('Quick picks');
+    expect(html).toContain('Operational execution layer');
+    expect(html).toContain('Turn ideas into executable plans');
+    expect(html).toContain('PLAN / OPERATE');
+    expect(html).toContain('Your AI operating loop');
+    expect(html).toContain('Your AI digital twin understands your profession');
+    expect(html).toContain('OPERATE');
+    expect(html).toContain('id="plan-operational-timeline"');
+    expect(html).toContain('Operational command center');
+    expect(html).toContain('Cross-platform operational timeline');
+    expect(html).toContain('What AI did');
+    expect(html).toContain('id="plan-human-approval-queue"');
+    expect(html).toContain('Human Approval Queue');
+    expect(html).toContain('Trust gate before execution');
+    expect(html).toContain('Nothing external executes automatically');
+    expect(html).toContain('id="plan-execution-receipts"');
+    expect(html).toContain('Execution receipts');
+    expect(html).toContain('What happened, why, and what data was used');
+    expect(html).toContain('Receipts');
+    expect(html).toContain('id="plan-human-trust-layer"');
+    expect(html).toContain('Human Trust Layer');
+    expect(html).toContain('Safe, controlled, transparent execution');
+    expect(html).toContain('Generated drafts');
+    expect(html).toContain('Approvals');
+    expect(html).toContain('Sent actions');
+    expect(html).toContain('Scheduled workflows');
+    expect(html).toContain('Platform actions');
+    expect(html).toContain('AI recommendations');
+    expect(html).toContain('Completed operations');
+    expect(html).toContain('Ops timeline');
+    expect(html).toContain('Approvals');
+    expect(html).toContain('Workflow Plan');
+    expect(html).toContain('Outreach Plan');
+    expect(html).toContain('Content Calendar');
+    expect(html).toContain('Execution Sequence');
+    expect(html).toContain('Approval Flow');
+    expect(html).toContain('Preview');
+    expect(html).toContain('Approve');
+    expect(html).toContain('Edit');
+    expect(html).toContain('Retry');
+    expect(html).toContain('Export plan JSON');
+    expect(html).toContain('Execution picks');
     expect(html).toContain('Sync embeddings');
     expect(html).toContain('Execution and governance');
     expect(html).toContain('id="plan-exec-insights"');
@@ -77,6 +163,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('id="plan-profile-summary"');
     expect(html).toContain('Workspace profile');
     expect(html).toContain('Edit profile');
+    expect(html).toContain('Resume-to-Digital-Twin');
+    expect(html).toContain('Upload your resume. Build your AI twin.');
+    expect(html).toContain('PDF/DOCX parsing is shown');
     expect(html).toContain('Primary offer');
     expect(html).toContain('Voice guide');
     expect(html).toContain('Focus metric');
@@ -136,7 +225,114 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).not.toContain('Workspace setup hint');
   });
 
-  it('Chat: header, thread, example commands, optional recent commands', () => {
+  it('Plan hub: renders converted ASK cards in the operational studio', () => {
+    const html = renderToString(
+      React.createElement(MobileWorkspaceHubView, {
+        snapshot: buildWorkspaceSnapshot(cloneDemoSampleData()),
+        btnFocus: '',
+        commandBusy: false,
+        runCommand: noop,
+        onOpenToday: noop,
+        launchAccess: planLaunchFixture,
+        onOpenSettings: noop,
+        onOpenIntegrations: noop,
+        onOpenCommandPalette: noop,
+        firstRunJourneyVisible: true,
+        canRunWorkspaceCommands: true,
+        workspaceCommandLockReason: null,
+        onDownloadPipelineRun: noop,
+        onApproveOperatorTrace: asyncNoop,
+        convertedOperationalPlans: [
+          {
+            id: 'ask-plan-test',
+            title: 'Converted Execution Plan',
+            kind: 'workflow',
+            promise: 'Created from ASK.',
+            previewCommand: 'ask: preview converted plan',
+            approveCommand: 'add note: converted plan',
+            editTarget: 'palette',
+            status: 'needs-input',
+            progress: 15,
+            timeline: ['ASK output', 'PLAN preview', 'Human approval', 'Execute in workspace'],
+            sourceLabel: 'Converted from ASK',
+            exportPayload: { type: 'execution-plan' }
+          }
+        ]
+      })
+    );
+
+    expect(html).toContain('Converted Execution Plan');
+    expect(html).toContain('Converted from ASK');
+    expect(html).toContain('ASK output');
+    expect(html).toContain('PLAN preview');
+  });
+
+  it('Plan hub: human approval queue exposes trust controls for pending outputs', () => {
+    const html = renderToString(
+      React.createElement(MobileWorkspaceHubView, {
+        snapshot: approvalSnapshot(),
+        btnFocus: '',
+        commandBusy: false,
+        runCommand: noop,
+        onOpenToday: noop,
+        launchAccess: planLaunchFixture,
+        onOpenSettings: noop,
+        onOpenIntegrations: noop,
+        onOpenCommandPalette: noop,
+        firstRunJourneyVisible: true,
+        canRunWorkspaceCommands: true,
+        workspaceCommandLockReason: null,
+        onDownloadPipelineRun: noop,
+        onApproveOperatorTrace: asyncNoop,
+        onRejectOperatorTrace: asyncNoop
+      })
+    );
+
+    expect(html).toContain('draft outreach');
+    expect(html).toContain('Output preview');
+    expect(html).toContain('Preview this outreach before sending.');
+    expect(html).toContain('external-action');
+    expect(html).toContain('Preview');
+    expect(html).toContain('Edit');
+    expect(html).toContain('Reject');
+    expect(html).toContain('Regenerate');
+    expect(html).toContain('Compare versions');
+    expect(html).toContain('Approve');
+  });
+
+  it('Plan hub: execution receipts explain action, data, outputs, approvals, and status', () => {
+    const html = renderToString(
+      React.createElement(MobileWorkspaceHubView, {
+        snapshot: approvalSnapshot(),
+        btnFocus: '',
+        commandBusy: false,
+        runCommand: noop,
+        onOpenToday: noop,
+        launchAccess: planLaunchFixture,
+        onOpenSettings: noop,
+        onOpenIntegrations: noop,
+        onOpenCommandPalette: noop,
+        firstRunJourneyVisible: true,
+        canRunWorkspaceCommands: true,
+        workspaceCommandLockReason: null,
+        onDownloadPipelineRun: noop,
+        onApproveOperatorTrace: asyncNoop,
+        onRejectOperatorTrace: asyncNoop
+      })
+    );
+
+    expect(html).toContain('Execution receipts');
+    expect(html).toContain('Every PLAN execution gets a readable receipt');
+    expect(html).toContain('Source facts used');
+    expect(html).toContain('Generated outputs');
+    expect(html).toContain('Approvals');
+    expect(html).toContain('Warnings / errors');
+    expect(html).toContain('Pending human approval');
+    expect(html).toContain('Preview receipt');
+    expect(html).toContain('Export receipt JSON');
+  });
+
+  it('ASK: intelligence layer, prompt categories, execution shortcuts, and recent commands', () => {
     const messages: ChatMessage[] = [
       {
         id: 'w',
@@ -159,9 +355,18 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         onOpenResumeGrounding: noop
       })
     );
-    expect(html).toContain('aria-label="Assistant"');
-    expect(html).toContain('Copilot');
-    expect(html).toContain('Starters');
+    expect(html).toContain('aria-label="ASK intelligence layer"');
+    expect(html).toContain('ASK');
+    expect(html).toContain('Ask your AI digital twin');
+    expect(html).toContain('profession identity');
+    expect(html).toContain('PLAN and OPERATE');
+    expect(html).toContain('Strategist mode');
+    expect(html).toContain('Suggested prompts');
+    expect(html).toContain('Brainstorm');
+    expect(html).toContain('Resume/profile');
+    expect(html).toContain('Opportunity analysis');
+    expect(html).toContain('Workflow reasoning');
+    expect(html).toContain('Execution shortcuts');
     expect(html).toContain('Connect Notion');
     expect(html).toContain('Check pipeline');
     expect(html).toContain('id="assistant-copilot"');
@@ -170,10 +375,99 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Recent');
     expect(html).toContain('pipeline health');
     expect(html).toContain('bo-assistant-hero');
-    expect(html).toContain('Quick picks');
-    expect(html).toContain('Plan');
-    expect(html).toContain('⌘K');
-    expect(html).toContain('Résumé grounding for Ask');
+    expect(html).toContain('Build or improve your AI twin');
+  });
+
+  it('ASK: active twin memory and guided outputs render when a twin exists', () => {
+    const html = renderToString(
+      React.createElement(MobileChatView, {
+        messages: [],
+        loading: false,
+        commandHistory: [],
+        onQuickCommand: noop,
+        copilotWorkerRegistry: snapshot().copilotWorkerRegistry,
+        onSelectCopilotWorker: noop,
+        onClearCommandHistory: noop,
+        btnFocus: '',
+        onOpenCommandPalette: noop,
+        activeDigitalTwin: twinSnapshot().activeDigitalTwin,
+        onTwinAction: noop
+      })
+    );
+
+    expect(html).toContain('Active twin:');
+    expect(html).toContain('Maya Rivera');
+    expect(html).toContain('Twin Context Mode');
+    expect(html).toContain('Twin memory preview');
+    expect(html).toContain('Verified data usage');
+    expect(html).toContain('Memory usage');
+    expect(html).toContain('Clarification guardrail');
+    expect(html).toContain('Twin influence');
+    expect(html).toContain('Actionable outputs');
+    expect(html).toContain('Safe output rule');
+  });
+
+  it('ASK: hosted outputs expose Convert to Plan handoff actions', () => {
+    const messages: ChatMessage[] = [
+      {
+        id: 'ask-1',
+        role: 'assistant',
+        resultKind: 'ask-result',
+        ok: true,
+        text: 'Here is a strategic output that should become an operational plan.'
+      }
+    ];
+    const html = renderToString(
+      React.createElement(MobileChatView, {
+        messages,
+        loading: false,
+        commandHistory: [],
+        onQuickCommand: noop,
+        copilotWorkerRegistry: snapshot().copilotWorkerRegistry,
+        onSelectCopilotWorker: noop,
+        onClearCommandHistory: noop,
+        btnFocus: '',
+        onOpenCommandPalette: noop,
+        onConvertAskToPlan: noop
+      })
+    );
+
+    expect(html).toContain('Convert ASK output to PLAN');
+    expect(html).toContain('Ask → Plan → Approve → Execute');
+    expect(html).toContain('Convert to Plan');
+    expect(html).toContain('Action queue');
+    expect(html).toContain('Content schedule');
+    expect(html).toContain('Outreach draft');
+    expect(html).toContain('Follow-ups');
+  });
+
+  it('Plan hub: active twin context influences operational planning', () => {
+    const html = renderToString(
+      React.createElement(MobileWorkspaceHubView, {
+        snapshot: twinSnapshot(),
+        btnFocus: '',
+        commandBusy: false,
+        runCommand: noop,
+        onOpenToday: noop,
+        launchAccess: planLaunchFixture,
+        onOpenSettings: noop,
+        onOpenIntegrations: noop,
+        onOpenCommandPalette: noop,
+        firstRunJourneyVisible: true,
+        canRunWorkspaceCommands: true,
+        workspaceCommandLockReason: null,
+        onDownloadPipelineRun: noop,
+        onApproveOperatorTrace: asyncNoop
+      })
+    );
+
+    expect(html).toContain('PLAN active twin context');
+    expect(html).toContain('Active twin for PLAN:');
+    expect(html).toContain('Maya Rivera');
+    expect(html).toContain('Verified data usage');
+    expect(html).toContain('Memory usage');
+    expect(html).toContain('Twin-aware plan');
+    expect(html).toContain('voice, positioning, suggestions, workflows');
   });
 
   it('Getting started card: Plan onboarding landmarks', () => {
@@ -182,20 +476,23 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         btnFocus: '',
         onDismiss: noop,
         onTryCommand: noop,
-        onOpenToday: noop,
+        onOpenAsk: noop,
         onOpenSettings: noop,
         onOpenHelp: noop
       })
     );
     expect(html).toContain('aria-label="Start here — first session"');
-    expect(html).toContain('Getting started');
-    expect(html).toContain('Five quick steps');
-    expect(html).toContain('Jump to Quick picks');
-    expect(html).toContain('Open Today');
-    expect(html).toContain('Pipeline health');
-    expect(html).toContain('Open Settings');
-    expect(html).toContain('Help — First run');
-    expect(html).toContain('Tune your workspace');
+    expect(html).toContain('ASK. PLAN. OPERATE.');
+    expect(html).toContain('Your AI digital twin understands your profession');
+    expect(html).toContain('not another chatbot');
+    expect(html).toContain('connects platform context');
+    expect(html).toContain('Create digital twin');
+    expect(html).toContain('ASK your twin');
+    expect(html).toContain('Convert ideas into PLANs');
+    expect(html).toContain('OPERATE with control');
+    expect(html).toContain('Track operational execution');
+    expect(html).toContain('Review approval queue');
+    expect(html).toContain('View receipts');
     expect(html).toContain('Dismiss getting started');
   });
 
@@ -412,7 +709,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Export operator traces');
     expect(html).toContain('Record operator traces locally');
     expect(html).toContain('Assistant');
-    expect(html).toContain('Résumé grounding (hosted Ask)');
+    expect(html).toContain('Operator twin — résumé ingest (hosted Ask)');
+    expect(html).toContain('PDF/DOCX parsing is not bundled yet');
+    expect(html).toContain('Generate Digital Twin');
     expect(html).toContain('Diagnostics');
     expect(html).toContain('Extension shell');
     expect(html).toContain('Open integrations page in a new tab');
@@ -425,6 +724,34 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('No messaging vault entries in this workspace.');
     expect(html).toContain('Capability map');
     expect(html).toContain('Expand capability index');
+  });
+
+  it('Settings: Twin Dashboard renders active twin, action studio, export, and delete controls', () => {
+    const html = renderToString(
+      React.createElement(MobileSettingsView, {
+        snapshot: twinSnapshot(),
+        btnFocus: '',
+        runCommand: noop,
+        applySettingsConfigure: asyncNoop,
+        applyBusy: false,
+        commandBusy: false,
+        onRequestClearChat: noop,
+        onExportWorkspace: asyncNoop,
+        onExportOperatorTraces: asyncNoop,
+        onImportWorkspace: asyncNoop,
+        onRequestResetWorkspace: noop,
+        onOperatorTraceCollectionChange: noop,
+        documentSurface: 'mobile'
+      })
+    );
+
+    expect(html).toContain('Twin Dashboard');
+    expect(html).toContain('Maya Rivera');
+    expect(html).toContain('Twin Action Studio');
+    expect(html).toContain('Captured into BrandOps');
+    expect(html).toContain('Export twin data');
+    expect(html).toContain('Delete twin');
+    expect(html).toContain('Improve Twin Profile');
   });
 
   it('Settings: intelligence readout reflects init when awaited before snapshot', async () => {

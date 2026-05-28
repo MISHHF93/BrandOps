@@ -3,7 +3,8 @@ import type { OperatorTraceEntry } from '../../src/types/domain';
 import { cloneSeedData } from '../helpers/fixtures';
 import {
   countPendingOperatorReviews,
-  approveOperatorTraceEntry
+  approveOperatorTraceEntry,
+  rejectOperatorTraceEntry
 } from '../../src/services/plan/reviewQueue';
 import { governancePoliciesFromPackagedRules } from '../../src/services/plan/governancePoliciesReadout';
 
@@ -47,6 +48,27 @@ describe('review queue + governance readout', () => {
     expect(next?.operatorTraces?.entries[0]?.reviewStatus).toBe('approved');
     const noop = approveOperatorTraceEntry(next!, 't1');
     expect(noop).toBe(next);
+  });
+
+  it('rejects a pending trace by id without deleting the audit row', () => {
+    const data = cloneSeedData();
+    data.operatorTraces = {
+      entries: [
+        {
+          id: 't1',
+          at: '2026-01-01',
+          source: 'assistant',
+          verb: 'ask',
+          reviewStatus: 'pending'
+        }
+      ]
+    };
+    const next = rejectOperatorTraceEntry(data, 't1', 'No external send approved.');
+    expect(next).not.toBeNull();
+    expect(next?.operatorTraces?.entries).toHaveLength(1);
+    expect(next?.operatorTraces?.entries[0]?.reviewStatus).toBe('rejected');
+    expect(next?.operatorTraces?.entries[0]?.annotatorNote).toBe('No external send approved.');
+    expect(countPendingOperatorReviews(next?.operatorTraces?.entries)).toBe(0);
   });
 
   it('returns null when trace id missing', () => {

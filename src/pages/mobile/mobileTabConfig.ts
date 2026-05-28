@@ -2,7 +2,7 @@ import { CalendarCheck2, LayoutDashboard, MessageCircle, PlugZap, Settings } fro
 import type { MobileShellTabId } from './mobileShellQuery';
 
 /**
- * Bottom dock: **Ask | Plan** — `chat` (dock “Ask”) and `workspace` (dock “Plan” cell).
+ * Bottom dock: **Ask | Plan** — Plan contains the OPERATE layer.
  * Plan strip tabs (`PlanSurfaceNav`) open `daily` | `integrations` | `settings` while keeping the Plan dock lit.
  * Tab id ↔ URL mapping: `mobileShellQuery.ts`.
  */
@@ -12,8 +12,8 @@ export const MOBILE_SHELL_NAV_TABS: ReadonlyArray<{
   dockLabel?: string;
   icon: typeof MessageCircle;
 }> = [
-  { id: 'chat', label: 'Assistant', dockLabel: 'Ask', icon: MessageCircle },
-  { id: 'workspace', label: 'Workspace', dockLabel: 'Plan', icon: LayoutDashboard }
+  { id: 'chat', label: 'ASK', dockLabel: 'Ask', icon: MessageCircle },
+  { id: 'workspace', label: 'PLAN / OPERATE', dockLabel: 'Plan', icon: LayoutDashboard }
 ];
 
 export const COMMAND_PALETTE_NAV_TARGETS: ReadonlyArray<{
@@ -24,14 +24,25 @@ export const COMMAND_PALETTE_NAV_TARGETS: ReadonlyArray<{
 }> = [
   {
     tab: 'chat',
-    label: 'Assistant',
-    keywords: ['assistant', 'chat', 'commands', 'ask', 'ai'],
+    label: 'ASK',
+    keywords: ['ask', 'ai twin', 'strategist', 'chat', 'commands', 'assistant', 'intelligence'],
     Icon: MessageCircle
   },
   {
     tab: 'workspace',
-    label: 'Plan',
-    keywords: ['workspace', 'home', 'overview', 'plan', 'pulse', 'timeline', 'queue', 'hub'],
+    label: 'PLAN / OPERATE',
+    keywords: [
+      'workspace',
+      'home',
+      'overview',
+      'plan',
+      'operate',
+      'execution',
+      'pulse',
+      'timeline',
+      'queue',
+      'hub'
+    ],
     Icon: LayoutDashboard
   },
   {

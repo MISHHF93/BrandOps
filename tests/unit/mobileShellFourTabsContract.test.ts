@@ -61,7 +61,7 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toContain('onRequestResetWorkspace');
   });
 
-  it('keeps Plan + palette commands on workspace tab until user opens Assistant', () => {
+  it('keeps Plan + palette commands on workspace tab until user opens ASK', () => {
     expect(mobileApp).toContain("sendQuickCommandFrom('Workspace', { navigateToChat: false })");
 
     expect(mobileApp).toContain('paletteOnRunCommand');
@@ -112,11 +112,12 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
     expect(tabConfig).toContain("id: 'chat'");
 
-    expect(tabConfig).toContain("label: 'Assistant'");
+    expect(tabConfig).toContain("label: 'ASK'");
 
     expect(tabConfig).toContain("id: 'workspace'");
 
-    expect(tabConfig).toContain("label: 'Workspace'");
+    expect(tabConfig).toContain("label: 'PLAN / OPERATE'");
+    expect(tabConfig).toContain("'operate'");
 
     expect(tabConfig).toContain('COMMAND_PALETTE_NAV_TARGETS');
 
@@ -127,12 +128,12 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(tabConfig).toContain('Settings');
   });
 
-  it('keeps Assistant composer outside MobileChatView so input stays fixed to viewport', () => {
+  it('keeps ASK composer outside MobileChatView so input stays fixed to viewport', () => {
     expect(mobileApp).toMatch(/activeTab === 'chat'[\s\S]*<ChatCommandBar/);
 
     const bar = read('src/pages/mobile/ChatCommandBar.tsx');
 
-    expect(bar).toMatch(/placeholder="Ask BrandOps anything/);
+    expect(bar).toContain('Ask your AI twin');
   });
 
   it('embeds a dismissible Getting started card on the Plan (workspace) tab', () => {
@@ -185,7 +186,7 @@ describe('Mobile shell query parity (mobile + integrations HTML)', () => {
 });
 
 describe('Surface entrypoints', () => {
-  it('mobile.html boots MobileApp with Assistant as the default tab', () => {
+  it('mobile.html boots MobileApp with ASK as the default tab', () => {
     const main = read('src/pages/mobile/main.tsx');
 
     expect(main).toMatch(/initialTab:\s*'chat'/);

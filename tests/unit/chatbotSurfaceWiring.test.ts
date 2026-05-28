@@ -30,7 +30,7 @@ describe('chatbot surface wiring', () => {
     expect(indexHtml).toContain("new URL('/mobile.html'");
   });
 
-  it('mobile.html entry uses Assistant as the default shell tab', () => {
+  it('mobile.html entry uses ASK as the default shell tab', () => {
     const mobileMain = read('src/pages/mobile/main.tsx');
     expect(mobileMain).toMatch(/initialTab:\s*'chat'/);
   });

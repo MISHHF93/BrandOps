@@ -36,6 +36,18 @@ export type NotificationApi = {
   ) => Promise<void> | void;
 };
 
+const toFiniteTime = (value?: string): number | null => {
+  if (!value) return null;
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const hasNotifiedForCurrentReminderWindow = (task: SchedulerState['tasks'][number]): boolean => {
+  const notifiedAt = toFiniteTime(task.lastNotifiedAt);
+  const remindAt = toFiniteTime(task.remindAt);
+  return notifiedAt !== null && remindAt !== null && notifiedAt >= remindAt;
+};
+
 export async function loadWorkspaceSafely(
   storage: WorkspaceStorage,
   reconcileWorkspace: (data: BrandOpsData) => BrandOpsData
@@ -72,6 +84,7 @@ export async function scheduleBrandOpsAlarms(options: {
   await Promise.all(
     nextData.scheduler.tasks
       .filter((task) => ['scheduled', 'due-soon', 'snoozed'].includes(task.status))
+      .filter((task) => !hasNotifiedForCurrentReminderWindow(task))
       .map((task) => {
         const when = Math.max(now + 5_000, new Date(task.remindAt).getTime());
         return alarms.create(alarmNameForTask(task.id), { when });
@@ -97,6 +110,11 @@ export async function sendTaskReminderNotification(options: {
   const shouldNotify =
     task.status === 'due-soon' || task.status === 'due' || task.status === 'missed';
   if (!shouldNotify) {
+    await storage.setData(reconciled);
+    return;
+  }
+
+  if (hasNotifiedForCurrentReminderWindow(task)) {
     await storage.setData(reconciled);
     return;
   }

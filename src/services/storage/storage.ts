@@ -33,10 +33,19 @@ import {
   AiEmbeddingIndexState,
   CopilotWorker,
   CopilotWorkerContextHints,
+  ConnectedIdentityEngineState,
+  ConnectedIdentitySignal,
+  ConnectedIdentitySignalKind,
+  ConnectedIdentitySignalSource,
+  DigitalTwin,
+  DigitalTwinState,
   OperatingPresetId,
   OperatingProfileState,
+  TwinFactStatus,
+  TwinSupportedActionType,
   IntegrationSourceKind
 } from '../../types/domain';
+import { SUPPORTED_TWIN_ACTIONS } from '../digitalTwin/digitalTwin';
 import { ALL_INTEGRATION_SOURCE_KINDS } from '../../shared/integrations/integrationSourceCatalog';
 import { OPERATING_PRESETS } from '../../shared/workspace/operatingProfileCatalog';
 import { MAX_AI_TRACE_BUNDLES, sanitizeTraceBundle } from '../ai/aiTracePersistence';
@@ -74,6 +83,11 @@ const asIsoString = (value: unknown, fallback: string) => {
   if (typeof value !== 'string') return fallback;
   const parsed = new Date(value).getTime();
   return Number.isFinite(parsed) ? new Date(parsed).toISOString() : fallback;
+};
+
+const asNumberInRange = (value: unknown, fallback: number, min: number, max: number): number => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.max(min, Math.min(max, Math.round(value)));
 };
 
 const normalizeContentLibrary = (items: unknown): ContentLibraryItem[] => {
@@ -895,7 +909,8 @@ const normalizeOperatorTwinSettings = (
     typeof (legacyNotificationCenter as { resumeNeuralPhaseContext?: unknown })
       .resumeNeuralPhaseContext === 'string'
       ? String(
-          (legacyNotificationCenter as { resumeNeuralPhaseContext: string }).resumeNeuralPhaseContext
+          (legacyNotificationCenter as { resumeNeuralPhaseContext: string })
+            .resumeNeuralPhaseContext
         )
           .trim()
           .slice(0, 12_000)
@@ -1412,6 +1427,10 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
       typeof candidate.operatorTraceCollectionEnabled === 'boolean'
         ? candidate.operatorTraceCollectionEnabled
         : fallback.operatorTraceCollectionEnabled,
+    connectedIdentityLearningEnabled:
+      typeof candidate.connectedIdentityLearningEnabled === 'boolean'
+        ? candidate.connectedIdentityLearningEnabled
+        : fallback.connectedIdentityLearningEnabled,
     primaryIdentityProvider:
       candidate.primaryIdentityProvider === 'google' ||
       candidate.primaryIdentityProvider === 'github' ||
@@ -1574,7 +1593,7 @@ const normalizeOperatorTraces = (value: unknown): NonNullable<BrandOpsData['oper
   const isOutcome = (s: string): s is NonNullable<OperatorTraceEntry['outcome']> =>
     s === 'success' || s === 'failure';
   const isReview = (s: string): s is NonNullable<OperatorTraceEntry['reviewStatus']> =>
-    s === 'pending' || s === 'approved';
+    s === 'pending' || s === 'approved' || s === 'rejected';
 
   for (const item of raw) {
     if (!item || typeof item !== 'object') continue;
@@ -1708,6 +1727,308 @@ const normalizeAiTraceGraph = (value: unknown): BrandOpsData['aiTraceGraph'] => 
   };
 };
 
+const CONNECTED_IDENTITY_SIGNAL_SOURCES = new Set<ConnectedIdentitySignalSource>([
+  'linkedin',
+  'gmail',
+  'google-calendar',
+  'notion',
+  'slack',
+  'content',
+  'workflow',
+  'integration-hub'
+]);
+
+const CONNECTED_IDENTITY_SIGNAL_KINDS = new Set<ConnectedIdentitySignalKind>([
+  'professional_positioning',
+  'communication_tone',
+  'operational_schedule',
+  'knowledge_memory',
+  'team_collaboration_style',
+  'content_pattern',
+  'workflow_behavior',
+  'operational_habit'
+]);
+
+const normalizeConnectedIdentityEngine = (
+  value: unknown,
+  consentGranted: boolean
+): ConnectedIdentityEngineState => {
+  const fallback: ConnectedIdentityEngineState = {
+    schemaVersion: 1,
+    consentGranted,
+    lastUpdatedAt: null,
+    signals: [],
+    sensitiveDataPolicy:
+      'Connected Identity Engine is opt-in. It may derive identity signals from local metadata, summaries, and approved traces, but it must not automatically ingest raw private messages, files, or calendar details.',
+    blockedPrivateSources: ['gmail', 'google-calendar', 'slack', 'notion']
+  };
+  if (!value || typeof value !== 'object') return fallback;
+  const v = value as Partial<ConnectedIdentityEngineState> & Record<string, unknown>;
+  const signals: ConnectedIdentitySignal[] = Array.isArray(v.signals)
+    ? v.signals
+        .slice(0, 80)
+        .map((raw, i): ConnectedIdentitySignal | null => {
+          if (!raw || typeof raw !== 'object') return null;
+          const item = raw as unknown as Record<string, unknown>;
+          const source =
+            typeof item.source === 'string' &&
+            CONNECTED_IDENTITY_SIGNAL_SOURCES.has(item.source as ConnectedIdentitySignalSource)
+              ? (item.source as ConnectedIdentitySignalSource)
+              : null;
+          const kind =
+            typeof item.kind === 'string' &&
+            CONNECTED_IDENTITY_SIGNAL_KINDS.has(item.kind as ConnectedIdentitySignalKind)
+              ? (item.kind as ConnectedIdentitySignalKind)
+              : null;
+          if (!source || !kind) return null;
+          return {
+            id:
+              typeof item.id === 'string' && item.id.trim()
+                ? item.id.trim().slice(0, 160)
+                : `cis-${i}`,
+            source,
+            kind,
+            summary: asTrimmedString(item.summary, '').slice(0, 500),
+            evidence: asStringArray(item.evidence).slice(0, 10),
+            confidence: asNumberInRange(item.confidence, 0, 0, 100),
+            sensitivity:
+              item.sensitivity === 'user_approved_summary' ||
+              item.sensitivity === 'private_data_blocked'
+                ? item.sensitivity
+                : 'metadata_only',
+            lastObservedAt: asIsoString(item.lastObservedAt, new Date().toISOString())
+          };
+        })
+        .filter((item): item is ConnectedIdentitySignal => Boolean(item))
+    : [];
+  return {
+    schemaVersion: 1,
+    consentGranted,
+    lastUpdatedAt:
+      typeof v.lastUpdatedAt === 'string' && v.lastUpdatedAt.trim()
+        ? asIsoString(v.lastUpdatedAt, new Date().toISOString())
+        : null,
+    signals,
+    sensitiveDataPolicy:
+      typeof v.sensitiveDataPolicy === 'string' && v.sensitiveDataPolicy.trim()
+        ? v.sensitiveDataPolicy.trim().slice(0, 800)
+        : fallback.sensitiveDataPolicy,
+    blockedPrivateSources: Array.isArray(v.blockedPrivateSources)
+      ? v.blockedPrivateSources
+          .filter(
+            (source): source is ConnectedIdentitySignalSource =>
+              typeof source === 'string' &&
+              CONNECTED_IDENTITY_SIGNAL_SOURCES.has(source as ConnectedIdentitySignalSource)
+          )
+          .slice(0, 12)
+      : fallback.blockedPrivateSources
+  };
+};
+
+const asFactStatus = (value: unknown): TwinFactStatus =>
+  value === 'verified' || value === 'rejected' ? value : 'unverified';
+
+const asTwinActionType = (value: unknown): TwinSupportedActionType | null =>
+  typeof value === 'string' && SUPPORTED_TWIN_ACTIONS.includes(value as TwinSupportedActionType)
+    ? (value as TwinSupportedActionType)
+    : null;
+
+const normalizeDigitalTwin = (value: unknown): DigitalTwin | null => {
+  if (!value || typeof value !== 'object') return null;
+  const v = value as Partial<DigitalTwin> & Record<string, unknown>;
+  if (typeof v.id !== 'string' || !v.id.trim()) return null;
+  const nowIso = new Date().toISOString();
+  const identity =
+    v.identity && typeof v.identity === 'object'
+      ? (v.identity as unknown as Record<string, unknown>)
+      : {};
+  const resumeProfile =
+    v.resumeProfile && typeof v.resumeProfile === 'object'
+      ? (v.resumeProfile as unknown as Record<string, unknown>)
+      : {};
+  const contactInfo =
+    resumeProfile.contactInfo && typeof resumeProfile.contactInfo === 'object'
+      ? (resumeProfile.contactInfo as Record<string, unknown>)
+      : {};
+  const memory =
+    v.memory && typeof v.memory === 'object'
+      ? (v.memory as unknown as Record<string, unknown>)
+      : {};
+  const actions =
+    v.actions && typeof v.actions === 'object'
+      ? (v.actions as unknown as Record<string, unknown>)
+      : {};
+  return {
+    id: v.id.trim().slice(0, 120),
+    ownerUserId:
+      typeof v.ownerUserId === 'string' && v.ownerUserId.trim()
+        ? v.ownerUserId.trim().slice(0, 160)
+        : 'local-owner',
+    workspaceId:
+      typeof v.workspaceId === 'string' && v.workspaceId.trim()
+        ? v.workspaceId.trim().slice(0, 160)
+        : 'local-workspace',
+    displayName: asTrimmedString(v.displayName, 'Digital Twin').slice(0, 120),
+    sourceType:
+      v.sourceType === 'resume' ||
+      v.sourceType === 'linkedin' ||
+      v.sourceType === 'portfolio' ||
+      v.sourceType === 'brand' ||
+      v.sourceType === 'manual'
+        ? v.sourceType
+        : 'manual',
+    status:
+      v.status === 'draft' ||
+      v.status === 'processing' ||
+      v.status === 'ready' ||
+      v.status === 'needs_review' ||
+      v.status === 'failed'
+        ? v.status
+        : 'needs_review',
+    confidenceScore: asNumberInRange(v.confidenceScore, 0, 0, 100),
+    createdAt: asIsoString(v.createdAt, nowIso),
+    updatedAt: asIsoString(v.updatedAt, nowIso),
+    identity: {
+      headline: asTrimmedString(identity.headline, '').slice(0, 220),
+      summary: asTrimmedString(identity.summary, '').slice(0, 1200),
+      professionalPositioning: asTrimmedString(identity.professionalPositioning, '').slice(0, 500),
+      targetAudience: asTrimmedString(identity.targetAudience, '').slice(0, 360),
+      goals: asStringArray(identity.goals).slice(0, 12),
+      toneOfVoice: asTrimmedString(identity.toneOfVoice, '').slice(0, 500),
+      strengths: asStringArray(identity.strengths).slice(0, 24),
+      differentiators: asStringArray(identity.differentiators).slice(0, 18)
+    },
+    resumeProfile: {
+      contactInfo: {
+        name: typeof contactInfo.name === 'string' ? contactInfo.name.slice(0, 160) : undefined,
+        email: typeof contactInfo.email === 'string' ? contactInfo.email.slice(0, 180) : undefined,
+        phone: typeof contactInfo.phone === 'string' ? contactInfo.phone.slice(0, 80) : undefined,
+        location:
+          typeof contactInfo.location === 'string' ? contactInfo.location.slice(0, 160) : undefined,
+        links: asStringArray(contactInfo.links).slice(0, 12)
+      },
+      experience: Array.isArray(resumeProfile.experience)
+        ? resumeProfile.experience.slice(0, 24).map((rawItem, i) => {
+            const item =
+              rawItem && typeof rawItem === 'object' ? (rawItem as Record<string, unknown>) : {};
+            return {
+              id: typeof item.id === 'string' ? item.id : `exp-${i}`,
+              role: asTrimmedString(item.role, '').slice(0, 160),
+              organization: asTrimmedString(item.organization, '').slice(0, 160),
+              timeframe: asTrimmedString(item.timeframe, '').slice(0, 120),
+              highlights: asStringArray(item.highlights).slice(0, 12),
+              verificationStatus: asFactStatus(item.verificationStatus)
+            };
+          })
+        : [],
+      education: Array.isArray(resumeProfile.education)
+        ? resumeProfile.education.slice(0, 16).map((rawItem, i) => {
+            const item =
+              rawItem && typeof rawItem === 'object' ? (rawItem as Record<string, unknown>) : {};
+            return {
+              id: typeof item.id === 'string' ? item.id : `edu-${i}`,
+              institution: asTrimmedString(item.institution, '').slice(0, 180),
+              credential: asTrimmedString(item.credential, '').slice(0, 180),
+              timeframe: asTrimmedString(item.timeframe, '').slice(0, 120),
+              verificationStatus: asFactStatus(item.verificationStatus)
+            };
+          })
+        : [],
+      skills: asStringArray(resumeProfile.skills).slice(0, 80),
+      certifications: asStringArray(resumeProfile.certifications).slice(0, 40),
+      projects: Array.isArray(resumeProfile.projects)
+        ? resumeProfile.projects.slice(0, 24).map((rawItem, i) => {
+            const item =
+              rawItem && typeof rawItem === 'object' ? (rawItem as Record<string, unknown>) : {};
+            return {
+              id: typeof item.id === 'string' ? item.id : `proj-${i}`,
+              name: asTrimmedString(item.name, '').slice(0, 180),
+              summary: asTrimmedString(item.summary, '').slice(0, 600),
+              tools: asStringArray(item.tools).slice(0, 20),
+              verificationStatus: asFactStatus(item.verificationStatus)
+            };
+          })
+        : [],
+      achievements: asStringArray(resumeProfile.achievements).slice(0, 80),
+      industries: asStringArray(resumeProfile.industries).slice(0, 40),
+      tools: asStringArray(resumeProfile.tools).slice(0, 60),
+      keywords: asStringArray(resumeProfile.keywords).slice(0, 120)
+    },
+    memory: {
+      facts: asStringArray(memory.facts).slice(0, 100),
+      preferences: asStringArray(memory.preferences).slice(0, 60),
+      voiceExamples: asStringArray(memory.voiceExamples).slice(0, 30),
+      approvedClaims: asStringArray(memory.approvedClaims).slice(0, 80),
+      rejectedClaims: asStringArray(memory.rejectedClaims).slice(0, 80),
+      missingInfo: asStringArray(memory.missingInfo).slice(0, 60)
+    },
+    actions: {
+      supportedActionTypes: Array.isArray(actions.supportedActionTypes)
+        ? actions.supportedActionTypes
+            .map(asTwinActionType)
+            .filter((x): x is TwinSupportedActionType => Boolean(x))
+        : SUPPORTED_TWIN_ACTIONS,
+      generatedAssets: Array.isArray(actions.generatedAssets)
+        ? actions.generatedAssets.slice(0, 80).map((rawAsset, i) => {
+            const asset =
+              rawAsset && typeof rawAsset === 'object' ? (rawAsset as Record<string, unknown>) : {};
+            return {
+              id: typeof asset.id === 'string' ? asset.id : `asset-${i}`,
+              actionType: asTwinActionType(asset.actionType) ?? 'summarize_resume',
+              title: asTrimmedString(asset.title, 'Generated twin asset').slice(0, 180),
+              body: asTrimmedString(asset.body, '').slice(0, 20_000),
+              createdAt: asIsoString(asset.createdAt, nowIso)
+            };
+          })
+        : [],
+      pendingApprovals: Array.isArray(actions.pendingApprovals)
+        ? actions.pendingApprovals.slice(0, 40).map((rawApproval, i) => {
+            const approval =
+              rawApproval && typeof rawApproval === 'object'
+                ? (rawApproval as Record<string, unknown>)
+                : {};
+            return {
+              id: typeof approval.id === 'string' ? approval.id : `approval-${i}`,
+              actionType: asTwinActionType(approval.actionType) ?? 'summarize_resume',
+              summary: asTrimmedString(approval.summary, '').slice(0, 600),
+              createdAt: asIsoString(approval.createdAt, nowIso)
+            };
+          })
+        : [],
+      auditTrail: Array.isArray(actions.auditTrail)
+        ? actions.auditTrail.slice(0, 120).map((rawEntry, i) => {
+            const entry =
+              rawEntry && typeof rawEntry === 'object' ? (rawEntry as Record<string, unknown>) : {};
+            return {
+              id: typeof entry.id === 'string' ? entry.id : `audit-${i}`,
+              at: asIsoString(entry.at, nowIso),
+              action: asTrimmedString(entry.action, 'twin_action').slice(0, 120),
+              summary: asTrimmedString(entry.summary, '').slice(0, 800)
+            };
+          })
+        : []
+    }
+  };
+};
+
+const normalizeDigitalTwinState = (value: unknown): DigitalTwinState => {
+  if (!value || typeof value !== 'object') return { activeTwinId: null, twins: [] };
+  const v = value as Partial<DigitalTwinState>;
+  const twins = Array.isArray(v.twins)
+    ? v.twins
+        .map(normalizeDigitalTwin)
+        .filter((t): t is DigitalTwin => Boolean(t))
+        .slice(0, 12)
+    : [];
+  const requestedActive = typeof v.activeTwinId === 'string' ? v.activeTwinId : null;
+  return {
+    activeTwinId: twins.some((t) => t.id === requestedActive)
+      ? requestedActive
+      : (twins[0]?.id ?? null),
+    twins
+  };
+};
+
 const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   ...base,
   brand: normalizeBrandProfile(base.brand),
@@ -1732,6 +2053,11 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => ({
   aiAssistantTraces: normalizeAiAssistantTraces(base.aiAssistantTraces),
   aiTraceGraph: normalizeAiTraceGraph(base.aiTraceGraph),
   aiPipelineRuns: normalizeAiPipelineRuns(base.aiPipelineRuns),
+  digitalTwins: normalizeDigitalTwinState(base.digitalTwins),
+  connectedIdentityEngine: normalizeConnectedIdentityEngine(
+    base.connectedIdentityEngine,
+    Boolean(base.settings?.connectedIdentityLearningEnabled)
+  ),
   embeddingIndex: normalizeEmbeddingIndex(base.embeddingIndex),
   scheduler: normalizeSchedulerState(base.scheduler),
   seed: {

@@ -33,6 +33,10 @@ interface ImportMetaEnv {
    * Omit or `0` during local development / pre-launch builds.
    */
   readonly VITE_ENFORCE_MEMBERSHIP_GATE?: string;
+  /** Optional HTTPS Stripe Checkout URL used by the membership gate CTA. */
+  readonly VITE_STRIPE_CHECKOUT_URL?: string;
+  /** Optional HTTPS Stripe Billing Portal URL used by account recovery / billing CTA. */
+  readonly VITE_STRIPE_BILLING_PORTAL_URL?: string;
   /**
    * If `1` or `true`, skip the launch sign-in gate so users land directly in the app (no simulated provider pick).
    * Settings still lists account / sign-in for optional verification. Omit for Chrome Web Store / production.

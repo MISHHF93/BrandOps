@@ -32,7 +32,12 @@ import {
 } from '../../services/ai/actionPipeline';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import { prependOperatorTrace } from '../../services/dataset/operatorTraces';
-import type { BrandOpsData, OperatingPresetId, UiTheme } from '../../types/domain';
+import type {
+  BrandOpsData,
+  DigitalTwinSourceType,
+  OperatingPresetId,
+  UiTheme
+} from '../../types/domain';
 import type { AiOperatorMode, PipelineRun } from '../../types/aiIntegrationSuite';
 import {
   getCockpitMobileSectionHeadingId,
@@ -48,10 +53,14 @@ import {
 } from './mobileShellQuery';
 import { CockpitDailyView } from './CockpitDailyView';
 import { MobileWorkspaceHubView } from './MobileWorkspaceHubView';
-import { MobileChatView, type ChatMessage } from './MobileChatView';
+import { MobileChatView, type AskPlanConversionKind, type ChatMessage } from './MobileChatView';
 import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
-import { buildWorkspaceSnapshot, type MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
+import {
+  buildWorkspaceSnapshot,
+  type MobileWorkspaceSnapshot,
+  type PlanExecutionReceipt
+} from './buildWorkspaceSnapshot';
 import { MOBILE_BTN_FOCUS, MobileShellNav } from './mobileTabPrimitives';
 import { MOBILE_SHELL_EDGE_PAD_CLASS, MOBILE_SHELL_MAX_WIDTH_CLASS } from './shellLayoutTokens';
 import {
@@ -63,6 +72,7 @@ import { getAgentCommandLock } from './agentCommandAccess';
 import { ChatCommandBar } from './ChatCommandBar';
 import { AppearanceToggle } from './AppearanceToggle';
 import { WorkspaceCommandPalette } from './WorkspaceCommandPalette';
+import type { OperationalPlanCard } from './PlanOperationalStudio';
 import { PlanSurfaceNav } from './PlanSurfaceNav';
 import { requestExtensionSchedulerSync } from '../../services/messaging/requestExtensionSchedulerSync';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
@@ -103,7 +113,18 @@ import {
   recordLocalSessionDay,
   recordShellNavigation
 } from '../../services/usage/localProductUsage';
-import { approveOperatorTraceEntry } from '../../services/plan/reviewQueue';
+import {
+  approveOperatorTraceEntry,
+  rejectOperatorTraceEntry
+} from '../../services/plan/reviewQueue';
+import {
+  buildDigitalTwinContextSummary,
+  createDigitalTwinFromText,
+  getActiveDigitalTwin,
+  hydrateWorkspaceFromDigitalTwin,
+  removeDigitalTwinWorkspaceArtifacts
+} from '../../services/digitalTwin/digitalTwin';
+import { evolveActiveTwinFromConnectedIdentity } from '../../services/connectedIdentity/connectedIdentityEngine';
 
 const uid = () => `msg-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -125,11 +146,11 @@ const defaultWelcomeMessage = (
   gettingStartedChecklistVisible = true
 ): ChatMessage => {
   const mobileLine = gettingStartedChecklistVisible
-    ? 'Getting started is on Plan (dock): five-step checklist, pulse, queue. Assistant here uses Starters, Recent, and ⌘K / Ctrl+K.'
-    : 'Quick picks and pulse stay on Plan. Assistant uses Starters, ⌘K / Ctrl+K, and typed lines.';
+    ? 'ASK. PLAN. OPERATE. Your AI digital twin understands your profession, connects to your tools, and helps operate your workflows.'
+    : 'ASK is twin-aware intelligence. PLAN creates AI planning artifacts. OPERATE keeps execution visible with approvals, timelines, receipts, and audit history.';
   const welcomeLine = gettingStartedChecklistVisible
-    ? 'Getting started is on Plan (checklist, pulse, queue). Assistant focuses on commands and hosted ask: replies.'
-    : 'Plan has pulse and queue; Assistant handles commands and ask:. ⌘K / Ctrl+K opens the full catalogue.';
+    ? 'ASK. PLAN. OPERATE. Your AI digital twin understands your profession, connects to your tools, and helps operate your workflows.'
+    : 'ASK handles twin-aware strategy. PLAN creates execution plans. OPERATE tracks approvals, receipts, and operating timelines.';
   return {
     id: uid(),
     role: 'assistant',
@@ -269,6 +290,7 @@ const STRIPE_CHECKOUT_URL = import.meta.env.VITE_STRIPE_CHECKOUT_URL as string |
 const STRIPE_BILLING_PORTAL_URL = import.meta.env.VITE_STRIPE_BILLING_PORTAL_URL as
   | string
   | undefined;
+const ALLOW_LOCAL_MEMBERSHIP_BYPASS = import.meta.env.DEV;
 
 type ChatComposerAttachment = {
   name: string;
@@ -304,9 +326,9 @@ function LaunchAuthGate({
   return (
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Sign in to continue</h2>
-      <p className="mt-1 text-meta text-textSoft">
-        Launch gate for QA: sign-in is simulated on-device (no federated account yet). Pick a
-        provider to continue into the workspace:
+      <p className="mt-1 text-meta text-textMuted">
+        BrandOps keeps your workspace local-first. Continue with a provider to unlock this device;
+        production OAuth requires configured client IDs and provider redirects.
       </p>
       <div className="bo-auth-actions mt-3">
         <GoogleSignInButton
@@ -351,20 +373,29 @@ function MembershipGate({
   return (
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Activate membership</h2>
-      <p className="mt-1 text-meta text-textSoft">
-        Stripe checkout and billing portal open only when env URLs are set; membership state here is
-        for launch QA until billing is wired end-to-end.
+      <p className="mt-1 text-meta text-textMuted">
+        Membership protects the operator workspace when billing is enforced. Stripe checkout opens
+        only when production billing URLs are configured for this build.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" className={clsx('bo-link', btnFocus)} onClick={onStartCheckout}>
+        <button
+          type="button"
+          className={clsx('bo-btn-primary', btnFocus)}
+          onClick={onStartCheckout}
+        >
           Open Stripe checkout
         </button>
-        <button type="button" className={clsx('bo-link', btnFocus)} onClick={onOpenBillingPortal}>
+        <button
+          type="button"
+          className={clsx('bo-btn-ghost', btnFocus)}
+          onClick={onOpenBillingPortal}
+        >
           Billing portal
         </button>
       </div>
-      <p className="mt-2 text-fine text-textSoft">
-        Set `VITE_STRIPE_CHECKOUT_URL` and `VITE_STRIPE_BILLING_PORTAL_URL` in env for production.
+      <p className="mt-2 text-fine text-textMuted">
+        If checkout is unavailable, the app is running without billing links and will explain that
+        state instead of pretending a purchase completed.
       </p>
     </section>
   );
@@ -414,6 +445,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     command: string;
     sourceSurface: 'Workspace' | 'Today' | 'Integrations' | 'Settings' | 'Chat';
   } | null>(null);
+  const [convertedOperationalPlans, setConvertedOperationalPlans] = useState<OperationalPlanCard[]>(
+    []
+  );
   const [pendingClearChat, setPendingClearChat] = useState(false);
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
@@ -720,7 +754,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             settings,
             workerModelId: workerResolved?.chatModelId ?? null
           });
-          const routingAugment = [routing.behaviorHint, routing.diagnosticsDetail]
+          const twinContext = buildDigitalTwinContextSummary(getActiveDigitalTwin(data));
+          const routingAugment = [routing.behaviorHint, routing.diagnosticsDetail, twinContext]
             .filter(Boolean)
             .join('\n\n');
           const completionMessages = buildHostedAskMessages(
@@ -976,7 +1011,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
 
   /**
    * Enqueue an agent command from quick actions or the palette.
-   * Plan can keep the user on the workspace tab; other surfaces still jump to Assistant for the transcript.
+   * Plan can keep the user on the workspace tab; other surfaces still jump to ASK for the transcript.
    */
   const runAgentQuick = (
     command: string,
@@ -989,7 +1024,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     const stayOnPlan = source === 'Workspace' && !navigateToChat;
 
     if (stayOnPlan) {
-      setDataOpsHint('Running from Plan… Open Assistant for the transcript.');
+      setDataOpsHint('Running from Plan… Open ASK for the transcript.');
     } else if (source !== 'Chat') {
       const surfaceLabel =
         source === 'Today'
@@ -1039,6 +1074,83 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     sendQuickCommand(command);
   };
 
+  const convertAskOutputToPlan = useCallback(
+    (kind: AskPlanConversionKind, askOutput: string, messageId: string) => {
+      const excerpt = askOutput.replace(/\s+/g, ' ').trim().slice(0, 1200);
+      if (!excerpt) return;
+      const nowIso = new Date().toISOString();
+      const id = `ask-plan-${kind}-${messageId}-${Math.random().toString(36).slice(2, 7)}`;
+      const labelByKind: Record<AskPlanConversionKind, string> = {
+        'execution-plan': 'Converted Execution Plan',
+        workflow: 'Converted Workflow',
+        'action-queue': 'Converted Action Queue',
+        'content-schedule': 'Converted Content Schedule',
+        'outreach-draft': 'Converted Outreach Draft',
+        'follow-up-sequence': 'Converted Follow-up Sequence'
+      };
+      const approveCommandByKind: Record<AskPlanConversionKind, string> = {
+        'execution-plan': `add note: PLAN conversion — ${excerpt.slice(0, 420)}`,
+        workflow: `add note: Workflow plan — ${excerpt.slice(0, 420)}`,
+        'action-queue': `add note: Action queue — ${excerpt.slice(0, 420)}`,
+        'content-schedule': `draft post: Content schedule from ASK — ${excerpt.slice(0, 420)}`,
+        'outreach-draft': `draft outreach: ${excerpt.slice(0, 420)}`,
+        'follow-up-sequence': `create follow up: ${excerpt.slice(0, 220)}`
+      };
+      const twin = snapshot.activeDigitalTwin;
+      const twinContext = twin
+        ? `Active twin: ${twin.displayName}. Voice: ${twin.identity.toneOfVoice}. Positioning: ${twin.identity.professionalPositioning || twin.identity.summary}. Confidence: ${twin.confidenceScore}%. Missing facts: ${twin.memory.missingInfo.join('; ') || 'none'}; ask for clarification instead of inventing.`
+        : 'No active twin is available; ask for missing voice, positioning, and proof before making unsupported claims.';
+      const previewCommandByKind: Record<AskPlanConversionKind, string> = {
+        'execution-plan': `ask: ${twinContext}\n\nConvert this ASK output into an executable PLAN with status, timeline, progress, approvals, retry path, and export summary:\n${excerpt}`,
+        workflow: `ask: ${twinContext}\n\nTurn this ASK output into a workflow with stages, dependencies, risks, and execution checkpoints:\n${excerpt}`,
+        'action-queue': `ask: ${twinContext}\n\nConvert this ASK output into a prioritized action queue with sequence, status, owners, and next actions:\n${excerpt}`,
+        'content-schedule': `ask: ${twinContext}\n\nBuild a content schedule from this ASK output with weekly themes, drafts, approvals, publishing sequence, and twin-aligned content direction:\n${excerpt}`,
+        'outreach-draft': `ask: ${twinContext}\n\nConvert this ASK output into an outreach plan with message preview, approval gate, follow-up timing, outreach style, and no invented claims:\n${excerpt}`,
+        'follow-up-sequence': `ask: ${twinContext}\n\nBuild a follow-up sequence from this ASK output with timing, message intent, approval gate, retry criteria, and twin-aligned voice:\n${excerpt}`
+      };
+      const card: OperationalPlanCard = {
+        id,
+        title: labelByKind[kind],
+        kind:
+          kind === 'content-schedule'
+            ? 'content-calendar'
+            : kind === 'follow-up-sequence'
+              ? 'execution-sequence'
+              : kind === 'outreach-draft'
+                ? 'outreach'
+                : kind === 'action-queue'
+                  ? 'action-queue'
+                  : 'workflow',
+        promise:
+          'Created from an ASK output. Preview, edit, approve, execute, retry, or export from PLAN.',
+        previewCommand: previewCommandByKind[kind],
+        approveCommand: approveCommandByKind[kind],
+        editTarget:
+          kind === 'outreach-draft'
+            ? 'settings'
+            : kind === 'follow-up-sequence'
+              ? 'today'
+              : 'palette',
+        status: 'needs-input',
+        progress: 15,
+        timeline: ['ASK output', 'PLAN preview', 'Human approval', 'Execute in workspace'],
+        sourceLabel: 'Converted from ASK',
+        exportPayload: {
+          type: kind,
+          convertedFromMessageId: messageId,
+          convertedAt: nowIso,
+          activeTwinId: twin?.id ?? null,
+          activeTwinConfidence: twin?.confidenceScore ?? null,
+          askOutputExcerpt: excerpt
+        }
+      };
+      setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+      commitTab('workspace');
+      setDataOpsHint('ASK output converted to PLAN. Preview, approve, edit, retry, or export it.');
+    },
+    [commitTab, snapshot.activeDigitalTwin]
+  );
+
   const onSignInProvider = useCallback((provider: AuthProviderId) => {
     const nextEmail =
       provider === 'google'
@@ -1074,7 +1186,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     if (STRIPE_CHECKOUT_URL) {
       window.open(STRIPE_CHECKOUT_URL, '_blank', 'noopener,noreferrer');
     } else {
-      setDataOpsHint('Set VITE_STRIPE_CHECKOUT_URL to open checkout.');
+      setDataOpsHint('Checkout is not configured for this build.');
     }
   }, []);
 
@@ -1082,7 +1194,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     if (STRIPE_BILLING_PORTAL_URL) {
       window.open(STRIPE_BILLING_PORTAL_URL, '_blank', 'noopener,noreferrer');
     } else {
-      setDataOpsHint('Set VITE_STRIPE_BILLING_PORTAL_URL to open billing portal.');
+      setDataOpsHint('Billing portal is not configured for this build.');
     }
   }, []);
 
@@ -1094,7 +1206,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
       }
     }));
-    setDataOpsHint('Membership marked active for launch QA.');
+    setDataOpsHint('Local demo membership enabled.');
   }, []);
 
   const onChatFileSelected = (event: ChangeEvent<HTMLInputElement>) => {
@@ -1180,6 +1292,60 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     }
   }, []);
 
+  const exportOperationalPlanJson = useCallback((plan: OperationalPlanCard) => {
+    try {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        productSurface: 'PLAN',
+        lifecycle: [
+          'preview',
+          'approval',
+          'edit',
+          'status',
+          'timeline',
+          'progress',
+          'retry',
+          'export'
+        ],
+        plan
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeId = plan.id.replace(/[^a-z0-9-_]+/gi, '_').slice(0, 80);
+      a.href = url;
+      a.download = `brandops-operational-plan-${safeId || 'plan'}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDataOpsHint('Operational plan JSON downloaded.');
+    } catch (e) {
+      setDataOpsHint(e instanceof Error ? e.message : 'Operational plan export failed.');
+    }
+  }, []);
+
+  const exportExecutionReceiptJson = useCallback((receipt: PlanExecutionReceipt) => {
+    try {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        productSurface: 'PLAN',
+        guarantee:
+          'Receipt explains what happened, why it happened, what data was used, approvals, status, and warnings/errors.',
+        receipt
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeId = receipt.id.replace(/[^a-z0-9-_]+/gi, '_').slice(0, 80);
+      a.href = url;
+      a.download = `brandops-plan-receipt-${safeId || 'receipt'}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDataOpsHint('PLAN execution receipt JSON downloaded.');
+    } catch (e) {
+      setDataOpsHint(e instanceof Error ? e.message : 'Execution receipt export failed.');
+    }
+  }, []);
+
   const approveOperatorTraceReview = useCallback(
     async (traceId: string) => {
       try {
@@ -1204,6 +1370,30 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     [refreshWorkspaceSnapshot]
   );
 
+  const rejectOperatorTraceReview = useCallback(
+    async (traceId: string) => {
+      try {
+        const data = await storageService.getData();
+        const next = rejectOperatorTraceEntry(data, traceId);
+        if (next === null) {
+          setDataOpsHint('Trace not found.');
+          return;
+        }
+        if (next === data) {
+          setDataOpsHint('That trace was not awaiting review.');
+          return;
+        }
+        await storageService.setData(next);
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint('Review rejected. No external action executed.');
+      } catch (e) {
+        console.error('BrandOps: reject operator trace failed', e);
+        setDataOpsHint(e instanceof Error ? e.message : 'Could not reject trace.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
   const setOperatorTraceCollection = useCallback(
     async (enabled: boolean) => {
       try {
@@ -1220,6 +1410,45 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       } catch (err) {
         console.error('BrandOps: operator trace preference update failed', err);
         setDataOpsHint('Could not update trace setting.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  const setConnectedIdentityLearning = useCallback(
+    async (enabled: boolean) => {
+      try {
+        const data = await storageService.getData();
+        if (data.settings.connectedIdentityLearningEnabled === enabled) return;
+        const updated: BrandOpsData = {
+          ...data,
+          settings: { ...data.settings, connectedIdentityLearningEnabled: enabled },
+          connectedIdentityEngine: {
+            ...(data.connectedIdentityEngine ?? {
+              schemaVersion: 1,
+              consentGranted: false,
+              lastUpdatedAt: null,
+              signals: [],
+              sensitiveDataPolicy:
+                'Connected Identity Engine is opt-in. It may derive identity signals from local metadata, summaries, and approved traces, but it must not automatically ingest raw private messages, files, or calendar details.',
+              blockedPrivateSources: ['gmail', 'google-calendar', 'slack', 'notion']
+            }),
+            consentGranted: enabled
+          }
+        };
+        const evolved = enabled ? evolveActiveTwinFromConnectedIdentity(updated) : null;
+        await storageService.setData(evolved?.workspace ?? updated);
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint(
+          enabled
+            ? evolved?.applied
+              ? `Connected Identity Engine on; evolved twin from ${evolved.signalCount} consented signals.`
+              : 'Connected Identity Engine on; waiting for an active twin or approved platform signals.'
+            : 'Connected Identity Engine off. Platform data will not evolve the twin.'
+        );
+      } catch (err) {
+        console.error('BrandOps: connected identity preference update failed', err);
+        setDataOpsHint('Could not update Connected Identity Engine setting.');
       }
     },
     [refreshWorkspaceSnapshot]
@@ -1349,6 +1578,75 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     },
     [refreshWorkspaceSnapshot]
   );
+
+  const createDigitalTwinFromProfile = useCallback(
+    async (input: {
+      rawText: string;
+      sourceType: DigitalTwinSourceType;
+      sourceSummary?: string;
+      reviewOverrides?: {
+        displayName?: string;
+        headline?: string;
+        summary?: string;
+        professionalPositioning?: string;
+      };
+    }) => {
+      try {
+        const data = await storageService.getData();
+        const { twin, resumeArtifact } = createDigitalTwinFromText({
+          workspace: data,
+          rawText: input.rawText,
+          sourceType: input.sourceType,
+          sourceSummary: input.sourceSummary,
+          reviewOverrides: input.reviewOverrides
+        });
+        const ot = data.settings.operatorTwin;
+        const baseWorkspace = {
+          ...data,
+          settings: {
+            ...data.settings,
+            operatorTwin: {
+              ...ot,
+              resumeArtifact,
+              version: resumeArtifact.length ? ot.version + 1 : ot.version,
+              lastIngestAt: new Date().toISOString(),
+              sourceSummary: input.sourceSummary ?? 'Digital twin profile ingest'
+            }
+          }
+        };
+        const hydrated = hydrateWorkspaceFromDigitalTwin({
+          workspace: baseWorkspace,
+          twin,
+          resumeArtifact
+        });
+        await storageService.setData(hydrated.workspace);
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint(
+          `Digital twin ready for ${twin.displayName}; captured ${hydrated.capturedArtifactCount} profile artifacts.`
+        );
+      } catch (err) {
+        console.error('BrandOps: digital twin create failed', err);
+        setDataOpsHint('Could not create digital twin from profile text.');
+        throw err;
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  const deleteActiveDigitalTwin = useCallback(async () => {
+    try {
+      const data = await storageService.getData();
+      const active = getActiveDigitalTwin(data);
+      if (!active) return;
+      await storageService.setData(removeDigitalTwinWorkspaceArtifacts(data, active));
+      await refreshWorkspaceSnapshot();
+      setDataOpsHint('Digital twin and generated workspace artifacts deleted from this workspace.');
+    } catch (err) {
+      console.error('BrandOps: digital twin delete failed', err);
+      setDataOpsHint('Could not delete digital twin.');
+      throw err;
+    }
+  }, [refreshWorkspaceSnapshot]);
 
   const persistKpiSelfCheck = useCallback(
     async (score: 1 | 2 | 3 | 4 | 5, note: string) => {
@@ -1499,7 +1797,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               'bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-4 pb-6 text-sm text-textMuted motion-reduce:animate-none',
               MOBILE_SHELL_EDGE_PAD_CLASS
             )}
-            aria-label="Assistant conversation"
+            aria-label="ASK conversational intelligence"
             key="shell-chat"
           >
             <MobileChatView
@@ -1507,6 +1805,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               loading={commandLoading}
               commandHistory={commandHistory}
               onQuickCommand={sendQuickCommand}
+              activeDigitalTwin={snapshot.activeDigitalTwin}
+              platformAwareAsk={snapshot.platformAwareAsk}
+              onTwinAction={(_actionType, prompt) => {
+                setInput(prompt);
+                commitTab('chat');
+              }}
               copilotWorkerRegistry={snapshot.copilotWorkerRegistry}
               onSelectCopilotWorker={selectCopilotWorker}
               onClearCommandHistory={() => {
@@ -1518,6 +1822,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               onOpenCommandPalette={() => setCommandPaletteOpen(true)}
               onOpenResumeGrounding={openSettingsResumePhase}
               assistantRoutingCaption={snapshot.aiAssistantRoutingCaption}
+              onConvertAskToPlan={convertAskOutputToPlan}
             />
           </section>
         ) : (
@@ -1539,8 +1844,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                       setFirstRunJourneyVisible(false);
                       void persistGettingStartedCompletionToWorkspace();
                     }}
-                    onTryCommand={sendQuickCommandFrom('Workspace', { navigateToChat: false })}
-                    onOpenToday={() => commitTab('daily')}
+                    onTryCommand={sendQuickCommand}
+                    onOpenAsk={() => commitTab('chat')}
                     onOpenSettings={() => commitTab('settings')}
                     onOpenHelp={() => openExtensionSurface('help')}
                   />
@@ -1560,6 +1865,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                   workspaceCommandLockReason={agentCommandLock}
                   onDownloadPipelineRun={downloadPipelineRunJson}
                   onApproveOperatorTrace={approveOperatorTraceReview}
+                  onRejectOperatorTrace={rejectOperatorTraceReview}
+                  onExportOperationalPlan={exportOperationalPlanJson}
+                  onExportExecutionReceipt={exportExecutionReceiptJson}
+                  convertedOperationalPlans={convertedOperationalPlans}
                 />
               </>
             ) : null}
@@ -1604,6 +1913,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onOperatorTraceCollectionChange={(enabled) =>
                   void setOperatorTraceCollection(enabled)
                 }
+                onConnectedIdentityLearningChange={(enabled) =>
+                  void setConnectedIdentityLearning(enabled)
+                }
                 documentSurface={surfaceLabel}
                 isAuthenticated={launchAccess.auth.isAuthenticated}
                 authProvider={launchAccess.auth.provider}
@@ -1615,6 +1927,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onOpenBillingPortal={onOpenBillingPortal}
                 onOperatingProfileApplied={persistOperatingProfileApply}
                 onPersistResumeNeuralPhaseContext={persistResumeNeuralPhaseContext}
+                onCreateDigitalTwinFromText={createDigitalTwinFromProfile}
+                onDeleteActiveDigitalTwin={deleteActiveDigitalTwin}
                 resumePhaseRevealKey={resumePhaseRevealKey}
                 onAiOperatorModeChange={patchAiOperatorMode}
                 onAiRoutingDiagnosticsChange={patchAiRoutingDiagnostics}
@@ -1645,7 +1959,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         />
       ) : null}
 
-      {activeTab === 'settings' && shouldRequireLaunchMembership(launchAccess) ? (
+      {activeTab === 'settings' &&
+      shouldRequireLaunchMembership(launchAccess) &&
+      ALLOW_LOCAL_MEMBERSHIP_BYPASS ? (
         <div
           className={clsx(
             'bo-mobile-main fixed inset-x-0 bottom-[calc(10.85rem+env(safe-area-inset-bottom,0px))] z-[32] mx-auto w-full px-2 pe-14 ps-3',
@@ -1655,12 +1971,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           <button
             type="button"
             onClick={onMarkMembershipActive}
-            className={clsx(
-              'w-full rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-sm text-text',
-              btnFocus
-            )}
+            className={clsx('bo-btn-ghost w-full', btnFocus)}
           >
-            Mark membership active (QA)
+            Unlock local demo access
           </button>
         </div>
       ) : null}
