@@ -3,6 +3,9 @@ import { CalendarCheck2, CirclePlay, TableProperties } from 'lucide-react';
 import type { LaunchAccessState } from '../../shared/account/launchAccess';
 import type { MobileWorkspaceSnapshot, PlanExecutionReceipt } from './buildWorkspaceSnapshot';
 import type { PipelineRun } from '../../types/aiIntegrationSuite';
+import type { PredictiveOpportunitySuggestion } from '../../services/plan/predictiveOpportunityLayer';
+import type { ContentIdeationItem } from '../../services/plan/predictiveContentIdeationEngine';
+import type { WorkflowPrediction } from '../../services/plan/workflowPredictionLayer';
 import { workspaceQueueCommandLine } from './pulseTimeline';
 import type { PulseTimelineRow } from './pulseTimeline';
 import { PlanDestinationGrid } from './PlanDestinationGrid';
@@ -18,10 +21,17 @@ import { PlanOperationalStudio, type OperationalPlanCard } from './PlanOperation
 import { PlanOperationalTimeline } from './PlanOperationalTimeline';
 import { PlanCrossPlatformPlanner } from './PlanCrossPlatformPlanner';
 import { PlanUnifiedOperationalInbox } from './PlanUnifiedOperationalInbox';
+import { PlanBehavioralIntelligenceEngine } from './PlanBehavioralIntelligenceEngine';
+import { PlanMemoryContextEngine } from './PlanMemoryContextEngine';
+import { PlanPredictiveOpportunityLayer } from './PlanPredictiveOpportunityLayer';
+import { PlanBuyerPersonaIntelligence } from './PlanBuyerPersonaIntelligence';
+import { PlanPositioningIntelligence } from './PlanPositioningIntelligence';
+import { PlanPredictiveContentIdeationEngine } from './PlanPredictiveContentIdeationEngine';
+import { PlanWorkflowPredictionLayer } from './PlanWorkflowPredictionLayer';
 import { PlanOpportunityEngine } from './PlanOpportunityEngine';
 import { PlanPlatformActionCards } from './PlanPlatformActionCards';
 import { PlanHumanTrustLayer } from './PlanHumanTrustLayer';
-import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
+import { PlanPredictiveOperationsDashboard } from './PlanPredictiveOperationsDashboard';
 import { EmptyState } from '../../shared/ui/brandopsPolish';
 import { mobileChipClass } from './mobileTabPrimitives';
 import { defaultBrandProfile } from '../../config/workspaceDefaults';
@@ -76,6 +86,11 @@ export interface MobileWorkspaceHubViewProps {
   onDownloadPipelineRun: (run: PipelineRun) => void;
   onApproveOperatorTrace: (traceId: string) => void | Promise<void>;
   onRejectOperatorTrace?: (traceId: string) => void | Promise<void>;
+  onConvertPredictiveOpportunityToPlan?: (suggestion: PredictiveOpportunitySuggestion) => void;
+  onConvertContentIdeationToPlan?: (item: ContentIdeationItem) => void;
+  onConvertWorkflowPredictionToPlan?: (prediction: WorkflowPrediction) => void;
+  onDeleteMemoryContext?: () => void | Promise<void>;
+  onDisableMemoryContext?: () => void | Promise<void>;
   onExportOperationalPlan?: (plan: OperationalPlanCard) => void;
   onExportExecutionReceipt?: (receipt: PlanExecutionReceipt) => void;
   convertedOperationalPlans?: OperationalPlanCard[];
@@ -100,6 +115,11 @@ export const MobileWorkspaceHubView = ({
   onDownloadPipelineRun,
   onApproveOperatorTrace,
   onRejectOperatorTrace = () => {},
+  onConvertPredictiveOpportunityToPlan = () => {},
+  onConvertContentIdeationToPlan = () => {},
+  onConvertWorkflowPredictionToPlan = () => {},
+  onDeleteMemoryContext = () => {},
+  onDisableMemoryContext = () => {},
   onExportOperationalPlan = () => {},
   onExportExecutionReceipt = () => {},
   convertedOperationalPlans = []
@@ -269,6 +289,67 @@ export const MobileWorkspaceHubView = ({
             runCommand={runCommand}
           />
 
+          <PlanBehavioralIntelligenceEngine
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+
+          <PlanMemoryContextEngine
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+            onDeleteMemory={onDeleteMemoryContext}
+            onDisableMemory={onDisableMemoryContext}
+          />
+
+          <PlanPredictiveOpportunityLayer
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+            onConvertToPlan={onConvertPredictiveOpportunityToPlan}
+          />
+
+          <PlanBuyerPersonaIntelligence
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+
+          <PlanPositioningIntelligence
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+
+          <PlanPredictiveContentIdeationEngine
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+            onConvertToPlan={onConvertContentIdeationToPlan}
+          />
+
+          <PlanWorkflowPredictionLayer
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+            onConvertToPlan={onConvertWorkflowPredictionToPlan}
+          />
+
           <PlanOpportunityEngine
             snapshot={snapshot}
             btnFocus={btnFocus}
@@ -357,20 +438,15 @@ export const MobileWorkspaceHubView = ({
           <PlanJumpNav btnFocus={btnFocus} />
         </div>
 
-        <section id="plan-pulse" className={ROW}>
-          <WorkspaceSignalsBoard
-            metrics={snapshot}
-            variant="pulse"
-            cellOverrides={{
-              oauth: {
-                label: 'Sync hub',
-                sub: '3 slots',
-                title:
-                  'Google, GitHub, and LinkedIn sync-hub preference rows (connected vs disconnected).'
-              }
-            }}
+        <div className={ROW}>
+          <PlanPredictiveOperationsDashboard
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
           />
-        </section>
+        </div>
 
         <div className={ROW}>
           <PlanPlanningActions

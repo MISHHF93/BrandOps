@@ -25,6 +25,21 @@ import type {
 import type { AssistantAskTraceSummaryUI } from '../../types/aiTraceGraph';
 import { twinActionPrompt } from '../../services/digitalTwin/digitalTwin';
 import type { PlatformAwareAskReadout } from '../../services/ai/platformAwareAskContext';
+import type { BehavioralIntelligenceEngineReadout } from '../../services/intelligence/behavioralIntelligenceEngine';
+import type {
+  PredictiveOpportunityLayerReadout,
+  PredictiveOpportunitySuggestion
+} from '../../services/plan/predictiveOpportunityLayer';
+import type {
+  ContentIdeationItem,
+  PredictiveContentIdeationReadout
+} from '../../services/plan/predictiveContentIdeationEngine';
+import type {
+  WorkflowPrediction,
+  WorkflowPredictionLayerReadout
+} from '../../services/plan/workflowPredictionLayer';
+import type { MemoryContextEngineReadout } from '../../services/memory/memoryContextEngine';
+import { buildPredictiveAskPromptGroups } from './predictiveAskPrompts';
 
 export interface ChatMessage {
   id: string;
@@ -95,91 +110,6 @@ const ASK_TO_PLAN_CONVERSIONS: ReadonlyArray<{
   }
 ];
 
-const ASK_PROMPT_GROUPS = [
-  {
-    id: 'platforms',
-    label: 'Platform-aware ops',
-    prompts: [
-      'ask: What should I prioritize today using my connected apps, recent activity, workflow state, and operational context?',
-      'ask: Draft a LinkedIn outreach based on my recent Gmail conversations. If Gmail summaries are unavailable, say what is missing.',
-      'ask: Turn my Notion notes into a content plan. If Notion is not connected or no notes exist, ask for approved notes.',
-      'ask: Summarize my upcoming founder meetings using connected calendar context only.'
-    ]
-  },
-  {
-    id: 'brainstorm',
-    label: 'Brainstorm',
-    prompts: [
-      'ask: Brainstorm 10 high-leverage directions for my AI twin based on my verified strengths.',
-      'ask: What are three unconventional angles I should explore this week?'
-    ]
-  },
-  {
-    id: 'profile',
-    label: 'Resume/profile',
-    prompts: [
-      'ask: Explain what my resume/profile says I am strongest at. Flag any missing evidence.',
-      'ask: What facts are still unverified or missing from my digital twin?'
-    ]
-  },
-  {
-    id: 'positioning',
-    label: 'Positioning',
-    prompts: [
-      'ask: Sharpen my positioning into a premium one-line professional identity.',
-      'ask: Compare three positioning angles for my target audience and recommend one.'
-    ]
-  },
-  {
-    id: 'bio',
-    label: 'Bio generation',
-    prompts: [
-      'ask: Generate a concise professional bio using only verified twin facts.',
-      'ask: Write a LinkedIn About section with proof, voice, and a clear CTA.'
-    ]
-  },
-  {
-    id: 'opportunity',
-    label: 'Opportunity analysis',
-    prompts: [
-      'ask: Analyze the strongest opportunities for this twin and explain why.',
-      'ask: Which outreach targets or roles best match my profile, proof, and goals?'
-    ]
-  },
-  {
-    id: 'content',
-    label: 'Content ideation',
-    prompts: [
-      'ask: Generate content ideas from my verified skills, proof points, and voice.',
-      'ask: Create a 30-day content plan grounded in my twin profile.'
-    ]
-  },
-  {
-    id: 'outreach',
-    label: 'Outreach drafting',
-    prompts: [
-      'ask: Draft an outreach message that uses verified twin facts and asks before missing claims.',
-      'ask: Create a follow-up sequence for a high-trust professional opportunity.'
-    ]
-  },
-  {
-    id: 'workflow',
-    label: 'Workflow reasoning',
-    prompts: [
-      'ask: Turn this idea into an execution workflow with risks, next steps, and artifacts.',
-      'ask: Reason through my next operational move and convert it into a plan.'
-    ]
-  },
-  {
-    id: 'strategy',
-    label: 'Strategic thinking',
-    prompts: [
-      'ask: Act as my AI strategist and operator. What should I focus on next?',
-      'ask: What is the highest-leverage move for my positioning, growth, and execution?'
-    ]
-  }
-] as const;
-
 const ASSISTANT_QUICK_PICKS = (() => {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -222,7 +152,20 @@ export interface MobileChatViewProps {
   activeDigitalTwin?: DigitalTwin | null;
   /** Connected-app/workflow context readout that hosted ASK receives. */
   platformAwareAsk?: PlatformAwareAskReadout;
+  /** Behavioral patterns from local recent actions and ASK/PLAN history. */
+  behavioralIntelligenceEngine?: BehavioralIntelligenceEngineReadout;
+  /** Predictive opportunities used to generate dynamic ASK starters. */
+  predictiveOpportunityLayer?: PredictiveOpportunityLayerReadout;
+  /** Predictive content ideation used to generate ASK to PLAN starters. */
+  predictiveContentIdeationEngine?: PredictiveContentIdeationReadout;
+  /** Repeated workflow predictions used to generate ASK to PLAN starters. */
+  workflowPredictionLayer?: WorkflowPredictionLayerReadout;
+  /** Persistent local memory used to personalize ASK suggestions. */
+  memoryContextEngine?: MemoryContextEngineReadout;
   onTwinAction?: (actionType: TwinSupportedActionType, prompt: string) => void;
+  onConvertPredictiveOpportunityToPlan?: (suggestion: PredictiveOpportunitySuggestion) => void;
+  onConvertContentIdeationToPlan?: (item: ContentIdeationItem) => void;
+  onConvertWorkflowPredictionToPlan?: (prediction: WorkflowPrediction) => void;
   onConvertAskToPlan?: (kind: AskPlanConversionKind, askOutput: string, messageId: string) => void;
 }
 
@@ -245,7 +188,15 @@ export const MobileChatView = ({
   assistantRoutingCaption,
   activeDigitalTwin,
   platformAwareAsk,
+  behavioralIntelligenceEngine,
+  predictiveOpportunityLayer,
+  predictiveContentIdeationEngine,
+  workflowPredictionLayer,
+  memoryContextEngine,
   onTwinAction,
+  onConvertPredictiveOpportunityToPlan,
+  onConvertContentIdeationToPlan,
+  onConvertWorkflowPredictionToPlan,
   onConvertAskToPlan
 }: MobileChatViewProps) => {
   /** Matches hero inset — keeps Copilot / starters / transcript edges aligned. */
@@ -283,7 +234,16 @@ export const MobileChatView = ({
   const platformConnected = platformAwareAsk?.connectedApps ?? [];
   const platformRecentActivityCount = platformAwareAsk?.recentActivity.length ?? 0;
   const platformWorkflowCount = platformAwareAsk?.workflowState.length ?? 0;
-  const promptGroups = ASK_PROMPT_GROUPS;
+  const promptGroups = buildPredictiveAskPromptGroups({
+    predictiveOpportunityLayer,
+    predictiveContentIdeationEngine,
+    workflowPredictionLayer,
+    memoryContextEngine,
+    behavioralIntelligenceEngine,
+    activeDigitalTwin,
+    platformAwareAsk,
+    recentCommandLines: commandHistory
+  });
 
   return (
     <div aria-label="ASK intelligence layer" className="bo-assistant-surface flex flex-col gap-3">
@@ -497,11 +457,11 @@ export const MobileChatView = ({
         <div id="assistant-commands" className="scroll-mt-28 space-y-3">
           <section aria-labelledby="ask-prompts-label" className="min-w-0">
             <p id="ask-prompts-label" className="bo-assistant-section-label">
-              Suggested prompts
+              Predictive prompts
             </p>
             <p className="mt-1 text-meta leading-snug text-textSoft">
-              Start with a strategic question. ASK can brainstorm, challenge assumptions, create
-              drafts, ask follow-ups, and convert useful outputs into operational next steps.
+              Dynamic starters based on recent behavior, profession context, connected platforms,
+              behavioral history, and memory patterns.
             </p>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               {promptGroups.map((group) => (
@@ -513,17 +473,78 @@ export const MobileChatView = ({
                   <p className="text-label font-semibold text-text">{group.label}</p>
                   <div className="mt-2 grid gap-1.5">
                     {group.prompts.map((prompt) => (
-                      <button
-                        key={prompt}
-                        type="button"
-                        onClick={() => onQuickCommand(prompt)}
+                      <article
+                        key={prompt.id}
                         className={clsx(
-                          'rounded-lg border border-border/35 bg-bgSubtle/55 px-2.5 py-2 text-left text-meta leading-snug text-textMuted hover:border-borderStrong hover:text-text',
-                          btnFocus
+                          'rounded-lg border border-border/35 bg-bgSubtle/55 p-2 text-meta leading-snug text-textMuted',
+                          'hover:border-borderStrong'
                         )}
                       >
-                        {prompt.replace(/^ask:\s*/i, '')}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => onQuickCommand(prompt.command)}
+                          className={clsx('w-full text-left', btnFocus)}
+                          title={`${prompt.why} · ${prompt.confidence}% confidence`}
+                        >
+                          <span className="block text-label font-semibold text-text">
+                            {prompt.prompt}
+                          </span>
+                          <span className="mt-1 line-clamp-2 block text-fine leading-snug text-textSoft">
+                            {prompt.why}
+                          </span>
+                        </button>
+                        <span className="mt-1 inline-flex rounded-full border border-border/35 bg-bgElevated px-1.5 py-0.5 text-overline font-bold uppercase text-textMuted">
+                          {prompt.confidence}% confidence
+                        </span>
+                        {prompt.sourceSuggestion && onConvertPredictiveOpportunityToPlan ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (prompt.sourceSuggestion) {
+                                onConvertPredictiveOpportunityToPlan(prompt.sourceSuggestion);
+                              }
+                            }}
+                            className={clsx(
+                              'mt-2 block rounded-lg border border-primary/35 bg-primarySoft/15 px-2 py-1.5 text-left text-fine font-semibold text-primary',
+                              btnFocus
+                            )}
+                          >
+                            Convert this into a reusable operational plan
+                          </button>
+                        ) : null}
+                        {prompt.sourceContentIdeation && onConvertContentIdeationToPlan ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (prompt.sourceContentIdeation) {
+                                onConvertContentIdeationToPlan(prompt.sourceContentIdeation);
+                              }
+                            }}
+                            className={clsx(
+                              'mt-2 block rounded-lg border border-primary/35 bg-primarySoft/15 px-2 py-1.5 text-left text-fine font-semibold text-primary',
+                              btnFocus
+                            )}
+                          >
+                            Convert ideation directly to PLAN
+                          </button>
+                        ) : null}
+                        {prompt.sourceWorkflowPrediction && onConvertWorkflowPredictionToPlan ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (prompt.sourceWorkflowPrediction) {
+                                onConvertWorkflowPredictionToPlan(prompt.sourceWorkflowPrediction);
+                              }
+                            }}
+                            className={clsx(
+                              'mt-2 block rounded-lg border border-primary/35 bg-primarySoft/15 px-2 py-1.5 text-left text-fine font-semibold text-primary',
+                              btnFocus
+                            )}
+                          >
+                            Convert workflow directly to PLAN
+                          </button>
+                        ) : null}
+                      </article>
                     ))}
                   </div>
                 </section>

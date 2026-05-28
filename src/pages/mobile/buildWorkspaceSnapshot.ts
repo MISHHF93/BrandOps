@@ -61,6 +61,38 @@ import {
   buildHumanTrustLayer,
   type HumanTrustLayerReadout
 } from '../../services/plan/humanTrustLayer';
+import {
+  buildPredictiveOpportunityLayerReadout,
+  type PredictiveOpportunityLayerReadout
+} from '../../services/plan/predictiveOpportunityLayer';
+import {
+  buildBuyerPersonaIntelligenceReadout,
+  type BuyerPersonaIntelligenceReadout
+} from '../../services/plan/buyerPersonaIntelligence';
+import {
+  buildPositioningIntelligenceReadout,
+  type PositioningIntelligenceReadout
+} from '../../services/plan/positioningIntelligence';
+import {
+  buildPredictiveContentIdeationReadout,
+  type PredictiveContentIdeationReadout
+} from '../../services/plan/predictiveContentIdeationEngine';
+import {
+  buildWorkflowPredictionLayerReadout,
+  type WorkflowPredictionLayerReadout
+} from '../../services/plan/workflowPredictionLayer';
+import {
+  buildPredictiveOperationsDashboardReadout,
+  type PredictiveOperationsDashboardReadout
+} from '../../services/plan/predictiveOperationsDashboard';
+import {
+  buildBehavioralIntelligenceEngineReadout,
+  type BehavioralIntelligenceEngineReadout
+} from '../../services/intelligence/behavioralIntelligenceEngine';
+import {
+  buildMemoryContextEngineReadout,
+  type MemoryContextEngineReadout
+} from '../../services/memory/memoryContextEngine';
 
 function formatAiOperatorMode(mode: AiOperatorMode): string {
   const labels: Record<AiOperatorMode, string> = {
@@ -366,6 +398,22 @@ export interface MobileWorkspaceSnapshot {
   unifiedOperationalInbox: UnifiedOperationalInboxReadout;
   /** Profession/twin/platform-aware opportunity suggestions for PLAN. */
   opportunityEngine: OpportunityEngineReadout;
+  /** Local pattern detection and approval-gated next-action predictions. */
+  behavioralIntelligenceEngine: BehavioralIntelligenceEngineReadout;
+  /** Persistent local memory and context used to improve ASK, PLAN, predictions, and workflows. */
+  memoryContextEngine: MemoryContextEngineReadout;
+  /** Proactive opportunity suggestions with why/confidence/signals/impact. */
+  predictiveOpportunityLayer: PredictiveOpportunityLayerReadout;
+  /** Buyer Persona Intelligence: ICP, personas, segments, recommendations, and versions. */
+  buyerPersonaIntelligence: BuyerPersonaIntelligenceReadout;
+  /** Positioning Intelligence: statements, value props, niches, differentiation, evidence, gaps. */
+  positioningIntelligence: PositioningIntelligenceReadout;
+  /** Predictive Content Ideation: themes, posts, campaigns, threads, hooks, series, trends. */
+  predictiveContentIdeationEngine: PredictiveContentIdeationReadout;
+  /** Workflow Prediction: repeated operations that can become reusable approval-gated workflows. */
+  workflowPredictionLayer: WorkflowPredictionLayerReadout;
+  /** Predictive Operations Dashboard: live Pulse lanes and next best action signals. */
+  predictiveOperationsDashboard: PredictiveOperationsDashboardReadout;
   /** Platform-specific action cards shown only for connected/supported platform context. */
   platformActionCards: PlatformActionCard[];
   /** Cross-platform operational event feed with what/where/AI-did provenance. */
@@ -663,6 +711,14 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     crossPlatformPlans: buildCrossPlatformOperationalPlans(workspace),
     unifiedOperationalInbox: buildUnifiedOperationalInbox(workspace),
     opportunityEngine: buildOpportunityEngineReadout(workspace),
+    behavioralIntelligenceEngine: buildBehavioralIntelligenceEngineReadout(workspace),
+    memoryContextEngine: buildMemoryContextEngineReadout(workspace),
+    predictiveOpportunityLayer: buildPredictiveOpportunityLayerReadout(workspace),
+    buyerPersonaIntelligence: buildBuyerPersonaIntelligenceReadout(workspace),
+    positioningIntelligence: buildPositioningIntelligenceReadout(workspace),
+    predictiveContentIdeationEngine: buildPredictiveContentIdeationReadout(workspace),
+    workflowPredictionLayer: buildWorkflowPredictionLayerReadout(workspace),
+    predictiveOperationsDashboard: buildPredictiveOperationsDashboardReadout(workspace),
     platformActionCards: buildPlatformActionCards(workspace),
     cockpitOpportunityPeek: activeOpportunities.slice(0, 5).map((o) => ({
       id: o.id,

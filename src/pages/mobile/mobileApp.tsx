@@ -73,6 +73,12 @@ import { ChatCommandBar } from './ChatCommandBar';
 import { AppearanceToggle } from './AppearanceToggle';
 import { WorkspaceCommandPalette } from './WorkspaceCommandPalette';
 import type { OperationalPlanCard } from './PlanOperationalStudio';
+import type { PredictiveOpportunitySuggestion } from '../../services/plan/predictiveOpportunityLayer';
+import type { ContentIdeationItem } from '../../services/plan/predictiveContentIdeationEngine';
+import type { WorkflowPrediction } from '../../services/plan/workflowPredictionLayer';
+import { buildOperationalPlanFromPredictiveSuggestion } from './predictivePlanConversion';
+import { buildOperationalPlanFromContentIdeation } from './contentIdeationPlanConversion';
+import { buildOperationalPlanFromWorkflowPrediction } from './workflowPredictionPlanConversion';
 import { PlanSurfaceNav } from './PlanSurfaceNav';
 import { requestExtensionSchedulerSync } from '../../services/messaging/requestExtensionSchedulerSync';
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
@@ -1151,6 +1157,36 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     [commitTab, snapshot.activeDigitalTwin]
   );
 
+  const convertPredictiveOpportunityToPlan = useCallback(
+    (suggestion: PredictiveOpportunitySuggestion) => {
+      const card = buildOperationalPlanFromPredictiveSuggestion(suggestion);
+      setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+      commitTab('workspace');
+      setDataOpsHint('Predictive opportunity converted to PLAN. Preview, approve, edit, retry, or export it.');
+    },
+    [commitTab]
+  );
+
+  const convertContentIdeationToPlan = useCallback(
+    (item: ContentIdeationItem) => {
+      const card = buildOperationalPlanFromContentIdeation(item);
+      setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+      commitTab('workspace');
+      setDataOpsHint('Content ideation converted to PLAN. Preview, approve, edit, retry, or export it.');
+    },
+    [commitTab]
+  );
+
+  const convertWorkflowPredictionToPlan = useCallback(
+    (prediction: WorkflowPrediction) => {
+      const card = buildOperationalPlanFromWorkflowPrediction(prediction);
+      setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+      commitTab('workspace');
+      setDataOpsHint('Workflow prediction converted to PLAN. Save, edit, reuse, template, or automate only after approval.');
+    },
+    [commitTab]
+  );
+
   const onSignInProvider = useCallback((provider: AuthProviderId) => {
     const nextEmail =
       provider === 'google'
@@ -1648,6 +1684,58 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     }
   }, [refreshWorkspaceSnapshot]);
 
+  const disableMemoryContext = useCallback(async () => {
+    try {
+      const data = await storageService.getData();
+      await storageService.setData({
+        ...data,
+        settings: {
+          ...data.settings,
+          operatorTraceCollectionEnabled: false,
+          connectedIdentityLearningEnabled: false
+        },
+        connectedIdentityEngine: data.connectedIdentityEngine
+          ? { ...data.connectedIdentityEngine, consentGranted: false }
+          : data.connectedIdentityEngine
+      });
+      await refreshWorkspaceSnapshot();
+      setDataOpsHint('Memory learning disabled. Existing memory remains local until deleted.');
+    } catch (err) {
+      console.error('BrandOps: disable memory context failed', err);
+      setDataOpsHint('Could not disable memory learning.');
+    }
+  }, [refreshWorkspaceSnapshot]);
+
+  const deleteMemoryContext = useCallback(async () => {
+    try {
+      const data = await storageService.getData();
+      const twins = data.digitalTwins?.twins ?? [];
+      const withoutTwins = twins.reduce<BrandOpsData>(
+        (workspace, twin) => removeDigitalTwinWorkspaceArtifacts(workspace, twin),
+        data
+      );
+      await storageService.setData({
+        ...withoutTwins,
+        operatorTraces: { entries: [] },
+        aiAssistantTraces: { entries: [] },
+        aiTraceGraph: { schema_version: '1.0.0', bundles: [] },
+        settings: {
+          ...withoutTwins.settings,
+          operatorTraceCollectionEnabled: false,
+          connectedIdentityLearningEnabled: false
+        },
+        connectedIdentityEngine: withoutTwins.connectedIdentityEngine
+          ? { ...withoutTwins.connectedIdentityEngine, consentGranted: false, signals: [] }
+          : withoutTwins.connectedIdentityEngine
+      });
+      await refreshWorkspaceSnapshot();
+      setDataOpsHint('Memory context deleted. Twin memory, local traces, ASK trace memory, and connected identity signals were cleared.');
+    } catch (err) {
+      console.error('BrandOps: delete memory context failed', err);
+      setDataOpsHint('Could not delete memory context.');
+    }
+  }, [refreshWorkspaceSnapshot]);
+
   const persistKpiSelfCheck = useCallback(
     async (score: 1 | 2 | 3 | 4 | 5, note: string) => {
       try {
@@ -1807,6 +1895,14 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               onQuickCommand={sendQuickCommand}
               activeDigitalTwin={snapshot.activeDigitalTwin}
               platformAwareAsk={snapshot.platformAwareAsk}
+              behavioralIntelligenceEngine={snapshot.behavioralIntelligenceEngine}
+              predictiveOpportunityLayer={snapshot.predictiveOpportunityLayer}
+              predictiveContentIdeationEngine={snapshot.predictiveContentIdeationEngine}
+              workflowPredictionLayer={snapshot.workflowPredictionLayer}
+              memoryContextEngine={snapshot.memoryContextEngine}
+              onConvertPredictiveOpportunityToPlan={convertPredictiveOpportunityToPlan}
+              onConvertContentIdeationToPlan={convertContentIdeationToPlan}
+              onConvertWorkflowPredictionToPlan={convertWorkflowPredictionToPlan}
               onTwinAction={(_actionType, prompt) => {
                 setInput(prompt);
                 commitTab('chat');
@@ -1866,6 +1962,11 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                   onDownloadPipelineRun={downloadPipelineRunJson}
                   onApproveOperatorTrace={approveOperatorTraceReview}
                   onRejectOperatorTrace={rejectOperatorTraceReview}
+                  onConvertPredictiveOpportunityToPlan={convertPredictiveOpportunityToPlan}
+                  onConvertContentIdeationToPlan={convertContentIdeationToPlan}
+                  onConvertWorkflowPredictionToPlan={convertWorkflowPredictionToPlan}
+                  onDeleteMemoryContext={deleteMemoryContext}
+                  onDisableMemoryContext={disableMemoryContext}
                   onExportOperationalPlan={exportOperationalPlanJson}
                   onExportExecutionReceipt={exportExecutionReceiptJson}
                   convertedOperationalPlans={convertedOperationalPlans}

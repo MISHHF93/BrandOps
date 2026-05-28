@@ -1,6 +1,13 @@
 import { localIntelligence } from '../intelligence/localIntelligence';
 import type { BrandOpsData } from '../../types/domain';
 import { buildCrossPlatformOperationalPlans } from './crossPlatformPlanner';
+import { buildBehavioralIntelligenceEngineReadout } from '../intelligence/behavioralIntelligenceEngine';
+import { buildPredictiveOpportunityLayerReadout } from './predictiveOpportunityLayer';
+import { buildBuyerPersonaIntelligenceReadout } from './buyerPersonaIntelligence';
+import { buildPositioningIntelligenceReadout } from './positioningIntelligence';
+import { buildPredictiveContentIdeationReadout } from './predictiveContentIdeationEngine';
+import { buildWorkflowPredictionLayerReadout } from './workflowPredictionLayer';
+import { buildMemoryContextEngineReadout } from '../memory/memoryContextEngine';
 
 export type UnifiedInboxKind =
   | 'notification'
@@ -208,6 +215,107 @@ export function buildUnifiedOperationalInbox(
         kind: 'ai-opportunity',
         sourceLabel: 'AI opportunity'
       })
+    });
+  }
+
+  for (const prediction of buildBehavioralIntelligenceEngineReadout(workspace).predictions.slice(
+    0,
+    5
+  )) {
+    items.push({
+      id: `inbox-behavioral-prediction-${prediction.id}`,
+      kind: 'ai-opportunity',
+      title: prediction.title,
+      detail: `${prediction.rationale} ${prediction.approvalGate}`,
+      sourceLabel: 'Behavioral Intelligence Engine',
+      priority: prediction.confidence >= 80 ? 'high' : 'medium',
+      status: `${prediction.confidence}% prediction`,
+      at: new Date().toISOString(),
+      command: prediction.suggestedCommand
+    });
+  }
+
+  for (const suggestion of buildPredictiveOpportunityLayerReadout(workspace).suggestions.slice(
+    0,
+    5
+  )) {
+    items.push({
+      id: `inbox-predictive-opportunity-${suggestion.id}`,
+      kind: 'ai-opportunity',
+      title: suggestion.title,
+      detail: `${suggestion.whyThisAppeared} Expected impact: ${suggestion.expectedImpact}`,
+      sourceLabel: 'Predictive Opportunity Layer',
+      priority: suggestion.confidence >= 80 ? 'high' : 'medium',
+      status: `${suggestion.confidence}% confidence`,
+      at: new Date().toISOString(),
+      command: suggestion.previewCommand
+    });
+  }
+
+  const buyerPersona = buildBuyerPersonaIntelligenceReadout(workspace);
+  items.push({
+    id: 'inbox-buyer-persona-intelligence',
+    kind: 'ai-opportunity',
+    title: buyerPersona.idealCustomerProfile.title,
+    detail: `${buyerPersona.headline} Review, edit, approve, regenerate, or compare versions before use.`,
+    sourceLabel: 'Buyer Persona Intelligence',
+    priority: buyerPersona.averageConfidence >= 80 ? 'high' : 'medium',
+    status: `${buyerPersona.averageConfidence}% confidence`,
+    at: new Date().toISOString(),
+    command: buyerPersona.compareVersionsCommand
+  });
+
+  const positioning = buildPositioningIntelligenceReadout(workspace);
+  items.push({
+    id: 'inbox-positioning-intelligence',
+    kind: 'ai-opportunity',
+    title: 'Positioning Intelligence',
+    detail: `${positioning.headline} Strengths: ${positioning.strengths.slice(0, 2).join(' ')} Gaps: ${positioning.gaps.slice(0, 2).join(' ')}`,
+    sourceLabel: 'Positioning Intelligence',
+    priority: positioning.averageConfidence >= 80 ? 'high' : 'medium',
+    status: `${positioning.averageConfidence}% confidence`,
+    at: new Date().toISOString(),
+    command: positioning.reviewCommand
+  });
+
+  const memory = buildMemoryContextEngineReadout(workspace);
+  items.push({
+    id: 'inbox-memory-context-engine',
+    kind: 'ai-opportunity',
+    title: 'Memory & Context Engine',
+    detail: `${memory.headline} Users can view, edit, delete, or disable memory.`,
+    sourceLabel: 'Memory & Context Engine',
+    priority: memory.enabled ? 'medium' : 'low',
+    status: memory.enabled ? `${memory.averageConfidence}% memory confidence` : 'memory disabled',
+    at: new Date().toISOString(),
+    command: memory.controls.viewCommand
+  });
+
+  for (const idea of buildPredictiveContentIdeationReadout(workspace).allIdeas.slice(0, 4)) {
+    items.push({
+      id: `inbox-predictive-content-ideation-${idea.id}`,
+      kind: 'ai-opportunity',
+      title: idea.title,
+      detail: `${idea.whyNow} Expected impact: ${idea.expectedImpact}`,
+      sourceLabel: 'Predictive Content Ideation',
+      priority: idea.confidence >= 80 ? 'high' : 'medium',
+      status: `${idea.confidence}% confidence`,
+      at: new Date().toISOString(),
+      command: idea.askToPlanCommand
+    });
+  }
+
+  for (const workflow of buildWorkflowPredictionLayerReadout(workspace).predictions.slice(0, 4)) {
+    items.push({
+      id: `inbox-workflow-prediction-${workflow.id}`,
+      kind: 'ai-opportunity',
+      title: workflow.title,
+      detail: `${workflow.repeatedPattern} ${workflow.suggestion}`,
+      sourceLabel: 'Workflow Prediction Layer',
+      priority: workflow.confidence >= 80 ? 'high' : 'medium',
+      status: `${workflow.confidence}% confidence`,
+      at: new Date().toISOString(),
+      command: workflow.controls.reuseCommand
     });
   }
 

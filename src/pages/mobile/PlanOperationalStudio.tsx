@@ -59,7 +59,16 @@ function twinPrompt(
 
 function twinPlanPrefix(snapshot: MobileWorkspaceSnapshot): string {
   const twin = snapshot.activeDigitalTwin;
-  if (!twin) return '';
+  const memory = snapshot.memoryContextEngine;
+  const memoryContext = memory.entries.length
+    ? `Memory context: ${[
+        ...memory.improvements['plan-generation'].slice(0, 3),
+        ...memory.improvements['workflow-recommendations'].slice(0, 3)
+      ]
+        .filter(Boolean)
+        .join('; ')}.`
+    : '';
+  if (!twin) return memoryContext;
   const verified = [
     twin.identity.headline,
     twin.identity.professionalPositioning,
@@ -71,7 +80,7 @@ function twinPlanPrefix(snapshot: MobileWorkspaceSnapshot): string {
   const missing = twin.memory.missingInfo.length
     ? `Missing info: ${twin.memory.missingInfo.join('; ')}. Ask for clarification before using missing facts.`
     : 'If any required fact is missing, ask for clarification instead of inventing it.';
-  return `In active twin context for ${twin.displayName}, use this voice: ${twin.identity.toneOfVoice}. Positioning: ${twin.identity.professionalPositioning || twin.identity.summary}. Verified facts: ${verified || 'use only reviewed profile data'}. ${missing}`;
+  return `In active twin context for ${twin.displayName}, use this voice: ${twin.identity.toneOfVoice}. Positioning: ${twin.identity.professionalPositioning || twin.identity.summary}. Verified facts: ${verified || 'use only reviewed profile data'}. ${memoryContext} ${missing}`;
 }
 
 function twinAwareAsk(snapshot: MobileWorkspaceSnapshot, task: string): string {
