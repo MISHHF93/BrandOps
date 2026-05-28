@@ -457,11 +457,13 @@ export const MobileChatView = ({
         <div id="assistant-commands" className="scroll-mt-28 space-y-3">
           <section aria-labelledby="ask-prompts-label" className="min-w-0">
             <p id="ask-prompts-label" className="bo-assistant-section-label">
-              Predictive prompts
+              Suggested prompts
             </p>
             <p className="mt-1 text-meta leading-snug text-textSoft">
-              Dynamic starters based on recent behavior, profession context, connected platforms,
-              behavioral history, and memory patterns.
+              Dynamic suggested prompts based on recent behavior, profession context, connected
+              platforms, behavioral history, and memory patterns. Prompt families: Brainstorm,
+              Resume/profile, Opportunity analysis, and Workflow reasoning before converting output
+              to PLAN.
             </p>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               {promptGroups.map((group) => (

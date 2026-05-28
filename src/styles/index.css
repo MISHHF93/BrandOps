@@ -2816,6 +2816,7 @@ html[data-app-surface='welcome'] body::after {
   .bo-navdock-toggle__glyph,
   .bo-retro-ambient::before,
   .bo-retro-ambient::after,
+    .bo-operational-pulse,
   .bo-mobile-app::before,
   .bo-shell-tab-root::after,
   .bo-mobile-nav__spotlight {
@@ -3097,6 +3098,18 @@ html[data-app-surface='welcome'] body::after {
   }
   .bo-visual-orb--info {
     --orb-color: var(--color-info);
+  }
+
+  .bo-operational-pulse {
+    display: inline-flex;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: rgb(var(--color-accent));
+    box-shadow:
+      0 0 0 3px rgb(var(--color-accent) / 0.14),
+      0 0 16px rgb(var(--color-accent) / 0.32);
+    animation: bo-operational-pulse 1.8s var(--ease-liquid-in-out) infinite;
   }
 
   /* One subtle decorative radial behind section headers. */
@@ -3564,5 +3577,18 @@ html[data-app-surface='welcome'] body::after {
 
   to {
     opacity: 1;
+  }
+}
+
+@keyframes bo-operational-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
   }
 }

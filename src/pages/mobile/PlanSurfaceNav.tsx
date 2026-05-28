@@ -7,10 +7,10 @@ const PLAN_NAV_ITEMS: ReadonlyArray<{
   label: string;
   Icon: typeof LayoutDashboard;
 }> = [
-  { tab: 'workspace', label: 'Overview', Icon: LayoutDashboard },
-  { tab: 'daily', label: 'Today', Icon: CalendarRange },
-  { tab: 'integrations', label: 'Connect', Icon: PlugZap },
-  { tab: 'settings', label: 'Setup', Icon: Settings }
+  { tab: 'workspace', label: 'Workspace OS', Icon: LayoutDashboard },
+  { tab: 'daily', label: 'Verify', Icon: CalendarRange },
+  { tab: 'integrations', label: 'Platforms', Icon: PlugZap },
+  { tab: 'settings', label: 'Twin', Icon: Settings }
 ];
 
 /**

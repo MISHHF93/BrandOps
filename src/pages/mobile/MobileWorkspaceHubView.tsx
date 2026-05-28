@@ -26,9 +26,11 @@ import type { PredictiveOpportunitySuggestion } from '../../services/plan/predic
 import type { ContentIdeationItem } from '../../services/plan/predictiveContentIdeationEngine';
 import type { WorkflowPrediction } from '../../services/plan/workflowPredictionLayer';
 import type { CrossPlatformTimelineItem } from '../../services/plan/crossPlatformOperationalTimeline';
+import type { ExpertProfessionPath } from '../../services/ai/expertRoutingEngine';
 import { workspaceQueueCommandLine } from './pulseTimeline';
 import type { PulseTimelineRow } from './pulseTimeline';
 import { PlanIdentityHeader } from './PlanIdentityHeader';
+import { PlanUnifiedOperationalInbox } from './PlanUnifiedOperationalInbox';
 import {
   buildOperationalPlanCards,
   type OperationalPlanCard,
@@ -43,6 +45,7 @@ const SHEET = 'bo-plan-flat-root overflow-hidden rounded-2xl bg-bg';
 const ROW = 'scroll-mt-28 px-4 py-4 sm:px-5';
 
 type BoardTone = 'success' | 'warning' | 'danger' | 'info' | 'muted' | 'primary';
+type OperationalModeId = 'ASK' | 'PLAN' | 'OPERATE' | 'VERIFY';
 
 interface PlanBoardSuggestion {
   id: string;
@@ -54,6 +57,12 @@ interface PlanBoardSuggestion {
   command: string;
   primaryLabel: string;
   onPrimary?: () => void;
+}
+
+interface ProfessionModeCopy {
+  label: string;
+  focus: string;
+  recommendedMove: string;
 }
 
 export interface MobileWorkspaceHubViewProps {
@@ -169,6 +178,35 @@ function receiptPreviewCommand(receipt: PlanExecutionReceipt): string {
   return `ask: Explain this PLAN receipt in plain language. Include what happened, why it matters, what data was used, approval status, warnings, and the safest next step. Do not claim anything external happened unless the receipt says so.\n\n${JSON.stringify(receipt, null, 2)}`;
 }
 
+function professionModeCopy(path: ExpertProfessionPath): ProfessionModeCopy {
+  switch (path) {
+    case 'founder':
+      return {
+        label: 'Founder mode',
+        focus: 'Investor outreach, fundraising follow-ups, positioning, growth loops, and operating cadence.',
+        recommendedMove: 'Prioritize warm follow-ups, proof-backed positioning, and approval-gated growth plans.'
+      };
+    case 'creator':
+      return {
+        label: 'Creator mode',
+        focus: 'Content pipelines, audience growth, publishing rhythm, sponsors, and reusable campaign systems.',
+        recommendedMove: 'Turn engagement and content signals into a calendar, sponsor queue, or repurposing plan.'
+      };
+    case 'recruiter':
+      return {
+        label: 'Recruiter mode',
+        focus: 'Candidate pipelines, outreach sequences, scheduling, follow-up timing, and source health.',
+        recommendedMove: 'Convert candidate signals into prioritized outreach, screening, and scheduling steps.'
+      };
+    default:
+      return {
+        label: 'General operator mode',
+        focus: 'Plans, approvals, platform context, memory, and repeatable professional workflows.',
+        recommendedMove: 'Use ASK to clarify intent, then convert the output into a PLAN before operating.'
+      };
+  }
+}
+
 function activeNextStep(plan: OperationalPlanCard): string {
   if (plan.status === 'blocked') return 'Review what is blocking it, then approve or reject.';
   if (plan.status === 'needs-input') return 'Preview it and fill in the missing context.';
@@ -278,6 +316,40 @@ function SummaryTile({
   );
 }
 
+function ModeCard({
+  mode,
+  title,
+  metric,
+  detail,
+  tone
+}: {
+  mode: OperationalModeId;
+  title: string;
+  metric: string;
+  detail: string;
+  tone: BoardTone;
+}) {
+  return (
+    <div className="rounded-xl border border-border/35 bg-bgElevated/60 px-3 py-2.5">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-fine font-bold uppercase tracking-[0.16em] text-primary">{mode}</p>
+          <p className="mt-1 text-label font-semibold leading-tight text-text">{title}</p>
+        </div>
+        <span
+          className={clsx(
+            'shrink-0 rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
+            toneClass(tone)
+          )}
+        >
+          {metric}
+        </span>
+      </div>
+      <p className="mt-2 text-fine leading-snug text-textMuted">{detail}</p>
+    </div>
+  );
+}
+
 export const MobileWorkspaceHubView = ({
   snapshot,
   btnFocus,
@@ -334,6 +406,58 @@ export const MobileWorkspaceHubView = ({
     snapshot.queuedPublishing;
   const inProgressCount = planCards.filter((plan) => plan.status === 'in-progress').length;
   const readyCount = planCards.filter((plan) => plan.status === 'ready').length;
+  const connectedPlatforms = snapshot.platformAwareAsk.connectedApps.length
+    ? snapshot.platformAwareAsk.connectedApps
+    : snapshot.integrationHubSources.map((source) => source.name);
+  const activeExpertNames = snapshot.expertOperator.generatedUsing.slice(0, 3);
+  const professionMode = professionModeCopy(snapshot.expertOperator.professionPath);
+  const platformCards = snapshot.platformActionCards.slice(0, 6);
+  const pulseState =
+    failedCount > 0
+      ? `${failedCount} attention`
+      : snapshot.planPendingReviewCount > 0
+        ? `${snapshot.planPendingReviewCount} approvals`
+        : suggestions.length > 0
+          ? `${suggestions.length} suggestions`
+          : 'clear';
+  const modeCards: Array<{
+    mode: OperationalModeId;
+    title: string;
+    metric: string;
+    detail: string;
+    tone: BoardTone;
+  }> = [
+    {
+      mode: 'ASK' as const,
+      title: 'Strategic intelligence',
+      metric: `${snapshot.expertOperator.ask.confidence}%`,
+      detail: activeExpertNames.length
+        ? `Routed through ${activeExpertNames.join(', ')}.`
+        : 'Routes questions through operational experts when context is available.',
+      tone: 'primary' as const
+    },
+    {
+      mode: 'PLAN' as const,
+      title: 'Execution board',
+      metric: `${planCards.length}`,
+      detail: `${readyCount} ready plan${readyCount === 1 ? '' : 's'} and ${inProgressCount} in progress.`,
+      tone: planCards.length ? 'info' : 'muted'
+    },
+    {
+      mode: 'OPERATE' as const,
+      title: 'Approval-gated action',
+      metric: `${snapshot.planPendingReviewCount}`,
+      detail: 'Drafts, sends, schedules, syncs, and workspace changes wait for human approval.',
+      tone: snapshot.planPendingReviewCount ? 'warning' : 'success'
+    },
+    {
+      mode: 'VERIFY' as const,
+      title: 'Receipts and trust',
+      metric: `${snapshot.planExecutionReceipts.length}`,
+      detail: 'Every AI action keeps experts, data used, reasoning summary, status, and warnings visible.',
+      tone: failedCount ? 'danger' : 'success'
+    }
+  ];
 
   return (
     <div className="space-y-3" aria-label="Plan">
@@ -351,6 +475,11 @@ export const MobileWorkspaceHubView = ({
             positioningPreview={snapshot.positioning}
             launchAccess={launchAccess}
             onOpenSettings={onOpenSettings}
+            activeDigitalTwin={snapshot.activeDigitalTwin}
+            connectedPlatforms={connectedPlatforms}
+            predictiveOpportunityCount={snapshot.predictiveOpportunityLayer.totalCount}
+            activePlanCount={planCards.length}
+            approvalCount={snapshot.planPendingReviewCount}
           />
         </div>
 
@@ -358,15 +487,18 @@ export const MobileWorkspaceHubView = ({
           <div className="rounded-2xl border border-primary/25 bg-primarySoft/10 p-3.5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                <p className="flex items-center gap-2 text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                  <span className="bo-operational-pulse" aria-hidden />
                   PLAN command board
                 </p>
                 <h1 id="plan-board-heading" className="mt-1 text-h2 text-text">
-                  Turn ideas into approved next steps
+                  What matters now, what the AI recommends, and what can run next
                 </h1>
                 <p className="mt-1.5 max-w-2xl text-meta leading-snug text-textMuted">
-                  ASK is where you think with the AI. PLAN is where those ideas become structured
-                  workflows, approvals, timelines, and safe execution steps.
+                  BrandOps is one continuous operational surface powered by ASK, PLAN, OPERATE, and
+                  VERIFY. Static widgets become approvals, plans, predictions, platform actions, and
+                  receipts. Turn ideas into approved next steps with receipts before anything leaves
+                  the workspace.
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap gap-1.5">
@@ -384,6 +516,22 @@ export const MobileWorkspaceHubView = ({
                 >
                   Open Today
                 </button>
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                    Operational pulse
+                  </p>
+                  <p className="mt-1 text-meta leading-snug text-textMuted">
+                    {pulseState} · {professionMode.label} · {snapshot.expertOperator.workflowType.replace(/_/g, ' ')} workflow
+                  </p>
+                </div>
+                <span className={clsx('rounded-full border px-2 py-1 text-fine font-semibold uppercase', toneClass(failedCount ? 'danger' : snapshot.planPendingReviewCount ? 'warning' : 'success'))}>
+                  {failedCount ? 'attention' : snapshot.planPendingReviewCount ? 'review' : 'stable'}
+                </span>
               </div>
             </div>
 
@@ -420,15 +568,26 @@ export const MobileWorkspaceHubView = ({
               />
             </div>
 
+            <div className="mt-3 grid gap-2 sm:grid-cols-4" aria-label="Operational mode layer">
+              {modeCards.map((card) => (
+                <ModeCard key={card.mode} {...card} />
+              ))}
+            </div>
+
             <div className="mt-3 grid gap-2 sm:grid-cols-[1.4fr_1fr]">
               <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
                 <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
-                  Operator context
+                  Operator context · Profession-aware mode
                 </p>
                 <p className="mt-1 text-meta leading-snug text-textMuted">
                   {twin
                     ? `${twin.displayName} is active with ${twin.confidenceScore}% confidence. PLAN uses approved profile facts, voice, memory, and current workspace context.`
                     : 'No active digital twin yet. PLAN still works, but profile, voice, and proof improve after setup.'}
+                </p>
+                <p className="mt-2 rounded-lg border border-border/30 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textSoft">
+                  {professionMode.label}: {professionMode.focus} Recommended next move:{' '}
+                  {professionMode.recommendedMove} Connected context:{' '}
+                  {connectedPlatforms.length ? connectedPlatforms.join(', ') : 'workspace only'}.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <button
@@ -493,6 +652,66 @@ export const MobileWorkspaceHubView = ({
                 Add your offer, voice, and focus metric in Setup to make plans more specific.
               </p>
             ) : null}
+          </div>
+        </section>
+
+        <div className={ROW}>
+          <PlanUnifiedOperationalInbox
+            snapshot={snapshot}
+            btnFocus={btnFocus}
+            commandBusy={commandBusy}
+            canRunWorkspaceCommands={canRunWorkspaceCommands}
+            runCommand={runCommand}
+          />
+        </div>
+
+        <section className={ROW} aria-labelledby="expert-routing-heading">
+          <div className="rounded-2xl border border-info/35 bg-infoSoft/10 p-3.5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-meta font-semibold uppercase tracking-[0.14em] text-info">
+                  Mixture of Operational Experts
+                </p>
+                <h2 id="expert-routing-heading" className="mt-1 text-h3 text-text">
+                  Experts activated without exposing hidden reasoning
+                </h2>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  BrandOps routes ASK, PLAN, and OPERATE through specialized experts based on
+                  profession, workflow, twin memory, behavior, and platform context.
+                </p>
+              </div>
+              <span className="rounded-full border border-border/45 bg-bgElevated px-2 py-1 text-fine font-semibold text-textMuted">
+                {snapshot.expertOperator.generatedUsing.length} expert{snapshot.expertOperator.generatedUsing.length === 1 ? '' : 's'}
+              </span>
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              {[snapshot.expertOperator.ask, snapshot.expertOperator.plan, snapshot.expertOperator.operate].map(
+                (mode) => (
+                  <article key={mode.mode} className="rounded-xl border border-border/35 bg-bgElevated/60 px-3 py-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-fine font-bold uppercase tracking-[0.16em] text-primary">
+                          {mode.mode}
+                        </p>
+                        <h3 className="mt-1 text-label font-semibold leading-tight text-text">
+                          {mode.headline}
+                        </h3>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-border/45 bg-bgSubtle px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
+                        {mode.confidence}%
+                      </span>
+                    </div>
+                    <p className="mt-2 line-clamp-3 text-fine leading-snug text-textMuted">
+                      {mode.summary}
+                    </p>
+                    <p className="mt-2 rounded-lg border border-border/30 bg-bgSubtle/45 px-2 py-1.5 text-fine leading-snug text-textSoft">
+                      Experts: {mode.expertNames.join(', ') || 'General operator'}
+                    </p>
+                  </article>
+                )
+              )}
+            </div>
           </div>
         </section>
 
@@ -613,7 +832,11 @@ export const MobileWorkspaceHubView = ({
           </div>
         </section>
 
-        <section className={ROW} aria-labelledby="pending-approvals-heading">
+        <section
+          id="plan-human-approval-queue"
+          className={ROW}
+          aria-labelledby="pending-approvals-heading"
+        >
           <div className="rounded-2xl border border-warning/35 bg-warningSoft/10 p-3.5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -762,6 +985,69 @@ export const MobileWorkspaceHubView = ({
               ))}
             </div>
           )}
+        </section>
+
+        <section className={ROW} aria-labelledby="platform-intelligence-heading">
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                  Connected Platform Intelligence
+                </p>
+                <h2 id="platform-intelligence-heading" className="mt-1 text-h3 text-text">
+                  Platform-aware actions BrandOps can actually support
+                </h2>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  Action cards only appear when connected or approved context exists. Unsupported
+                  Gmail, LinkedIn, Calendar, Slack, Notion, HubSpot, or X actions are not faked.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenIntegrations}
+                className={clsx(mobileChipClass(btnFocus), 'text-meta')}
+              >
+                Manage platforms
+              </button>
+            </div>
+
+            {platformCards.length === 0 ? (
+              <p className="mt-3 rounded-xl border border-warning/30 bg-warningSoft/10 px-3 py-2 text-meta leading-snug text-warning">
+                No supported platform action cards yet. Connect a source or approve platform
+                summaries before BrandOps suggests external-platform workflows.
+              </p>
+            ) : (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {platformCards.map((card) => (
+                  <article key={card.id} className="rounded-xl border border-border/35 bg-bgSubtle/50 p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                          {card.platform}
+                        </p>
+                        <h3 className="mt-1 text-label font-semibold text-text">{card.title}</h3>
+                      </div>
+                      <span className="rounded-full border border-success/35 bg-successSoft/15 px-2 py-0.5 text-overline font-bold uppercase text-success">
+                        Supported
+                      </span>
+                    </div>
+                    <p className="mt-2 text-meta leading-snug text-textMuted">{card.description}</p>
+                    <p className="mt-2 rounded-lg border border-border/30 bg-bgElevated/60 px-2 py-1.5 text-fine leading-snug text-textSoft">
+                      Approval: {card.approvalRequirement}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => void runCommand(card.command)}
+                      className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                    >
+                      Preview action
+                    </button>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
 
         <section className={ROW} aria-labelledby="timeline-heading">
