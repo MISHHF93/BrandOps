@@ -699,18 +699,7 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-flagship-surface::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto;
-    height: 4px;
-    pointer-events: none;
-    background: linear-gradient(
-      90deg,
-      rgb(var(--brand-gold) / 0.38),
-      rgb(var(--color-secondary) / 0.22) 52%,
-      transparent
-    );
-    opacity: 0.48;
+    display: none;
   }
 
   .bo-flagship-surface > * {
