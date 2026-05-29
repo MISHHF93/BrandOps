@@ -367,16 +367,9 @@ html[data-app-surface='welcome'] body::after {
   }
 
   :root[data-theme='light'] .bo-mobile-header {
-    border-bottom: 1px solid rgb(var(--color-border) / 0.55);
-    background: linear-gradient(
-      92deg,
-      rgb(var(--color-surface) / 0.97),
-      rgb(var(--color-bg-elevated) / 0.99) 52%,
-      rgb(var(--flagship-sheen) / 1) 100%
-    );
-    box-shadow:
-      0 10px 26px rgb(var(--color-shadow) / 0.14),
-      inset 0 1px 0 rgb(var(--flagship-sheen) / 0.08);
+    border-bottom: 1px solid rgb(var(--color-border) / 0.45);
+    background: rgb(var(--color-bg) / 0.96);
+    box-shadow: 0 1px 0 rgb(var(--color-shadow) / 0.04);
   }
 
   :root[data-theme='light'] .bo-mobile-nav {
@@ -412,19 +405,12 @@ html[data-app-surface='welcome'] body::after {
 
   .bo-mobile-header {
     position: relative;
-    border-bottom: 1px solid rgb(var(--color-border) / 0.45);
-    background: linear-gradient(
-      92deg,
-      rgb(var(--color-surface) / 0.72),
-      rgb(var(--color-bg-elevated) / 0.88) 50%,
-      rgb(var(--brand-gold) / 0.1)
-    );
-    box-shadow:
-      0 10px 28px rgb(var(--color-shadow) / 0.22),
-      inset 0 1px 0 rgb(var(--flagship-sheen) / 0.04);
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    padding-top: max(0.85rem, env(safe-area-inset-top, 0px));
-    padding-bottom: 0.85rem;
+    border-bottom: 1px solid rgb(var(--color-border) / 0.34);
+    background: rgb(var(--color-bg) / 0.96);
+    box-shadow: 0 1px 0 rgb(var(--color-text) / 0.025);
+    backdrop-filter: blur(14px) saturate(1.05);
+    padding-top: max(0.65rem, env(safe-area-inset-top, 0px));
+    padding-bottom: 0.65rem;
     padding-left: max(1.125rem, env(safe-area-inset-left, 0px));
     padding-right: max(1.125rem, env(safe-area-inset-right, 0px));
     transition:
@@ -433,31 +419,24 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-mobile-header.shadow-none {
-    box-shadow:
-      0 1px 0 rgb(var(--flagship-sheen) / 0.04),
-      0 8px 20px rgb(var(--color-shadow) / 0.12);
+    box-shadow: 0 1px 0 rgb(var(--color-text) / 0.025);
   }
 
   .bo-scroll-progress {
     position: absolute;
     inset: auto 0 -1px;
-    height: 2px;
+    height: 1px;
     transform-origin: left center;
-    background: linear-gradient(
-      90deg,
-      rgb(var(--brand-gold) / 0.88),
-      rgb(var(--color-accent) / 0.72),
-      rgb(var(--brand-gold) / 0.38)
-    );
-    box-shadow: 0 0 18px rgb(var(--brand-gold) / 0.32);
+    background: rgb(var(--color-accent) / 0.36);
+    box-shadow: none;
     transition: transform 0.12s linear;
     pointer-events: none;
     z-index: 2;
   }
 
-  .bo-mobile-brand__mark--compact.bo-brand-mark {
-    --brand-mark-size: 2.55rem;
-    border-radius: 0.82rem;
+  .bo-mobile-brand__mark--compact {
+    --brand-mark-size: 2.2rem;
+    border-radius: 0.7rem;
   }
 
   .bo-mobile-brand__title {
@@ -471,13 +450,11 @@ html[data-app-surface='welcome'] body::after {
   }
 
   :root[data-theme='dark'] .bo-mobile-brand__title {
-    text-shadow: 0 0 22px rgb(var(--color-accent) / 0.14);
+    text-shadow: none;
   }
 
   .bo-mobile-help-btn {
-    box-shadow:
-      inset 0 1px 0 rgb(var(--color-text) / 0.06),
-      0 6px 16px rgb(var(--color-shadow) / 0.12);
+    box-shadow: none;
     transition:
       transform var(--duration-fast) var(--ease-liquid-out),
       border-color var(--duration-fast) var(--ease-liquid-out),
@@ -494,14 +471,9 @@ html[data-app-surface='welcome'] body::after {
     z-index: 0;
     pointer-events: none;
     border-radius: 1.5rem;
-    background: linear-gradient(
-      120deg,
-      transparent 0%,
-      rgb(var(--flagship-sheen) / 0.05) 42%,
-      transparent 74%
-    );
+    background: linear-gradient(120deg, transparent 0%, rgb(var(--flagship-sheen) / 0.025) 42%, transparent 74%);
     transform: translateX(-38%);
-    opacity: 0.38;
+    opacity: 0.16;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -527,14 +499,8 @@ html[data-app-surface='welcome'] body::after {
     position: absolute;
     inset: auto 0 -1px;
     height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgb(var(--brand-gold) / 0.58) 18%,
-      rgb(var(--color-accent) / 0.32) 58%,
-      transparent 88%
-    );
-    opacity: 0.8;
+    background: rgb(var(--color-border) / 0.28);
+    opacity: 1;
   }
 
   .bo-mobile-nav {
@@ -610,18 +576,9 @@ html[data-app-surface='welcome'] body::after {
     align-items: center;
     justify-content: center;
     border-radius: 0.95rem;
-    border: 1px solid rgb(var(--brand-gold) / 0.5);
-    background:
-      linear-gradient(180deg, rgb(var(--color-text) / 0.1), transparent 42%),
-      linear-gradient(
-        145deg,
-        rgb(var(--color-bg-elevated) / 0.98),
-        rgb(var(--color-surface) / 0.82)
-      );
-    box-shadow:
-      inset 0 1px 0 rgb(var(--color-text) / 0.08),
-      0 12px 28px rgb(var(--color-shadow) / 0.34),
-      0 0 0 4px rgb(var(--brand-gold) / 0.055);
+    border: 1px solid rgb(var(--color-border) / 0.52);
+    background: rgb(var(--color-bg-elevated) / 0.72);
+    box-shadow: none;
     color: rgb(var(--brand-gold));
   }
 
@@ -631,7 +588,7 @@ html[data-app-surface='welcome'] body::after {
     position: absolute;
     inset: 0.35rem;
     border-radius: 0.7rem;
-    border: 1px solid rgb(var(--brand-gold) / 0.14);
+    border: 1px solid rgb(var(--color-border) / 0.18);
     pointer-events: none;
   }
 
@@ -672,7 +629,7 @@ html[data-app-surface='welcome'] body::after {
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgb(var(--brand-gold) / 0.86);
+    color: rgb(var(--color-accent) / 0.74);
   }
 
   .bo-flagship-surface {
@@ -877,6 +834,11 @@ html[data-app-surface='welcome'] body::after {
     border: none;
     border-radius: 0;
     box-shadow: none;
+  }
+
+  .bo-chat-scroll-anchor {
+    height: max(12.5rem, calc(11.25rem + env(safe-area-inset-bottom, 0px)));
+    scroll-margin-bottom: max(12.5rem, calc(11.25rem + env(safe-area-inset-bottom, 0px)));
   }
 
   /**
@@ -1248,9 +1210,9 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-theme-seg__btn--active {
-    background: rgb(var(--color-surface-active) / 0.85);
+    background: rgb(var(--color-surface-active) / 0.56);
     color: rgb(var(--color-text) / 1);
-    box-shadow: inset 0 1px 0 rgb(var(--color-text) / 0.06);
+    box-shadow: none;
   }
 
   .bo-theme-seg--header {
@@ -3355,6 +3317,184 @@ html[data-app-surface='welcome'] body::after {
     color: rgb(var(--color-text));
     letter-spacing: 0;
     text-transform: none;
+  }
+
+  .bo-system-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 650;
+    line-height: 1.1;
+    color: rgb(var(--color-text-soft));
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+
+  .bo-ops-panel {
+    border-radius: 1rem;
+    border: 1px solid rgb(var(--color-border) / 0.42);
+    background:
+      linear-gradient(180deg, rgb(var(--color-accent) / 0.035), transparent 4.5rem),
+      rgb(var(--color-bg-elevated) / 0.66);
+    box-shadow: none;
+  }
+
+  .bo-ops-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgb(var(--color-border) / 0.34);
+    background: rgb(var(--color-bg-subtle) / 0.42);
+    padding: 0.75rem;
+    transition:
+      border-color var(--duration-base) var(--ease-liquid-out),
+      background var(--duration-base) var(--ease-liquid-out),
+      transform var(--duration-fast) var(--ease-liquid-out);
+  }
+
+  .bo-ops-row:hover {
+    border-color: rgb(var(--color-primary) / 0.42);
+    background: rgb(var(--color-surface) / 0.58);
+  }
+
+  .bo-ops-row:active {
+    transform: translateY(1px);
+  }
+
+  .bo-plan-plane {
+    display: grid;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .bo-plan-plane {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+  }
+
+  .bo-plan-plane > * {
+    min-width: 0;
+  }
+
+  .bo-plan-flat-section {
+    scroll-margin-top: 7rem;
+    padding: 0;
+  }
+
+  .bo-plan-scope-strip {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .bo-plan-scope-strip {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .bo-plan-scope-item {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgb(var(--color-border) / 0.32);
+    background: rgb(var(--color-bg-subtle) / 0.34);
+    padding: 0.65rem 0.7rem;
+  }
+
+  .bo-ops-disclosure {
+    overflow: clip;
+    border-radius: 0.9rem;
+    border: 1px solid rgb(var(--color-border) / 0.34);
+    background: rgb(var(--color-bg-subtle) / 0.42);
+    transition:
+      border-color var(--duration-base) var(--ease-liquid-out),
+      background var(--duration-base) var(--ease-liquid-out);
+  }
+
+  .bo-ops-disclosure[open] {
+    border-color: rgb(var(--color-primary) / 0.4);
+    background: rgb(var(--color-surface) / 0.58);
+  }
+
+  .bo-ops-disclosure > summary {
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .bo-ops-disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .bo-terminal-meta {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 9999px;
+    border: 1px solid rgb(var(--color-border) / 0.32);
+    background: rgb(var(--color-bg-subtle) / 0.5);
+    padding: 0.28rem 0.55rem;
+    font-family: var(--font-terminal);
+    font-size: 0.68rem;
+    line-height: 1.15;
+    color: rgb(var(--color-text-soft));
+  }
+
+  .bo-terminal-meta::before {
+    content: '>';
+    color: rgb(var(--color-accent));
+  }
+
+  .bo-streaming-text {
+    min-height: 1.45em;
+  }
+
+  .bo-stream-caret {
+    display: inline-block;
+    width: 0.5ch;
+    height: 1em;
+    margin-left: 0.12rem;
+    border-radius: 9999px;
+    background: rgb(var(--color-accent) / 0.82);
+    vertical-align: -0.12em;
+    animation: bo-stream-caret-pulse 900ms steps(2, end) infinite;
+  }
+
+  @keyframes bo-stream-caret-pulse {
+    0%,
+    45% {
+      opacity: 1;
+    }
+    46%,
+    100% {
+      opacity: 0.2;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bo-stream-caret {
+      animation: none;
+    }
+  }
+
+  .bo-action-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    opacity: 0.78;
+    transition: opacity var(--duration-base) var(--ease-liquid-out);
+  }
+
+  .bo-action-strip:hover,
+  .bo-action-strip:focus-within {
+    opacity: 1;
   }
 
   /* Tonal icon chip — small rounded square icon wrapper used inside stat cards, metric tiles,

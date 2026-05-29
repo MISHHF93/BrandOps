@@ -105,7 +105,7 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toContain('MembershipGate');
   });
 
-  it('uses a two-tab dock plus palette destinations for deeper panels', () => {
+  it('uses a two-tab dock with normalized pages inside Plan', () => {
     expect(mobileApp).toContain('<MobileShellNav');
 
     const tabConfig = read('src/pages/mobile/mobileTabConfig.ts');
@@ -117,7 +117,9 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(tabConfig).toContain("id: 'workspace'");
 
     expect(tabConfig).toContain("label: 'Plan'");
-    expect(tabConfig).toContain("'operate'");
+    expect(tabConfig).not.toContain("dockLabel: 'Activity'");
+    expect(tabConfig).not.toContain("dockLabel: 'Sources'");
+    expect(tabConfig).not.toContain("dockLabel: 'Setup'");
 
     expect(tabConfig).toContain('COMMAND_PALETTE_NAV_TARGETS');
 
@@ -146,6 +148,20 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).not.toContain('(Auto-run)');
   });
 
+  it('keeps hello prompts as a local one-paragraph Ask My Twin generation check', () => {
+    expect(mobileApp).toContain('const HELLO_ASK_RESPONSE');
+    expect(mobileApp).toContain('function isHelloAskPrompt');
+    expect(mobileApp).toMatch(/isHelloAskPrompt\(question\)[\s\S]*?text: HELLO_ASK_RESPONSE/);
+    expect(mobileApp).toContain('your AI operating partner inside this workspace');
+
+    const chatView = read('src/pages/mobile/MobileChatView.tsx');
+    expect(chatView).toContain('function StreamingAssistantText');
+    expect(chatView).toContain('generating text...');
+    expect(chatView).toContain('bo-stream-caret');
+    expect(chatView).toContain('onProgress={requestTranscriptFollow}');
+    expect(chatView).toContain('bo-chat-scroll-anchor');
+  });
+
   it('embeds a dismissible Getting started card on the Plan (workspace) tab', () => {
     expect(mobileApp).toMatch(/activeTab === 'workspace'[\s\S]*FirstRunJourneyCard/);
   });
@@ -156,6 +172,20 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(workspaceJsx).not.toContain('onOpenAssistant');
 
     expect(workspaceJsx).toContain('onOpenIntegrations');
+  });
+
+  it('renders normalized Plan page navigation for pages inside Plan', () => {
+    expect(mobileApp).toContain('<PlanSurfaceNav');
+
+    const shell = read('src/pages/mobile/mobileShellQuery.ts');
+    expect(shell).toContain("return tab === 'chat' ? 'chat' : 'workspace';");
+    expect(shell).toContain('**Activity**, **Sources**, and **Setup** are normalized pages inside Plan');
+
+    const nav = read('src/pages/mobile/PlanSurfaceNav.tsx');
+    expect(nav).toContain('aria-label="Plan pages"');
+    expect(nav).toContain("label: 'Activity'");
+    expect(nav).toContain("label: 'Sources'");
+    expect(nav).toContain("label: 'Setup'");
   });
 
   it('does not render Getting started on Today-only branch', () => {

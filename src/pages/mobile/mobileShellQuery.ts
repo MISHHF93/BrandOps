@@ -7,12 +7,12 @@ import {
 /**
  * Full-screen shell tabs (URL-synced `?section=`).
  *
- * **Product model — Ask | Plan (two dock cells)** — see `MOBILE_SHELL_NAV_TABS` in `mobileTabConfig.ts`:
+ * **Product model — Ask | Plan** — see `MOBILE_SHELL_NAV_TABS` in `mobileTabConfig.ts`:
  * - **Ask** → internal id `chat` → Assistant / command + hosted Ask.
- * - **Plan** → dock highlights internal id `workspace`; **Plan strip** then selects
- *   `workspace` (Overview hub), `daily` (Today), `integrations`, or `settings`.
+ * - **Plan** → internal id `workspace` → operational feed.
+ * - **Activity**, **Sources**, and **Setup** are normalized pages inside Plan.
  *
- * Internal name `workspace` is the Plan overview tab id (queue + Pulse strip), not “workspace app.”
+ * Internal name `workspace` is the Plan feed tab id, not “workspace app.”
  */
 export type MobileShellTabId = 'workspace' | 'chat' | 'daily' | 'integrations' | 'settings';
 
@@ -23,7 +23,7 @@ export type MobileShellTabId = 'workspace' | 'chat' | 'daily' | 'integrations' |
 export const SETTINGS_RESUME_PHASE_SECTION_ID = 'settings-resume-neural-phase';
 
 /**
- * Bottom dock highlight: everything except **Ask** (`chat`) rolls up under the **Plan** dock cell (`workspace`).
+ * Bottom dock highlight: everything except **Ask** (`chat`) rolls up under **Plan** (`workspace`).
  */
 export function dockTabForShellTab(tab: MobileShellTabId): 'chat' | 'workspace' {
   return tab === 'chat' ? 'chat' : 'workspace';

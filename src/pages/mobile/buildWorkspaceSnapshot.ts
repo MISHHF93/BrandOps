@@ -9,6 +9,7 @@ import type {
   DigitalTwin,
   FocusKpiSelfCheck,
   IntegrationSourceKind,
+  Plan,
   SchedulerTask,
   SchedulerTaskStatus
 } from '../../types/domain';
@@ -105,6 +106,7 @@ import {
   buildExpertOperatorIntegrationReadout,
   type ExpertOperatorIntegrationReadout
 } from '../../services/ai/expertOperatorIntegration';
+import { PLAN_PRESET_LABELS } from '../../services/plan/askPlanConversion';
 
 function formatAiOperatorMode(mode: AiOperatorMode): string {
   const labels: Record<AiOperatorMode, string> = {
@@ -475,6 +477,8 @@ export interface MobileWorkspaceSnapshot {
   planPendingReviewPeek: PlanPendingOperatorReviewPeek[];
   /** Receipts explain what happened, why it happened, and what data was used. */
   planExecutionReceipts: PlanExecutionReceipt[];
+  /** First-class saved PLAN records converted from Ask My Twin. */
+  convertedAskPlans: Plan[];
 }
 
 /** Fields required by Today cockpit sections; keeps props in sync with {@link MobileWorkspaceSnapshot}. */
@@ -604,6 +608,30 @@ function buildPlanExecutionReceipts(
   expertReceipts: ExpertOperatorIntegrationReadout['receipts']
 ): PlanExecutionReceipt[] {
   const receipts: PlanExecutionReceipt[] = [...buildExpertPlanReceipts(expertReceipts)];
+
+  for (const receipt of workspace.planWorkspace?.receipts ?? []) {
+    const plan = workspace.planWorkspace?.plans.find((item) => item.id === receipt.planId);
+    receipts.push({
+      id: `receipt-${receipt.id}`,
+      action: `Converted from Ask: ${PLAN_PRESET_LABELS[receipt.planType]}`,
+      reasoningSummary:
+        receipt.summary ||
+        `Ask response ${receipt.sourceMessageId} became a structured PLAN draft.`,
+      sourceFactsUsed: plan?.source.verifiedFactsUsed.length
+        ? plan.source.verifiedFactsUsed
+        : [`source message: ${receipt.sourceMessageId}`],
+      generatedOutputs: receipt.generatedSteps,
+      approvals: plan?.requiredApprovals.length
+        ? plan.requiredApprovals
+        : ['External actions require explicit approval before execution.'],
+      startedAt: receipt.timestamp,
+      executionStatus: plan?.status ?? 'draft',
+      warningsErrors: plan?.missingInputs.length
+        ? plan.missingInputs.map((item) => `Missing input: ${item}`)
+        : [],
+      sourceLabel: 'Created from Ask My Twin'
+    });
+  }
 
   for (const run of buildRecentAiPipelineRuns(workspace)) {
     const stepDetails = run.steps
@@ -912,6 +940,9 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     planPendingReviewCount: countPendingOperatorReviews(workspace.operatorTraces?.entries),
     planPendingReviewPeek: buildPendingReviewPeek(workspace),
     planExecutionReceipts: buildPlanExecutionReceipts(workspace, expertOperator.receipts),
+    convertedAskPlans: [...(workspace.planWorkspace?.plans ?? [])].sort(
+      (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
+    ),
     crossPlatformOperationalTimeline: buildCrossPlatformOperationalTimeline(workspace),
     humanTrustLayer: buildHumanTrustLayer(workspace),
     ...cockpitExtras

@@ -857,6 +857,134 @@ export interface OperatorTracesState {
   entries: OperatorTraceEntry[];
 }
 
+export type PlanPreset =
+  | 'outreach-plan'
+  | 'content-plan'
+  | 'positioning-plan'
+  | 'buyer-persona-plan'
+  | 'opportunity-analysis-plan'
+  | 'workflow-plan'
+  | 'resume-profile-improvement-plan'
+  | 'integration-setup-plan'
+  | 'weekly-execution-plan'
+  | 'custom-plan';
+
+export type PlanStepStatus = 'todo' | 'blocked' | 'ready' | 'approved' | 'done' | 'failed';
+
+export type SavedPlanStatus = 'draft' | 'active' | 'pending-approval' | 'opportunity';
+
+export interface PlanSourceMetadata {
+  sourceSurface: 'ask-my-twin';
+  originalUserMessage: string;
+  aiResponse: string;
+  activeTwinId: string | null;
+  activeTwinName?: string;
+  professionContext: string;
+  verifiedFactsUsed: string[];
+  unverifiedMissingFacts: string[];
+  timestamp: string;
+  conversationId: string;
+  messageId: string;
+}
+
+export interface PlanStep {
+  id: string;
+  title: string;
+  description: string;
+  owner: string;
+  platform?: string;
+  requiredInput: string;
+  approvalRequired: boolean;
+  status: PlanStepStatus;
+}
+
+export interface PlanTimelineItem {
+  id: string;
+  title: string;
+  description: string;
+  timing: string;
+}
+
+export interface PlanOutputAsset {
+  id: string;
+  title: string;
+  description: string;
+  platform?: string;
+  approvalRequired: boolean;
+}
+
+export interface PlanRisk {
+  id: string;
+  title: string;
+  mitigation: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface PlanNextAction {
+  id: string;
+  label: string;
+  approvalRequired: boolean;
+  status: PlanStepStatus;
+}
+
+export interface PlanThoughtTree {
+  originalQuestion: string;
+  insight: string;
+  planObjective: string;
+  branchesOptions: string[];
+  chosenPath: string;
+  steps: string[];
+  approvals: string[];
+  risks: string[];
+}
+
+export interface PlanDraft {
+  id: string;
+  title: string;
+  summary: string;
+  objective: string;
+  planType: PlanPreset;
+  confidenceScore: number;
+  sourceResponseId: string;
+  assumptions: string[];
+  missingInputs: string[];
+  requiredApprovals: string[];
+  steps: PlanStep[];
+  timeline: PlanTimelineItem[];
+  outputsAssets: PlanOutputAsset[];
+  risks: PlanRisk[];
+  nextActions: PlanNextAction[];
+  status: 'draft';
+  source: PlanSourceMetadata;
+  estimatedEffort: string;
+  expectedOutput: string;
+  thoughtTree?: PlanThoughtTree;
+}
+
+export interface Plan extends Omit<PlanDraft, 'status'> {
+  status: SavedPlanStatus;
+  savedAt: string;
+  receiptId: string;
+}
+
+export interface PlanReceipt {
+  id: string;
+  planId: string;
+  convertedFrom: 'Ask';
+  planType: PlanPreset;
+  sourceMessageId: string;
+  generatedSteps: string[];
+  userAction: 'save-plan' | 'regenerate-preview' | 'cancel-preview';
+  timestamp: string;
+  summary: string;
+}
+
+export interface PlanWorkspaceState {
+  plans: Plan[];
+  receipts: PlanReceipt[];
+  updatedAt: string;
+}
+
 /** Vector snapshot for a content library item (hosted embedding model). Kept small via normalization caps. */
 export interface ContentItemEmbeddingRecord {
   id: string;
@@ -1001,4 +1129,6 @@ export interface BrandOpsData {
   digitalTwins?: DigitalTwinState;
   /** Consent-gated identity learning signals derived from local platform metadata/summaries. */
   connectedIdentityEngine?: ConnectedIdentityEngineState;
+  /** First-class PLAN workspace records converted from Ask and other structured workflows. */
+  planWorkspace?: PlanWorkspaceState;
 }

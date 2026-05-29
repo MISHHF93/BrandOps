@@ -455,7 +455,7 @@ export function SettingsResumeNeuralPhasePanel({
       setDraft('');
       setReview(null);
       setBanner({
-        msg: 'Digital twin generated and BrandOps profile artifacts updated. Review the Twin Dashboard below.',
+        msg: 'Digital twin generated and BrandOps profile artifacts updated. Review Twin below.',
         tone: 'success'
       });
     } catch {
@@ -695,8 +695,8 @@ export function SettingsTwinDashboard({
   return (
     <MobileTabSection
       id="settings-digital-twin-dashboard"
-      title="Twin Dashboard"
-      description="Review the active AI digital twin, confidence, missing information, and safe action studio."
+      title="Twin"
+      description="Review the active AI digital twin, confidence, missing information, and safe action controls."
       descriptionVisibility="sr-only"
     >
       <div className="mt-2 grid gap-3">
@@ -746,7 +746,7 @@ export function SettingsTwinDashboard({
               <div className="min-w-0 flex-1">
                 <p className="text-label font-semibold text-text">AI Core continuity</p>
                 <p className="mt-1 text-fine leading-snug text-textMuted">
-                  Twin actions, ASK outputs, PLAN conversions, and batch runs resolve into the same
+                  Twin actions, Ask outputs, Plan conversions, and batch runs resolve into the same
                   BrandOps AI Core artifact ledger.
                 </p>
               </div>

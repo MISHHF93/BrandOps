@@ -81,7 +81,7 @@ const approvalSnapshot = () => {
 };
 
 describe('Mobile tab surfaces (SSR integration)', () => {
-  it('Plan hub: renders the flat command board landmarks', () => {
+  it('Plan hub: renders the unified operational stream', () => {
     const html = renderToString(
       React.createElement(MobileWorkspaceHubView, {
         snapshot: buildWorkspaceSnapshot(cloneDemoSampleData()),
@@ -101,36 +101,27 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Plan"');
-    expect(html).toContain('Operational Command Board');
+    expect(html).toContain('AI Chief of Staff briefing stream');
+    expect(html).toContain('What needs attention now?');
     expect(html).toContain('Twin Status');
-    expect(html).toContain('Recommended Actions');
     expect(html).toContain('Pending Approvals');
     expect(html).toContain('Opportunities');
     expect(html).toContain('Active Plans');
-    expect(html).toContain('Daily Operating Loop');
-    expect(html).toContain('Workspace Health');
-    expect(html).toContain('Health categories');
-    expect(html).toContain('AI Chief of Staff');
-    expect(html).toContain('Strategic gaps');
-    expect(html).toContain('End-of-day reflection');
-    expect(html).toContain('Relationship Memory');
-    expect(html).toContain('Operational Intelligence Core');
-    expect(html).toContain('Saved insights from Ask My Twin');
-    expect(html).toContain('Plan owns the operation');
-    expect(html).toContain('Twin, DNA, and memory');
-    expect(html).toContain('Sources and integrations');
-    expect(html).toContain('Activity and receipts');
-    expect(html).toContain('Active plans');
-    expect(html).toContain('Pending approvals');
-    expect(html).toContain('Recommended Actions');
-    expect(html).toContain('Opportunities');
-    expect(html).toContain('Operational Timeline');
-    expect(html).toContain('Soonest queue');
-    expect(html).toContain('Recent receipts');
+    expect(html).toContain('aria-label="Plan feed focus"');
+    expect(html).toContain('What should I do?');
+    expect(html).toContain('>All<');
+    expect(html).toContain('>Active<');
+    expect(html).toContain('>Recent<');
+    expect(html).toContain('Showing ');
+    expect(html).toContain('Start here');
+    expect(html).toContain('Recommended next move');
+    expect(html).toContain('Active plan');
+    expect(html).toContain('Recent receipt');
     expect(html).toContain('Safety rule');
-    expect(html).toContain('PlanCard');
-    expect(html).toContain('RecommendationCard');
-    expect(html).toContain('TimelineCard');
+    expect(html).toContain('Details');
+    expect(html).toContain('Timeline');
+    expect(html).toContain('Approvals');
+    expect(html).toContain('Receipts');
     expect(html).toContain('Workflow Plan');
     expect(html).toContain('Outreach Plan');
     expect(html).toContain('Content Calendar');
@@ -138,14 +129,13 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Approval Flow');
     expect(html).toContain('Preview');
     expect(html).toContain('Approve');
-    expect(html).toContain('Edit');
     expect(html).toContain('Export');
-    expect(html).toContain('Open full Today');
     expect(html).toContain('>Run<');
-    expect(html).toContain('Account &amp; billing');
     expect(html).toContain('Membership active');
     expect(html).toContain('operator@fixture.test');
     expect(html).not.toContain('Workstreams');
+    expect(html).not.toContain('Command center');
+    expect(html).not.toContain('Workspace Health');
   });
 
   it('Plan hub: setup hint when profile placeholders remain (Getting started checklist dismissed)', () => {
@@ -168,7 +158,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('Add your offer, voice, and focus metric');
-    expect(html).toContain('Set up profile');
+    expect(html).toContain('Set up');
   });
 
   it('Plan hub: no setup hint on personalized demo when profile is complete', () => {
@@ -231,8 +221,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
 
     expect(html).toContain('Converted Execution Plan');
     expect(html).toContain('Converted from ASK');
-    expect(html).toContain('What this is');
-    expect(html).toContain('Next step');
+    expect(html).toContain('Details');
+    expect(html).toContain('Approvals');
   });
 
   it('Plan hub: human approval queue exposes trust controls for pending outputs', () => {
@@ -284,7 +274,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
 
-    expect(html).toContain('Recent receipts');
+    expect(html).toContain('Recent receipt');
     expect(html).toContain('pending approval');
     expect(html).toContain('Explain');
     expect(html).toContain('Export');
@@ -317,15 +307,14 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('aria-label="Ask My Twin conversation"');
     expect(html).toContain('Ask My Twin');
     expect(html).toContain('Conversation only');
-    expect(html).toContain('Try asking');
     expect(html).toContain('id="assistant-thread"');
     expect(html).toContain('Ask My Twin conversation timeline');
-    expect(html).toContain('Conversation');
-    expect(html).toContain('Think with your twin');
     expect(html).toContain('Save');
     expect(html).toContain('Pin');
     expect(html).toContain('Copy');
-    expect(html).toContain('bo-assistant-hero');
+    expect(html).toContain('bo-ops-panel');
+    expect(html).not.toContain('Try asking');
+    expect(html).not.toContain('Think with your twin');
     expect(html).not.toContain('Execution shortcuts');
     expect(html).not.toContain('Operational Intelligence Core recommendation');
     expect(html).not.toContain('Workspace command result should stay out of Ask My Twin.');
@@ -399,10 +388,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
 
-    expect(html).toContain('Digital twin context');
+    expect(html).toContain('Maya Rivera is guiding PLAN');
     expect(html).toContain('Maya Rivera');
-    expect(html).toContain('Improve twin');
-    expect(html).toContain('Create outreach plan');
+    expect(html).toContain('Review gaps');
+    expect(html).toContain('Outreach Plan');
   });
 
   it('Getting started card: Plan onboarding landmarks', () => {
@@ -417,17 +406,11 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Start here — first session"');
-    expect(html).toContain('ASK. PLAN. OPERATE.');
-    expect(html).toContain('Your AI digital twin understands your profession');
-    expect(html).toContain('not another chatbot');
-    expect(html).toContain('connects platform context');
-    expect(html).toContain('Create digital twin');
-    expect(html).toContain('ASK your twin');
-    expect(html).toContain('Convert ideas into PLANs');
-    expect(html).toContain('OPERATE with control');
-    expect(html).toContain('Track operational execution');
-    expect(html).toContain('Review approval queue');
-    expect(html).toContain('View receipts');
+    expect(html).toContain('Ask My Twin. Plan.');
+    expect(html).toContain('Ask is for thinking');
+    expect(html).toContain('Plan is the flat operating surface');
+    expect(html).toContain('Create twin');
+    expect(html).toContain('Ask twin');
     expect(html).toContain('Dismiss getting started');
   });
 
@@ -680,7 +663,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
 
-    expect(html).toContain('Twin Dashboard');
+    expect(html).toContain('Twin');
     expect(html).toContain('Maya Rivera');
     expect(html).toContain('Twin Action Studio');
     expect(html).toContain('Captured into BrandOps');

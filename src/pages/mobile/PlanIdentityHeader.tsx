@@ -84,12 +84,66 @@ export function PlanIdentityHeader({
     .slice(0, 5);
   const confidence = activeDigitalTwin?.confidenceScore;
 
+  if (variant === 'sheet') {
+    return (
+      <section className="bo-ops-panel px-3 py-2.5" aria-labelledby="plan-identity-heading">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-accent/30 bg-accentSoft/18 text-fine font-bold uppercase tracking-wide text-accent"
+              aria-hidden
+            >
+              {initials}
+            </span>
+            <div className="min-w-0">
+              <p className="bo-system-label">Digital twin context</p>
+              <h2 id="plan-identity-heading" className="truncate text-label font-semibold leading-tight text-text">
+                {activeDigitalTwin?.displayName || operatorName.trim() || 'Workspace operator'}
+              </h2>
+              <p className="mt-0.5 line-clamp-1 text-fine leading-snug text-textMuted">
+                {profession}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="bo-terminal-meta">
+              twin {typeof confidence === 'number' ? `${confidence}%` : 'setup'} · {activePlanCount}{' '}
+              plans · {approvalCount} approvals
+            </span>
+            <span
+              className={clsx(
+                'rounded-full border px-2 py-1 text-fine font-semibold',
+                mem.tone === 'success' && 'border-success/40 bg-successSoft/12 text-success',
+                mem.tone === 'warning' && 'border-warning/40 bg-warningSoft/12 text-warning',
+                mem.tone === 'muted' && 'border-border/40 bg-bgSubtle text-textSoft'
+              )}
+            >
+              {mem.label}
+            </span>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              title={accountLine}
+              className={clsx(
+                'inline-flex shrink-0 items-center gap-1 rounded-lg border border-border/45 bg-bgSubtle/55 px-2 py-1 text-fine font-semibold text-text',
+                btnFocus
+              )}
+            >
+              Account & billing
+              <ChevronRight className="h-3.5 w-3.5 opacity-70" aria-hidden />
+            </button>
+          </div>
+        </div>
+        <p className="sr-only">{accountLine}</p>
+      </section>
+    );
+  }
+
   return (
     <section
       className={clsx(
         'flex flex-col gap-3',
-        variant === 'card' && 'rounded-2xl border border-border/45 bg-surface/55 px-4 py-4 sm:px-5',
-        variant === 'sheet' && 'px-0 py-0'
+        variant === 'card' && 'rounded-2xl border border-border/45 bg-surface/55 px-4 py-4 sm:px-5'
       )}
       aria-labelledby="plan-identity-heading"
     >

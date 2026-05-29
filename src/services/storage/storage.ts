@@ -43,7 +43,18 @@ import {
   OperatingProfileState,
   TwinFactStatus,
   TwinSupportedActionType,
-  IntegrationSourceKind
+  IntegrationSourceKind,
+  Plan,
+  PlanNextAction,
+  PlanOutputAsset,
+  PlanPreset,
+  PlanReceipt,
+  PlanRisk,
+  PlanStep,
+  PlanStepStatus,
+  PlanTimelineItem,
+  PlanWorkspaceState,
+  SavedPlanStatus
 } from '../../types/domain';
 import { SUPPORTED_TWIN_ACTIONS } from '../digitalTwin/digitalTwin';
 import { ALL_INTEGRATION_SOURCE_KINDS } from '../../shared/integrations/integrationSourceCatalog';
@@ -1641,6 +1652,251 @@ const normalizeOperatorTraces = (value: unknown): NonNullable<BrandOpsData['oper
   return { entries: entries.slice(0, MAX_OPERATOR_TRACE_ENTRIES) };
 };
 
+const MAX_PLAN_WORKSPACE_PLANS = 40;
+const MAX_PLAN_WORKSPACE_RECEIPTS = 80;
+const PLAN_PRESETS: PlanPreset[] = [
+  'outreach-plan',
+  'content-plan',
+  'positioning-plan',
+  'buyer-persona-plan',
+  'opportunity-analysis-plan',
+  'workflow-plan',
+  'resume-profile-improvement-plan',
+  'integration-setup-plan',
+  'weekly-execution-plan',
+  'custom-plan'
+];
+const PLAN_STEP_STATUSES: PlanStepStatus[] = [
+  'todo',
+  'blocked',
+  'ready',
+  'approved',
+  'done',
+  'failed'
+];
+const SAVED_PLAN_STATUSES: SavedPlanStatus[] = [
+  'draft',
+  'active',
+  'pending-approval',
+  'opportunity'
+];
+
+const normalizePlanString = (value: unknown, fallback: string, max = 500): string => {
+  const clean = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+  return (clean || fallback).slice(0, max);
+};
+
+const normalizePlanStringArray = (value: unknown, max = 8): string[] =>
+  Array.isArray(value)
+    ? value
+        .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+        .map((item) => item.replace(/\s+/g, ' ').trim().slice(0, 320))
+        .slice(0, max)
+    : [];
+
+const normalizePlanStep = (value: unknown, index: number): PlanStep | null => {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Record<string, unknown>;
+  const status = PLAN_STEP_STATUSES.includes(item.status as PlanStepStatus)
+    ? (item.status as PlanStepStatus)
+    : 'todo';
+  return {
+    id: normalizePlanString(item.id, `step-${index + 1}`, 120),
+    title: normalizePlanString(item.title, `Step ${index + 1}`, 160),
+    description: normalizePlanString(item.description, 'Review and complete this step.', 700),
+    owner: normalizePlanString(item.owner, 'User', 120),
+    ...(typeof item.platform === 'string' && item.platform.trim()
+      ? { platform: item.platform.trim().slice(0, 80) }
+      : {}),
+    requiredInput: normalizePlanString(item.requiredInput, 'Review required input.', 300),
+    approvalRequired: Boolean(item.approvalRequired),
+    status
+  };
+};
+
+const normalizePlanTimelineItem = (value: unknown, index: number): PlanTimelineItem | null => {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Record<string, unknown>;
+  return {
+    id: normalizePlanString(item.id, `timeline-${index + 1}`, 120),
+    title: normalizePlanString(item.title, `Timeline ${index + 1}`, 160),
+    description: normalizePlanString(item.description, 'Timeline checkpoint.', 500),
+    timing: normalizePlanString(item.timing, 'TBD', 120)
+  };
+};
+
+const normalizePlanOutputAsset = (value: unknown, index: number): PlanOutputAsset | null => {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Record<string, unknown>;
+  return {
+    id: normalizePlanString(item.id, `asset-${index + 1}`, 120),
+    title: normalizePlanString(item.title, `Asset ${index + 1}`, 160),
+    description: normalizePlanString(item.description, 'Draft output asset.', 500),
+    ...(typeof item.platform === 'string' && item.platform.trim()
+      ? { platform: item.platform.trim().slice(0, 80) }
+      : {}),
+    approvalRequired: Boolean(item.approvalRequired)
+  };
+};
+
+const normalizePlanRisk = (value: unknown, index: number): PlanRisk | null => {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Record<string, unknown>;
+  const severity =
+    item.severity === 'low' || item.severity === 'medium' || item.severity === 'high'
+      ? item.severity
+      : 'medium';
+  return {
+    id: normalizePlanString(item.id, `risk-${index + 1}`, 120),
+    title: normalizePlanString(item.title, `Risk ${index + 1}`, 160),
+    mitigation: normalizePlanString(item.mitigation, 'Review before execution.', 500),
+    severity
+  };
+};
+
+const normalizePlanNextAction = (value: unknown, index: number): PlanNextAction | null => {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Record<string, unknown>;
+  const status = PLAN_STEP_STATUSES.includes(item.status as PlanStepStatus)
+    ? (item.status as PlanStepStatus)
+    : 'todo';
+  return {
+    id: normalizePlanString(item.id, `next-${index + 1}`, 120),
+    label: normalizePlanString(item.label, `Next action ${index + 1}`, 180),
+    approvalRequired: Boolean(item.approvalRequired),
+    status
+  };
+};
+
+const normalizePlan = (value: unknown): Plan | null => {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Record<string, unknown>;
+  if (typeof item.id !== 'string' || typeof item.sourceResponseId !== 'string') return null;
+  const planType = PLAN_PRESETS.includes(item.planType as PlanPreset)
+    ? (item.planType as PlanPreset)
+    : 'custom-plan';
+  const status = SAVED_PLAN_STATUSES.includes(item.status as SavedPlanStatus)
+    ? (item.status as SavedPlanStatus)
+    : 'draft';
+  const sourceRaw =
+    item.source && typeof item.source === 'object' ? (item.source as Record<string, unknown>) : {};
+  const steps = Array.isArray(item.steps)
+    ? item.steps
+        .map((step, index) => normalizePlanStep(step, index))
+        .filter((step): step is PlanStep => Boolean(step))
+        .slice(0, 20)
+    : [];
+  if (steps.length === 0) return null;
+  return {
+    id: item.id.slice(0, 160),
+    title: normalizePlanString(item.title, 'Untitled plan', 180),
+    summary: normalizePlanString(item.summary, 'Converted from Ask My Twin.', 600),
+    objective: normalizePlanString(item.objective, 'Operationalize the selected Ask response.', 700),
+    planType,
+    confidenceScore: asNumberInRange(item.confidenceScore, 50, 0, 100),
+    sourceResponseId: item.sourceResponseId.slice(0, 160),
+    assumptions: normalizePlanStringArray(item.assumptions, 12),
+    missingInputs: normalizePlanStringArray(item.missingInputs, 12),
+    requiredApprovals: normalizePlanStringArray(item.requiredApprovals, 12),
+    steps,
+    timeline: Array.isArray(item.timeline)
+      ? item.timeline
+          .map((row, index) => normalizePlanTimelineItem(row, index))
+          .filter((row): row is PlanTimelineItem => Boolean(row))
+          .slice(0, 12)
+      : [],
+    outputsAssets: Array.isArray(item.outputsAssets)
+      ? item.outputsAssets
+          .map((row, index) => normalizePlanOutputAsset(row, index))
+          .filter((row): row is PlanOutputAsset => Boolean(row))
+          .slice(0, 12)
+      : [],
+    risks: Array.isArray(item.risks)
+      ? item.risks
+          .map((row, index) => normalizePlanRisk(row, index))
+          .filter((row): row is PlanRisk => Boolean(row))
+          .slice(0, 12)
+      : [],
+    nextActions: Array.isArray(item.nextActions)
+      ? item.nextActions
+          .map((row, index) => normalizePlanNextAction(row, index))
+          .filter((row): row is PlanNextAction => Boolean(row))
+          .slice(0, 12)
+      : [],
+    status,
+    source: {
+      sourceSurface: 'ask-my-twin',
+      originalUserMessage: normalizePlanString(sourceRaw.originalUserMessage, '', 1000),
+      aiResponse: normalizePlanString(sourceRaw.aiResponse, '', 1500),
+      activeTwinId: typeof sourceRaw.activeTwinId === 'string' ? sourceRaw.activeTwinId : null,
+      ...(typeof sourceRaw.activeTwinName === 'string' && sourceRaw.activeTwinName.trim()
+        ? { activeTwinName: sourceRaw.activeTwinName.trim().slice(0, 160) }
+        : {}),
+      professionContext: normalizePlanString(sourceRaw.professionContext, 'BrandOps workspace', 500),
+      verifiedFactsUsed: normalizePlanStringArray(sourceRaw.verifiedFactsUsed, 12),
+      unverifiedMissingFacts: normalizePlanStringArray(sourceRaw.unverifiedMissingFacts, 12),
+      timestamp: asIsoString(sourceRaw.timestamp, new Date().toISOString()),
+      conversationId: normalizePlanString(sourceRaw.conversationId, 'local-chat', 160),
+      messageId: normalizePlanString(sourceRaw.messageId, item.sourceResponseId, 160)
+    },
+    estimatedEffort: normalizePlanString(item.estimatedEffort, 'Needs review', 120),
+    expectedOutput: normalizePlanString(item.expectedOutput, 'Structured plan draft', 240),
+    ...(item.thoughtTree && typeof item.thoughtTree === 'object'
+      ? { thoughtTree: item.thoughtTree as Plan['thoughtTree'] }
+      : {}),
+    savedAt: asIsoString(item.savedAt, new Date().toISOString()),
+    receiptId: normalizePlanString(item.receiptId, `receipt-${item.id}`, 160)
+  };
+};
+
+const normalizePlanReceipt = (value: unknown): PlanReceipt | null => {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Record<string, unknown>;
+  if (typeof item.id !== 'string' || typeof item.planId !== 'string') return null;
+  const planType = PLAN_PRESETS.includes(item.planType as PlanPreset)
+    ? (item.planType as PlanPreset)
+    : 'custom-plan';
+  return {
+    id: item.id.slice(0, 160),
+    planId: item.planId.slice(0, 160),
+    convertedFrom: 'Ask',
+    planType,
+    sourceMessageId: normalizePlanString(item.sourceMessageId, '', 160),
+    generatedSteps: normalizePlanStringArray(item.generatedSteps, 20),
+    userAction:
+      item.userAction === 'regenerate-preview' || item.userAction === 'cancel-preview'
+        ? item.userAction
+        : 'save-plan',
+    timestamp: asIsoString(item.timestamp, new Date().toISOString()),
+    summary: normalizePlanString(item.summary, 'Converted from Ask My Twin.', 500)
+  };
+};
+
+const normalizePlanWorkspace = (value: unknown): PlanWorkspaceState => {
+  const nowIso = new Date().toISOString();
+  if (!value || typeof value !== 'object') {
+    return { plans: [], receipts: [], updatedAt: nowIso };
+  }
+  const raw = value as Record<string, unknown>;
+  const plans = Array.isArray(raw.plans)
+    ? raw.plans
+        .map(normalizePlan)
+        .filter((plan): plan is Plan => Boolean(plan))
+        .slice(0, MAX_PLAN_WORKSPACE_PLANS)
+    : [];
+  const receipts = Array.isArray(raw.receipts)
+    ? raw.receipts
+        .map(normalizePlanReceipt)
+        .filter((receipt): receipt is PlanReceipt => Boolean(receipt))
+        .slice(0, MAX_PLAN_WORKSPACE_RECEIPTS)
+    : [];
+  return {
+    plans,
+    receipts,
+    updatedAt: asIsoString(raw.updatedAt, nowIso)
+  };
+};
+
 const normalizeAiAssistantTraces = (
   value: unknown
 ): NonNullable<BrandOpsData['aiAssistantTraces']> => {
@@ -2068,6 +2324,7 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => {
       base.connectedIdentityEngine,
       Boolean(base.settings?.connectedIdentityLearningEnabled)
     ),
+    planWorkspace: normalizePlanWorkspace(base.planWorkspace),
     embeddingIndex: normalizeEmbeddingIndex(base.embeddingIndex),
     scheduler: normalizeSchedulerState(base.scheduler),
     seed: {

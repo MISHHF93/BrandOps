@@ -21,12 +21,12 @@ export function PlanSetupHint({
       aria-label="Workspace setup hint"
     >
       <p className="text-meta font-semibold leading-snug text-text">
-        Finish your AI operating system setup
+        Finish Plan setup
       </p>
       <p className="mt-1 text-fine leading-snug text-textSoft">
-        Create your digital twin in <span className="font-medium text-text">Settings</span>, ASK it
-        for strategy, convert outputs into PLANs, approve actions, and connect sources under{' '}
-        <span className="font-medium text-text">Integrations</span>. Use{' '}
+        Create your digital twin in <span className="font-medium text-text">Setup</span>, ask it
+        for strategy, convert outputs into plans, approve actions, and connect sources under{' '}
+        <span className="font-medium text-text">Sources</span>. Use{' '}
         <span className="whitespace-nowrap font-medium text-text">⌘K</span> /{' '}
         <span className="whitespace-nowrap font-medium text-text">Ctrl+K</span> for deeper commands.
       </p>
@@ -41,7 +41,7 @@ export function PlanSetupHint({
           )}
         >
           <Settings className="h-3 w-3 shrink-0 opacity-80" strokeWidth={2.25} aria-hidden />
-          Open Settings
+          Open Setup
         </button>
         <button
           type="button"
@@ -53,7 +53,7 @@ export function PlanSetupHint({
           )}
         >
           <PlugZap className="h-3 w-3 shrink-0 opacity-80" strokeWidth={2.25} aria-hidden />
-          Integrations
+          Sources
         </button>
         <button
           type="button"

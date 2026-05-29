@@ -149,7 +149,7 @@ export const ChatCommandBar = ({
           aria-live="polite"
         >
           {assistantChrome
-            ? 'Ask My Twin is reasoning with your twin context...'
+            ? '> reasoning with twin context...'
             : 'Applying your command on-device…'}
         </p>
       ) : null}
@@ -277,7 +277,7 @@ export const ChatCommandBar = ({
           onClick={() => fileInputRef.current?.click()}
           className={clsx(
             assistantChrome
-              ? 'inline-flex h-10 min-h-[40px] w-10 min-w-[40px] shrink-0 items-center justify-center rounded-full border border-border/55 text-textMuted hover:border-borderStrong hover:text-text'
+              ? 'inline-flex h-10 min-h-[40px] w-10 min-w-[40px] shrink-0 items-center justify-center rounded-full border border-border/35 text-textSoft opacity-70 hover:border-borderStrong hover:text-text hover:opacity-100'
               : 'inline-flex h-11 min-h-[44px] w-11 min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border/60 text-textMuted hover:border-borderStrong hover:text-text',
             'disabled:opacity-50',
             btn

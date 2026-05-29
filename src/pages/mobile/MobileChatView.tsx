@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { AlertCircle, BookmarkPlus, Bot, Copy, Pin, Sparkles, User } from 'lucide-react';
 import clsx from 'clsx';
@@ -29,6 +29,12 @@ export interface ChatMessage {
   orphanInlineMarkers?: string[];
   /** Compact provenance summary for this assistant turn (optional). */
   traceSummary?: AssistantAskTraceSummaryUI;
+  /** Saved PLAN bridge created from this Ask response. */
+  planConversion?: {
+    planId: string;
+    planTitle: string;
+    convertedAt: string;
+  };
 }
 
 export type AskPlanConversionKind =
@@ -45,6 +51,15 @@ export interface AskMemorySaveRequest {
   summary: string;
   details: string;
   sourceFacts: string[];
+}
+
+export interface AskPlanConversionRequest {
+  kind: AskPlanConversionKind;
+  askOutput: string;
+  messageId: string;
+  originalUserMessage: string;
+  verifiedFactsUsed: string[];
+  unverifiedMissingFacts: string[];
 }
 
 const ASK_MY_TWIN_STARTERS = [
@@ -86,10 +101,72 @@ function sourceFactsFromMessage(message: ChatMessage, activeDigitalTwin?: Digita
   return Array.from(new Set([...citationFacts, ...twinFacts])).slice(0, 5);
 }
 
+function missingFactsFromMessage(message: ChatMessage, activeDigitalTwin?: DigitalTwin | null): string[] {
+  const citationGaps = message.orphanInlineMarkers?.length
+    ? [`Unresolved citation markers: ${message.orphanInlineMarkers.join(', ')}`]
+    : [];
+  const twinGaps = activeDigitalTwin?.memory.missingInfo ?? [];
+  return Array.from(new Set([...citationGaps, ...twinGaps])).slice(0, 6);
+}
+
 function messageTitle(message: ChatMessage): string {
   if (message.role === 'user') return 'Ask My Twin question';
   if (message.resultKind === 'ask-result') return 'Ask My Twin response';
   return 'Conversation item';
+}
+
+function StreamingAssistantText({
+  text,
+  animate,
+  onProgress
+}: {
+  text: string;
+  animate: boolean;
+  onProgress?: () => void;
+}) {
+  const shouldAnimate =
+    animate &&
+    typeof window !== 'undefined' &&
+    !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const [visibleCount, setVisibleCount] = useState(() => (shouldAnimate ? 0 : text.length));
+
+  useEffect(() => {
+    if (!shouldAnimate) {
+      setVisibleCount(text.length);
+      return;
+    }
+
+    setVisibleCount(0);
+    let index = 0;
+    const timer = window.setInterval(() => {
+      index = Math.min(text.length, index + 3);
+      setVisibleCount(index);
+      if (index >= text.length) window.clearInterval(timer);
+    }, 18);
+
+    return () => window.clearInterval(timer);
+  }, [shouldAnimate, text]);
+
+  const visibleText = text.slice(0, visibleCount);
+  const isGenerating = visibleCount < text.length;
+
+  useEffect(() => {
+    if (!animate || visibleCount === 0) return;
+    onProgress?.();
+  }, [animate, onProgress, visibleCount]);
+
+  return (
+    <div className="space-y-2">
+      {isGenerating ? <span className="bo-terminal-meta">generating text...</span> : null}
+      <p
+        className="bo-streaming-text whitespace-pre-wrap break-words leading-relaxed"
+        aria-label={text}
+      >
+        {visibleText}
+        {isGenerating ? <span className="bo-stream-caret" aria-hidden /> : null}
+      </p>
+    </div>
+  );
 }
 
 export interface MobileChatViewProps {
@@ -103,7 +180,9 @@ export interface MobileChatViewProps {
   assistantRoutingCaption?: string;
   /** Active digital twin, if created from reviewed resume/profile data. */
   activeDigitalTwin?: DigitalTwin | null;
-  onConvertAskToPlan?: (kind: AskPlanConversionKind, askOutput: string, messageId: string) => void;
+  onConvertAskToPlan?: (request: AskPlanConversionRequest) => void;
+  convertingPlanMessageId?: string | null;
+  onOpenConvertedPlan?: (planId: string) => void;
   onRequestSaveToMemory?: (request: AskMemorySaveRequest) => void;
 }
 
@@ -121,10 +200,13 @@ export const MobileChatView = (props: MobileChatViewProps) => {
     assistantRoutingCaption,
     activeDigitalTwin,
     onConvertAskToPlan,
+    convertingPlanMessageId,
+    onOpenConvertedPlan,
     onRequestSaveToMemory
   } = props;
   const [pinnedItems, setPinnedItems] = useState<Set<string>>(() => new Set());
   const [savedItems, setSavedItems] = useState<Set<string>>(() => new Set());
+  const followScrollFrameRef = useRef<number | null>(null);
   const suggestedPrompts = useMemo(() => ASK_MY_TWIN_STARTERS, []);
   const conversationMessages = useMemo(
     () =>
@@ -133,6 +215,31 @@ export const MobileChatView = (props: MobileChatViewProps) => {
           message.resultKind !== 'command-result' && (message.sourceSurface ?? 'Chat') === 'Chat'
       ),
     [messages]
+  );
+  const hasConversation = conversationMessages.length > 0;
+  const latestAssistantMessageId = useMemo(
+    () => [...conversationMessages].reverse().find((message) => message.role === 'assistant')?.id,
+    [conversationMessages]
+  );
+
+  const requestTranscriptFollow = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    if (!transcriptEndRef?.current) return;
+    if (followScrollFrameRef.current !== null) return;
+
+    followScrollFrameRef.current = window.requestAnimationFrame(() => {
+      followScrollFrameRef.current = null;
+      transcriptEndRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' });
+    });
+  }, [transcriptEndRef]);
+
+  useEffect(
+    () => () => {
+      if (typeof window === 'undefined') return;
+      if (followScrollFrameRef.current === null) return;
+      window.cancelAnimationFrame(followScrollFrameRef.current);
+    },
+    []
   );
 
   const togglePin = (id: string) => {
@@ -156,8 +263,8 @@ export const MobileChatView = (props: MobileChatViewProps) => {
   };
 
   return (
-    <div aria-label="Ask My Twin conversation" className="bo-assistant-surface flex flex-col gap-3">
-      <header className="bo-assistant-hero bo-dos-hero px-3 py-3 sm:px-3.5 sm:py-3.5">
+    <div aria-label="Ask My Twin conversation" className="bo-assistant-surface flex flex-col gap-2.5">
+      <header className="bo-ops-panel px-3 py-3 sm:px-3.5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 text-text">
@@ -168,9 +275,8 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                 <h2 className="text-base font-semibold leading-tight tracking-tight text-text">
                   Ask My Twin
                 </h2>
-                <p className="mt-0.5 text-meta leading-snug text-textMuted">
-                  Conversation only. Ask questions, brainstorm, analyze, draft, and explore ideas with
-                  your digital twin.
+                <p className="mt-0.5 text-fine leading-snug text-textMuted">
+                  Conversation only. Think, draft, analyze, then convert strong outputs into Plan.
                 </p>
               </div>
             </div>
@@ -190,68 +296,61 @@ export const MobileChatView = (props: MobileChatViewProps) => {
           </div>
         </div>
 
-        <div className="mt-3">
-          <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
-            Try asking
-          </p>
-          <div className="bo-assistant-quick-strip mt-1.5">
-            {suggestedPrompts.map((prompt) => (
-              <button
-                key={prompt}
-                type="button"
-                onClick={() => onQuickCommand(prompt)}
-                className={clsx('bo-chat-starter-chip touch-manipulation', btnFocus)}
-              >
-                <span className="line-clamp-1">{prompt.replace(/^ask:\s*/i, '')}</span>
-              </button>
-            ))}
+        {!hasConversation ? (
+          <div className="mt-3">
+            <p className="bo-system-label">Try asking</p>
+            <div className="bo-assistant-quick-strip mt-1.5">
+              {suggestedPrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => onQuickCommand(prompt)}
+                  className={clsx('bo-chat-starter-chip touch-manipulation', btnFocus)}
+                >
+                  <span className="line-clamp-1">{prompt.replace(/^ask:\s*/i, '')}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
       </header>
 
       <section
         id="assistant-thread"
-        className="bo-assistant-thread-shell mx-3 min-w-0 scroll-mt-28 px-0 py-3 sm:mx-3.5 sm:py-3.5"
+        className="bo-assistant-thread-shell mx-3 min-w-0 scroll-mt-28 px-0 py-2.5 sm:mx-3.5 sm:py-3"
         aria-label="Ask My Twin conversation timeline"
       >
-        <div className="flex flex-wrap items-start justify-between gap-2 px-3 sm:px-3.5">
-          <div className="min-w-0">
-            <p className="bo-assistant-section-label">Conversation</p>
-            <h3 className="text-h3 text-text">Think with your twin</h3>
-            <p className="mt-1 text-meta leading-snug text-textMuted">
-              Keep exploration here. Save or pin useful answers, then convert strong outputs into PLAN
-              when they are ready to operate.
-            </p>
-          </div>
-        </div>
-
         <div
-          className="mt-3 flex flex-col gap-3 px-3 sm:px-3.5"
+          className="flex flex-col gap-3 px-3 sm:px-3.5"
           role="log"
           aria-relevant="additions"
           aria-live="polite"
           aria-atomic="false"
         >
-          {conversationMessages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border/60 bg-bgSubtle/55 px-3 py-12 text-center sm:px-4 sm:py-14">
+          {!hasConversation ? (
+            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border/45 bg-bgSubtle/45 px-3 py-9 text-center sm:px-4 sm:py-10">
               <span className="bo-assistant-empty-state-icon">
                 <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
               </span>
               <p className="text-sm font-semibold text-text">Start a conversation with your twin</p>
               <p className="max-w-[min(100%,22rem)] text-meta leading-relaxed text-textMuted">
-                Ask for positioning, buyer personas, content ideas, outreach drafts, opportunity
-                analysis, or strategic thinking. PLAN owns the operating workspace.
+                Ask for positioning, personas, content ideas, outreach drafts, opportunities, or
+                strategic thinking. Plan owns the operating workspace.
               </p>
             </div>
           ) : (
-            conversationMessages.map((message) => {
+            conversationMessages.map((message, index) => {
               const isPinned = pinnedItems.has(message.id);
               const isSaved = savedItems.has(message.id);
               const canConvert = message.role === 'assistant' && onConvertAskToPlan;
+              const priorUserMessage = [...conversationMessages.slice(0, index)]
+                .reverse()
+                .find((item) => item.role === 'user');
+              const isConverting = convertingPlanMessageId === message.id;
               return (
                 <article
                   key={message.id}
-                  className={clsx('flex gap-2.5 rounded-xl border border-transparent p-1.5', message.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
+                  className={clsx('group flex gap-2.5 rounded-xl border border-transparent p-1.5', message.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
                 >
                   <span
                     className={clsx(
@@ -285,12 +384,20 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                         </div>
                         {message.ok !== false ? (
                           <>
-                            <AssistantInlineCitationBody
-                              text={message.text}
-                              citations={message.citations ?? []}
-                              messageAnchorPrefix={message.id}
-                              btnFocus={btnFocus}
-                            />
+                            {message.citations?.length ? (
+                              <AssistantInlineCitationBody
+                                text={message.text}
+                                citations={message.citations}
+                                messageAnchorPrefix={message.id}
+                                btnFocus={btnFocus}
+                              />
+                            ) : (
+                              <StreamingAssistantText
+                                text={message.text}
+                                animate={message.id === latestAssistantMessageId}
+                                onProgress={requestTranscriptFollow}
+                              />
+                            )}
                             {message.orphanInlineMarkers?.length ? (
                               <p className="text-fine leading-snug text-warning" role="status">
                                 Unresolved citation markers:{' '}
@@ -299,19 +406,32 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                                 </span>
                               </p>
                             ) : null}
-                            {message.citations?.length ? (
-                              <AssistantEvidenceChips
-                                citations={message.citations}
-                                anchorPrefix={message.id}
-                                btnFocus={btnFocus}
-                              />
-                            ) : null}
-                            {message.traceSummary ? (
-                              <AssistantTraceSummary
-                                summary={message.traceSummary}
-                                orphanMarkerCount={message.orphanInlineMarkers?.length ?? 0}
-                                btnFocus={btnFocus}
-                              />
+                            {message.citations?.length || message.traceSummary ? (
+                              <details className="bo-ops-disclosure px-2.5 py-2">
+                                <summary className="flex flex-wrap items-center justify-between gap-2">
+                                  <span className="bo-terminal-meta">
+                                    evidence {message.citations?.length ?? 0} · trace{' '}
+                                    {message.traceSummary?.evidence_completeness ?? 'review'}
+                                  </span>
+                                  <span className="text-fine font-semibold text-textSoft">Details</span>
+                                </summary>
+                                <div className="mt-2 space-y-2">
+                                  {message.citations?.length ? (
+                                    <AssistantEvidenceChips
+                                      citations={message.citations}
+                                      anchorPrefix={message.id}
+                                      btnFocus={btnFocus}
+                                    />
+                                  ) : null}
+                                  {message.traceSummary ? (
+                                    <AssistantTraceSummary
+                                      summary={message.traceSummary}
+                                      orphanMarkerCount={message.orphanInlineMarkers?.length ?? 0}
+                                      btnFocus={btnFocus}
+                                    />
+                                  ) : null}
+                                </div>
+                              </details>
                             ) : null}
                           </>
                         ) : (
@@ -324,7 +444,7 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                       </div>
                     )}
 
-                    <div className={clsx('flex flex-wrap items-center gap-1.5', message.role === 'user' && 'justify-end')}>
+                    <div className={clsx('bo-action-strip', message.role === 'user' && 'justify-end')}>
                       <button
                         type="button"
                         onClick={() => saveMessage(message)}
@@ -352,10 +472,32 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                       {canConvert ? (
                         <button
                           type="button"
-                          onClick={() => onConvertAskToPlan('execution-plan', message.text, message.id)}
+                          disabled={isConverting}
+                          onClick={() =>
+                            onConvertAskToPlan({
+                              kind: 'execution-plan',
+                              askOutput: message.text,
+                              messageId: message.id,
+                              originalUserMessage: priorUserMessage?.text ?? '',
+                              verifiedFactsUsed: sourceFactsFromMessage(message, activeDigitalTwin),
+                              unverifiedMissingFacts: missingFactsFromMessage(
+                                message,
+                                activeDigitalTwin
+                              )
+                            })
+                          }
                           className={clsx('bo-ask-card-action border-primary/45 text-primary', btnFocus)}
                         >
-                          Convert to Plan
+                          {isConverting ? 'Preparing plan...' : 'Convert to Plan'}
+                        </button>
+                      ) : null}
+                      {message.planConversion ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenConvertedPlan?.(message.planConversion!.planId)}
+                          className={clsx('bo-ask-card-action border-success/45 text-success', btnFocus)}
+                        >
+                          Converted to Plan · Open in Plan
                         </button>
                       ) : null}
                     </div>
@@ -369,7 +511,7 @@ export const MobileChatView = (props: MobileChatViewProps) => {
               <AgentWorkingState />
             </div>
           ) : null}
-          <div ref={transcriptEndRef} className="h-1 w-full shrink-0 scroll-mt-24" aria-hidden />
+          <div ref={transcriptEndRef} className="bo-chat-scroll-anchor w-full shrink-0" aria-hidden />
         </div>
       </section>
     </div>

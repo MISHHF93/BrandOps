@@ -1,16 +1,23 @@
-import { CalendarCheck2, LayoutDashboard, MessageCircle, PlugZap, Settings } from 'lucide-react';
+import {
+  CalendarCheck2,
+  LayoutDashboard,
+  MessageCircle,
+  PlugZap,
+  Settings,
+  type LucideIcon
+} from 'lucide-react';
 import type { MobileShellTabId } from './mobileShellQuery';
 
 /**
- * Bottom dock: **Ask My Twin | Plan** — Plan contains all operational workspace surfaces.
- * Plan strip tabs (`PlanSurfaceNav`) open `daily` | `integrations` | `settings` while keeping the Plan dock lit.
+ * Bottom dock: **Ask My Twin | Plan**.
+ * Activity, Sources, and Setup are normalized pages inside Plan, not separate dock roots.
  * Tab id ↔ URL mapping: `mobileShellQuery.ts`.
  */
 export const MOBILE_SHELL_NAV_TABS: ReadonlyArray<{
   id: 'chat' | 'workspace';
   label: string;
   dockLabel?: string;
-  icon: typeof MessageCircle;
+  icon: LucideIcon;
 }> = [
   { id: 'chat', label: 'Ask My Twin', dockLabel: 'Ask My Twin', icon: MessageCircle },
   { id: 'workspace', label: 'Plan', dockLabel: 'Plan', icon: LayoutDashboard }
@@ -20,7 +27,7 @@ export const COMMAND_PALETTE_NAV_TARGETS: ReadonlyArray<{
   tab: MobileShellTabId;
   label: string;
   keywords: string[];
-  Icon: typeof MessageCircle;
+  Icon: LucideIcon;
 }> = [
   {
     tab: 'chat',

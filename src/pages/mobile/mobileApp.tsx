@@ -30,6 +30,8 @@ import type {
   BrandOpsData,
   DigitalTwinSourceType,
   OperatingPresetId,
+  PlanDraft,
+  PlanPreset,
   UiTheme
 } from '../../types/domain';
 import type { BrandOpsAIArtifactType } from '../../types/brandOpsAiCore';
@@ -51,6 +53,7 @@ import { MobileWorkspaceHubView } from './MobileWorkspaceHubView';
 import {
   MobileChatView,
   type AskMemorySaveRequest,
+  type AskPlanConversionRequest,
   type AskPlanConversionKind,
   type ChatMessage
 } from './MobileChatView';
@@ -124,6 +127,11 @@ import {
   rejectOperatorTraceEntry
 } from '../../services/plan/reviewQueue';
 import {
+  convertAskResponseToPlan,
+  savePlanDraftToWorkspace
+} from '../../services/plan/askPlanConversion';
+import { ConvertAskToPlanDrawer } from './ConvertAskToPlanDrawer';
+import {
   buildDigitalTwinContextSummary,
   createDigitalTwinFromText,
   getActiveDigitalTwin,
@@ -143,9 +151,21 @@ interface MobileAppProps {
 }
 
 const CHAT_THREAD_KEY = 'brandops:agent:chatThread';
+const CHAT_CONVERSATION_ID_KEY = 'brandops:agent:chatConversationId';
 const COMMAND_CHIPS_KEY = 'brandops:agent:commandChips';
 const MAX_PERSISTED_MESSAGES = 50;
 const MAX_COMMAND_CHIPS = 24;
+const HELLO_ASK_RESPONSE =
+  "Hello, I’m BrandOps, your AI operating partner inside this workspace: I help you think with Ask My Twin, turn useful ideas into operational plans, keep recommendations and approvals organized in Plan, and explain my reasoning in plain language so you can test text generation, review the output, save a useful insight, or convert the conversation into a plan when it is ready.";
+
+function isHelloAskPrompt(input: string): boolean {
+  const normalized = input
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s']/gu, ' ')
+    .replace(/\s+/g, ' ');
+  return /^(hello|hi|hey|greetings|yo)\b/.test(normalized);
+}
 
 const defaultWelcomeMessage = (
   surface: AppDocumentSurfaceId | 'chatbot' = 'mobile',
@@ -215,6 +235,25 @@ const normalizeStoredMessage = (raw: unknown): ChatMessage | null => {
       );
       return cleaned.length ? { orphanInlineMarkers: cleaned } : {};
     })(),
+    ...(m.planConversion && typeof m.planConversion === 'object'
+      ? (() => {
+          const plan = m.planConversion as Record<string, unknown>;
+          if (
+            typeof plan.planId !== 'string' ||
+            typeof plan.planTitle !== 'string' ||
+            typeof plan.convertedAt !== 'string'
+          ) {
+            return {};
+          }
+          return {
+            planConversion: {
+              planId: plan.planId,
+              planTitle: plan.planTitle,
+              convertedAt: plan.convertedAt
+            }
+          };
+        })()
+      : {}),
     ...(():
       | Record<string, never>
       | { traceSummary: NonNullable<ReturnType<typeof sanitizeAssistantAskTraceSummaryUI>> } => {
@@ -246,6 +285,19 @@ const writeChatThread = (rows: ChatMessage[]) => {
     localStorage.setItem(CHAT_THREAD_KEY, JSON.stringify(rows.slice(-MAX_PERSISTED_MESSAGES)));
   } catch {
     // ignore quota
+  }
+};
+
+const readChatConversationId = (): string => {
+  const fallback = `ask-conversation-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  if (typeof localStorage === 'undefined') return fallback;
+  try {
+    const existing = localStorage.getItem(CHAT_CONVERSATION_ID_KEY);
+    if (existing?.trim()) return existing;
+    localStorage.setItem(CHAT_CONVERSATION_ID_KEY, fallback);
+    return fallback;
+  } catch {
+    return fallback;
   }
 };
 
@@ -471,6 +523,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
   const [pendingAskMemorySave, setPendingAskMemorySave] =
     useState<AskMemorySaveRequest | null>(null);
+  const [pendingAskPlanConversion, setPendingAskPlanConversion] =
+    useState<AskPlanConversionRequest | null>(null);
+  const [askPlanPreset, setAskPlanPreset] = useState<PlanPreset>('custom-plan');
+  const [askPlanDraft, setAskPlanDraft] = useState<PlanDraft | null>(null);
+  const [askPlanBusy, setAskPlanBusy] = useState(false);
+  const [askPlanError, setAskPlanError] = useState<string | null>(null);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   /** Opens Unified workspace + scroll to operator twin résumé ingest when incremented (Assistant link / URL hash). */
@@ -485,6 +543,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [firstRunJourneyVisible, setFirstRunJourneyVisible] = useState(
     () => !readFirstRunJourneyDismissed()
   );
+  const [conversationId] = useState(readChatConversationId);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
@@ -743,6 +802,18 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               text: 'Ask My Twin a question — example: What should I prioritize today?'
             }
           ]);
+        } else if (isHelloAskPrompt(question)) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: uid(),
+              role: 'assistant',
+              resultKind: 'ask-result',
+              ok: true,
+              text: HELLO_ASK_RESPONSE
+            }
+          ]);
+          commandOk = true;
         } else {
           const data = await storageService.getData();
           const settings = data.settings;
@@ -1072,7 +1143,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         const data = await storageService.getData();
         const activeTwin = getActiveDigitalTwin(data);
         if (!activeTwin || !data.digitalTwins) {
-          setDataOpsHint('Create a digital twin before saving ASK outputs into workspace memory.');
+          setDataOpsHint('Create a digital twin before saving Ask outputs into workspace memory.');
           return;
         }
         const nowIso = new Date().toISOString();
@@ -1094,7 +1165,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                   id: `ask-memory-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
                   at: nowIso,
                   action: 'ask-memory-save',
-                  summary: `Saved ASK output into approved twin memory: ${request.title}`
+                  summary: `Saved Ask output into approved twin memory: ${request.title}`
                 },
                 ...twin.actions.auditTrail
               ].slice(0, 80)
@@ -1109,7 +1180,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           }
         });
         await refreshWorkspaceSnapshot();
-        setDataOpsHint('ASK output saved to approved twin memory and Workspace DNA refresh.');
+        setDataOpsHint('Ask output saved to approved twin memory and Workspace DNA refresh.');
       } catch (err) {
         console.error('BrandOps: ASK memory save failed', err);
         setDataOpsHint('Could not save ASK output to memory. Nothing was changed.');
@@ -1118,88 +1189,105 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     [refreshWorkspaceSnapshot]
   );
 
-  const convertAskOutputToPlan = useCallback(
-    (kind: AskPlanConversionKind, askOutput: string, messageId: string) => {
-      const excerpt = askOutput.replace(/\s+/g, ' ').trim().slice(0, 1200);
-      if (!excerpt) return;
-      const nowIso = new Date().toISOString();
-      const id = `ask-plan-${kind}-${messageId}-${Math.random().toString(36).slice(2, 7)}`;
-      const labelByKind: Record<AskPlanConversionKind, string> = {
-        'execution-plan': 'Converted Execution Plan',
-        workflow: 'Converted Workflow',
-        'action-queue': 'Converted Action Queue',
-        'content-schedule': 'Converted Content Schedule',
-        'outreach-draft': 'Converted Outreach Draft',
-        'follow-up-sequence': 'Converted Follow-up Sequence'
-      };
-      const approveCommandByKind: Record<AskPlanConversionKind, string> = {
-        'execution-plan': `add note: PLAN conversion — ${excerpt.slice(0, 420)}`,
-        workflow: `add note: Workflow plan — ${excerpt.slice(0, 420)}`,
-        'action-queue': `add note: Action queue — ${excerpt.slice(0, 420)}`,
-        'content-schedule': `draft post: Content schedule from ASK — ${excerpt.slice(0, 420)}`,
-        'outreach-draft': `draft outreach: ${excerpt.slice(0, 420)}`,
-        'follow-up-sequence': `create follow up: ${excerpt.slice(0, 220)}`
-      };
-      const twin = snapshot.activeDigitalTwin;
-      const twinContext = twin
-        ? `Active twin: ${twin.displayName}. Voice: ${twin.identity.toneOfVoice}. Positioning: ${twin.identity.professionalPositioning || twin.identity.summary}. Confidence: ${twin.confidenceScore}%. Missing facts: ${twin.memory.missingInfo.join('; ') || 'none'}; ask for clarification instead of inventing.`
-        : 'No active twin is available; ask for missing voice, positioning, and proof before making unsupported claims.';
-      const previewCommandByKind: Record<AskPlanConversionKind, string> = {
-        'execution-plan': `ask: ${twinContext}\n\nConvert this ASK output into an executable PLAN with status, timeline, progress, approvals, retry path, and export summary:\n${excerpt}`,
-        workflow: `ask: ${twinContext}\n\nTurn this ASK output into a workflow with stages, dependencies, risks, and execution checkpoints:\n${excerpt}`,
-        'action-queue': `ask: ${twinContext}\n\nConvert this ASK output into a prioritized action queue with sequence, status, owners, and next actions:\n${excerpt}`,
-        'content-schedule': `ask: ${twinContext}\n\nBuild a content schedule from this ASK output with weekly themes, drafts, approvals, publishing sequence, and twin-aligned content direction:\n${excerpt}`,
-        'outreach-draft': `ask: ${twinContext}\n\nConvert this ASK output into an outreach plan with message preview, approval gate, follow-up timing, outreach style, and no invented claims:\n${excerpt}`,
-        'follow-up-sequence': `ask: ${twinContext}\n\nBuild a follow-up sequence from this ASK output with timing, message intent, approval gate, retry criteria, and twin-aligned voice:\n${excerpt}`
-      };
-      const card: OperationalPlanCard = {
-        id,
-        title: labelByKind[kind],
-        kind:
-          kind === 'content-schedule'
-            ? 'content-calendar'
-            : kind === 'follow-up-sequence'
-              ? 'execution-sequence'
-              : kind === 'outreach-draft'
-                ? 'outreach'
-                : kind === 'action-queue'
-                  ? 'action-queue'
-                  : 'workflow',
-        promise:
-          'Created from an ASK output. Preview, edit, approve, execute, retry, or export from PLAN.',
-        previewCommand: previewCommandByKind[kind],
-        approveCommand: approveCommandByKind[kind],
-        editTarget:
-          kind === 'outreach-draft'
-            ? 'settings'
-            : kind === 'follow-up-sequence'
-              ? 'today'
-              : 'palette',
-        status: 'needs-input',
-        progress: 15,
-        timeline: ['ASK output', 'PLAN preview', 'Human approval', 'Execute in workspace'],
-        sourceLabel: 'Converted from ASK',
-        exportPayload: {
-          type: kind,
-          convertedFromMessageId: messageId,
-          convertedAt: nowIso,
-          activeTwinId: twin?.id ?? null,
-          activeTwinConfidence: twin?.confidenceScore ?? null,
-          askOutputExcerpt: excerpt
+  const convertAskOutputToPlan = useCallback((request: AskPlanConversionRequest) => {
+    setPendingAskPlanConversion(request);
+    setAskPlanPreset('custom-plan');
+    setAskPlanDraft(null);
+    setAskPlanError(null);
+  }, []);
+
+  const generateAskPlanDraft = useCallback(
+    async (preset: PlanPreset) => {
+      if (!pendingAskPlanConversion) return;
+      setAskPlanBusy(true);
+      setAskPlanError(null);
+      setAskPlanPreset(preset);
+      try {
+        const data = await storageService.getData();
+        const result = convertAskResponseToPlan({
+          conversationId,
+          messageId: pendingAskPlanConversion.messageId,
+          responseText: pendingAskPlanConversion.askOutput,
+          userIntent: pendingAskPlanConversion.originalUserMessage,
+          activeTwinId: snapshot.activeDigitalTwin?.id ?? null,
+          planPreset: preset,
+          workspaceContext: data,
+          verifiedFactsUsed: pendingAskPlanConversion.verifiedFactsUsed,
+          unverifiedMissingFacts: pendingAskPlanConversion.unverifiedMissingFacts
+        });
+        if (!result.ok) {
+          setAskPlanError(`${result.error} ${result.issues.join(' ')}`.trim());
+          setAskPlanDraft(null);
+          return;
         }
-      };
-      setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
-      void capturePlanArtifactInAiCore({
-        intent: `Convert ASK output to ${labelByKind[kind]}`,
-        userInput: excerpt,
-        generatedText: JSON.stringify(card, null, 2),
-        requiredOutputs: aiCoreOutputsForAskPlanKind(kind),
-        approvalRequired: true
-      });
-      commitTab('workspace');
-      setDataOpsHint('ASK output converted to PLAN. Preview, approve, edit, retry, or export it.');
+        setAskPlanDraft(result.draft);
+      } catch (err) {
+        console.error('BrandOps: ASK to PLAN preview failed', err);
+        setAskPlanError('Could not generate a structured plan draft. Nothing was saved.');
+      } finally {
+        setAskPlanBusy(false);
+      }
     },
-    [capturePlanArtifactInAiCore, commitTab, snapshot.activeDigitalTwin]
+    [conversationId, pendingAskPlanConversion, snapshot.activeDigitalTwin]
+  );
+
+  const saveAskPlanDraft = useCallback(
+    async (draft: PlanDraft) => {
+      if (!pendingAskPlanConversion) return;
+      setAskPlanBusy(true);
+      setAskPlanError(null);
+      try {
+        const data = await storageService.getData();
+        const saved = savePlanDraftToWorkspace({
+          workspace: data,
+          draft,
+          userAction: 'save-plan'
+        });
+        await storageService.setData(saved.workspace);
+        await refreshWorkspaceSnapshot();
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === pendingAskPlanConversion.messageId
+              ? {
+                  ...message,
+                  planConversion: {
+                    planId: saved.plan.id,
+                    planTitle: saved.plan.title,
+                    convertedAt: saved.plan.savedAt
+                  }
+                }
+              : message
+          )
+        );
+        await capturePlanArtifactInAiCore({
+          intent: `Convert ASK output to ${saved.plan.title}`,
+          userInput: pendingAskPlanConversion.askOutput,
+          generatedText: JSON.stringify(saved.plan, null, 2),
+          requiredOutputs: aiCoreOutputsForAskPlanKind(pendingAskPlanConversion.kind),
+          approvalRequired: true
+        });
+        setConvertedOperationalPlans([]);
+        setPendingAskPlanConversion(null);
+        setAskPlanDraft(null);
+        commitTab('workspace');
+        setDataOpsHint('ASK response saved as a PLAN draft with approvals, source link, and receipt.');
+      } catch (err) {
+        console.error('BrandOps: ASK to PLAN save failed', err);
+        setAskPlanError(
+          err instanceof Error
+            ? err.message
+            : 'Plan draft failed validation or could not be saved. Nothing changed.'
+        );
+      } finally {
+        setAskPlanBusy(false);
+      }
+    },
+    [
+      capturePlanArtifactInAiCore,
+      commitTab,
+      pendingAskPlanConversion,
+      refreshWorkspaceSnapshot
+    ]
   );
 
   const convertPredictiveOpportunityToPlan = useCallback(
@@ -1874,12 +1962,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         />
         <div
           className={clsx(
-            'mx-auto flex w-full items-start justify-between gap-3',
+            'mx-auto flex w-full items-center justify-between gap-3',
             MOBILE_SHELL_MAX_WIDTH_CLASS,
             MOBILE_SHELL_EDGE_PAD_CLASS
           )}
         >
-          <div className="bo-mobile-brand flex min-w-0 flex-1 gap-3">
+          <div className="bo-mobile-brand flex min-w-0 flex-1 gap-2.5">
             <span
               className="bo-mobile-brand__mark bo-mobile-brand__mark--compact shrink-0"
               aria-hidden
@@ -1891,7 +1979,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               <span id={shellTitleDescId} className="sr-only">
                 {shellSrSummary}
               </span>
-              <h1 className="bo-mobile-brand__title text-h1" aria-describedby={shellTitleDescId}>
+              <h1
+                className="bo-mobile-brand__title whitespace-nowrap text-lg font-semibold leading-tight tracking-tight"
+                aria-describedby={shellTitleDescId}
+              >
                 {shellScreenTitle}
               </h1>
               {dataOpsHint ? <WorkspaceDataHint message={dataOpsHint} /> : null}
@@ -1913,11 +2004,11 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 aria-label="Open command palette"
                 title="Commands & search (⌘K / Ctrl+K)"
                 className={clsx(
-                  'bo-mobile-help-btn rounded-xl border border-border/45 bg-surface/50 p-2.5 text-textMuted transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive hover:text-text',
+                  'bo-mobile-help-btn rounded-lg border border-border/40 bg-surface/35 p-2 text-textMuted transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive hover:text-text',
                   btnFocus
                 )}
               >
-                <Search className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+                <Search className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
               </button>
             ) : null}
             <button
@@ -1926,11 +2017,11 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               aria-label="Open Help"
               title="Knowledge Center — Help"
               className={clsx(
-                'bo-mobile-help-btn rounded-xl border border-border/45 bg-surface/50 p-2.5 text-textMuted transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive hover:text-text',
+                'bo-mobile-help-btn rounded-lg border border-border/40 bg-surface/35 p-2 text-textMuted transition-colors duration-fast hover:border-borderStrong hover:bg-surfaceActive hover:text-text',
                 btnFocus
               )}
             >
-              <CircleHelp className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+              <CircleHelp className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
             </button>
           </div>
         </div>
@@ -1977,6 +2068,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               transcriptEndRef={transcriptEndRef}
               assistantRoutingCaption={snapshot.aiAssistantRoutingCaption}
               onConvertAskToPlan={convertAskOutputToPlan}
+              convertingPlanMessageId={askPlanBusy ? pendingAskPlanConversion?.messageId : null}
+              onOpenConvertedPlan={() => commitTab('workspace')}
               onRequestSaveToMemory={setPendingAskMemorySave}
             />
           </section>
@@ -1992,19 +2085,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             <PlanSurfaceNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />
             {activeTab === 'workspace' ? (
               <>
-                {firstRunJourneyVisible ? (
-                  <FirstRunJourneyCard
-                    btnFocus={btnFocus}
-                    onDismiss={() => {
-                      setFirstRunJourneyVisible(false);
-                      void persistGettingStartedCompletionToWorkspace();
-                    }}
-                    onTryCommand={sendQuickCommand}
-                    onOpenAsk={() => commitTab('chat')}
-                    onOpenSettings={() => commitTab('settings')}
-                    onOpenHelp={() => openExtensionSurface('help')}
-                  />
-                ) : null}
                 <MobileWorkspaceHubView
                   snapshot={snapshot}
                   btnFocus={btnFocus}
@@ -2030,6 +2110,19 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                   onExportExecutionReceipt={exportExecutionReceiptJson}
                   convertedOperationalPlans={convertedOperationalPlans}
                 />
+                {firstRunJourneyVisible ? (
+                  <FirstRunJourneyCard
+                    btnFocus={btnFocus}
+                    onDismiss={() => {
+                      setFirstRunJourneyVisible(false);
+                      void persistGettingStartedCompletionToWorkspace();
+                    }}
+                    onTryCommand={sendQuickCommand}
+                    onOpenAsk={() => commitTab('chat')}
+                    onOpenSettings={() => commitTab('settings')}
+                    onOpenHelp={() => openExtensionSurface('help')}
+                  />
+                ) : null}
               </>
             ) : null}
 
@@ -2351,6 +2444,27 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           </div>
         </div>
       ) : null}
+
+      <ConvertAskToPlanDrawer
+        open={Boolean(pendingAskPlanConversion)}
+        draft={askPlanDraft}
+        selectedPreset={askPlanPreset}
+        busy={askPlanBusy}
+        error={askPlanError}
+        btnFocus={btnFocus}
+        onSelectPreset={setAskPlanPreset}
+        onGenerate={(preset) => void generateAskPlanDraft(preset)}
+        onQuickConvert={() => void generateAskPlanDraft('custom-plan')}
+        onUpdateDraft={setAskPlanDraft}
+        onSave={(draft) => void saveAskPlanDraft(draft)}
+        onRegenerate={() => void generateAskPlanDraft(askPlanPreset)}
+        onCancel={() => {
+          if (askPlanBusy) return;
+          setPendingAskPlanConversion(null);
+          setAskPlanDraft(null);
+          setAskPlanError(null);
+        }}
+      />
 
       <MobileShellNav activeTab={activeTab} onSelect={commitTab} btnFocus={btnFocus} />
 
