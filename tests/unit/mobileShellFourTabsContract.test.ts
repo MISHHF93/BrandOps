@@ -112,20 +112,20 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
     expect(tabConfig).toContain("id: 'chat'");
 
-    expect(tabConfig).toContain("label: 'ASK'");
+    expect(tabConfig).toContain("label: 'Ask My Twin'");
 
     expect(tabConfig).toContain("id: 'workspace'");
 
-    expect(tabConfig).toContain("label: 'PLAN / OPERATE'");
+    expect(tabConfig).toContain("label: 'Plan'");
     expect(tabConfig).toContain("'operate'");
 
     expect(tabConfig).toContain('COMMAND_PALETTE_NAV_TARGETS');
 
     expect(tabConfig).toContain("tab: 'daily'");
 
-    expect(tabConfig).toContain('Integrations');
+    expect(tabConfig).toContain('Sources');
 
-    expect(tabConfig).toContain('Settings');
+    expect(tabConfig).toContain('Setup');
   });
 
   it('keeps ASK composer outside MobileChatView so input stays fixed to viewport', () => {
@@ -133,7 +133,17 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
     const bar = read('src/pages/mobile/ChatCommandBar.tsx');
 
-    expect(bar).toContain('Ask your AI twin');
+    expect(bar).toContain('Ask My Twin');
+    expect(bar).toContain('const showAssistantTypeahead = !assistantChrome && showTypeahead');
+    expect(bar).toContain('const routeHint = assistantChrome ? null : getInputRouteHint(value)');
+  });
+
+  it('keeps Ask My Twin conversational instead of an execution gateway', () => {
+    expect(mobileApp).toContain("const isAskSurface = sourceSurface === 'Chat'");
+    expect(mobileApp).toContain('const askQuestion = askMatch ? askMatch[1].trim() : isAskSurface ? trimmed : null');
+    expect(mobileApp).toContain("sourceSurface !== 'Chat' && needsDestructiveConfirm(trimmed)");
+    expect(mobileApp).not.toContain('parseAiExecutablePayload');
+    expect(mobileApp).not.toContain('(Auto-run)');
   });
 
   it('embeds a dismissible Getting started card on the Plan (workspace) tab', () => {

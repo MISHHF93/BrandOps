@@ -995,6 +995,8 @@ export interface BrandOpsData {
   aiCore?: import('./brandOpsAiCore').BrandOpsAICoreState;
   /** Persistent AI Operating Timeline — strategic workspace memory stream. */
   operatingTimeline?: import('./operatingTimeline').BrandOpsOperatingTimelineState;
+  /** Workspace Intelligence Core — living DNA, decisions, scorecard, opportunities, and playbook. */
+  workspaceIntelligence?: import('./workspaceIntelligence').WorkspaceIntelligenceState;
   /** Resume/profile-derived AI digital twins. Local-first; exported/deleted with workspace data. */
   digitalTwins?: DigitalTwinState;
   /** Consent-gated identity learning signals derived from local platform metadata/summaries. */

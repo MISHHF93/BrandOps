@@ -24,13 +24,6 @@ import {
 import { prependBrandOpsAICoreResult, runBrandOpsAI } from '../../services/ai/brandOpsAiCore';
 import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
 import { resolveHostedAssistantRouting } from '../../services/ai/aiAskRouting';
-import { isAllowedForWorker } from '../../services/ai/llmStructuredApply';
-import {
-  parseAiExecutablePayload,
-  arePipelineCommandsAllowed,
-  runSequentialAgentCommands,
-  formatPipelineAutoRunSummary
-} from '../../services/ai/actionPipeline';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import { prependOperatorTrace } from '../../services/dataset/operatorTraces';
 import type {
@@ -55,7 +48,12 @@ import {
 } from './mobileShellQuery';
 import { CockpitDailyView } from './CockpitDailyView';
 import { MobileWorkspaceHubView } from './MobileWorkspaceHubView';
-import { MobileChatView, type AskPlanConversionKind, type ChatMessage } from './MobileChatView';
+import {
+  MobileChatView,
+  type AskMemorySaveRequest,
+  type AskPlanConversionKind,
+  type ChatMessage
+} from './MobileChatView';
 import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
 import {
@@ -154,11 +152,11 @@ const defaultWelcomeMessage = (
   gettingStartedChecklistVisible = true
 ): ChatMessage => {
   const mobileLine = gettingStartedChecklistVisible
-    ? 'ASK. PLAN. OPERATE. Your AI digital twin understands your profession, connects to your tools, and helps operate your workflows.'
-    : 'ASK is twin-aware intelligence. PLAN creates AI planning artifacts. OPERATE keeps execution visible with approvals, timelines, receipts, and audit history.';
+    ? 'Ask My Twin for focused thinking. Plan is your operational workspace for actions, approvals, opportunities, timelines, and receipts.'
+    : 'Ask My Twin handles conversation. Plan owns the workspace, approvals, execution, receipts, and operating timeline.';
   const welcomeLine = gettingStartedChecklistVisible
-    ? 'ASK. PLAN. OPERATE. Your AI digital twin understands your profession, connects to your tools, and helps operate your workflows.'
-    : 'ASK handles twin-aware strategy. PLAN creates execution plans. OPERATE tracks approvals, receipts, and operating timelines.';
+    ? 'Ask My Twin for focused thinking. Plan is your operational workspace for actions, approvals, opportunities, timelines, and receipts.'
+    : 'Ask My Twin handles conversation. Plan owns execution plans, approvals, receipts, and operating timelines.';
   return {
     id: uid(),
     role: 'assistant',
@@ -278,11 +276,6 @@ const pushCommandChip = (cmd: string) => {
 const needsDestructiveConfirm = (text: string) => {
   const lower = text.toLowerCase();
   return lower.includes('archive opportunity') || lower.includes('archive content');
-};
-
-const clearPersistedCommandChips = () => {
-  if (typeof localStorage === 'undefined') return;
-  localStorage.removeItem(COMMAND_CHIPS_KEY);
 };
 
 const buildStripFromWorkspace = (data: BrandOpsData) => ({
@@ -443,9 +436,11 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const dialogDestrId = useId();
   const dialogClearId = useId();
   const dialogResetId = useId();
+  const dialogAskMemoryId = useId();
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
   const clearConfirmRef = useRef<HTMLButtonElement>(null);
   const resetConfirmRef = useRef<HTMLButtonElement>(null);
+  const askMemoryConfirmRef = useRef<HTMLButtonElement>(null);
   const cockpitSectionScrollRef = useRef(false);
   const mountAtRef = useRef(performance.now());
   const shellReadyLoggedRef = useRef(false);
@@ -474,6 +469,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   );
   const [pendingClearChat, setPendingClearChat] = useState(false);
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
+  const [pendingAskMemorySave, setPendingAskMemorySave] =
+    useState<AskMemorySaveRequest | null>(null);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   /** Opens Unified workspace + scroll to operator twin résumé ingest when incremented (Assistant link / URL hash). */
@@ -528,28 +525,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       console.error('BrandOps: failed to persist getting-started workspace completion', err);
     }
   }, [refreshWorkspaceSnapshot]);
-
-  const selectCopilotWorker = useCallback(
-    async (workerId: string) => {
-      try {
-        const data = await storageService.getData();
-        const reg = data.settings.copilotWorkers;
-        if (!reg.workers.some((w) => w.id === workerId)) return;
-        if (reg.activeWorkerId === workerId) return;
-        await storageService.setData({
-          ...data,
-          settings: {
-            ...data.settings,
-            copilotWorkers: { ...reg, activeWorkerId: workerId }
-          }
-        });
-        await refreshWorkspaceSnapshot();
-      } catch (err) {
-        console.error('BrandOps: failed to select copilot worker', err);
-      }
-    },
-    [refreshWorkspaceSnapshot]
-  );
 
   const setAppearanceTheme = useCallback(async (next: UiTheme) => {
     try {
@@ -624,16 +599,6 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     },
     [cockpitWorkstream]
   );
-
-  const openSettingsResumePhase = useCallback(() => {
-    setResumePhaseRevealKey((k) => k + 1);
-    commitTab('settings');
-    if (isAppShellWithSectionQuery()) {
-      const url = new URL(window.location.href);
-      url.hash = SETTINGS_RESUME_PHASE_SECTION_ID;
-      window.history.replaceState(null, '', url.toString());
-    }
-  }, [commitTab]);
 
   const handleSelectWorkstream = useCallback((id: DashboardSectionId) => {
     setCockpitWorkstream(id);
@@ -723,6 +688,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   }, [pendingResetWorkspace]);
 
   useEffect(() => {
+    if (pendingAskMemorySave) {
+      askMemoryConfirmRef.current?.focus();
+    }
+  }, [pendingAskMemorySave]);
+
+  useEffect(() => {
     if (!dataOpsHint) return;
     const t = window.setTimeout(() => setDataOpsHint(null), 5200);
     return () => window.clearTimeout(t);
@@ -756,9 +727,11 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     let commandOk = false;
     try {
       const askMatch = trimmed.match(/^ask\s*:\s*([\s\S]*)$/i);
-      if (askMatch) {
-        pushCommandChip(trimmed);
-        const question = askMatch[1].trim();
+      const isAskSurface = sourceSurface === 'Chat';
+      const askQuestion = askMatch ? askMatch[1].trim() : isAskSurface ? trimmed : null;
+      if (askQuestion !== null) {
+        pushCommandChip(askMatch ? trimmed : `ask: ${askQuestion}`);
+        const question = askQuestion;
         if (!question) {
           setMessages((prev) => [
             ...prev,
@@ -767,7 +740,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               role: 'assistant',
               resultKind: 'ask-result',
               ok: false,
-              text: 'Add your question after ask: — example: ask: What should I prioritize on the pipeline?'
+              text: 'Ask My Twin a question — example: What should I prioritize today?'
             }
           ]);
         } else {
@@ -907,7 +880,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 twinId: activeTwinForCore?.id,
                 workspaceId: activeTwinForCore?.workspaceId,
                 userInput: question,
-                requiredOutputs: ['operational plan'],
+                requiredOutputs: ['opportunity analysis'],
                 safetyLevel: 'review',
                 approvalRequired: false
               },
@@ -929,65 +902,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 traceSummary
               }
             ]);
-            const executable = parseAiExecutablePayload(result.text);
-            const agentSource = mapDocumentSurfaceToAgentSource(surfaceLabel);
-            const runAgentCmd = (text: string) =>
-              executeAgentWorkspaceCommand({
-                text,
-                actorName: 'mobile-operator',
-                source: agentSource
-              });
-
-            if (
-              executable.kind === 'single' &&
-              isAllowedForWorker(workerResolved, executable.commandText)
-            ) {
-              const cmdResult = await runAgentCmd(executable.commandText);
-              const dataAfter = await storageService.getData();
-              const strip = buildStripFromWorkspace(dataAfter);
-              setMessages((prev) => [
-                ...prev,
-                {
-                  id: uid(),
-                  role: 'assistant',
-                  resultKind: 'command-result',
-                  text: `(Auto-run) ${cmdResult.summary}`,
-                  action: cmdResult.action,
-                  ok: cmdResult.ok,
-                  sourceSurface,
-                  strip
-                }
-              ]);
-              commandOk = cmdResult.ok;
-            } else if (
-              executable.kind === 'pipeline' &&
-              arePipelineCommandsAllowed(workerResolved, executable.commands)
-            ) {
-              const { results, stoppedAfterIndex } = await runSequentialAgentCommands(
-                executable.commands,
-                runAgentCmd,
-                { stopOnError: executable.stopOnError }
-              );
-              const dataAfter = await storageService.getData();
-              const strip = buildStripFromWorkspace(dataAfter);
-              const allOk = results.every((r) => r.ok);
-              setMessages((prev) => [
-                ...prev,
-                {
-                  id: uid(),
-                  role: 'assistant',
-                  resultKind: 'command-result',
-                  text: formatPipelineAutoRunSummary(results, stoppedAfterIndex),
-                  action: results[results.length - 1]?.action ?? 'unsupported',
-                  ok: allOk,
-                  sourceSurface,
-                  strip
-                }
-              ]);
-              commandOk = allOk;
-            } else {
-              commandOk = true;
-            }
+            commandOk = true;
           }
         }
         await refreshWorkspaceSnapshot();
@@ -1042,7 +957,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     sourceSurface: 'Workspace' | 'Today' | 'Integrations' | 'Settings' | 'Chat' = 'Chat'
   ) => {
     if (!trimmed || commandLoading) return;
-    if (needsDestructiveConfirm(trimmed)) {
+    if (sourceSurface !== 'Chat' && needsDestructiveConfirm(trimmed)) {
       setPendingDestructive({ command: trimmed, sourceSurface });
       return;
     }
@@ -1144,6 +1059,60 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       } catch (err) {
         console.error('BrandOps: AI Core PLAN artifact capture failed', err);
         setDataOpsHint('PLAN preview created, but AI Core artifact capture failed.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  const persistAskMemorySave = useCallback(
+    async (request: AskMemorySaveRequest) => {
+      const claim = `${request.title}: ${request.summary}`.replace(/\s+/g, ' ').trim().slice(0, 520);
+      if (!claim) return;
+      try {
+        const data = await storageService.getData();
+        const activeTwin = getActiveDigitalTwin(data);
+        if (!activeTwin || !data.digitalTwins) {
+          setDataOpsHint('Create a digital twin before saving ASK outputs into workspace memory.');
+          return;
+        }
+        const nowIso = new Date().toISOString();
+        const nextTwins = data.digitalTwins.twins.map((twin) => {
+          if (twin.id !== activeTwin.id) return twin;
+          return {
+            ...twin,
+            updatedAt: nowIso,
+            memory: {
+              ...twin.memory,
+              approvedClaims: Array.from(
+                new Set([claim, ...twin.memory.approvedClaims].filter(Boolean))
+              ).slice(0, 40)
+            },
+            actions: {
+              ...twin.actions,
+              auditTrail: [
+                {
+                  id: `ask-memory-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                  at: nowIso,
+                  action: 'ask-memory-save',
+                  summary: `Saved ASK output into approved twin memory: ${request.title}`
+                },
+                ...twin.actions.auditTrail
+              ].slice(0, 80)
+            }
+          };
+        });
+        await storageService.setData({
+          ...data,
+          digitalTwins: {
+            ...data.digitalTwins,
+            twins: nextTwins
+          }
+        });
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint('ASK output saved to approved twin memory and Workspace DNA refresh.');
+      } catch (err) {
+        console.error('BrandOps: ASK memory save failed', err);
+        setDataOpsHint('Could not save ASK output to memory. Nothing was changed.');
       }
     },
     [refreshWorkspaceSnapshot]
@@ -1996,40 +1965,19 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               'bo-shell-tab-root bo-shell-page bo-shell-panel-enter space-y-4 pb-6 text-sm text-textMuted motion-reduce:animate-none',
               MOBILE_SHELL_EDGE_PAD_CLASS
             )}
-            aria-label="ASK conversational intelligence"
+            aria-label="Ask My Twin conversational intelligence"
             key="shell-chat"
           >
             <MobileChatView
               messages={messages}
               loading={commandLoading}
-              commandHistory={commandHistory}
               onQuickCommand={sendQuickCommand}
               activeDigitalTwin={snapshot.activeDigitalTwin}
-              platformAwareAsk={snapshot.platformAwareAsk}
-              behavioralIntelligenceEngine={snapshot.behavioralIntelligenceEngine}
-              predictiveOpportunityLayer={snapshot.predictiveOpportunityLayer}
-              predictiveContentIdeationEngine={snapshot.predictiveContentIdeationEngine}
-              workflowPredictionLayer={snapshot.workflowPredictionLayer}
-              memoryContextEngine={snapshot.memoryContextEngine}
-              onConvertPredictiveOpportunityToPlan={convertPredictiveOpportunityToPlan}
-              onConvertContentIdeationToPlan={convertContentIdeationToPlan}
-              onConvertWorkflowPredictionToPlan={convertWorkflowPredictionToPlan}
-              onTwinAction={(_actionType, prompt) => {
-                setInput(prompt);
-                commitTab('chat');
-              }}
-              copilotWorkerRegistry={snapshot.copilotWorkerRegistry}
-              onSelectCopilotWorker={selectCopilotWorker}
-              onClearCommandHistory={() => {
-                clearPersistedCommandChips();
-                setCommandHistory([]);
-              }}
               btnFocus={btnFocus}
               transcriptEndRef={transcriptEndRef}
-              onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-              onOpenResumeGrounding={openSettingsResumePhase}
               assistantRoutingCaption={snapshot.aiAssistantRoutingCaption}
               onConvertAskToPlan={convertAskOutputToPlan}
+              onRequestSaveToMemory={setPendingAskMemorySave}
             />
           </section>
         ) : (
@@ -2234,6 +2182,66 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 }}
               >
                 Run command
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingAskMemorySave ? (
+        <div
+          className="bo-system-overlay fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setPendingAskMemorySave(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={dialogAskMemoryId}
+            className="bo-system-sheet w-full max-w-sm rounded-2xl border border-border/70 p-4 shadow-panel"
+          >
+            <h2 id={dialogAskMemoryId} className="text-base font-semibold text-text">
+              Save ASK output to memory?
+            </h2>
+            <p className="mt-2 text-sm text-textMuted">
+              This will add the item to the active digital twin&apos;s approved memory. Workspace DNA
+              will refresh from that memory. Review before saving identity-level facts.
+            </p>
+            <div className="mt-2 rounded-lg border border-border/50 bg-bgSubtle/80 p-2 text-xs text-textMuted">
+              <p className="font-semibold text-text">{pendingAskMemorySave.title}</p>
+              <p className="mt-1 leading-snug">{pendingAskMemorySave.summary}</p>
+              {pendingAskMemorySave.sourceFacts.length ? (
+                <p className="mt-2 leading-snug">
+                  Source facts: {pendingAskMemorySave.sourceFacts.slice(0, 3).join(' · ')}
+                </p>
+              ) : (
+                <p className="mt-2 leading-snug text-warning">
+                  No source facts attached. Save only if you have reviewed this claim.
+                </p>
+              )}
+            </div>
+            <OnDeviceDialogTrustFooter />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                className={`rounded-lg border border-border px-3 py-2 text-sm text-textMuted ${btnFocus}`}
+                onClick={() => setPendingAskMemorySave(null)}
+              >
+                Cancel
+              </button>
+              <button
+                ref={askMemoryConfirmRef}
+                type="button"
+                className={`rounded-lg border border-success/50 bg-successSoft/20 px-3 py-2 text-sm font-semibold text-success ${btnFocus}`}
+                onClick={() => {
+                  const pending = pendingAskMemorySave;
+                  setPendingAskMemorySave(null);
+                  if (pending) void persistAskMemorySave(pending);
+                }}
+              >
+                Save to memory
               </button>
             </div>
           </div>

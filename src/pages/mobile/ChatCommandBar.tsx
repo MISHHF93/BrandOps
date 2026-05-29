@@ -80,8 +80,9 @@ export const ChatCommandBar = ({
   );
 
   const showTypeahead = !commandLoading && !empty && trimmed.length >= 2 && typeahead.length > 0;
-  const routeHint = getInputRouteHint(value);
-  const showTypingTip = !empty && trimmed.length < 2 && !routeHint;
+  const showAssistantTypeahead = !assistantChrome && showTypeahead;
+  const routeHint = assistantChrome ? null : getInputRouteHint(value);
+  const showTypingTip = !assistantChrome && !empty && trimmed.length < 2 && !routeHint;
 
   useEffect(() => {
     setHighlight((h) => (typeahead.length === 0 ? 0 : Math.min(h, typeahead.length - 1)));
@@ -97,7 +98,7 @@ export const ChatCommandBar = ({
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (commandLoading) return;
-    if (showTypeahead) {
+    if (showAssistantTypeahead) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setHighlight((h) => Math.min(h + 1, typeahead.length - 1));
@@ -129,8 +130,8 @@ export const ChatCommandBar = ({
     .filter((x): x is string => Boolean(x))
     .join(' ')
     .trim();
-  const controls = showTypeahead ? LIST_ID : undefined;
-  const expanded = showTypeahead;
+  const controls = showAssistantTypeahead ? LIST_ID : undefined;
+  const expanded = showAssistantTypeahead;
 
   return (
     <div
@@ -148,11 +149,11 @@ export const ChatCommandBar = ({
           aria-live="polite"
         >
           {assistantChrome
-            ? 'ASK is reasoning with your twin context…'
+            ? 'Ask My Twin is reasoning with your twin context...'
             : 'Applying your command on-device…'}
         </p>
       ) : null}
-      {empty && smartChips.length > 0 && !commandLoading && !hideSmartChips ? (
+      {empty && smartChips.length > 0 && !commandLoading && !hideSmartChips && !assistantChrome ? (
         <div
           className="mb-1.5 rounded-xl border border-border/50 bg-bgElevated/95 px-2 py-2 shadow-sm backdrop-blur-sm"
           id={CHIPS_ID}
@@ -200,7 +201,7 @@ export const ChatCommandBar = ({
         </p>
       ) : null}
 
-      {showTypeahead ? (
+      {showAssistantTypeahead ? (
         <ul
           className="bo-scroll-y-contained mb-1.5 max-h-[min(40vh,11rem)] overflow-y-auto rounded-xl border border-border/60 bg-bgElevated/98 py-0.5 shadow-lg backdrop-blur-sm"
           id={LIST_ID}
@@ -295,8 +296,8 @@ export const ChatCommandBar = ({
           onKeyDown={onKeyDown}
           disabled={commandLoading}
           className="min-w-0 flex-1 bg-transparent px-1 py-1.5 text-base leading-snug text-text outline-none placeholder:text-textMuted disabled:cursor-not-allowed disabled:opacity-50"
-          placeholder={assistantChrome ? 'Ask your AI twin…' : 'Ask BrandOps anything…'}
-          aria-label={assistantChrome ? 'ASK prompt input' : 'Assistant command input'}
+          placeholder={assistantChrome ? 'Ask My Twin…' : 'Ask BrandOps anything…'}
+          aria-label={assistantChrome ? 'Ask My Twin prompt input' : 'Assistant command input'}
           aria-autocomplete="list"
           aria-controls={controls}
           aria-expanded={expanded}
@@ -309,8 +310,8 @@ export const ChatCommandBar = ({
             disabled={commandLoading}
             onClick={() => onSubmit()}
             className={clsx('bo-chat-send-fab', btn)}
-            title={commandLoading ? 'ASK is reasoning' : 'Ask twin'}
-            aria-label={commandLoading ? 'ASK is reasoning' : 'Ask twin'}
+            title={commandLoading ? 'Ask My Twin is reasoning' : 'Ask twin'}
+            aria-label={commandLoading ? 'Ask My Twin is reasoning' : 'Ask twin'}
           >
             {commandLoading ? (
               <Loader2

@@ -4,32 +4,30 @@ import type { MobileShellTabId } from './mobileShellQuery';
  * Dock button tooltips: short clues only — no duplicating tab labels.
  */
 export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
-  workspace:
-    'Plan / Operate — AI planning, trust controls, operational timeline, receipts, Pulse, and queue.',
-  chat: 'ASK — AI twin intelligence for profession identity, connected tools, and planning.',
-  daily: 'Plan — Today lanes and scheduled work.',
-  integrations: 'Plan — integration readiness and sync.',
-  settings: 'Plan — account and workspace preferences.'
+  workspace: 'Plan — operational workspace, approvals, opportunities, plans, activity, and receipts.',
+  chat: 'Ask My Twin — focused conversation for questions, brainstorming, analysis, and drafts.',
+  daily: 'Plan — activity feed and scheduled work.',
+  integrations: 'Plan — sources and integration readiness.',
+  settings: 'Plan — setup, account, and workspace preferences.'
 };
 
 /**
  * Screen reader context for the shell title (hidden from sighted users — keeps chrome minimal).
  */
 export const SHELL_TAB_SR_SUMMARY: Record<MobileShellTabId, string> = {
-  workspace:
-    'Plan and Operate — AI planning, human trust controls, connected platform actions, timelines, and receipts.',
-  chat: 'ASK — command entry and AI twin intelligence.',
-  daily: 'Plan — Today lanes and work areas.',
-  integrations: 'Plan — Connect tools and sync readiness.',
-  settings: 'Plan — Account and workspace setup.'
+  workspace: 'Plan — operational command board, approvals, plans, opportunities, timelines, and receipts.',
+  chat: 'Ask My Twin — conversation-only AI twin intelligence.',
+  daily: 'Plan — Activity feed and work areas.',
+  integrations: 'Plan — Sources and sync readiness.',
+  settings: 'Plan — Setup, account, and workspace preferences.'
 };
 
 /** Sticky header wordmark — distinct from dock abbreviations. */
 export const SHELL_SCREEN_TITLE: Record<MobileShellTabId, string> = {
-  workspace: 'Plan / Operate',
-  chat: 'ASK',
-  daily: 'Plan · Today',
-  integrations: 'Plan · Connect',
+  workspace: 'Plan',
+  chat: 'Ask My Twin',
+  daily: 'Plan · Activity',
+  integrations: 'Plan · Sources',
   settings: 'Plan · Setup'
 };
 

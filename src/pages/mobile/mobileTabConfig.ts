@@ -2,7 +2,7 @@ import { CalendarCheck2, LayoutDashboard, MessageCircle, PlugZap, Settings } fro
 import type { MobileShellTabId } from './mobileShellQuery';
 
 /**
- * Bottom dock: **Ask | Plan** — Plan contains the OPERATE layer.
+ * Bottom dock: **Ask My Twin | Plan** — Plan contains all operational workspace surfaces.
  * Plan strip tabs (`PlanSurfaceNav`) open `daily` | `integrations` | `settings` while keeping the Plan dock lit.
  * Tab id ↔ URL mapping: `mobileShellQuery.ts`.
  */
@@ -12,8 +12,8 @@ export const MOBILE_SHELL_NAV_TABS: ReadonlyArray<{
   dockLabel?: string;
   icon: typeof MessageCircle;
 }> = [
-  { id: 'chat', label: 'ASK', dockLabel: 'Ask', icon: MessageCircle },
-  { id: 'workspace', label: 'PLAN / OPERATE', dockLabel: 'Plan', icon: LayoutDashboard }
+  { id: 'chat', label: 'Ask My Twin', dockLabel: 'Ask My Twin', icon: MessageCircle },
+  { id: 'workspace', label: 'Plan', dockLabel: 'Plan', icon: LayoutDashboard }
 ];
 
 export const COMMAND_PALETTE_NAV_TARGETS: ReadonlyArray<{
@@ -24,13 +24,13 @@ export const COMMAND_PALETTE_NAV_TARGETS: ReadonlyArray<{
 }> = [
   {
     tab: 'chat',
-    label: 'ASK',
+    label: 'Ask My Twin',
     keywords: ['ask', 'ai twin', 'strategist', 'chat', 'commands', 'assistant', 'intelligence'],
     Icon: MessageCircle
   },
   {
     tab: 'workspace',
-    label: 'PLAN / OPERATE',
+    label: 'Plan',
     keywords: [
       'workspace',
       'home',
@@ -47,19 +47,19 @@ export const COMMAND_PALETTE_NAV_TARGETS: ReadonlyArray<{
   },
   {
     tab: 'daily',
-    label: 'Today lanes',
+    label: 'Activity',
     keywords: ['today', 'cockpit', 'lanes', 'digest', 'daily'],
     Icon: CalendarCheck2
   },
   {
     tab: 'integrations',
-    label: 'Integrations',
+    label: 'Sources',
     keywords: ['integrations', 'sync', 'sources', 'connect', 'oauth'],
     Icon: PlugZap
   },
   {
     tab: 'settings',
-    label: 'Settings',
+    label: 'Setup',
     keywords: [
       'settings',
       'preferences',

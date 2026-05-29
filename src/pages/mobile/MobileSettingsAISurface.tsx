@@ -491,18 +491,18 @@ export function SettingsResumeNeuralPhasePanel({
   return (
     <MobileTabSection
       id="settings-resume-neural-phase"
-      title="Operator twin — résumé ingest (hosted Ask)"
-      description="Encode step: paste plain-text résumé; we compress it into the twin résumé artifact so hosted models infer skills and roles. Brand profile still wins on conflicts."
+      title="Create AI digital twin"
+      description="Paste a plain-text résumé or profile, review the extracted facts, then generate a local AI digital twin. Missing facts stay visible and should become questions, not invented claims."
       descriptionVisibility="sr-only"
     >
       <p className="mt-2 text-meta leading-relaxed text-textSoft">
-        Paste plain-text résumé/profile details, review the extracted facts, then generate a local
-        AI digital twin. PDF/DOCX parsing is not bundled yet; convert those files to text first.
+        Paste plain-text résumé/profile details, review the extracted facts, then generate your
+        local AI digital twin. PDF/DOCX parsing is not bundled yet; convert those files to text first.
       </p>
       <div className="mt-2 rounded-lg border border-primary/35 bg-primarySoft/15 px-2.5 py-2 text-meta leading-relaxed text-textMuted">
         <span className="font-semibold text-text">Consent:</span> uploaded or pasted profile data
         stays in this workspace by default. It is exported/deleted with workspace JSON. Hosted AI
-        only receives twin context when you send an <code className="font-mono">ask:</code> line.
+        only receives twin context when you choose to use ASK with an external model.
       </div>
       <div className="mt-2 rounded-lg border border-border/40 bg-bgSubtle/45 px-2.5 py-2 text-meta text-textMuted">
         <span className="font-medium text-textSoft">Twin status</span>
@@ -511,7 +511,7 @@ export function SettingsResumeNeuralPhasePanel({
             ? `${snapshot.activeDigitalTwin.displayName} · ${snapshot.activeDigitalTwin.status} · ${snapshot.activeDigitalTwin.confidenceScore}% confidence`
             : 'No digital twin yet'}
         </p>
-        <span className="mt-2 block font-medium text-textSoft">Stored Phase R preview</span>
+        <span className="mt-2 block font-medium text-textSoft">Stored profile preview</span>
         <p className="mt-1 min-w-0 break-words leading-relaxed text-text">
           {snapshot.resumeNeuralPhaseArtifactPreview.trim().length > 0
             ? snapshot.resumeNeuralPhaseArtifactPreview
@@ -572,7 +572,7 @@ export function SettingsResumeNeuralPhasePanel({
             btnFocus
           )}
         >
-          Compress &amp; save
+          Save profile context
         </button>
         <button
           type="button"
@@ -580,7 +580,7 @@ export function SettingsResumeNeuralPhasePanel({
           onClick={() => void generateTwin()}
           className={clsx('bo-btn-primary bo-btn-primary--sm disabled:opacity-50', btnFocus)}
         >
-          Generate Digital Twin
+          Generate digital twin
         </button>
         <button
           type="button"

@@ -62,6 +62,10 @@ import { MAX_AI_ASSISTANT_TURN_TRACES } from '../ai/aiAssistantTraceLog';
 import { sanitizeOrphanInlineMarkers } from '../ai/aiInlineCitations';
 import { AI_IO_TRACE_SCHEMA_VERSION, sanitizeAiCitationChunks } from '../ai/aiIoProvenance';
 import { normalizeOperatingTimelineState } from '../operatingTimeline/operatingTimeline';
+import {
+  buildWorkspaceIntelligenceState,
+  normalizeWorkspaceIntelligenceState
+} from '../workspaceIntelligence/workspaceIntelligence';
 
 const DATA_KEY = 'brandops:data';
 
@@ -2031,64 +2035,72 @@ const normalizeDigitalTwinState = (value: unknown): DigitalTwinState => {
   };
 };
 
-const withDefaults = (base: BrandOpsData): BrandOpsData => ({
-  ...base,
-  brand: normalizeBrandProfile(base.brand),
-  modules: normalizeModules(base.modules),
-  brandVault: base.brandVault ?? defaultBrandVault,
-  contentLibrary: normalizeContentLibrary(base.contentLibrary),
-  publishingQueue: normalizePublishingQueue(base.publishingQueue),
-  followUps: normalizeFollowUps(base.followUps),
-  contacts: normalizeContacts(base.contacts),
-  companies: normalizeCompanies(base.companies),
-  opportunities: normalizeOpportunities(base.opportunities),
-  notes: normalizeActivityNotes(base.notes),
-  outreachDrafts: normalizeOutreachDrafts(base.outreachDrafts),
-  outreachTemplates: normalizeOutreachTemplates(base.outreachTemplates),
-  outreachHistory: normalizeOutreachHistory(base.outreachHistory),
-  messagingVault: normalizeMessagingVault(base.messagingVault),
-  settings: normalizeSettings(base.settings),
-  externalSync: normalizeExternalSyncState(base.externalSync),
-  integrationHub: normalizeIntegrationHubState(base.integrationHub),
-  agentAudit: normalizeAgentAudit(base.agentAudit),
-  operatorTraces: normalizeOperatorTraces(base.operatorTraces),
-  aiAssistantTraces: normalizeAiAssistantTraces(base.aiAssistantTraces),
-  aiTraceGraph: normalizeAiTraceGraph(base.aiTraceGraph),
-  aiPipelineRuns: normalizeAiPipelineRuns(base.aiPipelineRuns),
-  aiCore: normalizeBrandOpsAICoreState(base.aiCore),
-  operatingTimeline: normalizeOperatingTimelineState(base.operatingTimeline),
-  digitalTwins: normalizeDigitalTwinState(base.digitalTwins),
-  connectedIdentityEngine: normalizeConnectedIdentityEngine(
-    base.connectedIdentityEngine,
-    Boolean(base.settings?.connectedIdentityLearningEnabled)
-  ),
-  embeddingIndex: normalizeEmbeddingIndex(base.embeddingIndex),
-  scheduler: normalizeSchedulerState(base.scheduler),
-  seed: {
-    source: normalizeSeedSource(base.seed?.source),
-    version:
-      typeof base.seed?.version === 'string' && base.seed.version.trim().length > 0
-        ? base.seed.version
-        : seedData.seed.version,
-    seededAt: asIsoString(base.seed?.seededAt, seedData.seed.seededAt),
-    welcomeCompletedAt:
-      typeof base.seed?.welcomeCompletedAt === 'string' && base.seed.welcomeCompletedAt.length > 0
-        ? base.seed.welcomeCompletedAt
-        : undefined,
-    onboardingVersion:
-      typeof base.seed?.onboardingVersion === 'string' &&
-      base.seed.onboardingVersion.trim().length > 0
-        ? base.seed.onboardingVersion
-        : seedData.seed.onboardingVersion,
-    /** Legacy guest/demo sessions removed — production requires federated OAuth. */
-    guestSessionAt: undefined,
-    previewMagicSignInAt:
-      typeof base.seed?.previewMagicSignInAt === 'string' &&
-      base.seed.previewMagicSignInAt.length > 0
-        ? base.seed.previewMagicSignInAt
-        : undefined
-  }
-});
+const withDefaults = (base: BrandOpsData): BrandOpsData => {
+  const normalized: BrandOpsData = {
+    ...base,
+    brand: normalizeBrandProfile(base.brand),
+    modules: normalizeModules(base.modules),
+    brandVault: base.brandVault ?? defaultBrandVault,
+    contentLibrary: normalizeContentLibrary(base.contentLibrary),
+    publishingQueue: normalizePublishingQueue(base.publishingQueue),
+    followUps: normalizeFollowUps(base.followUps),
+    contacts: normalizeContacts(base.contacts),
+    companies: normalizeCompanies(base.companies),
+    opportunities: normalizeOpportunities(base.opportunities),
+    notes: normalizeActivityNotes(base.notes),
+    outreachDrafts: normalizeOutreachDrafts(base.outreachDrafts),
+    outreachTemplates: normalizeOutreachTemplates(base.outreachTemplates),
+    outreachHistory: normalizeOutreachHistory(base.outreachHistory),
+    messagingVault: normalizeMessagingVault(base.messagingVault),
+    settings: normalizeSettings(base.settings),
+    externalSync: normalizeExternalSyncState(base.externalSync),
+    integrationHub: normalizeIntegrationHubState(base.integrationHub),
+    agentAudit: normalizeAgentAudit(base.agentAudit),
+    operatorTraces: normalizeOperatorTraces(base.operatorTraces),
+    aiAssistantTraces: normalizeAiAssistantTraces(base.aiAssistantTraces),
+    aiTraceGraph: normalizeAiTraceGraph(base.aiTraceGraph),
+    aiPipelineRuns: normalizeAiPipelineRuns(base.aiPipelineRuns),
+    aiCore: normalizeBrandOpsAICoreState(base.aiCore),
+    operatingTimeline: normalizeOperatingTimelineState(base.operatingTimeline),
+    workspaceIntelligence: normalizeWorkspaceIntelligenceState(base.workspaceIntelligence),
+    digitalTwins: normalizeDigitalTwinState(base.digitalTwins),
+    connectedIdentityEngine: normalizeConnectedIdentityEngine(
+      base.connectedIdentityEngine,
+      Boolean(base.settings?.connectedIdentityLearningEnabled)
+    ),
+    embeddingIndex: normalizeEmbeddingIndex(base.embeddingIndex),
+    scheduler: normalizeSchedulerState(base.scheduler),
+    seed: {
+      source: normalizeSeedSource(base.seed?.source),
+      version:
+        typeof base.seed?.version === 'string' && base.seed.version.trim().length > 0
+          ? base.seed.version
+          : seedData.seed.version,
+      seededAt: asIsoString(base.seed?.seededAt, seedData.seed.seededAt),
+      welcomeCompletedAt:
+        typeof base.seed?.welcomeCompletedAt === 'string' && base.seed.welcomeCompletedAt.length > 0
+          ? base.seed.welcomeCompletedAt
+          : undefined,
+      onboardingVersion:
+        typeof base.seed?.onboardingVersion === 'string' &&
+        base.seed.onboardingVersion.trim().length > 0
+          ? base.seed.onboardingVersion
+          : seedData.seed.onboardingVersion,
+      /** Legacy guest/demo sessions removed — production requires federated OAuth. */
+      guestSessionAt: undefined,
+      previewMagicSignInAt:
+        typeof base.seed?.previewMagicSignInAt === 'string' &&
+        base.seed.previewMagicSignInAt.length > 0
+          ? base.seed.previewMagicSignInAt
+          : undefined
+    }
+  };
+
+  return {
+    ...normalized,
+    workspaceIntelligence: buildWorkspaceIntelligenceState(normalized)
+  };
+};
 
 const isBrandOpsData = (value: unknown): value is BrandOpsData => {
   if (!value || typeof value !== 'object') return false;

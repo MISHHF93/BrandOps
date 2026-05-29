@@ -27,10 +27,16 @@ import type { PulseTimelineRow } from './pulseTimeline';
 import { buildPulseTimeline } from './pulseTimeline';
 import type { AiOperatorMode, PipelineRun } from '../../types/aiIntegrationSuite';
 import type { BrandOpsAIArtifact, BrandOpsAIBatchRun } from '../../types/brandOpsAiCore';
+import type { DailyOperatingLoopReadout } from '../../types/dailyOperatingLoop';
 import type { BrandOpsOperatingTimelineEvent } from '../../types/operatingTimeline';
+import type { OperationalIntelligenceCoreReadout } from '../../types/operationalIntelligence';
+import type { WorkspaceIntelligenceState } from '../../types/workspaceIntelligence';
 import { countPendingOperatorReviews } from '../../services/plan/reviewQueue';
 import { getOperatorTwinResumeArtifact } from '../../services/operatorTwin/readResumeArtifact';
 import { getActiveDigitalTwin } from '../../services/digitalTwin/digitalTwin';
+import { buildDailyOperatingLoopReadout } from '../../services/dailyOperatingLoop/dailyOperatingLoop';
+import { buildOperationalIntelligenceReadout } from '../../services/operationalIntelligence/operationalIntelligence';
+import { buildWorkspaceIntelligenceState } from '../../services/workspaceIntelligence/workspaceIntelligence';
 import {
   buildConnectedIdentityEngineReadout,
   type ConnectedIdentityEngineReadout
@@ -455,6 +461,12 @@ export interface MobileWorkspaceSnapshot {
   recentAiCoreBatchRuns: BrandOpsAIBatchRun[];
   /** Persistent AI Operating Timeline events, newest first. */
   recentOperatingTimelineEvents: BrandOpsOperatingTimelineEvent[];
+  /** Workspace Intelligence Core: DNA, decision memory, opportunity radar, scorecard, and playbook. */
+  workspaceIntelligence: WorkspaceIntelligenceState;
+  /** Operational Intelligence Core: unified DNA, decisions, radar, next actions, gaps, and receipt context. */
+  operationalIntelligenceCore: OperationalIntelligenceCoreReadout;
+  /** Daily Operating Loop: morning briefing, health score, Chief of Staff alerts, reflection, and tomorrow preview. */
+  dailyOperatingLoop: DailyOperatingLoopReadout;
   /** Summary counts for persisted Ask trace bundles (`BrandOpsData.aiTraceGraph`). */
   memoryTraceSummary: MemoryTraceSummaryReadout;
   /** Operator traces flagged for human review (`reviewStatus: pending`). */
@@ -893,6 +905,9 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     recentOperatingTimelineEvents: [...(workspace.operatingTimeline?.events ?? [])]
       .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
       .slice(0, 24),
+    workspaceIntelligence: buildWorkspaceIntelligenceState(workspace),
+    operationalIntelligenceCore: buildOperationalIntelligenceReadout(workspace),
+    dailyOperatingLoop: buildDailyOperatingLoopReadout(workspace),
     memoryTraceSummary: buildMemoryTraceSummary(workspace),
     planPendingReviewCount: countPendingOperatorReviews(workspace.operatorTraces?.entries),
     planPendingReviewPeek: buildPendingReviewPeek(workspace),

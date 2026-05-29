@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -18,7 +18,6 @@ import {
   GitFork,
   History,
   Layers,
-  Lightbulb,
   LineChart,
   Moon,
   Network,
@@ -457,6 +456,19 @@ function buildBoardSuggestions(args: {
   onConvertWorkflowPredictionToPlan: (prediction: WorkflowPrediction) => void;
 }): PlanBoardSuggestion[] {
   const suggestions: PlanBoardSuggestion[] = [];
+
+  for (const item of args.snapshot.operationalIntelligenceCore.recommendedActions.slice(0, 2)) {
+    suggestions.push({
+      id: `core-${item.id}`,
+      source: 'Operational Intelligence Core',
+      title: item.title,
+      detail: item.detail,
+      why: item.why,
+      confidence: item.confidence,
+      command: item.command,
+      primaryLabel: item.primaryLabel
+    });
+  }
 
   for (const item of args.snapshot.predictiveOpportunityLayer.suggestions.slice(0, 2)) {
     suggestions.push({
@@ -1397,7 +1409,7 @@ function buildBrainSignals(
     {
       label: 'Expert routing',
       detail: `${snapshot.expertOperator.professionPath} / ${snapshot.expertOperator.workflowType.replace(/_/g, ' ')} via ${snapshot.expertOperator.generatedUsing.join(', ') || 'general experts'}.`,
-      source: 'Mixture of Operational Experts',
+      source: 'Routing experts',
       priority: averageConfidence([
         snapshot.expertOperator.ask,
         snapshot.expertOperator.plan,
@@ -1532,11 +1544,11 @@ function buildOperatingTimelineEvents(
     push({
       id: `ai-core-${artifact.id}`,
       label: artifact.title,
-      detail: `${artifact.type} captured by BrandOps AI Core with ${artifact.confidenceScore}% confidence.`,
+      detail: `${artifact.type} captured in the AI work ledger with ${artifact.confidenceScore}% confidence.`,
       category: artifact.status,
       at: artifact.createdAt,
       tone: artifact.status === 'rejected' ? 'danger' : artifact.status === 'approved' ? 'success' : 'primary',
-      command: `ask: Replay this AI Core artifact as part of my operating memory timeline. Explain source facts, experts used, approval status, next actions, and strategic meaning.\n\nArtifact: ${artifact.title}\nType: ${artifact.type}\nContent: ${artifact.content.slice(0, 1200)}`
+      command: `ask: Replay this AI work ledger artifact as part of my operating memory timeline. Explain source facts, experts used, approval status, next actions, and strategic meaning.\n\nArtifact: ${artifact.title}\nType: ${artifact.type}\nContent: ${artifact.content.slice(0, 1200)}`
     });
   }
 
@@ -1824,7 +1836,7 @@ function buildAdaptiveLayoutState(
     return {
       name: 'Deep Work layout',
       reason: 'Execution pressure or overload suggests collapsing the workspace around one objective.',
-      elevatedSurfaces: ['Deep Work Mode', 'Approvals', 'Operational Time', 'AI Core artifacts'],
+      elevatedSurfaces: ['Deep Work Mode', 'Approvals', 'Operational Time', 'AI work ledger'],
       minimizedSurfaces: ['Low-confidence suggestions', 'Secondary platform activity', 'Exploratory simulations'],
       tone: 'primary'
     };
@@ -1868,7 +1880,7 @@ function buildAdaptiveLayoutState(
   return {
     name: 'Personal Operating System layout',
     reason: contextualSurface.signal,
-    elevatedSurfaces: ['Command Center', 'Memory Timeline', 'Workspace Brain', 'Next best action'],
+    elevatedSurfaces: ['Command Center', 'Memory Timeline', 'Workspace coordination', 'Next best action'],
     minimizedSurfaces: ['Static dashboards', 'Duplicate panels', 'Unsupported actions'],
     tone: contextualSurface.tone
   };
@@ -2140,6 +2152,488 @@ function ModeCard({
         </span>
       </div>
       <p className="mt-2 text-fine leading-snug text-textMuted">{detail}</p>
+    </div>
+  );
+}
+
+function ProductionReadinessPath({
+  snapshot,
+  btnFocus,
+  disabled,
+  runCommand,
+  onOpenSettings,
+  onOpenCommandPalette,
+  onOpenToday
+}: {
+  snapshot: MobileWorkspaceSnapshot;
+  btnFocus: string;
+  disabled: boolean;
+  runCommand: (command: string) => void | Promise<void>;
+  onOpenSettings: () => void;
+  onOpenCommandPalette: () => void;
+  onOpenToday: () => void;
+}) {
+  const twin = snapshot.activeDigitalTwin;
+  const missingInfo = twin?.memory.missingInfo.slice(0, 3) ?? [];
+  const steps = [
+    {
+      label: twin ? 'Twin ready' : 'Create twin',
+      detail: twin
+        ? `${twin.displayName} has ${twin.confidenceScore}% confidence with verified profile memory.`
+        : 'Paste a resume or profile, review facts, and generate the first AI digital twin.',
+      action: twin ? 'Improve facts' : 'Create twin',
+      onClick: onOpenSettings,
+      tone: twin ? 'success' as const : 'warning' as const
+    },
+    {
+      label: 'ASK',
+      detail: 'Ask for reasoning, positioning, buyer personas, content ideas, or next best moves.',
+      action: 'Ask twin',
+      onClick: () =>
+        void runCommand(
+          'ask: Using only verified workspace and digital twin facts, identify my strongest positioning and next best operational move. If facts are missing, ask questions before making claims.'
+        ),
+      tone: 'primary' as const
+    },
+    {
+      label: 'PLAN',
+      detail: 'Turn useful answers into workflows, timelines, outreach plans, content plans, and approval queues.',
+      action: 'New plan',
+      onClick: onOpenCommandPalette,
+      tone: 'info' as const
+    },
+    {
+      label: 'VERIFY',
+      detail: 'Review approvals, receipts, timeline events, warnings, confidence, and what data was used.',
+      action: 'Review receipts',
+      onClick: onOpenToday,
+      tone: snapshot.planPendingReviewCount ? 'warning' as const : 'success' as const
+    }
+  ];
+
+  return (
+    <section
+      className="mt-3 rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5"
+      aria-labelledby="production-path-heading"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+            Launch-ready operating path
+          </p>
+          <h2 id="production-path-heading" className="mt-1 text-h3 text-text">
+            Create twin, ask, plan, approve, and track
+          </h2>
+          <p className="mt-1 text-meta leading-snug text-textMuted">
+            BrandOps stays simple on the surface: your twin uses verified facts, missing facts become
+            questions, and external actions pause for approval before execution.
+          </p>
+        </div>
+        <span
+          className={clsx(
+            'rounded-full border px-2 py-1 text-fine font-semibold uppercase',
+            toneClass(missingInfo.length ? 'warning' : twin ? 'success' : 'muted')
+          )}
+        >
+          {missingInfo.length ? `${missingInfo.length} fact gap${missingInfo.length === 1 ? '' : 's'}` : twin ? 'ready' : 'setup'}
+        </span>
+      </div>
+
+      {missingInfo.length ? (
+        <p className="mt-2 rounded-xl border border-warning/35 bg-warningSoft/15 px-3 py-2 text-meta leading-snug text-warning">
+          Missing facts to resolve before stronger claims: {missingInfo.join(' · ')}.
+        </p>
+      ) : null}
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-4">
+        {steps.map((step) => (
+          <article key={step.label} className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-label font-semibold leading-tight text-text">{step.label}</h3>
+              <span className={clsx('rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(step.tone))}>
+                {step.tone}
+              </span>
+            </div>
+            <p className="mt-2 text-fine leading-snug text-textMuted">{step.detail}</p>
+            <button
+              type="button"
+              disabled={disabled && step.label === 'ASK'}
+              onClick={step.onClick}
+              className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+            >
+              {step.action}
+            </button>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AutonomyLevelsPanel() {
+  const levels = [
+    {
+      label: 'Observe',
+      detail: 'Read-only insight, summaries, context, and risk detection.',
+      tone: 'success' as const
+    },
+    {
+      label: 'Advise',
+      detail: 'Suggestions, drafts, simulations, and recommended plans only.',
+      tone: 'primary' as const
+    },
+    {
+      label: 'Act with approval',
+      detail: 'Default for sends, posts, schedules, syncs, edits, and workspace changes.',
+      tone: 'warning' as const
+    },
+    {
+      label: 'Autonomous',
+      detail: 'Disabled unless a future guarded capability explicitly supports it.',
+      tone: 'muted' as const
+    }
+  ];
+
+  return (
+    <section
+      className="mt-3 rounded-2xl border border-warning/30 bg-warningSoft/10 p-3.5"
+      aria-labelledby="autonomy-levels-heading"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-meta font-semibold uppercase tracking-[0.14em] text-warning">
+            Autonomy and approval policy
+          </p>
+          <h2 id="autonomy-levels-heading" className="mt-1 text-h3 text-text">
+            External actions default to human approval
+          </h2>
+          <p className="mt-1 text-meta leading-snug text-textMuted">
+            BrandOps can observe, advise, and prepare work. It does not send, publish, delete,
+            charge, sync, or modify external systems without explicit approval and a receipt.
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-4">
+        {levels.map((level) => (
+          <article key={level.label} className="rounded-xl border border-border/35 bg-bgElevated/60 px-3 py-2.5">
+            <span className={clsx('rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(level.tone))}>
+              {level.label}
+            </span>
+            <p className="mt-2 text-fine leading-snug text-textMuted">{level.detail}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function flipSetValue(current: Set<string>, value: string): Set<string> {
+  const next = new Set(current);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return next;
+}
+
+function BoardCardControl({
+  children,
+  onClick,
+  btnFocus,
+  disabled = false
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  btnFocus: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={clsx(
+        'rounded-lg border border-border/45 bg-surface/60 px-2 py-1.5 text-meta font-semibold text-text disabled:opacity-45',
+        btnFocus
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function BoardCardUtilityControls({
+  id,
+  btnFocus,
+  pinned,
+  archived,
+  duplicated,
+  saved,
+  onPin,
+  onArchive,
+  onDuplicate,
+  onSave
+}: {
+  id: string;
+  btnFocus: string;
+  pinned: Set<string>;
+  archived: Set<string>;
+  duplicated: Set<string>;
+  saved: Set<string>;
+  onPin: (id: string) => void;
+  onArchive: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  onSave: (id: string) => void;
+}) {
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      <BoardCardControl btnFocus={btnFocus} onClick={() => onPin(id)}>
+        {pinned.has(id) ? 'Pinned' : 'Pin'}
+      </BoardCardControl>
+      <BoardCardControl btnFocus={btnFocus} onClick={() => onArchive(id)}>
+        {archived.has(id) ? 'Archived' : 'Archive'}
+      </BoardCardControl>
+      <BoardCardControl btnFocus={btnFocus} onClick={() => onDuplicate(id)}>
+        {duplicated.has(id) ? 'Duplicated' : 'Duplicate'}
+      </BoardCardControl>
+      <BoardCardControl btnFocus={btnFocus} onClick={() => onSave(id)}>
+        {saved.has(id) ? 'Saved' : 'Save'}
+      </BoardCardControl>
+    </div>
+  );
+}
+
+function scoreTone(value: number): BoardTone {
+  if (value >= 82) return 'success';
+  if (value >= 64) return 'primary';
+  if (value >= 42) return 'warning';
+  return 'muted';
+}
+
+function WorkspaceIntelligenceCorePanel({
+  snapshot,
+  btnFocus,
+  disabled,
+  runCommand,
+  onOpenSettings
+}: {
+  snapshot: MobileWorkspaceSnapshot;
+  btnFocus: string;
+  disabled: boolean;
+  runCommand: (command: string) => void | Promise<void>;
+  onOpenSettings: () => void;
+}) {
+  const intelligence = snapshot.workspaceIntelligence;
+  const dna = intelligence.dna;
+  const decisions = intelligence.decisionMemory;
+  const approvedCount = decisions.filter((decision) => decision.polarity === 'approved').length;
+  const rejectedCount = decisions.filter((decision) => decision.polarity === 'rejected').length;
+  const topOpportunity = intelligence.opportunityRadar[0];
+  const playbookSection = intelligence.operatingManual[0];
+  const primaryScore = intelligence.scorecard[0];
+
+  return (
+    <section
+      className="mt-3 rounded-2xl border border-primary/25 bg-primarySoft/10 p-3.5"
+      aria-labelledby="workspace-intelligence-core-heading"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+            <BrainCircuit className="h-4 w-4" aria-hidden />
+            Workspace Intelligence Core
+          </p>
+          <h2 id="workspace-intelligence-core-heading" className="mt-1 text-h3 text-text">
+            Workspace DNA, decisions, opportunities, and playbook
+          </h2>
+          <p className="mt-1 text-meta leading-snug text-textMuted">
+            BrandOps learns how this operator thinks, decides, and works. ASK, PLAN, OPERATE, and
+            VERIFY now share the same living workspace identity instead of isolated feature state.
+          </p>
+        </div>
+        {primaryScore ? (
+          <span
+            className={clsx(
+              'rounded-full border px-2 py-1 text-fine font-semibold uppercase',
+              toneClass(scoreTone(primaryScore.value))
+            )}
+          >
+            {primaryScore.value}% DNA
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-4">
+        {intelligence.scorecard.map((metric) => (
+          <div key={metric.id} className="rounded-xl border border-border/35 bg-bgElevated/60 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                {metric.label}
+              </p>
+              <span
+                className={clsx(
+                  'rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
+                  toneClass(scoreTone(metric.value))
+                )}
+              >
+                {metric.value}%
+              </span>
+            </div>
+            <div
+              className="mt-2 h-1.5 overflow-hidden rounded-full border border-border/30 bg-bg"
+              role="progressbar"
+              aria-valuenow={metric.value}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={metric.label}
+            >
+              <span className="block h-full rounded-full bg-primary" style={{ width: `${metric.value}%` }} />
+            </div>
+            <p className="mt-2 text-fine leading-snug text-textMuted">{metric.detail}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 grid gap-2 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-xl border border-border/35 bg-bgElevated/60 px-3 py-2.5">
+          <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+            Living Workspace DNA
+          </p>
+          <p className="mt-1 text-label font-semibold text-text">{dna.profession}</p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <DnaList label="Goals" items={dna.goals} fallback="No approved goals yet" />
+            <DnaList label="Audience" items={dna.audience} fallback="Audience still needs approval" />
+            <DnaList label="Tone" items={dna.preferredTone} fallback="Tone will learn from decisions" />
+            <DnaList label="Workflows" items={dna.workflows} fallback="Approve a PLAN to seed workflows" />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border/35 bg-bgElevated/60 px-3 py-2.5">
+          <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+            Decision Memory
+          </p>
+          <p className="mt-1 text-meta leading-snug text-textMuted">
+            Approved and rejected decisions become constraints for future AI outputs.
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <SummaryTile
+              label="Approved"
+              value={approvedCount}
+              detail="Reusable decisions"
+              tone={approvedCount ? 'success' : 'muted'}
+            />
+            <SummaryTile
+              label="Rejected"
+              value={rejectedCount}
+              detail="Avoidance rules"
+              tone={rejectedCount ? 'warning' : 'muted'}
+            />
+          </div>
+          {decisions[0] ? (
+            <p className="mt-2 rounded-lg border border-border/30 bg-bgSubtle/45 px-2 py-1.5 text-fine leading-snug text-textMuted">
+              Latest: {decisions[0].polarity} · {decisions[0].title}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-2 lg:grid-cols-2">
+        <div className="rounded-xl border border-border/35 bg-bgElevated/60 px-3 py-2.5">
+          <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+            Opportunity Radar
+          </p>
+          {topOpportunity ? (
+            <>
+              <div className="mt-2 flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-label font-semibold leading-tight text-text">
+                    {topOpportunity.title}
+                  </h3>
+                  <p className="mt-1 text-fine leading-snug text-textMuted">
+                    {topOpportunity.detail}
+                  </p>
+                </div>
+                <span className="rounded-full border border-success/45 bg-successSoft/15 px-2 py-0.5 text-overline font-bold uppercase text-success">
+                  {topOpportunity.expectedImpact} impact
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => void runCommand(topOpportunity.suggestedAction)}
+                className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+              >
+                Turn into PLAN
+              </button>
+            </>
+          ) : (
+            <p className="mt-2 text-meta leading-snug text-textMuted">
+              No major opportunity gap detected. New signals appear as the twin, decisions, and
+              receipts compound.
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-border/35 bg-bgElevated/60 px-3 py-2.5">
+          <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+            BrandOps Playbook
+          </p>
+          {playbookSection ? (
+            <>
+              <h3 className="mt-2 text-label font-semibold leading-tight text-text">
+                {playbookSection.title}
+              </h3>
+              <p className="mt-1 text-fine leading-snug text-textMuted">{playbookSection.body}</p>
+              <p className="mt-2 text-fine text-textSoft">
+                {playbookSection.evidenceCount} evidence signal
+                {playbookSection.evidenceCount === 1 ? '' : 's'} used.
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-meta leading-snug text-textMuted">
+              The playbook starts once BrandOps has enough DNA, decisions, and operating history.
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() =>
+                void runCommand(
+                  'ask: Generate my BrandOps Playbook from Workspace DNA, Decision Memory, approvals, receipts, and connected platform context. Keep it human-reviewable and do not execute externally.'
+                )
+              }
+              className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
+            >
+              Generate playbook
+            </button>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className={clsx(mobileChipClass(btnFocus), 'text-fine')}
+            >
+              Improve DNA
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DnaList({
+  label,
+  items,
+  fallback
+}: {
+  label: string;
+  items: string[];
+  fallback: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border/30 bg-bgSubtle/45 px-2.5 py-2">
+      <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">{label}</p>
+      <p className="mt-1 text-fine leading-snug text-textMuted">
+        {items.length ? items.slice(0, 3).join(' · ') : fallback}
+      </p>
     </div>
   );
 }
@@ -2425,12 +2919,12 @@ function WorkspaceOSLayer({
               tone={twinEcosystem.some((member) => member.status === 'active') ? 'primary' : 'muted'}
             />
             <SummaryTile
-              label="AI Core artifacts"
+              label="AI work ledger"
               value={snapshot.recentAiCoreArtifacts.length}
               detail={
                 snapshot.recentAiCoreArtifacts[0]
-                  ? `${snapshot.recentAiCoreArtifacts[0].type}: ${snapshot.recentAiCoreArtifacts[0].title}`
-                  : 'Unified outputs will appear here after ASK, PLAN, or batch runs'
+                ? `${snapshot.recentAiCoreArtifacts[0].type}: ${snapshot.recentAiCoreArtifacts[0].title}`
+                : 'Unified outputs will appear here after ASK, PLAN, or batch runs'
               }
               tone={snapshot.recentAiCoreArtifacts.length ? 'success' : 'muted'}
             />
@@ -2982,7 +3476,7 @@ function WorkspaceOSLayer({
           <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
             <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
               <BrainCircuit className="h-4 w-4" aria-hidden />
-              Workspace Brain
+              Workspace coordination
             </p>
             <p className="mt-1 text-meta leading-snug text-textMuted">
               The invisible orchestration layer coordinates memory, experts, workflows,
@@ -3128,7 +3622,7 @@ function WorkspaceOSLayer({
           <div className="rounded-2xl border border-border/40 bg-bgElevated/65 p-3.5">
             <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-wide text-textSoft">
               <FileText className="h-4 w-4" aria-hidden />
-              Autonomous Drafting Layer
+              Prepared drafts
             </p>
             <p className="mt-1 text-meta leading-snug text-textMuted">
               BrandOps prepares likely next drafts early, but every draft remains preview-only and
@@ -3401,6 +3895,14 @@ export const MobileWorkspaceHubView = ({
   onExportExecutionReceipt = () => {},
   convertedOperationalPlans = []
 }: MobileWorkspaceHubViewProps) => {
+  const [pinnedBoardCards, setPinnedBoardCards] = useState<Set<string>>(() => new Set());
+  const [archivedBoardCards, setArchivedBoardCards] = useState<Set<string>>(() => new Set());
+  const [duplicatedBoardCards, setDuplicatedBoardCards] = useState<Set<string>>(() => new Set());
+  const [savedBoardCards, setSavedBoardCards] = useState<Set<string>>(() => new Set());
+  const pinCard = (id: string) => setPinnedBoardCards((current) => flipSetValue(current, id));
+  const archiveCard = (id: string) => setArchivedBoardCards((current) => flipSetValue(current, id));
+  const duplicateCard = (id: string) => setDuplicatedBoardCards((current) => flipSetValue(current, id));
+  const saveCard = (id: string) => setSavedBoardCards((current) => flipSetValue(current, id));
   const profileIncomplete =
     snapshot.operatorName.trim() === defaultBrandProfile.operatorName.trim() ||
     !snapshot.primaryOffer.trim() ||
@@ -3411,16 +3913,25 @@ export const MobileWorkspaceHubView = ({
   const disabled = commandBusy || !canRunWorkspaceCommands;
   const twin = snapshot.activeDigitalTwin;
   const planCards = [...convertedOperationalPlans, ...buildOperationalPlanCards(snapshot)];
-  const activePlans = planCards.slice(0, 6);
+  const activePlans = planCards
+    .filter((plan) => !archivedBoardCards.has(`plan-${plan.id}`))
+    .slice(0, 6);
   const suggestions = buildBoardSuggestions({
     snapshot,
     onConvertPredictiveOpportunityToPlan,
     onConvertContentIdeationToPlan,
     onConvertWorkflowPredictionToPlan
-  });
+  }).filter((item) => !archivedBoardCards.has(`recommendation-${item.id}`));
+  const opportunities = snapshot.predictiveOpportunityLayer.suggestions
+    .filter((item) => !archivedBoardCards.has(`opportunity-${item.id}`))
+    .slice(0, 6);
   const sortedQueue = sortRowsSoonestFirst(snapshot.pulseTimelineRows).slice(0, 5);
-  const approvals = snapshot.planPendingReviewPeek.slice(0, 4);
-  const timelineItems = snapshot.crossPlatformOperationalTimeline.items.slice(0, 6);
+  const approvals = snapshot.planPendingReviewPeek
+    .filter((item) => !archivedBoardCards.has(`approval-${item.id}`))
+    .slice(0, 4);
+  const timelineItems = snapshot.crossPlatformOperationalTimeline.items
+    .filter((item) => !archivedBoardCards.has(`timeline-${item.id}`))
+    .slice(0, 6);
   const receipts = snapshot.planExecutionReceipts.slice(0, 4);
   const failedCount =
     snapshot.crossPlatformOperationalTimeline.countsByKind['failed-operation'] +
@@ -3435,6 +3946,11 @@ export const MobileWorkspaceHubView = ({
   const connectedPlatforms = snapshot.platformAwareAsk.connectedApps.length
     ? snapshot.platformAwareAsk.connectedApps
     : snapshot.integrationHubSources.map((source) => source.name);
+  const operationalCore = snapshot.operationalIntelligenceCore;
+  const dailyLoop = snapshot.dailyOperatingLoop;
+  const missingOperationalCoreQuestion = operationalCore.missingFactQuestions[0];
+  const topChiefOfStaffAlert = dailyLoop.chiefOfStaffAlerts[0];
+  const topRelationshipMemory = dailyLoop.relationshipMemory[0];
   const activeExpertNames = snapshot.expertOperator.generatedUsing.slice(0, 3);
   const professionMode = professionModeCopy(snapshot.expertOperator.professionPath);
   const platformCards = snapshot.platformActionCards.slice(0, 6);
@@ -3592,16 +4108,14 @@ export const MobileWorkspaceHubView = ({
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-meta font-semibold uppercase tracking-[0.14em] text-primary">
                   <span className="bo-operational-pulse" aria-hidden />
-                  PLAN command board
+                  Operational Command Board
                 </p>
                 <h1 id="plan-board-heading" className="mt-1 text-h2 text-text">
-                  What matters now, what the AI recommends, and what can run next
+                  Plan
                 </h1>
                 <p className="mt-1.5 max-w-2xl text-meta leading-snug text-textMuted">
-                  BrandOps is one continuous operational surface powered by ASK, PLAN, OPERATE, and
-                  VERIFY. Static widgets become approvals, plans, predictions, platform actions, and
-                  receipts. Turn ideas into approved next steps with receipts before anything leaves
-                  the workspace.
+                  Everything operational lives here: twin status, recommended actions, approvals,
+                  opportunities, active plans, saved insights, activity, and receipts.
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap gap-1.5">
@@ -3610,7 +4124,7 @@ export const MobileWorkspaceHubView = ({
                   onClick={onOpenCommandPalette}
                   className={clsx('bo-btn-primary bo-btn-primary--sm', btnFocus)}
                 >
-                  New plan
+                  Add plan
                 </button>
                 <button
                   type="button"
@@ -3620,6 +4134,39 @@ export const MobileWorkspaceHubView = ({
                   Open Today
                 </button>
               </div>
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-5">
+              <SummaryTile
+                label="Twin Status"
+                value={twin?.confidenceScore ?? 0}
+                detail={twin ? `${twin.displayName} active` : 'Create a digital twin'}
+                tone={twin ? 'success' : 'warning'}
+              />
+              <SummaryTile
+                label="Recommended Actions"
+                value={suggestions.length}
+                detail={suggestions[0]?.title || 'No recommendation yet'}
+                tone={suggestions.length ? 'primary' : 'muted'}
+              />
+              <SummaryTile
+                label="Pending Approvals"
+                value={snapshot.planPendingReviewCount}
+                detail="Review before anything changes"
+                tone={snapshot.planPendingReviewCount ? 'warning' : 'success'}
+              />
+              <SummaryTile
+                label="Opportunities"
+                value={Math.max(opportunities.length, snapshot.predictiveOpportunityLayer.totalCount)}
+                detail={opportunities[0]?.title || 'No opportunity signal yet'}
+                tone={opportunities.length || snapshot.predictiveOpportunityLayer.totalCount ? 'success' : 'muted'}
+              />
+              <SummaryTile
+                label="Active Plans"
+                value={activePlans.length}
+                detail={`${readyCount} ready, ${inProgressCount} in progress`}
+                tone={activePlans.length ? 'info' : 'muted'}
+              />
             </div>
 
             <div className="mt-3 rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
@@ -3638,116 +4185,225 @@ export const MobileWorkspaceHubView = ({
               </div>
             </div>
 
-            <div className="mt-3 grid gap-2 sm:grid-cols-5">
-              <SummaryTile
-                label="Active plans"
-                value={planCards.length}
-                detail={`${readyCount} ready, ${inProgressCount} in progress`}
-                tone="primary"
-              />
-              <SummaryTile
-                label="Approvals"
-                value={snapshot.planPendingReviewCount}
-                detail="Need human review before action"
-                tone={snapshot.planPendingReviewCount ? 'warning' : 'success'}
-              />
-              <SummaryTile
-                label="Scheduled"
-                value={scheduledCount}
-                detail="Due, queued, or on the timeline"
-                tone={scheduledCount ? 'info' : 'muted'}
-              />
-              <SummaryTile
-                label="Needs attention"
-                value={failedCount}
-                detail="Failed, rejected, or warning receipts"
-                tone={failedCount ? 'danger' : 'success'}
-              />
-              <SummaryTile
-                label="AI suggestions"
-                value={suggestions.length}
-                detail="Ready to preview as plans"
-                tone={suggestions.length ? 'primary' : 'muted'}
-              />
-            </div>
-
-            <div className="mt-3 grid gap-2 sm:grid-cols-4" aria-label="Operational mode layer">
-              {modeCards.map((card) => (
-                <ModeCard key={card.mode} {...card} />
-              ))}
-            </div>
-
-            <div className="mt-3 grid gap-2 sm:grid-cols-[1.4fr_1fr]">
-              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
-                <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
-                  Operator context · Profession-aware mode
-                </p>
-                <p className="mt-1 text-meta leading-snug text-textMuted">
-                  {twin
-                    ? `${twin.displayName} is active with ${twin.confidenceScore}% confidence. PLAN uses approved profile facts, voice, memory, and current workspace context.`
-                    : 'No active digital twin yet. PLAN still works, but profile, voice, and proof improve after setup.'}
-                </p>
-                <p className="mt-2 rounded-lg border border-border/30 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textSoft">
-                  {professionMode.label}: {professionMode.focus} Recommended next move:{' '}
-                  {professionMode.recommendedMove} Connected context:{' '}
-                  {connectedPlatforms.length ? connectedPlatforms.join(', ') : 'workspace only'}.
-                </p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={onOpenSettings}
-                    className={clsx(mobileChipClass(btnFocus), 'text-fine')}
-                  >
-                    {twin ? 'Improve twin' : 'Set up profile'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onOpenIntegrations}
-                    className={clsx(mobileChipClass(btnFocus), 'text-fine')}
-                  >
-                    Connect tools
-                  </button>
-                  {twin ? (
-                    <>
-                      <button
-                        type="button"
-                        disabled={disabled}
-                        onClick={() =>
-                          void runCommand(twinActionPrompt('draft_outreach', twin))
-                        }
-                        className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
-                      >
-                        Create outreach plan
-                      </button>
-                      <button
-                        type="button"
-                        disabled={disabled}
-                        onClick={() =>
-                          void runCommand(twinActionPrompt('create_30_day_content_plan', twin))
-                        }
-                        className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
-                      >
-                        Build content plan
-                      </button>
-                    </>
-                  ) : null}
+            <div className="mt-3 rounded-2xl border border-primary/30 bg-bgElevated/70 p-3.5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                    Daily Operating Loop
+                  </p>
+                  <h2 className="mt-1 text-h3 text-text">{dailyLoop.greeting}</h2>
+                  <p className="mt-1 text-meta leading-snug text-textMuted">
+                    {dailyLoop.headline}. {dailyLoop.morningBriefing}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-success/35 bg-successSoft/15 px-3 py-2 text-right">
+                  <p className="text-overline font-bold uppercase tracking-wide text-success">
+                    Workspace Health
+                  </p>
+                  <p className="text-h3 text-text">{dailyLoop.workspaceHealth.score}/100</p>
+                  <p className="text-fine text-textMuted">{dailyLoop.workspaceHealth.label}</p>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
-                <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
-                  Safety rule
-                </p>
-                <p className="mt-1 text-meta leading-snug text-textMuted">
-                  Nothing sends, posts, syncs, schedules, or changes workspace records until you
-                  preview and approve it.
-                </p>
-                {lockHint ? (
-                  <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/15 px-2 py-1.5 text-fine text-warning">
-                    {lockHint}
-                  </p>
-                ) : null}
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                {dailyLoop.metrics.map((item) => (
+                  <div key={item.id} className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                        {item.label}
+                      </p>
+                      <span className={clsx('rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(item.tone))}>
+                        {item.value}
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-fine leading-snug text-textMuted">
+                      {item.detail}
+                    </p>
+                  </div>
+                ))}
               </div>
+
+              <div className="mt-3 rounded-xl border border-border/35 bg-bgSubtle/35 px-3 py-2">
+                <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                  Health categories
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {dailyLoop.workspaceHealth.categories.map((item) => (
+                    <span
+                      key={item.id}
+                      className={clsx('rounded-full border px-2 py-1 text-fine font-semibold', toneClass(item.tone))}
+                      title={item.improvement}
+                    >
+                      {item.label} {item.score}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                    Recommended priority
+                  </p>
+                  <div className="mt-2 space-y-2">
+                    {dailyLoop.recommendedPriorities.length ? (
+                      dailyLoop.recommendedPriorities.map((item, index) => (
+                        <div key={item.id} className="flex items-start gap-2">
+                          <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primarySoft/15 text-overline font-bold text-primary">
+                            {index + 1}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-label font-semibold leading-tight text-text">{item.title}</p>
+                            <p className="line-clamp-2 text-fine leading-snug text-textMuted">{item.detail}</p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => void runCommand(item.command)}
+                            className={clsx(mobileChipClass(btnFocus), 'shrink-0 text-fine disabled:opacity-50')}
+                          >
+                            Preview
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-fine leading-snug text-textMuted">
+                        Answer the next missing fact to unlock stronger daily priorities.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                    AI Chief of Staff
+                  </p>
+                  {topChiefOfStaffAlert ? (
+                    <>
+                      <h3 className="mt-2 text-label font-semibold text-text">{topChiefOfStaffAlert.title}</h3>
+                      <p className="mt-1 text-fine leading-snug text-textMuted">{topChiefOfStaffAlert.detail}</p>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void runCommand(topChiefOfStaffAlert.command)}
+                        className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                      >
+                        Review alert
+                      </button>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-fine leading-snug text-textMuted">
+                      No urgent alert. BrandOps will flag stalled follow-ups, pending approvals, weak cadence, and health gaps here.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                    Strategic gaps
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {dailyLoop.strategicGaps.slice(0, 4).map((gap) => (
+                      <button
+                        key={gap.id}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void runCommand(gap.command)}
+                        className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
+                      >
+                        Missing: {gap.title}
+                      </button>
+                    ))}
+                    {dailyLoop.strategicGaps.length === 0 ? (
+                      <span className="text-fine text-textMuted">No major strategic gap detected.</span>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                    End-of-day reflection
+                  </p>
+                  <p className="mt-1 text-fine leading-snug text-textMuted">
+                    {dailyLoop.endOfDayReflection.headline}
+                  </p>
+                  <p className="mt-1 text-fine leading-snug text-textSoft">
+                    Tomorrow: {dailyLoop.tomorrowPreview.slice(0, 3).join(' · ') || 'Review the next priority.'}
+                  </p>
+                </div>
+              </div>
+
+              {topRelationshipMemory ? (
+                <div className="mt-3 rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                        Relationship Memory
+                      </p>
+                      <p className="mt-1 text-label font-semibold text-text">{topRelationshipMemory.name}</p>
+                      <p className="text-fine leading-snug text-textMuted">
+                        {topRelationshipMemory.signal} · {topRelationshipMemory.nextAction}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => void runCommand(topRelationshipMemory.command)}
+                      className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
+                    >
+                      Build capsule
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-3 rounded-xl border border-primary/25 bg-primarySoft/10 px-3 py-2.5">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                    Operational Intelligence Core
+                  </p>
+                  <p className="mt-1 text-label font-semibold leading-tight text-text">
+                    {operationalCore.headline}
+                  </p>
+                  <p className="mt-1 text-fine leading-snug text-textMuted">
+                    {operationalCore.operatingStance}
+                  </p>
+                </div>
+                <span className="rounded-full border border-border/45 bg-bgSubtle px-2 py-1 text-fine font-semibold uppercase text-textMuted">
+                  {operationalCore.receiptContext.pendingApprovals} approvals
+                </span>
+              </div>
+              <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                {operationalCore.briefing.map((item) => (
+                  <div key={item.id} className="rounded-lg border border-border/30 bg-bgElevated/55 px-2.5 py-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                        {item.label}
+                      </p>
+                      <span className={clsx('rounded-full border px-1.5 py-0.5 text-overline font-bold uppercase', toneClass(item.tone))}>
+                        {item.tone}
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-fine leading-snug text-textMuted">
+                      {item.detail}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {missingOperationalCoreQuestion ? (
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => void runCommand(missingOperationalCoreQuestion.command)}
+                  className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                >
+                  Answer next missing fact
+                </button>
+              ) : null}
             </div>
 
             {showSetupHint ? (
@@ -3758,41 +4414,90 @@ export const MobileWorkspaceHubView = ({
           </div>
         </section>
 
-        <WorkspaceOSLayer
-          snapshot={snapshot}
-          btnFocus={btnFocus}
-          disabled={disabled}
-          runCommand={runCommand}
-          onOpenSettings={onOpenSettings}
-          onOpenIntegrations={onOpenIntegrations}
-          onOpenCommandPalette={onOpenCommandPalette}
-          onOpenToday={onOpenToday}
-          onConvertPredictiveOpportunityToPlan={onConvertPredictiveOpportunityToPlan}
-          memoryGraphNodes={memoryGraphNodes}
-          pulseItems={pulseItems}
-          twinProgress={twinProgress}
-          contextualSurface={contextualSurface}
-          personaModes={personaModes}
-          composerDrafts={composerDrafts}
-          briefingItems={briefingItems}
-          timeItems={timeItems}
-          ambientSignals={ambientSignals}
-          energyMetrics={energyMetrics}
-          simulations={simulations}
-          twinEcosystem={twinEcosystem}
-          autonomousDrafts={autonomousDrafts}
-          brainSignals={brainSignals}
-          searchLenses={searchLenses}
-          deepWorkState={deepWorkState}
-          operatingTimeline={operatingTimeline}
-          operationalGraph={operationalGraph}
-          strategicReflections={strategicReflections}
-          adaptiveLayout={adaptiveLayout}
-          intelligenceScores={intelligenceScores}
-          sandboxScenarios={sandboxScenarios}
-          cofounderInsights={cofounderInsights}
-          preparationAssets={preparationAssets}
-        />
+        <section className={ROW} aria-labelledby="plan-ownership-heading">
+          <div className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <p className="text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                  Plan owns the operation
+                </p>
+                <h2 id="plan-ownership-heading" className="mt-1 text-h3 text-text">
+                  One place to manage BrandOps
+                </h2>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  If it creates, changes, configures, approves, tracks, or connects something, it
+                  belongs in Plan.
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <article className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                <div className="flex items-center gap-2 text-text">
+                  <UserRound className="h-4 w-4 text-primary" aria-hidden />
+                  <h3 className="text-label font-semibold">Twin, DNA, and memory</h3>
+                </div>
+                <p className="mt-1 text-fine leading-snug text-textMuted">
+                  Create the twin, manage Workspace DNA, approve memory, and tune settings.
+                </p>
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine')}
+                >
+                  Open Setup
+                </button>
+              </article>
+              <article className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                <div className="flex items-center gap-2 text-text">
+                  <Sparkles className="h-4 w-4 text-primary" aria-hidden />
+                  <h3 className="text-label font-semibold">Actions and plans</h3>
+                </div>
+                <p className="mt-1 text-fine leading-snug text-textMuted">
+                  Convert Ask insights, review recommendations, and manage active work.
+                </p>
+                <button
+                  type="button"
+                  onClick={onOpenCommandPalette}
+                  className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine')}
+                >
+                  Browse actions
+                </button>
+              </article>
+              <article className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                <div className="flex items-center gap-2 text-text">
+                  <Network className="h-4 w-4 text-primary" aria-hidden />
+                  <h3 className="text-label font-semibold">Sources and integrations</h3>
+                </div>
+                <p className="mt-1 text-fine leading-snug text-textMuted">
+                  Connect platforms and keep operational context visible in one workspace.
+                </p>
+                <button
+                  type="button"
+                  onClick={onOpenIntegrations}
+                  className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine')}
+                >
+                  Open Sources
+                </button>
+              </article>
+              <article className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
+                <div className="flex items-center gap-2 text-text">
+                  <Activity className="h-4 w-4 text-primary" aria-hidden />
+                  <h3 className="text-label font-semibold">Activity and receipts</h3>
+                </div>
+                <p className="mt-1 text-fine leading-snug text-textMuted">
+                  Review timelines, notifications, receipts, and completed operational work.
+                </p>
+                <button
+                  type="button"
+                  onClick={onOpenToday}
+                  className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine')}
+                >
+                  Open Activity
+                </button>
+              </article>
+            </div>
+          </div>
+        </section>
 
         <div className={ROW}>
           <PlanUnifiedOperationalInbox
@@ -3804,54 +4509,104 @@ export const MobileWorkspaceHubView = ({
           />
         </div>
 
-        <section className={ROW} aria-labelledby="expert-routing-heading">
-          <div className="rounded-2xl border border-info/35 bg-infoSoft/10 p-3.5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-meta font-semibold uppercase tracking-[0.14em] text-info">
-                  Mixture of Operational Experts
-                </p>
-                <h2 id="expert-routing-heading" className="mt-1 text-h3 text-text">
-                  Experts activated without exposing hidden reasoning
-                </h2>
-                <p className="mt-1 text-meta leading-snug text-textMuted">
-                  BrandOps routes ASK, PLAN, and OPERATE through specialized experts based on
-                  profession, workflow, twin memory, behavior, and platform context.
-                </p>
-              </div>
-              <span className="rounded-full border border-border/45 bg-bgElevated px-2 py-1 text-fine font-semibold text-textMuted">
-                {snapshot.expertOperator.generatedUsing.length} expert{snapshot.expertOperator.generatedUsing.length === 1 ? '' : 's'}
-              </span>
+        <section className={ROW} aria-labelledby="recommended-next-actions-heading">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                <Sparkles className="h-4 w-4" aria-hidden />
+                Recommended Actions
+              </p>
+              <h2 id="recommended-next-actions-heading" className="mt-1 text-h3 text-text">
+                What should I do next?
+              </h2>
+              <p className="mt-1 text-meta leading-snug text-textMuted">
+                Simple next moves from current plans, approvals, opportunities, twin context, and
+                supported integrations.
+              </p>
             </div>
-
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              {[snapshot.expertOperator.ask, snapshot.expertOperator.plan, snapshot.expertOperator.operate].map(
-                (mode) => (
-                  <article key={mode.mode} className="rounded-xl border border-border/35 bg-bgElevated/60 px-3 py-2.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-fine font-bold uppercase tracking-[0.16em] text-primary">
-                          {mode.mode}
-                        </p>
-                        <h3 className="mt-1 text-label font-semibold leading-tight text-text">
-                          {mode.headline}
-                        </h3>
-                      </div>
-                      <span className="shrink-0 rounded-full border border-border/45 bg-bgSubtle px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
-                        {mode.confidence}%
-                      </span>
-                    </div>
-                    <p className="mt-2 line-clamp-3 text-fine leading-snug text-textMuted">
-                      {mode.summary}
-                    </p>
-                    <p className="mt-2 rounded-lg border border-border/30 bg-bgSubtle/45 px-2 py-1.5 text-fine leading-snug text-textSoft">
-                      Experts: {mode.expertNames.join(', ') || 'General operator'}
-                    </p>
-                  </article>
-                )
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={onOpenCommandPalette}
+              className={clsx(mobileChipClass(btnFocus), 'text-meta')}
+            >
+              Browse actions
+            </button>
           </div>
+
+          {suggestions.length === 0 ? (
+            <div className="mt-3">
+              <EmptyState
+                title="No recommendations yet"
+                body="Ask a question, convert an ASK output, connect a tool, or add workspace activity and BrandOps will recommend the next move."
+              />
+            </div>
+          ) : (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {suggestions.map((item) => {
+                const cardId = `recommendation-${item.id}`;
+                return (
+                  <details
+                    key={item.id}
+                    className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5"
+                  >
+                    <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                            RecommendationCard · {item.source}
+                          </p>
+                          <h3 className="mt-1 text-label font-semibold text-text">{item.title}</h3>
+                          <p className="mt-1 line-clamp-2 text-meta leading-snug text-textMuted">
+                            {item.detail}
+                          </p>
+                        </div>
+                        {typeof item.confidence === 'number' ? (
+                          <span className="rounded-full border border-border/45 bg-bgSubtle px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
+                            {item.confidence}% fit
+                          </span>
+                        ) : null}
+                      </div>
+                    </summary>
+                    <div className="mt-3 rounded-xl border border-border/30 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textSoft">
+                      <p><span className="font-semibold text-text">Why now:</span> {item.why}</p>
+                      <p className="mt-1"><span className="font-semibold text-text">What happens next:</span> Preview it, save it, or convert it into a PLAN draft. External action still requires approval.</p>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-1.5 text-meta">
+                      <BoardCardControl
+                        btnFocus={btnFocus}
+                        disabled={disabled}
+                        onClick={() => {
+                          if (item.onPrimary) item.onPrimary();
+                          else void runCommand(item.command);
+                        }}
+                      >
+                        Start
+                      </BoardCardControl>
+                      <BoardCardControl
+                        btnFocus={btnFocus}
+                        disabled={disabled}
+                        onClick={() => void runCommand(item.command)}
+                      >
+                        Preview
+                      </BoardCardControl>
+                    </div>
+                    <BoardCardUtilityControls
+                      id={cardId}
+                      btnFocus={btnFocus}
+                      pinned={pinnedBoardCards}
+                      archived={archivedBoardCards}
+                      duplicated={duplicatedBoardCards}
+                      saved={savedBoardCards}
+                      onPin={pinCard}
+                      onArchive={archiveCard}
+                      onDuplicate={duplicateCard}
+                      onSave={saveCard}
+                    />
+                  </details>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section className={ROW} aria-labelledby="active-plans-heading">
@@ -3883,7 +4638,7 @@ export const MobileWorkspaceHubView = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
-                      {plan.sourceLabel ?? 'Plan'}
+                      PlanCard · {plan.sourceLabel ?? 'Plan'}
                     </p>
                     <h3 id={`${plan.id}-heading`} className="mt-1 text-label font-semibold text-text">
                       {plan.title}
@@ -3897,6 +4652,16 @@ export const MobileWorkspaceHubView = ({
                   >
                     {statusLabel(plan.status)}
                   </span>
+                </div>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between gap-2 text-fine text-textSoft">
+                    <span>Progress</span>
+                    <span>{plan.progress}%</span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full border border-border/30 bg-bgSubtle">
+                    <span className="block h-full rounded-full bg-primary" style={{ width: `${plan.progress}%` }} />
+                  </div>
                 </div>
 
                 <div className="mt-3 grid gap-2 text-meta">
@@ -3913,6 +4678,30 @@ export const MobileWorkspaceHubView = ({
                     <p className="mt-1 leading-snug text-textMuted">{activeNextStep(plan)}</p>
                   </div>
                 </div>
+
+                <details className="mt-3 rounded-xl border border-border/30 bg-bgSubtle/35 px-2.5 py-2">
+                  <summary className="cursor-pointer list-none text-fine font-semibold uppercase tracking-wide text-textSoft [&::-webkit-details-marker]:hidden">
+                    Expand workflow, timeline, approvals, assets, and activity
+                  </summary>
+                  <div className="mt-2 grid gap-2 text-fine leading-snug text-textMuted sm:grid-cols-2">
+                    <div className="rounded-lg border border-border/25 bg-bgElevated/45 px-2 py-1.5">
+                      <span className="font-semibold text-text">Workflow:</span>{' '}
+                      {plan.timeline.join(' -> ')}
+                    </div>
+                    <div className="rounded-lg border border-border/25 bg-bgElevated/45 px-2 py-1.5">
+                      <span className="font-semibold text-text">Approvals:</span> Preview and approve
+                      before execution.
+                    </div>
+                    <div className="rounded-lg border border-border/25 bg-bgElevated/45 px-2 py-1.5">
+                      <span className="font-semibold text-text">Generated assets:</span>{' '}
+                      {plan.exportPayload ? Object.keys(plan.exportPayload).slice(0, 4).join(', ') : 'Plan preview'}
+                    </div>
+                    <div className="rounded-lg border border-border/25 bg-bgElevated/45 px-2 py-1.5">
+                      <span className="font-semibold text-text">Activity log:</span> Created from{' '}
+                      {plan.sourceLabel ?? 'workspace context'}.
+                    </div>
+                  </div>
+                </details>
 
                 <div className="mt-3 grid grid-cols-2 gap-1.5 text-meta">
                   <button
@@ -3966,6 +4755,18 @@ export const MobileWorkspaceHubView = ({
                     Export
                   </button>
                 </div>
+                <BoardCardUtilityControls
+                  id={`plan-${plan.id}`}
+                  btnFocus={btnFocus}
+                  pinned={pinnedBoardCards}
+                  archived={archivedBoardCards}
+                  duplicated={duplicatedBoardCards}
+                  saved={savedBoardCards}
+                  onPin={pinCard}
+                  onArchive={archiveCard}
+                  onDuplicate={duplicateCard}
+                  onSave={saveCard}
+                />
               </article>
             ))}
           </div>
@@ -4006,6 +4807,9 @@ export const MobileWorkspaceHubView = ({
                   <article key={item.id} className="rounded-xl border border-border/40 bg-bgElevated/65 p-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
+                        <p className="text-fine font-semibold uppercase tracking-wide text-warning">
+                          ApprovalCard
+                        </p>
                         <h3 className="text-label font-semibold text-text">{item.verb}</h3>
                         <p className="mt-1 text-meta leading-snug text-textMuted">
                           {item.preview || 'No preview captured yet.'}
@@ -4015,7 +4819,15 @@ export const MobileWorkspaceHubView = ({
                         Waiting
                       </span>
                     </div>
-                    <div className="mt-3 grid grid-cols-3 gap-1.5 text-meta">
+                    <details className="mt-3 rounded-xl border border-border/30 bg-bgSubtle/35 px-2.5 py-2">
+                      <summary className="cursor-pointer list-none text-fine font-semibold uppercase tracking-wide text-textSoft [&::-webkit-details-marker]:hidden">
+                        Why this needs approval
+                      </summary>
+                      <p className="mt-2 text-fine leading-snug text-textMuted">
+                        {item.annotatorNote || 'BrandOps needs your review before the next action can change workspace or external state.'}
+                      </p>
+                    </details>
+                    <div className="mt-3 grid grid-cols-2 gap-1.5 text-meta sm:grid-cols-5">
                       <button
                         type="button"
                         disabled={disabled}
@@ -4023,6 +4835,22 @@ export const MobileWorkspaceHubView = ({
                         className={clsx('rounded-lg border border-border/45 bg-surface/60 px-2 py-1.5 text-text disabled:opacity-45', btnFocus)}
                       >
                         Preview
+                      </button>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void runCommand(approvalPrompt('Edit this approval item', item))}
+                        className={clsx('rounded-lg border border-border/45 bg-surface/60 px-2 py-1.5 text-text disabled:opacity-45', btnFocus)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void runCommand(approvalPrompt('Regenerate this approval item', item))}
+                        className={clsx('rounded-lg border border-border/45 bg-surface/60 px-2 py-1.5 text-text disabled:opacity-45', btnFocus)}
+                      >
+                        Regenerate
                       </button>
                       <button
                         type="button"
@@ -4043,6 +4871,18 @@ export const MobileWorkspaceHubView = ({
                         Approve
                       </button>
                     </div>
+                    <BoardCardUtilityControls
+                      id={`approval-${item.id}`}
+                      btnFocus={btnFocus}
+                      pinned={pinnedBoardCards}
+                      archived={archivedBoardCards}
+                      duplicated={duplicatedBoardCards}
+                      saved={savedBoardCards}
+                      onPin={pinCard}
+                      onArchive={archiveCard}
+                      onDuplicate={duplicateCard}
+                      onSave={saveCard}
+                    />
                   </article>
                 ))}
               </div>
@@ -4050,141 +4890,149 @@ export const MobileWorkspaceHubView = ({
           </div>
         </section>
 
-        <section className={ROW} aria-labelledby="suggested-plans-heading">
+        <section className={ROW} aria-labelledby="opportunity-feed-heading">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
               <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-[0.14em] text-primary">
-                <Sparkles className="h-4 w-4" aria-hidden />
-                Suggested next plans
+                <Radar className="h-4 w-4" aria-hidden />
+                Opportunities
               </p>
-              <h2 id="suggested-plans-heading" className="mt-1 text-h3 text-text">
-                What the AI recommends next
+              <h2 id="opportunity-feed-heading" className="mt-1 text-h3 text-text">
+                What opportunities exist?
               </h2>
+              <p className="mt-1 text-meta leading-snug text-textMuted">
+                Growth, positioning, outreach, content, and workflow openings from the current
+                workspace signals.
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={onOpenCommandPalette}
-              className={clsx(mobileChipClass(btnFocus), 'text-meta')}
-            >
-              Browse commands
-            </button>
           </div>
 
-          {suggestions.length === 0 ? (
-            <div className="mt-3">
-              <EmptyState
-                title="No suggestions yet"
-                body="Ask a question, connect a tool, or add workspace activity and new plan suggestions will appear here."
-              />
-            </div>
+          {opportunities.length === 0 ? (
+            <p className="mt-3 rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2 text-meta text-textMuted">
+              No opportunity signals yet. ASK outputs, twin memory, connected platforms, and activity
+              will feed this stream.
+            </p>
           ) : (
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {suggestions.map((item) => (
-                <article key={item.id} className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-fine font-semibold uppercase tracking-wide text-primary">
-                        {item.source}
+              {opportunities.map((item) => {
+                const cardId = `opportunity-${item.id}`;
+                return (
+                  <details
+                    key={item.id}
+                    className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5"
+                  >
+                    <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                            OpportunityCard · {item.kind.replace(/-/g, ' ')}
+                          </p>
+                          <h3 className="mt-1 text-label font-semibold text-text">{item.title}</h3>
+                          <p className="mt-1 line-clamp-2 text-meta leading-snug text-textMuted">
+                            {item.suggestion}
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-success/45 bg-successSoft/15 px-2 py-0.5 text-overline font-bold uppercase text-success">
+                          {item.confidence}% confidence
+                        </span>
+                      </div>
+                    </summary>
+                    <div className="mt-3 grid gap-2 text-fine leading-snug text-textMuted">
+                      <p className="rounded-lg border border-border/25 bg-bgSubtle/45 px-2 py-1.5">
+                        <span className="font-semibold text-text">Impact score:</span>{' '}
+                        {item.expectedImpact}
                       </p>
-                      <h3 className="mt-1 text-label font-semibold text-text">{item.title}</h3>
+                      <p className="rounded-lg border border-border/25 bg-bgSubtle/45 px-2 py-1.5">
+                        <span className="font-semibold text-text">Source signal:</span>{' '}
+                        {item.supportingSignals.slice(0, 3).join(' · ') || item.whyThisAppeared}
+                      </p>
+                      <p className="rounded-lg border border-border/25 bg-bgSubtle/45 px-2 py-1.5">
+                        <span className="font-semibold text-text">Why now:</span>{' '}
+                        {item.whyThisAppeared}
+                      </p>
                     </div>
-                    {typeof item.confidence === 'number' ? (
-                      <span className="rounded-full border border-border/45 bg-bgSubtle px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
-                        {item.confidence}% fit
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-2 text-meta leading-snug text-textMuted">{item.detail}</p>
-                  <p className="mt-2 rounded-xl border border-border/30 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textSoft">
-                    Why now: {item.why}
-                  </p>
-                  <div className="mt-3 grid grid-cols-2 gap-1.5 text-meta">
-                    <button
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => void runCommand(item.command)}
-                      className={clsx('rounded-lg border border-border/45 bg-surface/60 px-2 py-1.5 text-text disabled:opacity-45', btnFocus)}
-                    >
-                      Preview
-                    </button>
-                    <button
-                      type="button"
-                      disabled={commandBusy}
-                      onClick={() => {
-                        if (item.onPrimary) item.onPrimary();
-                        else void runCommand(item.command);
-                      }}
-                      className={clsx('rounded-lg border border-success/45 bg-successSoft/20 px-2 py-1.5 text-success disabled:opacity-45', btnFocus)}
-                    >
-                      <Lightbulb className="mr-1 inline h-3.5 w-3.5" aria-hidden />
-                      {item.primaryLabel}
-                    </button>
-                  </div>
-                </article>
-              ))}
+                    <div className="mt-3 grid grid-cols-2 gap-1.5 text-meta">
+                      <BoardCardControl
+                        btnFocus={btnFocus}
+                        onClick={() => onConvertPredictiveOpportunityToPlan(item)}
+                      >
+                        Convert to plan
+                      </BoardCardControl>
+                      <BoardCardControl
+                        btnFocus={btnFocus}
+                        disabled={disabled}
+                        onClick={() => void runCommand(item.previewCommand)}
+                      >
+                        Preview
+                      </BoardCardControl>
+                    </div>
+                    <BoardCardUtilityControls
+                      id={cardId}
+                      btnFocus={btnFocus}
+                      pinned={pinnedBoardCards}
+                      archived={archivedBoardCards}
+                      duplicated={duplicatedBoardCards}
+                      saved={savedBoardCards}
+                      onPin={pinCard}
+                      onArchive={archiveCard}
+                      onDuplicate={duplicateCard}
+                      onSave={saveCard}
+                    />
+                  </details>
+                );
+              })}
             </div>
           )}
         </section>
 
-        <section className={ROW} aria-labelledby="platform-intelligence-heading">
-          <div className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-meta font-semibold uppercase tracking-[0.14em] text-primary">
-                  Connected Platform Intelligence
-                </p>
-                <h2 id="platform-intelligence-heading" className="mt-1 text-h3 text-text">
-                  Platform-aware actions BrandOps can actually support
-                </h2>
-                <p className="mt-1 text-meta leading-snug text-textMuted">
-                  Action cards only appear when connected or approved context exists. Unsupported
-                  Gmail, LinkedIn, Calendar, Slack, Notion, HubSpot, or X actions are not faked.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={onOpenIntegrations}
-                className={clsx(mobileChipClass(btnFocus), 'text-meta')}
-              >
-                Manage platforms
-              </button>
-            </div>
-
-            {platformCards.length === 0 ? (
-              <p className="mt-3 rounded-xl border border-warning/30 bg-warningSoft/10 px-3 py-2 text-meta leading-snug text-warning">
-                No supported platform action cards yet. Connect a source or approve platform
-                summaries before BrandOps suggests external-platform workflows.
+        <section className={ROW} aria-labelledby="saved-ask-insights-heading">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                Saved insights from Ask My Twin
               </p>
+              <h2 id="saved-ask-insights-heading" className="mt-1 text-h3 text-text">
+                Thinking ready to become operations
+              </h2>
+              <p className="mt-1 text-meta leading-snug text-textMuted">
+                Ask stays conversational. Saved, pinned, or converted answers show up here as plan,
+                mission, memory, positioning, content, or outreach inputs.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onOpenCommandPalette()}
+              className={clsx(mobileChipClass(btnFocus), 'text-meta')}
+            >
+              Add from Ask
+            </button>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {convertedOperationalPlans.length ? (
+              convertedOperationalPlans.slice(0, 4).map((plan) => (
+                <article key={plan.id} className="rounded-xl border border-border/40 bg-bgElevated/60 p-3">
+                  <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                    Converted from Ask My Twin
+                  </p>
+                  <h3 className="mt-1 text-label font-semibold text-text">{plan.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-meta leading-snug text-textMuted">
+                    {plan.promise}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => void runCommand(plan.previewCommand)}
+                    className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                  >
+                    Preview as plan
+                  </button>
+                </article>
+              ))
             ) : (
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {platformCards.map((card) => (
-                  <article key={card.id} className="rounded-xl border border-border/35 bg-bgSubtle/50 p-3">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-fine font-semibold uppercase tracking-wide text-primary">
-                          {card.platform}
-                        </p>
-                        <h3 className="mt-1 text-label font-semibold text-text">{card.title}</h3>
-                      </div>
-                      <span className="rounded-full border border-success/35 bg-successSoft/15 px-2 py-0.5 text-overline font-bold uppercase text-success">
-                        Supported
-                      </span>
-                    </div>
-                    <p className="mt-2 text-meta leading-snug text-textMuted">{card.description}</p>
-                    <p className="mt-2 rounded-lg border border-border/30 bg-bgElevated/60 px-2 py-1.5 text-fine leading-snug text-textSoft">
-                      Approval: {card.approvalRequirement}
-                    </p>
-                    <button
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => void runCommand(card.command)}
-                      className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
-                    >
-                      Preview action
-                    </button>
-                  </article>
-                ))}
-              </div>
+              <p className="rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2 text-meta leading-snug text-textMuted">
+                No saved Ask insights yet. Use Save, Pin, or Convert to Plan from Ask My Twin when a
+                conversation produces something operational.
+              </p>
             )}
           </div>
         </section>
@@ -4194,10 +5042,10 @@ export const MobileWorkspaceHubView = ({
             <div>
               <p className="flex items-center gap-1.5 text-meta font-semibold uppercase tracking-[0.14em] text-primary">
                 <Clock3 className="h-4 w-4" aria-hidden />
-                Timeline and activity
+                Operational Timeline
               </p>
               <h2 id="timeline-heading" className="mt-1 text-h3 text-text">
-                What is scheduled, in progress, or failed
+                What has already happened?
               </h2>
             </div>
             <button
@@ -4221,6 +5069,9 @@ export const MobileWorkspaceHubView = ({
                   <article key={item.id} className="rounded-xl border border-border/40 bg-bgElevated/65 p-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
+                        <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                          TimelineCard · {item.kind.replace(/-/g, ' ')}
+                        </p>
                         <h3 className="text-label font-semibold text-text">{item.whatHappened}</h3>
                         <p className="mt-0.5 text-fine text-textSoft">
                           {item.whereItHappened} - {compactTime(item.at)}
@@ -4231,6 +5082,15 @@ export const MobileWorkspaceHubView = ({
                       </span>
                     </div>
                     <p className="mt-2 text-meta leading-snug text-textMuted">{item.whatAiDid}</p>
+                    <details className="mt-2 rounded-lg border border-border/30 bg-bgSubtle/35 px-2 py-1.5">
+                      <summary className="cursor-pointer list-none text-fine font-semibold uppercase tracking-wide text-textSoft [&::-webkit-details-marker]:hidden">
+                        Activity detail
+                      </summary>
+                      <p className="mt-1 text-fine leading-snug text-textMuted">
+                        Plan created, updated, requested, completed, retried, or reviewed in the
+                        workspace timeline. Developer traces stay hidden from this board.
+                      </p>
+                    </details>
                     {item.command ? (
                       <button
                         type="button"
@@ -4246,6 +5106,18 @@ export const MobileWorkspaceHubView = ({
                         {item.kind === 'failed-operation' ? 'Retry' : 'Inspect'}
                       </button>
                     ) : null}
+                    <BoardCardUtilityControls
+                      id={`timeline-${item.id}`}
+                      btnFocus={btnFocus}
+                      pinned={pinnedBoardCards}
+                      archived={archivedBoardCards}
+                      duplicated={duplicatedBoardCards}
+                      saved={savedBoardCards}
+                      onPin={pinCard}
+                      onArchive={archiveCard}
+                      onDuplicate={duplicateCard}
+                      onSave={saveCard}
+                    />
                   </article>
                 ))
               )}
@@ -4340,6 +5212,237 @@ export const MobileWorkspaceHubView = ({
             </div>
           </div>
         </section>
+
+        <details className={ROW}>
+          <summary className="cursor-pointer rounded-2xl border border-border/40 bg-bgElevated/65 px-3.5 py-3 text-meta font-semibold text-text outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
+            Advanced workspace intelligence
+            <span className="ml-2 font-normal text-textMuted">
+              Twin context, safety policy, experts, platform support, and deeper operating memory.
+            </span>
+          </summary>
+
+          <div className="mt-3 space-y-3">
+            <div className="grid gap-2 sm:grid-cols-4" aria-label="ASK PLAN OPERATE VERIFY mental model">
+              {modeCards.map((card) => (
+                <ModeCard key={card.mode} {...card} />
+              ))}
+            </div>
+
+            <ProductionReadinessPath
+              snapshot={snapshot}
+              btnFocus={btnFocus}
+              disabled={disabled}
+              runCommand={runCommand}
+              onOpenSettings={onOpenSettings}
+              onOpenCommandPalette={onOpenCommandPalette}
+              onOpenToday={onOpenToday}
+            />
+
+            <AutonomyLevelsPanel />
+
+            <WorkspaceIntelligenceCorePanel
+              snapshot={snapshot}
+              btnFocus={btnFocus}
+              disabled={disabled}
+              runCommand={runCommand}
+              onOpenSettings={onOpenSettings}
+            />
+
+            <div className="grid gap-2 sm:grid-cols-[1.4fr_1fr]">
+              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
+                <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                  Digital twin context
+                </p>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  {twin
+                    ? `${twin.displayName} is active with ${twin.confidenceScore}% confidence. PLAN uses approved profile facts, voice, memory, and current workspace context.`
+                    : 'No active digital twin yet. PLAN still works, but profile, voice, and proof improve after setup.'}
+                </p>
+                <p className="mt-2 rounded-lg border border-border/30 bg-bgSubtle/45 px-2.5 py-2 text-fine leading-snug text-textSoft">
+                  {professionMode.label}: {professionMode.focus} Recommended next move:{' '}
+                  {professionMode.recommendedMove} Connected context:{' '}
+                  {connectedPlatforms.length ? connectedPlatforms.join(', ') : 'workspace only'}.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={onOpenSettings}
+                    className={clsx(mobileChipClass(btnFocus), 'text-fine')}
+                  >
+                    {twin ? 'Improve twin' : 'Set up profile'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onOpenIntegrations}
+                    className={clsx(mobileChipClass(btnFocus), 'text-fine')}
+                  >
+                    Connect tools
+                  </button>
+                  {twin ? (
+                    <>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void runCommand(twinActionPrompt('draft_outreach', twin))}
+                        className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
+                      >
+                        Create outreach plan
+                      </button>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() =>
+                          void runCommand(twinActionPrompt('create_30_day_content_plan', twin))
+                        }
+                        className={clsx(mobileChipClass(btnFocus), 'text-fine disabled:opacity-50')}
+                      >
+                        Build content plan
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
+                <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+                  Safety rule
+                </p>
+                <p className="mt-1 text-meta leading-snug text-textMuted">
+                  Nothing sends, posts, syncs, schedules, or changes workspace records until you
+                  preview and approve it.
+                </p>
+                {lockHint ? (
+                  <p className="mt-2 rounded-lg border border-warning/30 bg-warningSoft/15 px-2 py-1.5 text-fine text-warning">
+                    {lockHint}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            <section aria-labelledby="expert-routing-heading">
+              <div className="rounded-2xl border border-info/35 bg-infoSoft/10 p-3.5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-meta font-semibold uppercase tracking-[0.14em] text-info">
+                      Routing experts
+                    </p>
+                    <h2 id="expert-routing-heading" className="mt-1 text-h3 text-text">
+                      Experts activated without exposing hidden reasoning
+                    </h2>
+                    <p className="mt-1 text-meta leading-snug text-textMuted">
+                      BrandOps routes ASK, PLAN, and OPERATE through specialized experts based on
+                      profession, workflow, twin memory, behavior, and platform context.
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-border/45 bg-bgElevated px-2 py-1 text-fine font-semibold text-textMuted">
+                    {snapshot.expertOperator.generatedUsing.length} expert{snapshot.expertOperator.generatedUsing.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <section aria-labelledby="platform-intelligence-heading">
+              <div className="rounded-2xl border border-border/40 bg-bgElevated/60 p-3.5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-meta font-semibold uppercase tracking-[0.14em] text-primary">
+                      Connected Platform Support
+                    </p>
+                    <h2 id="platform-intelligence-heading" className="mt-1 text-h3 text-text">
+                      Platform actions BrandOps can actually support
+                    </h2>
+                    <p className="mt-1 text-meta leading-snug text-textMuted">
+                      Action cards only appear when connected or approved context exists. Unsupported
+                      Gmail, LinkedIn, Calendar, Slack, Notion, HubSpot, or X actions are not faked.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenIntegrations}
+                    className={clsx(mobileChipClass(btnFocus), 'text-meta')}
+                  >
+                    Manage platforms
+                  </button>
+                </div>
+
+                {platformCards.length === 0 ? (
+                  <p className="mt-3 rounded-xl border border-warning/30 bg-warningSoft/10 px-3 py-2 text-meta leading-snug text-warning">
+                    No supported platform action cards yet. Connect a source or approve platform
+                    summaries before BrandOps suggests external-platform workflows.
+                  </p>
+                ) : (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {platformCards.map((card) => (
+                      <article key={card.id} className="rounded-xl border border-border/35 bg-bgSubtle/50 p-3">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-fine font-semibold uppercase tracking-wide text-primary">
+                              {card.platform}
+                            </p>
+                            <h3 className="mt-1 text-label font-semibold text-text">{card.title}</h3>
+                          </div>
+                          <span className="rounded-full border border-success/35 bg-successSoft/15 px-2 py-0.5 text-overline font-bold uppercase text-success">
+                            Supported
+                          </span>
+                        </div>
+                        <p className="mt-2 text-meta leading-snug text-textMuted">{card.description}</p>
+                        <p className="mt-2 rounded-lg border border-border/30 bg-bgElevated/60 px-2 py-1.5 text-fine leading-snug text-textSoft">
+                          Approval: {card.approvalRequirement}
+                        </p>
+                        <button
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => void runCommand(card.command)}
+                          className={clsx(mobileChipClass(btnFocus), 'mt-2 text-fine disabled:opacity-50')}
+                        >
+                          Preview action
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <div className="-mx-4 sm:-mx-5">
+              <WorkspaceOSLayer
+                snapshot={snapshot}
+                btnFocus={btnFocus}
+                disabled={disabled}
+                runCommand={runCommand}
+                onOpenSettings={onOpenSettings}
+                onOpenIntegrations={onOpenIntegrations}
+                onOpenCommandPalette={onOpenCommandPalette}
+                onOpenToday={onOpenToday}
+                onConvertPredictiveOpportunityToPlan={onConvertPredictiveOpportunityToPlan}
+                memoryGraphNodes={memoryGraphNodes}
+                pulseItems={pulseItems}
+                twinProgress={twinProgress}
+                contextualSurface={contextualSurface}
+                personaModes={personaModes}
+                composerDrafts={composerDrafts}
+                briefingItems={briefingItems}
+                timeItems={timeItems}
+                ambientSignals={ambientSignals}
+                energyMetrics={energyMetrics}
+                simulations={simulations}
+                twinEcosystem={twinEcosystem}
+                autonomousDrafts={autonomousDrafts}
+                brainSignals={brainSignals}
+                searchLenses={searchLenses}
+                deepWorkState={deepWorkState}
+                operatingTimeline={operatingTimeline}
+                operationalGraph={operationalGraph}
+                strategicReflections={strategicReflections}
+                adaptiveLayout={adaptiveLayout}
+                intelligenceScores={intelligenceScores}
+                sandboxScenarios={sandboxScenarios}
+                cofounderInsights={cofounderInsights}
+                preparationAssets={preparationAssets}
+              />
+            </div>
+          </div>
+        </details>
       </div>
     </div>
   );

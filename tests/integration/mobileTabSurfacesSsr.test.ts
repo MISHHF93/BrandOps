@@ -101,15 +101,36 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Plan"');
-    expect(html).toContain('PLAN command board');
-    expect(html).toContain('Turn ideas into approved next steps');
+    expect(html).toContain('Operational Command Board');
+    expect(html).toContain('Twin Status');
+    expect(html).toContain('Recommended Actions');
+    expect(html).toContain('Pending Approvals');
+    expect(html).toContain('Opportunities');
+    expect(html).toContain('Active Plans');
+    expect(html).toContain('Daily Operating Loop');
+    expect(html).toContain('Workspace Health');
+    expect(html).toContain('Health categories');
+    expect(html).toContain('AI Chief of Staff');
+    expect(html).toContain('Strategic gaps');
+    expect(html).toContain('End-of-day reflection');
+    expect(html).toContain('Relationship Memory');
+    expect(html).toContain('Operational Intelligence Core');
+    expect(html).toContain('Saved insights from Ask My Twin');
+    expect(html).toContain('Plan owns the operation');
+    expect(html).toContain('Twin, DNA, and memory');
+    expect(html).toContain('Sources and integrations');
+    expect(html).toContain('Activity and receipts');
     expect(html).toContain('Active plans');
     expect(html).toContain('Pending approvals');
-    expect(html).toContain('Suggested next plans');
-    expect(html).toContain('Timeline and activity');
+    expect(html).toContain('Recommended Actions');
+    expect(html).toContain('Opportunities');
+    expect(html).toContain('Operational Timeline');
     expect(html).toContain('Soonest queue');
     expect(html).toContain('Recent receipts');
     expect(html).toContain('Safety rule');
+    expect(html).toContain('PlanCard');
+    expect(html).toContain('RecommendationCard');
+    expect(html).toContain('TimelineCard');
     expect(html).toContain('Workflow Plan');
     expect(html).toContain('Outreach Plan');
     expect(html).toContain('Content Calendar');
@@ -269,79 +290,64 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Export');
   });
 
-  it('ASK: intelligence layer, prompt categories, execution shortcuts, and recent commands', () => {
+  it('ASK: renders a focused Ask My Twin conversation surface', () => {
     const messages: ChatMessage[] = [
       {
         id: 'w',
         role: 'assistant',
         resultKind: 'plain',
-        text: 'Type a command (try pipeline health) or press ⌘K / Ctrl+K. Workspace: instruments + queue. Today: full lanes.'
+        text: 'Talk through positioning, strategy, ideas, and opportunities with your twin.'
+      },
+      {
+        id: 'hidden-workspace-command',
+        role: 'assistant',
+        resultKind: 'command-result',
+        sourceSurface: 'Workspace',
+        text: 'Workspace command result should stay out of Ask My Twin.'
       }
     ];
     const html = renderToString(
       React.createElement(MobileChatView, {
         messages,
         loading: false,
-        commandHistory: ['pipeline health'],
         onQuickCommand: noop,
-        copilotWorkerRegistry: snapshot().copilotWorkerRegistry,
-        onSelectCopilotWorker: noop,
-        onClearCommandHistory: noop,
         btnFocus: '',
-        onOpenCommandPalette: noop,
-        onOpenResumeGrounding: noop
       })
     );
-    expect(html).toContain('aria-label="ASK intelligence layer"');
-    expect(html).toContain('ASK');
-    expect(html).toContain('Ask your AI digital twin');
-    expect(html).toContain('profession identity');
-    expect(html).toContain('PLAN and OPERATE');
-    expect(html).toContain('Strategist mode');
-    expect(html).toContain('Suggested prompts');
-    expect(html).toContain('Brainstorm');
-    expect(html).toContain('Resume/profile');
-    expect(html).toContain('Opportunity analysis');
-    expect(html).toContain('Workflow reasoning');
-    expect(html).toContain('Execution shortcuts');
-    expect(html).toContain('Connect Notion');
-    expect(html).toContain('Check pipeline');
-    expect(html).toContain('id="assistant-copilot"');
-    expect(html).toContain('id="assistant-commands"');
+    expect(html).toContain('aria-label="Ask My Twin conversation"');
+    expect(html).toContain('Ask My Twin');
+    expect(html).toContain('Conversation only');
+    expect(html).toContain('Try asking');
     expect(html).toContain('id="assistant-thread"');
-    expect(html).toContain('Recent');
-    expect(html).toContain('pipeline health');
+    expect(html).toContain('Ask My Twin conversation timeline');
+    expect(html).toContain('Conversation');
+    expect(html).toContain('Think with your twin');
+    expect(html).toContain('Save');
+    expect(html).toContain('Pin');
+    expect(html).toContain('Copy');
     expect(html).toContain('bo-assistant-hero');
-    expect(html).toContain('Build or improve your AI twin');
+    expect(html).not.toContain('Execution shortcuts');
+    expect(html).not.toContain('Operational Intelligence Core recommendation');
+    expect(html).not.toContain('Workspace command result should stay out of Ask My Twin.');
+    expect(html).not.toContain('Type a command');
   });
 
-  it('ASK: active twin memory and guided outputs render when a twin exists', () => {
+  it('ASK: active twin chip renders when a twin exists', () => {
     const html = renderToString(
       React.createElement(MobileChatView, {
         messages: [],
         loading: false,
-        commandHistory: [],
         onQuickCommand: noop,
-        copilotWorkerRegistry: snapshot().copilotWorkerRegistry,
-        onSelectCopilotWorker: noop,
-        onClearCommandHistory: noop,
         btnFocus: '',
-        onOpenCommandPalette: noop,
-        activeDigitalTwin: twinSnapshot().activeDigitalTwin,
-        onTwinAction: noop
+        activeDigitalTwin: twinSnapshot().activeDigitalTwin
       })
     );
 
-    expect(html).toContain('Active twin:');
     expect(html).toContain('Maya Rivera');
-    expect(html).toContain('Twin Context Mode');
-    expect(html).toContain('Twin memory preview');
-    expect(html).toContain('Verified data usage');
-    expect(html).toContain('Memory usage');
-    expect(html).toContain('Clarification guardrail');
-    expect(html).toContain('Twin influence');
-    expect(html).toContain('Actionable outputs');
-    expect(html).toContain('Safe output rule');
+    expect(html).toContain('confidence');
+    expect(html).toContain('Start a conversation with your twin');
+    expect(html).not.toContain('Twin Context Mode');
+    expect(html).not.toContain('Actionable outputs');
   });
 
   it('ASK: hosted outputs expose Convert to Plan handoff actions', () => {
@@ -358,24 +364,19 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       React.createElement(MobileChatView, {
         messages,
         loading: false,
-        commandHistory: [],
         onQuickCommand: noop,
-        copilotWorkerRegistry: snapshot().copilotWorkerRegistry,
-        onSelectCopilotWorker: noop,
-        onClearCommandHistory: noop,
         btnFocus: '',
-        onOpenCommandPalette: noop,
         onConvertAskToPlan: noop
       })
     );
 
-    expect(html).toContain('Convert ASK output to PLAN');
-    expect(html).toContain('Ask → Plan → Approve → Execute');
+    expect(html).toContain('Twin response');
     expect(html).toContain('Convert to Plan');
-    expect(html).toContain('Action queue');
-    expect(html).toContain('Content schedule');
-    expect(html).toContain('Outreach draft');
-    expect(html).toContain('Follow-ups');
+    expect(html).toContain('Save');
+    expect(html).toContain('Pin');
+    expect(html).not.toContain('Action queue');
+    expect(html).not.toContain('Approval Prompt Card');
+    expect(html).not.toContain('Interactive ASK cards');
   });
 
   it('Plan hub: active twin context influences operational planning', () => {
@@ -398,7 +399,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
 
-    expect(html).toContain('Operator context');
+    expect(html).toContain('Digital twin context');
     expect(html).toContain('Maya Rivera');
     expect(html).toContain('Improve twin');
     expect(html).toContain('Create outreach plan');
@@ -643,9 +644,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Export operator traces');
     expect(html).toContain('Record operator traces locally');
     expect(html).toContain('Assistant');
-    expect(html).toContain('Operator twin — résumé ingest (hosted Ask)');
+    expect(html).toContain('Create AI digital twin');
     expect(html).toContain('PDF/DOCX parsing is not bundled yet');
-    expect(html).toContain('Generate Digital Twin');
+    expect(html).toContain('Generate digital twin');
     expect(html).toContain('Diagnostics');
     expect(html).toContain('Extension shell');
     expect(html).toContain('Open integrations page in a new tab');

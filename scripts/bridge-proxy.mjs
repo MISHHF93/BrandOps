@@ -7,6 +7,9 @@ const TARGET_URL = process.env.BRIDGE_TARGET_URL ?? '';
 const TELEGRAM_TOKEN = process.env.TELEGRAM_WEBHOOK_TOKEN ?? '';
 const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN ?? '';
 const WHATSAPP_APP_SECRET = process.env.WHATSAPP_APP_SECRET ?? '';
+const LOCAL_RECEIVER_ENABLED =
+  process.env.BRIDGE_ENABLE_LOCAL_RECEIVER === '1' ||
+  process.env.BRIDGE_ENABLE_LOCAL_RECEIVER === 'true';
 
 if (!SHARED_SECRET) {
   console.error('[bridge-proxy] Missing BRIDGE_SHARED_SECRET.');
@@ -95,6 +98,26 @@ const server = createServer(async (req, res) => {
 
     if (req.method === 'GET' && req.url === '/health') {
       sendJson(res, 200, { ok: true, service: 'bridge-proxy' });
+      return;
+    }
+
+    if (req.method === 'POST' && req.url === '/agent-bridge') {
+      if (!LOCAL_RECEIVER_ENABLED) {
+        sendJson(res, 404, { ok: false, error: 'Local bridge receiver is disabled.' });
+        return;
+      }
+      const { json } = await readRequestBody(req);
+      const isBridgeEnvelope =
+        json &&
+        typeof json === 'object' &&
+        json.type === 'AGENT_BRIDGE_ENVELOPE' &&
+        json.payload &&
+        typeof json.payload === 'object';
+      sendJson(res, isBridgeEnvelope ? 200 : 400, {
+        ok: isBridgeEnvelope,
+        service: 'bridge-proxy-local-receiver',
+        receivedType: isBridgeEnvelope ? json.type : 'unknown'
+      });
       return;
     }
 

@@ -65,6 +65,24 @@ describe('BrandOps AI Core', () => {
     expect(response.artifacts[0].sourceFactsUsed.some((fact) => fact.includes('Avery'))).toBe(true);
   });
 
+  it('keeps default ASK artifacts conversational instead of operational plans', async () => {
+    const workspace = cloneSeedData();
+    const response = await runBrandOpsAI({
+      workspace,
+      request: {
+        intent: 'Think through my positioning',
+        mode: 'ask',
+        userInput: 'Think through my positioning',
+        safetyLevel: 'review',
+        approvalRequired: false
+      },
+      generatedText: 'Conversation output with strategic analysis.'
+    });
+
+    expect(response.artifacts[0].type).toBe('opportunity analysis');
+    expect(response.artifacts[0].type).not.toBe('operational plan');
+  });
+
   it('labels missing facts before outputs are used externally', async () => {
     const workspace = cloneSeedData();
     const sparse = {
@@ -156,6 +174,35 @@ describe('BrandOps AI Core', () => {
     expect(response.artifacts[0].type).toBe('content plan');
     expect(response.artifacts[0].content).toContain('PLAN conversion payload');
     expect(response.requiredApprovals).toHaveLength(1);
+  });
+
+  it('feeds Workspace Intelligence Core from approved AI Core artifacts', async () => {
+    const workspace = cloneSeedData();
+    const response = await runBrandOpsAI({
+      workspace,
+      request: {
+        intent: 'Approve a reusable workflow for future workspace DNA',
+        mode: 'plan',
+        userInput: 'Approve this reusable workflow',
+        requiredOutputs: ['workflow plan'],
+        safetyLevel: 'review',
+        approvalRequired: false
+      },
+      generatedText: 'Approved workflow: turn founder ideas into reviewable content and outreach plans.'
+    });
+
+    const next = prependBrandOpsAICoreResult(workspace, response);
+    const snapshot = buildWorkspaceSnapshot(next);
+
+    expect(next.workspaceIntelligence?.dna.approvedOutputs[0]).toContain('workflow plan');
+    expect(snapshot.workspaceIntelligence.decisionMemory[0].polarity).toBe('approved');
+    expect(snapshot.workspaceIntelligence.scorecard.map((metric) => metric.id)).toEqual([
+      'identity-completeness',
+      'positioning-strength',
+      'workflow-maturity',
+      'operational-readiness'
+    ]);
+    expect(snapshot.workspaceIntelligence.operatingManual.length).toBeGreaterThan(0);
   });
 
   it('routes AI Core batch commands through the supported command map', () => {

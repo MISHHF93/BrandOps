@@ -22,6 +22,8 @@ import {
   buildOperatingTimelineEventsFromAiCoreResponse,
   prependOperatingTimelineEvents
 } from '../operatingTimeline/operatingTimeline';
+import { buildOperationalIntelligenceReadout } from '../operationalIntelligence/operationalIntelligence';
+import { refreshWorkspaceIntelligence } from '../workspaceIntelligence/workspaceIntelligence';
 
 export const BRANDOPS_AI_CORE_SCHEMA_VERSION = '1.0.0';
 export const MAX_BRANDOPS_AI_CORE_ARTIFACTS = 160;
@@ -94,12 +96,17 @@ function resolveTwin(workspace: BrandOpsData, twinId?: string): DigitalTwin | nu
 function sourceFacts(workspace: BrandOpsData, twin: DigitalTwin | null): string[] {
   const memory = buildMemoryContextEngineReadout(workspace);
   const platform = buildPlatformAwareAskReadout(workspace);
+  const operationalIntelligence = buildOperationalIntelligenceReadout(workspace);
   return uniq(
     [
       workspace.brand.operatorName,
       workspace.brand.positioning,
       workspace.brand.primaryOffer,
       workspace.brand.focusMetric,
+      operationalIntelligence.dna.profession,
+      operationalIntelligence.recommendedActions[0]?.title,
+      operationalIntelligence.opportunityRadar[0]?.title,
+      operationalIntelligence.decisionMemory[0]?.title,
       twin?.displayName,
       twin?.identity.headline,
       twin?.identity.professionalPositioning,
@@ -372,7 +379,7 @@ function createArtifact(args: {
 function outputsForRequest(request: BrandOpsAIRequest): BrandOpsAIArtifactType[] {
   if (request.requiredOutputs?.length) return request.requiredOutputs;
   if (request.mode === 'batch') return DEFAULT_BATCH_OUTPUTS;
-  if (request.mode === 'ask') return ['operational plan'];
+  if (request.mode === 'ask') return ['opportunity analysis'];
   if (request.mode === 'plan') return ['operational plan', 'workflow plan'];
   if (request.mode === 'predict') return ['opportunity analysis'];
   return ['approval item'];
@@ -482,7 +489,7 @@ export function prependBrandOpsAICoreResult(
   const batchRuns = response.batchRun
     ? [response.batchRun, ...current.batchRuns].slice(0, MAX_BRANDOPS_AI_CORE_BATCH_RUNS)
     : current.batchRuns;
-  return {
+  const nextWorkspace = {
     ...workspace,
     aiCore: {
       schemaVersion: BRANDOPS_AI_CORE_SCHEMA_VERSION,
@@ -494,6 +501,7 @@ export function prependBrandOpsAICoreResult(
       buildOperatingTimelineEventsFromAiCoreResponse(response)
     )
   };
+  return refreshWorkspaceIntelligence(nextWorkspace);
 }
 
 export function normalizeBrandOpsAICoreState(value: unknown): BrandOpsAICoreState {
