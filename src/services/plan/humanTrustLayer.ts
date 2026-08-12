@@ -163,39 +163,37 @@ export function buildHumanTrustLayer(workspace: BrandOpsData): HumanTrustLayerRe
     })
   );
 
-  const behavioralPredictionActions =
-    buildBehavioralIntelligenceEngineReadout(workspace).predictions.map<HumanTrustAction>(
-      (prediction) => ({
-        id: `trust-${prediction.id}`,
-        kind: 'behavioral-prediction',
-        title: prediction.title,
-        location: 'Behavioral Intelligence Engine',
-        status: 'prediction requires approval',
-        riskLevel: 'workspace-only',
-        controls: controlsFor({
-          title: prediction.title,
-          location: 'Behavioral Intelligence Engine',
-          previewCommand: prediction.suggestedCommand
-        })
-      })
-    );
+  const behavioralPredictionActions = buildBehavioralIntelligenceEngineReadout(
+    workspace
+  ).predictions.map<HumanTrustAction>((prediction) => ({
+    id: `trust-${prediction.id}`,
+    kind: 'behavioral-prediction',
+    title: prediction.title,
+    location: 'Behavioral Intelligence Engine',
+    status: 'prediction requires approval',
+    riskLevel: 'workspace-only',
+    controls: controlsFor({
+      title: prediction.title,
+      location: 'Behavioral Intelligence Engine',
+      previewCommand: prediction.suggestedCommand
+    })
+  }));
 
-  const predictiveOpportunityActions =
-    buildPredictiveOpportunityLayerReadout(workspace).suggestions.map<HumanTrustAction>(
-      (suggestion) => ({
-        id: `trust-${suggestion.id}`,
-        kind: 'predictive-opportunity',
-        title: suggestion.title,
-        location: 'Predictive Opportunity Layer',
-        status: 'suggestion requires approval',
-        riskLevel: 'workspace-only',
-        controls: controlsFor({
-          title: suggestion.title,
-          location: 'Predictive Opportunity Layer',
-          previewCommand: suggestion.previewCommand
-        })
-      })
-    );
+  const predictiveOpportunityActions = buildPredictiveOpportunityLayerReadout(
+    workspace
+  ).suggestions.map<HumanTrustAction>((suggestion) => ({
+    id: `trust-${suggestion.id}`,
+    kind: 'predictive-opportunity',
+    title: suggestion.title,
+    location: 'Predictive Opportunity Layer',
+    status: 'suggestion requires approval',
+    riskLevel: 'workspace-only',
+    controls: controlsFor({
+      title: suggestion.title,
+      location: 'Predictive Opportunity Layer',
+      previewCommand: suggestion.previewCommand
+    })
+  }));
 
   const buyerPersona = buildBuyerPersonaIntelligenceReadout(workspace);
   const buyerPersonaActions: HumanTrustAction[] = [
@@ -231,35 +229,37 @@ export function buildHumanTrustLayer(workspace: BrandOpsData): HumanTrustLayerRe
     }
   ];
 
-  const predictiveContentIdeationActions =
-    buildPredictiveContentIdeationReadout(workspace).allIdeas.map<HumanTrustAction>((idea) => ({
-      id: `trust-${idea.id}`,
-      kind: 'predictive-content-ideation',
+  const predictiveContentIdeationActions = buildPredictiveContentIdeationReadout(
+    workspace
+  ).allIdeas.map<HumanTrustAction>((idea) => ({
+    id: `trust-${idea.id}`,
+    kind: 'predictive-content-ideation',
+    title: idea.title,
+    location: 'Predictive Content Ideation',
+    status: 'content idea requires approval',
+    riskLevel: 'workspace-only',
+    controls: controlsFor({
       title: idea.title,
       location: 'Predictive Content Ideation',
-      status: 'content idea requires approval',
-      riskLevel: 'workspace-only',
-      controls: controlsFor({
-        title: idea.title,
-        location: 'Predictive Content Ideation',
-        previewCommand: idea.askToPlanCommand
-      })
-    }));
+      previewCommand: idea.askToPlanCommand
+    })
+  }));
 
-  const workflowPredictionActions =
-    buildWorkflowPredictionLayerReadout(workspace).predictions.map<HumanTrustAction>((workflow) => ({
-      id: `trust-${workflow.id}`,
-      kind: 'workflow-prediction',
+  const workflowPredictionActions = buildWorkflowPredictionLayerReadout(
+    workspace
+  ).predictions.map<HumanTrustAction>((workflow) => ({
+    id: `trust-${workflow.id}`,
+    kind: 'workflow-prediction',
+    title: workflow.title,
+    location: 'Workflow Prediction Layer',
+    status: 'workflow requires approval',
+    riskLevel: 'workspace-only',
+    controls: controlsFor({
       title: workflow.title,
       location: 'Workflow Prediction Layer',
-      status: 'workflow requires approval',
-      riskLevel: 'workspace-only',
-      controls: controlsFor({
-        title: workflow.title,
-        location: 'Workflow Prediction Layer',
-        previewCommand: workflow.controls.reuseCommand
-      })
-    }));
+      previewCommand: workflow.controls.reuseCommand
+    })
+  }));
 
   const memory = buildMemoryContextEngineReadout(workspace);
   const memoryActions: HumanTrustAction[] = [

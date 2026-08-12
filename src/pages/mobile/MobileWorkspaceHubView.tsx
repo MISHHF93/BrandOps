@@ -25,10 +25,7 @@ import type { ContentIdeationItem } from '../../services/plan/predictiveContentI
 import type { WorkflowPrediction } from '../../services/plan/workflowPredictionLayer';
 import type { PulseTimelineRow } from './pulseTimeline';
 import { workspaceQueueCommandLine } from './pulseTimeline';
-import {
-  buildOperationalPlanCards,
-  type OperationalPlanCard
-} from './PlanOperationalStudio';
+import { buildOperationalPlanCards, type OperationalPlanCard } from './PlanOperationalStudio';
 import { mobileChipClass } from './mobileTabPrimitives';
 import { defaultBrandProfile } from '../../config/workspaceDefaults';
 
@@ -83,6 +80,7 @@ export interface MobileWorkspaceHubViewProps {
   onDownloadPipelineRun: (run: PipelineRun) => void;
   onApproveOperatorTrace: (traceId: string) => void | Promise<void>;
   onRejectOperatorTrace?: (traceId: string) => void | Promise<void>;
+  onExecutePlan?: (planId: string) => void | Promise<void>;
   onConvertPredictiveOpportunityToPlan?: (suggestion: PredictiveOpportunitySuggestion) => void;
   onConvertContentIdeationToPlan?: (item: ContentIdeationItem) => void;
   onConvertWorkflowPredictionToPlan?: (prediction: WorkflowPrediction) => void;
@@ -148,8 +146,10 @@ function compactTime(value: string): string {
 }
 
 function planAgentLockCopy(reason: 'auth' | 'membership' | null): string | null {
-  if (reason === 'auth') return 'Sign in from Settings to run workspace commands from Plan.';
-  if (reason === 'membership') return 'Activate membership to run workspace commands from Plan.';
+  if (reason === 'auth')
+    return 'Unlock local preview access in Settings to run workspace commands from Plan.';
+  if (reason === 'membership')
+    return 'Enable the local development membership demo to run workspace commands from Plan.';
   return null;
 }
 
@@ -163,17 +163,27 @@ function planTone(plan: OperationalPlanCard): FeedTone {
 function savedPlanTone(plan: Plan): FeedTone {
   if (plan.status === 'draft' || plan.status === 'pending-approval') return 'warning';
   if (plan.status === 'opportunity') return 'primary';
+  if (plan.status === 'rejected') return 'danger';
+  if (plan.status === 'executing') return 'info';
   return 'success';
+}
+
+/** 'rejected'/'executed' are terminal — the review or the work is done, so this card belongs under "Recent", not the "Active" filter (which matches on `kind === 'active-plan'`). */
+function savedPlanFeedKind(status: Plan['status']): FeedKind {
+  if (status === 'opportunity') return 'opportunity';
+  if (status === 'rejected' || status === 'executed') return 'completed-action';
+  return 'active-plan';
 }
 
 function savedPlanToFeedItem(
   plan: Plan,
   runCommand: MobileWorkspaceHubViewProps['runCommand'],
-  disabled: boolean
+  disabled: boolean,
+  onExecutePlan: NonNullable<MobileWorkspaceHubViewProps['onExecutePlan']>
 ): FeedItem {
   return {
     id: `saved-plan-${plan.id}`,
-    kind: plan.status === 'opportunity' ? 'opportunity' : 'active-plan',
+    kind: savedPlanFeedKind(plan.status),
     title: plan.title,
     summary: plan.objective,
     status: plan.status === 'pending-approval' ? 'approval pending' : plan.status,
@@ -188,13 +198,28 @@ function savedPlanToFeedItem(
     details: [
       `Created from Ask My Twin response ${plan.sourceResponseId}.`,
       `Expected output: ${plan.expectedOutput}`,
-      `Confidence: ${plan.confidenceScore}%`
+      `Confidence: ${plan.confidenceScore}%`,
+      /** Otherwise `plan.thoughtTree` is only ever shown once, in the Convert-to-Plan preview drawer, then becomes permanently invisible once saved. */
+      ...(plan.thoughtTree ? [`Chosen path: ${plan.thoughtTree.chosenPath}`] : [])
     ],
     timeline: plan.timeline.map((item) => `${item.title}: ${item.timing}`),
     approvals: plan.requiredApprovals.length
       ? plan.requiredApprovals
       : ['External actions still require explicit approval.'],
-    receipts: [`Receipt: ${plan.receiptId}`, `Saved ${compactTime(plan.savedAt)}`]
+    receipts: [`Receipt: ${plan.receiptId}`, `Saved ${compactTime(plan.savedAt)}`],
+    /** Only `approved` plans are executable — the executor (planExecutor.ts) refuses anything else. */
+    ...(plan.status === 'approved'
+      ? {
+          secondaryActions: [
+            {
+              label: 'Execute',
+              onClick: () => onExecutePlan(plan.id),
+              disabled,
+              tone: 'success' as FeedTone
+            }
+          ]
+        }
+      : {})
   };
 }
 
@@ -223,12 +248,21 @@ function operationalCardToFeedItem(
     primaryAction: plan.status === 'needs-input' ? 'Add input' : 'Preview',
     primaryDisabled: disabled,
     onPrimary: () => runCommand(plan.previewCommand),
-    details: [nextStep, `Source: ${plan.sourceLabel ?? 'Workspace'}`, `Progress: ${plan.progress}%`],
+    details: [
+      nextStep,
+      `Source: ${plan.sourceLabel ?? 'Workspace'}`,
+      `Progress: ${plan.progress}%`
+    ],
     timeline: plan.timeline,
     approvals: ['Preview and approve before execution.'],
     receipts: Object.keys(plan.exportPayload ?? {}).slice(0, 4),
     secondaryActions: [
-      { label: 'Approve', onClick: () => runCommand(plan.approveCommand), disabled, tone: 'success' },
+      {
+        label: 'Approve',
+        onClick: () => runCommand(plan.approveCommand),
+        disabled,
+        tone: 'success'
+      },
       { label: 'Export', onClick: () => onExportOperationalPlan?.(plan), tone: 'muted' }
     ]
   };
@@ -266,7 +300,12 @@ function approvalToFeedItem(args: {
     approvals: ['Human decision required before workspace or external state changes.'],
     receipts: [`Trace: ${item.id}`, ...(item.labels ?? [])],
     secondaryActions: [
-      { label: 'Approve', onClick: () => onApproveOperatorTrace(item.id), disabled, tone: 'success' },
+      {
+        label: 'Approve',
+        onClick: () => onApproveOperatorTrace(item.id),
+        disabled,
+        tone: 'success'
+      },
       { label: 'Reject', onClick: () => onRejectOperatorTrace(item.id), disabled, tone: 'danger' }
     ]
   };
@@ -295,12 +334,21 @@ function opportunityToFeedItem(args: {
     timeline: ['Evaluate', 'Run small experiment', 'Capture receipt'],
     approvals: ['Approve experiments before outreach, publishing, or record changes.'],
     receipts: item.supportingSignals.slice(0, 4),
-    secondaryActions: [{ label: 'Preview', onClick: () => runCommand(item.previewCommand), disabled }]
+    secondaryActions: [
+      { label: 'Preview', onClick: () => runCommand(item.previewCommand), disabled }
+    ]
   };
 }
 
 function recommendationToFeedItem(
-  item: { id: string; title: string; detail: string; why: string; command: string; confidence?: number },
+  item: {
+    id: string;
+    title: string;
+    detail: string;
+    why: string;
+    command: string;
+    confidence?: number;
+  },
   runCommand: MobileWorkspaceHubViewProps['runCommand'],
   disabled: boolean
 ): FeedItem {
@@ -312,7 +360,7 @@ function recommendationToFeedItem(
     status: item.confidence ? `${item.confidence}% confidence` : 'suggested',
     tone: 'info',
     priority: 35,
-    primaryAction: 'Run',
+    primaryAction: 'Preview',
     primaryDisabled: disabled,
     onPrimary: () => runCommand(item.command),
     details: [item.why],
@@ -393,7 +441,9 @@ function twinFeedItem(snapshot: MobileWorkspaceSnapshot, onOpenSettings: () => v
     details: [
       snapshot.primaryOffer ? `Offer: ${snapshot.primaryOffer}` : '',
       snapshot.focusMetric ? `Focus metric: ${snapshot.focusMetric}` : '',
-      missing.length ? `Missing: ${missing.slice(0, 3).join(', ')}` : 'No urgent twin gaps detected.'
+      missing.length
+        ? `Missing: ${missing.slice(0, 3).join(', ')}`
+        : 'No urgent twin gaps detected.'
     ].filter(Boolean),
     timeline: ['Ask thinks', 'PLAN structures execution', 'Approvals gate external action'],
     approvals: ['Identity-level claims should be reviewed before public use.'],
@@ -405,7 +455,8 @@ function integrationReminder(
   snapshot: MobileWorkspaceSnapshot,
   onOpenIntegrations: () => void
 ): FeedItem | null {
-  const connected = snapshot.platformAwareAsk.connectedApps.length + snapshot.syncProvidersConnected;
+  const connected =
+    snapshot.platformAwareAsk.connectedApps.length + snapshot.syncProvidersConnected;
   if (connected > 0) return null;
   return {
     id: 'integration-reminder',
@@ -417,7 +468,10 @@ function integrationReminder(
     priority: 55,
     primaryAction: 'Open setup',
     onPrimary: onOpenIntegrations,
-    details: ['External actions are never faked.', 'Connect a platform before syncing or operating there.'],
+    details: [
+      'External actions are never faked.',
+      'Connect a platform before syncing or operating there.'
+    ],
     timeline: ['Draft safely', 'Connect platform', 'Approve external action'],
     approvals: ['Permission scope requires user approval.'],
     receipts: ['Unsupported integrations show as setup needed.']
@@ -432,6 +486,7 @@ function buildOperationalFeed(args: {
   onOpenIntegrations: () => void;
   onApproveOperatorTrace: MobileWorkspaceHubViewProps['onApproveOperatorTrace'];
   onRejectOperatorTrace: NonNullable<MobileWorkspaceHubViewProps['onRejectOperatorTrace']>;
+  onExecutePlan: NonNullable<MobileWorkspaceHubViewProps['onExecutePlan']>;
   onConvertPredictiveOpportunityToPlan: NonNullable<
     MobileWorkspaceHubViewProps['onConvertPredictiveOpportunityToPlan']
   >;
@@ -444,9 +499,12 @@ function buildOperationalFeed(args: {
     items.push(approvalToFeedItem({ ...args, item }));
   }
   for (const plan of args.snapshot.convertedAskPlans.slice(0, 6)) {
-    items.push(savedPlanToFeedItem(plan, args.runCommand, args.disabled));
+    items.push(savedPlanToFeedItem(plan, args.runCommand, args.disabled, args.onExecutePlan));
   }
-  for (const plan of [...args.convertedOperationalPlans, ...buildOperationalPlanCards(args.snapshot)].slice(0, 6)) {
+  for (const plan of [
+    ...args.convertedOperationalPlans,
+    ...buildOperationalPlanCards(args.snapshot)
+  ].slice(0, 6)) {
     items.push(
       operationalCardToFeedItem(plan, args.runCommand, args.disabled, args.onExportOperationalPlan)
     );
@@ -481,9 +539,7 @@ function filterFeedItems(items: FeedItem[], filter: FeedFilter): FeedItem[] {
           item.status.includes('needed')
       );
     case 'approvals':
-      return items.filter(
-        (item) => item.kind === 'approval' || item.status.includes('approval')
-      );
+      return items.filter((item) => item.kind === 'approval' || item.status.includes('approval'));
     case 'opportunities':
       return items.filter((item) => item.kind === 'opportunity');
     case 'active':
@@ -524,21 +580,36 @@ function FeedDetail({ title, items }: { title: string; items: string[] }) {
 function FeedItemRow({ item, btnFocus }: { item: FeedItem; btnFocus: string }) {
   const Icon = FEED_ICONS[item.kind];
   return (
-    <details className="group rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5 open:border-primary/30 open:bg-surface/65">
+    <details
+      id={item.id}
+      className="group scroll-mt-28 rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5 open:border-primary/30 open:bg-surface/65"
+    >
       <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
         <div className="flex items-start gap-2.5">
-          <span className={clsx('mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border', toneClass(item.tone))}>
+          <span
+            className={clsx(
+              'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border',
+              toneClass(item.tone)
+            )}
+          >
             <Icon className="h-4 w-4" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <p className="bo-system-label">{FEED_LABELS[item.kind]}</p>
-              <span className={clsx('rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(item.tone))}>
+              <span
+                className={clsx(
+                  'rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
+                  toneClass(item.tone)
+                )}
+              >
                 {item.status}
               </span>
             </div>
             <h3 className="mt-1 text-label font-semibold leading-tight text-text">{item.title}</h3>
-            <p className="mt-1 line-clamp-2 text-meta leading-snug text-textMuted">{item.summary}</p>
+            <p className="mt-1 line-clamp-2 text-meta leading-snug text-textMuted">
+              {item.summary}
+            </p>
           </div>
           <button
             type="button"
@@ -605,6 +676,7 @@ export const MobileWorkspaceHubView = ({
   onDownloadPipelineRun: _onDownloadPipelineRun,
   onApproveOperatorTrace,
   onRejectOperatorTrace = () => {},
+  onExecutePlan = () => {},
   onConvertPredictiveOpportunityToPlan = () => {},
   onConvertContentIdeationToPlan: _onConvertContentIdeationToPlan = () => {},
   onConvertWorkflowPredictionToPlan: _onConvertWorkflowPredictionToPlan = () => {},
@@ -622,8 +694,12 @@ export const MobileWorkspaceHubView = ({
     !snapshot.focusMetric.trim();
   const disabled = commandBusy || !canRunWorkspaceCommands;
   const lockHint = planAgentLockCopy(workspaceCommandLockReason);
+  /** 'approved'/'executing' are live, in-progress work too — not just 'active' — since the approval fan-out (checkpointActions.ts) started making 'approved' a real, reachable status. Excludes 'executed' (done), 'draft'/'pending-approval' (not yet live), 'rejected' (dead), and 'opportunity' (its own counter below). */
   const activePlanCount =
-    snapshot.convertedAskPlans.filter((plan) => plan.status === 'active').length +
+    snapshot.convertedAskPlans.filter(
+      (plan) =>
+        plan.status === 'active' || plan.status === 'approved' || plan.status === 'executing'
+    ).length +
     convertedOperationalPlans.length +
     buildOperationalPlanCards(snapshot).filter((plan) => plan.status !== 'needs-input').length;
   const opportunityCount =
@@ -637,6 +713,7 @@ export const MobileWorkspaceHubView = ({
     onOpenIntegrations,
     onApproveOperatorTrace,
     onRejectOperatorTrace,
+    onExecutePlan,
     onConvertPredictiveOpportunityToPlan,
     onExportOperationalPlan,
     onExportExecutionReceipt,
@@ -648,7 +725,9 @@ export const MobileWorkspaceHubView = ({
   );
   const attention = feedItems.find((item) => item.priority <= 20) ?? feedItems[0];
   const member =
-    launchAccess.membership.status === 'active' ? 'Membership active' : 'Membership inactive';
+    launchAccess.membership.status === 'active'
+      ? 'Local membership flag active · unverified'
+      : 'No verified membership';
 
   return (
     <section
@@ -664,8 +743,8 @@ export const MobileWorkspaceHubView = ({
             </p>
             <h2 className="mt-1 text-h3 text-text">What needs attention now?</h2>
             <p className="mt-1 text-meta leading-snug text-textMuted">
-              One feed for what to do, what needs approval, what is active, what opportunities exist,
-              and what happened recently.
+              One feed for what to do, what needs approval, what is active, what opportunities
+              exist, and what happened recently.
             </p>
           </div>
           <button
@@ -680,7 +759,11 @@ export const MobileWorkspaceHubView = ({
         <div className="mt-3 grid grid-cols-2 gap-1.5 text-fine sm:grid-cols-4">
           <SummaryPill
             label="Twin Status"
-            value={snapshot.activeDigitalTwin ? `${snapshot.activeDigitalTwin.confidenceScore}%` : 'Setup'}
+            value={
+              snapshot.activeDigitalTwin
+                ? `${snapshot.activeDigitalTwin.confidenceScore}%`
+                : 'Setup'
+            }
             tone={profileIncomplete ? 'warning' : 'success'}
             active={feedFilter === 'attention'}
             onClick={() => setFeedFilter('attention')}
@@ -712,7 +795,7 @@ export const MobileWorkspaceHubView = ({
           />
         </div>
 
-        <nav className="mt-3 flex gap-1.5 overflow-x-auto pb-1" aria-label="Plan feed focus">
+        <nav className="mt-3 flex flex-wrap gap-1.5" aria-label="Plan feed focus">
           {FEED_FILTERS.map((filter) => (
             <button
               key={filter.id}
@@ -739,7 +822,8 @@ export const MobileWorkspaceHubView = ({
         ) : null}
         {!firstRunJourneyVisible && profileIncomplete ? (
           <p className="mt-3 rounded-xl border border-warning/35 bg-warningSoft/15 px-3 py-2 text-meta leading-snug text-warning">
-            Add your offer, voice, and focus metric so the stream can prioritize work with better context.
+            Add your offer, voice, and focus metric so the stream can prioritize work with better
+            context.
           </p>
         ) : null}
         <p className="mt-2 text-fine text-textSoft">
@@ -753,7 +837,12 @@ export const MobileWorkspaceHubView = ({
           <p className="bo-system-label text-primary">Start here</p>
           <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
             <p className="min-w-0 flex-1 text-label font-semibold text-text">{attention.title}</p>
-            <span className={clsx('rounded-full border px-2 py-0.5 text-overline font-bold uppercase', toneClass(attention.tone))}>
+            <span
+              className={clsx(
+                'rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
+                toneClass(attention.tone)
+              )}
+            >
               {attention.status}
             </span>
           </div>

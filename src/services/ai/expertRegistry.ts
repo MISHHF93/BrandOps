@@ -64,13 +64,7 @@ export type ExpertContextKey =
   | 'memory_context'
   | 'app_settings';
 
-export type ExpertSchemaFieldType =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'array'
-  | 'object'
-  | 'enum';
+export type ExpertSchemaFieldType = 'string' | 'number' | 'boolean' | 'array' | 'object' | 'enum';
 
 export interface ExpertSchemaField {
   type: ExpertSchemaFieldType;
@@ -231,7 +225,7 @@ const penalty = (
   description: string
 ): ExpertConfidencePenalty => ({ id, label, weight, description });
 
-export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[] = [
+const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[] = [
   {
     id: 'positioning-expert',
     name: 'Positioning Expert',
@@ -241,10 +235,19 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
     requiredContext: ['brand_profile', 'brand_vault', 'digital_twins'],
     inputSchema: schema('Inputs for positioning, messaging, and audience strategy.', {
       targetAudience: field('string', 'Audience, buyer, reader, or stakeholder segment.', false),
-      offerOrIdentity: field('string', 'Offer, role, expertise area, or professional identity.', false),
-      proofPoints: field('array', 'Claims, outcomes, examples, or credentials to ground messaging.', false, {
-        items: field('string', 'Proof point.')
-      })
+      offerOrIdentity: field(
+        'string',
+        'Offer, role, expertise area, or professional identity.',
+        false
+      ),
+      proofPoints: field(
+        'array',
+        'Claims, outcomes, examples, or credentials to ground messaging.',
+        false,
+        {
+          items: field('string', 'Proof point.')
+        }
+      )
     }),
     outputSchema: outputSchema('Outputs for brand positioning decisions.', {
       positioningStatement: field('string', 'Concise positioning statement.'),
@@ -253,21 +256,63 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
         items: field('string', 'Differentiation note.')
       })
     }),
-    confidenceScoring: confidence(0.7, [
-      signal('brand-profile-depth', 'Brand profile depth', 'brand_profile', 0.25, 'Operator name, focus, and profile details are present.'),
-      signal('vault-proof-density', 'Proof density', 'brand_vault', 0.3, 'Positioning statement, proof points, and reusable snippets exist.'),
-      signal('twin-identity-grounding', 'Twin identity grounding', 'digital_twins', 0.25, 'Active twin includes reviewed identity and approved claims.')
-    ], [
-      penalty('missing-proof', 'Missing proof', 0.25, 'Strategic claims are weak without examples or evidence.'),
-      penalty('conflicting-audiences', 'Conflicting audiences', 0.18, 'Multiple audiences are present without a priority order.')
-    ]),
+    confidenceScoring: confidence(
+      0.7,
+      [
+        signal(
+          'brand-profile-depth',
+          'Brand profile depth',
+          'brand_profile',
+          0.25,
+          'Operator name, focus, and profile details are present.'
+        ),
+        signal(
+          'vault-proof-density',
+          'Proof density',
+          'brand_vault',
+          0.3,
+          'Positioning statement, proof points, and reusable snippets exist.'
+        ),
+        signal(
+          'twin-identity-grounding',
+          'Twin identity grounding',
+          'digital_twins',
+          0.25,
+          'Active twin includes reviewed identity and approved claims.'
+        )
+      ],
+      [
+        penalty(
+          'missing-proof',
+          'Missing proof',
+          0.25,
+          'Strategic claims are weak without examples or evidence.'
+        ),
+        penalty(
+          'conflicting-audiences',
+          'Conflicting audiences',
+          0.18,
+          'Multiple audiences are present without a priority order.'
+        )
+      ]
+    ),
     routingConditions: [
       {
         id: 'positioning-keywords',
-        routeWhen: 'The request asks how the operator, brand, offer, audience, or message should be positioned.',
+        routeWhen:
+          'The request asks how the operator, brand, offer, audience, or message should be positioned.',
         modes: ['ask', 'plan'],
         taskHints: ['positioning_strategy', 'message_refinement', 'audience_definition'],
-        keywords: ['positioning', 'audience', 'niche', 'offer', 'headline', 'bio', 'message', 'differentiate'],
+        keywords: [
+          'positioning',
+          'audience',
+          'niche',
+          'offer',
+          'headline',
+          'bio',
+          'message',
+          'differentiate'
+        ],
         requiredContext: ['brand_profile', 'brand_vault'],
         avoidWhen: 'The user is asking to send outreach or publish content immediately.'
       }
@@ -295,24 +340,68 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
       }),
       relationshipRationale: field('string', 'Why this tone and ask fit the relationship.', false)
     }),
-    confidenceScoring: confidence(0.68, [
-      signal('contact-context', 'Contact context', 'contacts', 0.25, 'Contact details and relationship stage are available.'),
-      signal('outreach-history', 'Outreach history', 'outreach_drafts', 0.22, 'Prior drafts or messages indicate tone and goal.'),
-      signal('opportunity-linkage', 'Opportunity linkage', 'opportunities', 0.22, 'Relevant opportunity context exists.'),
-      signal('follow-up-timing', 'Follow-up timing', 'follow_ups', 0.16, 'Follow-up state can guide urgency.')
-    ], [
-      penalty('unknown-recipient', 'Unknown recipient', 0.28, 'Recipient or relationship is not specified.'),
-      penalty('unclear-ask', 'Unclear ask', 0.2, 'The requested outcome is vague.')
-    ]),
+    confidenceScoring: confidence(
+      0.68,
+      [
+        signal(
+          'contact-context',
+          'Contact context',
+          'contacts',
+          0.25,
+          'Contact details and relationship stage are available.'
+        ),
+        signal(
+          'outreach-history',
+          'Outreach history',
+          'outreach_drafts',
+          0.22,
+          'Prior drafts or messages indicate tone and goal.'
+        ),
+        signal(
+          'opportunity-linkage',
+          'Opportunity linkage',
+          'opportunities',
+          0.22,
+          'Relevant opportunity context exists.'
+        ),
+        signal(
+          'follow-up-timing',
+          'Follow-up timing',
+          'follow_ups',
+          0.16,
+          'Follow-up state can guide urgency.'
+        )
+      ],
+      [
+        penalty(
+          'unknown-recipient',
+          'Unknown recipient',
+          0.28,
+          'Recipient or relationship is not specified.'
+        ),
+        penalty('unclear-ask', 'Unclear ask', 0.2, 'The requested outcome is vague.')
+      ]
+    ),
     routingConditions: [
       {
         id: 'outreach-keywords',
-        routeWhen: 'The request asks for outreach, replies, follow-ups, introductions, reconnects, or relationship copy.',
+        routeWhen:
+          'The request asks for outreach, replies, follow-ups, introductions, reconnects, or relationship copy.',
         modes: ['ask', 'plan', 'operate'],
         taskHints: ['outreach_drafting', 'relationship_follow_up', 'reply_strategy'],
-        keywords: ['outreach', 'follow up', 'follow-up', 'reply', 'dm', 'intro', 'reconnect', 'message them'],
+        keywords: [
+          'outreach',
+          'follow up',
+          'follow-up',
+          'reply',
+          'dm',
+          'intro',
+          'reconnect',
+          'message them'
+        ],
         requiredContext: ['contacts', 'outreach_drafts'],
-        avoidWhen: 'The user is asking for general public content rather than one-to-one communication.'
+        avoidWhen:
+          'The user is asking for general public content rather than one-to-one communication.'
       }
     ]
   },
@@ -339,21 +428,58 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
         items: field('string', 'Publishing note.')
       })
     }),
-    confidenceScoring: confidence(0.69, [
-      signal('content-library-depth', 'Content library depth', 'content_library', 0.28, 'Existing ideas and drafts can ground recommendations.'),
-      signal('queue-awareness', 'Publishing queue awareness', 'publishing_queue', 0.18, 'Upcoming posts prevent duplication and cadence conflicts.'),
-      signal('brand-voice', 'Brand voice', 'brand_vault', 0.24, 'Brand vault provides reusable voice and proof material.')
-    ], [
-      penalty('no-channel', 'No channel', 0.15, 'Channel constraints are missing.'),
-      penalty('thin-source-material', 'Thin source material', 0.2, 'Repurposing quality drops without source material.')
-    ]),
+    confidenceScoring: confidence(
+      0.69,
+      [
+        signal(
+          'content-library-depth',
+          'Content library depth',
+          'content_library',
+          0.28,
+          'Existing ideas and drafts can ground recommendations.'
+        ),
+        signal(
+          'queue-awareness',
+          'Publishing queue awareness',
+          'publishing_queue',
+          0.18,
+          'Upcoming posts prevent duplication and cadence conflicts.'
+        ),
+        signal(
+          'brand-voice',
+          'Brand voice',
+          'brand_vault',
+          0.24,
+          'Brand vault provides reusable voice and proof material.'
+        )
+      ],
+      [
+        penalty('no-channel', 'No channel', 0.15, 'Channel constraints are missing.'),
+        penalty(
+          'thin-source-material',
+          'Thin source material',
+          0.2,
+          'Repurposing quality drops without source material.'
+        )
+      ]
+    ),
     routingConditions: [
       {
         id: 'content-keywords',
-        routeWhen: 'The request asks for posts, content ideas, hooks, outlines, publishing, or repurposing.',
+        routeWhen:
+          'The request asks for posts, content ideas, hooks, outlines, publishing, or repurposing.',
         modes: ['ask', 'plan', 'operate'],
         taskHints: ['content_ideation', 'content_drafting', 'content_repurposing'],
-        keywords: ['content', 'post', 'linkedin', 'publish', 'draft post', 'hook', 'outline', 'repurpose'],
+        keywords: [
+          'content',
+          'post',
+          'linkedin',
+          'publish',
+          'draft post',
+          'hook',
+          'outline',
+          'repurpose'
+        ],
         requiredContext: ['content_library', 'brand_vault'],
         avoidWhen: 'The request is about private outreach to one recipient.'
       }
@@ -365,7 +491,13 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
     purpose:
       'Turns intent into sequenced operational plans with dependencies, approvals, execution readiness, and next actions.',
     supportedTasks: ['plan_generation', 'plan_prioritization', 'execution_readiness'],
-    requiredContext: ['scheduler', 'follow_ups', 'opportunities', 'publishing_queue', 'app_settings'],
+    requiredContext: [
+      'scheduler',
+      'follow_ups',
+      'opportunities',
+      'publishing_queue',
+      'app_settings'
+    ],
     inputSchema: schema('Inputs for operational planning and prioritization.', {
       objective: field('string', 'Desired outcome or workstream objective.'),
       constraints: field('array', 'Timing, capacity, risk, or approval constraints.', false, {
@@ -386,19 +518,58 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
         allowedValues: ['ready', 'needs_input', 'needs_approval', 'blocked']
       })
     }),
-    confidenceScoring: confidence(0.72, [
-      signal('scheduler-state', 'Scheduler state', 'scheduler', 0.22, 'Calendar-like task state clarifies timing.'),
-      signal('pipeline-state', 'Pipeline state', 'opportunities', 0.18, 'Opportunity state informs priority.'),
-      signal('queue-state', 'Publishing queue state', 'publishing_queue', 0.14, 'Queued content affects workload.'),
-      signal('settings-policy', 'Settings policy', 'app_settings', 0.16, 'Operator settings define execution and trace preferences.')
-    ], [
-      penalty('missing-objective', 'Missing objective', 0.24, 'Planning needs a concrete outcome.'),
-      penalty('unsafe-action', 'Unsafe action', 0.3, 'Unapproved external actions must not be executed.')
-    ]),
+    confidenceScoring: confidence(
+      0.72,
+      [
+        signal(
+          'scheduler-state',
+          'Scheduler state',
+          'scheduler',
+          0.22,
+          'Calendar-like task state clarifies timing.'
+        ),
+        signal(
+          'pipeline-state',
+          'Pipeline state',
+          'opportunities',
+          0.18,
+          'Opportunity state informs priority.'
+        ),
+        signal(
+          'queue-state',
+          'Publishing queue state',
+          'publishing_queue',
+          0.14,
+          'Queued content affects workload.'
+        ),
+        signal(
+          'settings-policy',
+          'Settings policy',
+          'app_settings',
+          0.16,
+          'Operator settings define execution and trace preferences.'
+        )
+      ],
+      [
+        penalty(
+          'missing-objective',
+          'Missing objective',
+          0.24,
+          'Planning needs a concrete outcome.'
+        ),
+        penalty(
+          'unsafe-action',
+          'Unsafe action',
+          0.3,
+          'Unapproved external actions must not be executed.'
+        )
+      ]
+    ),
     routingConditions: [
       {
         id: 'plan-mode',
-        routeWhen: 'The request asks to plan, prioritize, convert ASK into steps, or prepare OPERATE.',
+        routeWhen:
+          'The request asks to plan, prioritize, convert ASK into steps, or prepare OPERATE.',
         modes: ['plan', 'operate'],
         taskHints: ['plan_generation', 'plan_prioritization', 'execution_readiness'],
         keywords: ['plan', 'prioritize', 'roadmap', 'next steps', 'operate', 'execute', 'workflow'],
@@ -424,22 +595,70 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
       stageRecommendation: field('string', 'Recommended stage movement or status change.', false),
       nextAction: field('string', 'Most important next action.')
     }),
-    confidenceScoring: confidence(0.7, [
-      signal('opportunity-detail', 'Opportunity detail', 'opportunities', 0.3, 'Value, stage, confidence, and next action exist.'),
-      signal('contact-link', 'Contact linkage', 'contacts', 0.18, 'Related contact context exists.'),
-      signal('follow-up-state', 'Follow-up state', 'follow_ups', 0.18, 'Pending follow-ups clarify momentum.'),
-      signal('outreach-link', 'Outreach linkage', 'outreach_drafts', 0.12, 'Drafts show communication state.')
-    ], [
-      penalty('unknown-opportunity', 'Unknown opportunity', 0.3, 'No matching opportunity is referenced.'),
-      penalty('stale-stage', 'Stale stage', 0.2, 'Stage confidence is weak when activity is stale.')
-    ]),
+    confidenceScoring: confidence(
+      0.7,
+      [
+        signal(
+          'opportunity-detail',
+          'Opportunity detail',
+          'opportunities',
+          0.3,
+          'Value, stage, confidence, and next action exist.'
+        ),
+        signal(
+          'contact-link',
+          'Contact linkage',
+          'contacts',
+          0.18,
+          'Related contact context exists.'
+        ),
+        signal(
+          'follow-up-state',
+          'Follow-up state',
+          'follow_ups',
+          0.18,
+          'Pending follow-ups clarify momentum.'
+        ),
+        signal(
+          'outreach-link',
+          'Outreach linkage',
+          'outreach_drafts',
+          0.12,
+          'Drafts show communication state.'
+        )
+      ],
+      [
+        penalty(
+          'unknown-opportunity',
+          'Unknown opportunity',
+          0.3,
+          'No matching opportunity is referenced.'
+        ),
+        penalty(
+          'stale-stage',
+          'Stale stage',
+          0.2,
+          'Stage confidence is weak when activity is stale.'
+        )
+      ]
+    ),
     routingConditions: [
       {
         id: 'opportunity-keywords',
-        routeWhen: 'The request asks about pipeline health, opportunity rank, deal risk, value, or stage movement.',
+        routeWhen:
+          'The request asks about pipeline health, opportunity rank, deal risk, value, or stage movement.',
         modes: ['ask', 'plan', 'operate'],
         taskHints: ['opportunity_scoring', 'pipeline_movement', 'deal_risk_review'],
-        keywords: ['opportunity', 'pipeline', 'deal', 'stage', 'proposal', 'prospect', 'rank', 'revenue'],
+        keywords: [
+          'opportunity',
+          'pipeline',
+          'deal',
+          'stage',
+          'proposal',
+          'prospect',
+          'rank',
+          'revenue'
+        ],
         requiredContext: ['opportunities'],
         avoidWhen: 'The request is about content or broad positioning without deal context.'
       }
@@ -454,8 +673,16 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
     requiredContext: ['operator_traces', 'ai_assistant_traces', 'scheduler', 'connected_identity'],
     inputSchema: schema('Inputs for behavioral prediction and cadence optimization.', {
       behaviorQuestion: field('string', 'Prediction, habit, cadence, or timing question.'),
-      entityScope: field('string', 'Operator, audience, contact, account, or workflow scope.', false),
-      timeHorizon: field('string', 'Prediction horizon such as today, this week, or next 30 days.', false)
+      entityScope: field(
+        'string',
+        'Operator, audience, contact, account, or workflow scope.',
+        false
+      ),
+      timeHorizon: field(
+        'string',
+        'Prediction horizon such as today, this week, or next 30 days.',
+        false
+      )
     }),
     outputSchema: outputSchema('Outputs for behavioral intelligence.', {
       prediction: field('string', 'Behavioral forecast.'),
@@ -464,22 +691,70 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
       }),
       recommendedTiming: field('string', 'Suggested timing or cadence.', false)
     }),
-    confidenceScoring: confidence(0.6, [
-      signal('operator-traces', 'Operator traces', 'operator_traces', 0.3, 'Local operator traces reveal recurring workflow behavior.'),
-      signal('assistant-traces', 'Assistant traces', 'ai_assistant_traces', 0.14, 'Ask/plan history clarifies repeated needs.'),
-      signal('scheduler-history', 'Scheduler history', 'scheduler', 0.22, 'Task completion and snooze history indicate cadence.'),
-      signal('connected-identity', 'Connected identity signals', 'connected_identity', 0.18, 'Consented connected identity signals improve context.')
-    ], [
-      penalty('trace-collection-off', 'Trace collection off', 0.35, 'Behavior prediction should be conservative without traces.'),
-      penalty('private-data-risk', 'Private data risk', 0.35, 'Raw private data must not be inferred or ingested automatically.')
-    ]),
+    confidenceScoring: confidence(
+      0.6,
+      [
+        signal(
+          'operator-traces',
+          'Operator traces',
+          'operator_traces',
+          0.3,
+          'Local operator traces reveal recurring workflow behavior.'
+        ),
+        signal(
+          'assistant-traces',
+          'Assistant traces',
+          'ai_assistant_traces',
+          0.14,
+          'Ask/plan history clarifies repeated needs.'
+        ),
+        signal(
+          'scheduler-history',
+          'Scheduler history',
+          'scheduler',
+          0.22,
+          'Task completion and snooze history indicate cadence.'
+        ),
+        signal(
+          'connected-identity',
+          'Connected identity signals',
+          'connected_identity',
+          0.18,
+          'Consented connected identity signals improve context.'
+        )
+      ],
+      [
+        penalty(
+          'trace-collection-off',
+          'Trace collection off',
+          0.35,
+          'Behavior prediction should be conservative without traces.'
+        ),
+        penalty(
+          'private-data-risk',
+          'Private data risk',
+          0.35,
+          'Raw private data must not be inferred or ingested automatically.'
+        )
+      ]
+    ),
     routingConditions: [
       {
         id: 'behavior-keywords',
-        routeWhen: 'The request asks what is likely to happen, when to act, what habit is emerging, or how to optimize cadence.',
+        routeWhen:
+          'The request asks what is likely to happen, when to act, what habit is emerging, or how to optimize cadence.',
         modes: ['ask', 'plan'],
         taskHints: ['behavior_prediction', 'cadence_optimization', 'habit_signal_review'],
-        keywords: ['predict', 'likely', 'behavior', 'cadence', 'habit', 'timing', 'when should', 'pattern'],
+        keywords: [
+          'predict',
+          'likely',
+          'behavior',
+          'cadence',
+          'habit',
+          'timing',
+          'when should',
+          'pattern'
+        ],
         requiredContext: ['operator_traces', 'scheduler'],
         avoidWhen: 'The user expects certainty or requests unconsented private inference.'
       }
@@ -494,7 +769,11 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
     requiredContext: ['integration_hub', 'external_artifacts', 'app_settings'],
     inputSchema: schema('Inputs for integration and artifact decisions.', {
       sourceName: field('string', 'Integration source, vendor, or workspace system.', false),
-      artifactType: field('string', 'Artifact kind such as document, issue, CRM record, or thread.', false),
+      artifactType: field(
+        'string',
+        'Artifact kind such as document, issue, CRM record, or thread.',
+        false
+      ),
       syncGoal: field('string', 'Desired mapping, review, or sync outcome.')
     }),
     outputSchema: outputSchema('Outputs for integration planning and health.', {
@@ -508,21 +787,64 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
         items: field('string', 'Artifact mapping.')
       })
     }),
-    confidenceScoring: confidence(0.67, [
-      signal('integration-source-state', 'Integration source state', 'integration_hub', 0.32, 'Registered sources and artifacts are available.'),
-      signal('artifact-coverage', 'Artifact coverage', 'external_artifacts', 0.22, 'Imported artifacts can ground mapping decisions.'),
-      signal('settings-constraints', 'Settings constraints', 'app_settings', 0.16, 'Settings clarify configured capabilities.')
-    ], [
-      penalty('unregistered-source', 'Unregistered source', 0.25, 'The source is not registered in the local workspace.'),
-      penalty('sync-honesty-gap', 'Sync honesty gap', 0.22, 'A planned source should not be described as live sync.')
-    ]),
+    confidenceScoring: confidence(
+      0.67,
+      [
+        signal(
+          'integration-source-state',
+          'Integration source state',
+          'integration_hub',
+          0.32,
+          'Registered sources and artifacts are available.'
+        ),
+        signal(
+          'artifact-coverage',
+          'Artifact coverage',
+          'external_artifacts',
+          0.22,
+          'Imported artifacts can ground mapping decisions.'
+        ),
+        signal(
+          'settings-constraints',
+          'Settings constraints',
+          'app_settings',
+          0.16,
+          'Settings clarify configured capabilities.'
+        )
+      ],
+      [
+        penalty(
+          'unregistered-source',
+          'Unregistered source',
+          0.25,
+          'The source is not registered in the local workspace.'
+        ),
+        penalty(
+          'sync-honesty-gap',
+          'Sync honesty gap',
+          0.22,
+          'A planned source should not be described as live sync.'
+        )
+      ]
+    ),
     routingConditions: [
       {
         id: 'integration-keywords',
-        routeWhen: 'The request asks to connect, map, sync, review, or reason about external tools and artifacts.',
+        routeWhen:
+          'The request asks to connect, map, sync, review, or reason about external tools and artifacts.',
         modes: ['ask', 'plan', 'operate'],
         taskHints: ['integration_mapping', 'artifact_sync_review', 'source_health_review'],
-        keywords: ['integration', 'connect', 'sync', 'source', 'artifact', 'notion', 'github', 'google', 'slack'],
+        keywords: [
+          'integration',
+          'connect',
+          'sync',
+          'source',
+          'artifact',
+          'notion',
+          'github',
+          'google',
+          'slack'
+        ],
         requiredContext: ['integration_hub'],
         avoidWhen: 'The request is solely about local content drafting or positioning.'
       }
@@ -536,8 +858,15 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
     supportedTasks: ['memory_retrieval', 'twin_grounding', 'missing_info_detection'],
     requiredContext: ['digital_twins', 'memory_context', 'connected_identity', 'brand_profile'],
     inputSchema: schema('Inputs for twin memory retrieval and grounding.', {
-      memoryQuestion: field('string', 'Question about remembered facts, preferences, claims, or missing information.'),
-      claimToCheck: field('string', 'Claim, draft, or recommendation that needs twin grounding.', false),
+      memoryQuestion: field(
+        'string',
+        'Question about remembered facts, preferences, claims, or missing information.'
+      ),
+      claimToCheck: field(
+        'string',
+        'Claim, draft, or recommendation that needs twin grounding.',
+        false
+      ),
       allowedMemoryUse: field('enum', 'How memory may be used for the response.', false, {
         allowedValues: ['approved_only', 'ask_before_missing_facts', 'summarize_gaps']
       })
@@ -546,29 +875,76 @@ export const OPERATIONAL_EXPERT_REGISTRY: readonly OperationalExpertDefinition[]
       approvedMemory: field('array', 'Approved facts or preferences safe to use.', false, {
         items: field('string', 'Approved memory item.')
       }),
-      missingInfoQuestions: field('array', 'Clarifying questions required before asserting facts.', false, {
-        items: field('string', 'Clarifying question.')
-      }),
+      missingInfoQuestions: field(
+        'array',
+        'Clarifying questions required before asserting facts.',
+        false,
+        {
+          items: field('string', 'Clarifying question.')
+        }
+      ),
       groundingVerdict: field('enum', 'Whether the response is grounded enough to proceed.', true, {
         allowedValues: ['grounded', 'ask_first', 'insufficient_context']
       })
     }),
-    confidenceScoring: confidence(0.74, [
-      signal('active-twin', 'Active twin', 'digital_twins', 0.34, 'An active reviewed twin exists.'),
-      signal('memory-context', 'Memory context', 'memory_context', 0.22, 'Approved facts, preferences, and voice examples exist.'),
-      signal('identity-signals', 'Connected identity signals', 'connected_identity', 0.14, 'Consented identity signals can supplement memory.'),
-      signal('brand-profile', 'Brand profile', 'brand_profile', 0.12, 'Curated profile provides conflict resolution.')
-    ], [
-      penalty('no-active-twin', 'No active twin', 0.34, 'No active digital twin is available.'),
-      penalty('unverified-claim', 'Unverified claim', 0.28, 'Unverified facts require clarification or exclusion.')
-    ]),
+    confidenceScoring: confidence(
+      0.74,
+      [
+        signal(
+          'active-twin',
+          'Active twin',
+          'digital_twins',
+          0.34,
+          'An active reviewed twin exists.'
+        ),
+        signal(
+          'memory-context',
+          'Memory context',
+          'memory_context',
+          0.22,
+          'Approved facts, preferences, and voice examples exist.'
+        ),
+        signal(
+          'identity-signals',
+          'Connected identity signals',
+          'connected_identity',
+          0.14,
+          'Consented identity signals can supplement memory.'
+        ),
+        signal(
+          'brand-profile',
+          'Brand profile',
+          'brand_profile',
+          0.12,
+          'Curated profile provides conflict resolution.'
+        )
+      ],
+      [
+        penalty('no-active-twin', 'No active twin', 0.34, 'No active digital twin is available.'),
+        penalty(
+          'unverified-claim',
+          'Unverified claim',
+          0.28,
+          'Unverified facts require clarification or exclusion.'
+        )
+      ]
+    ),
     routingConditions: [
       {
         id: 'twin-memory-keywords',
-        routeWhen: 'The request asks what the twin knows, how to ground a response, or whether a claim matches approved memory.',
+        routeWhen:
+          'The request asks what the twin knows, how to ground a response, or whether a claim matches approved memory.',
         modes: ['ask', 'plan'],
         taskHints: ['memory_retrieval', 'twin_grounding', 'missing_info_detection'],
-        keywords: ['twin', 'memory', 'remember', 'approved claim', 'voice', 'grounded', 'missing info'],
+        keywords: [
+          'twin',
+          'memory',
+          'remember',
+          'approved claim',
+          'voice',
+          'grounded',
+          'missing info'
+        ],
         requiredContext: ['digital_twins', 'memory_context'],
         avoidWhen: 'The user asks to infer private facts that are not approved memory.'
       }
@@ -690,7 +1066,9 @@ function scoreExpertRoute(
 export function routeOperationalExperts(input: ExpertRoutingInput): ExpertRouteCandidate[] {
   const maxExperts = input.maxExperts ?? OPERATIONAL_EXPERT_REGISTRY.length;
   return OPERATIONAL_EXPERT_REGISTRY.map((expert) => scoreExpertRoute(expert, input))
-    .filter((candidate) => candidate.score >= candidate.expert.confidenceScoring.minimumRoutableScore)
+    .filter(
+      (candidate) => candidate.score >= candidate.expert.confidenceScoring.minimumRoutableScore
+    )
     .sort((a, b) => b.score - a.score || a.expert.name.localeCompare(b.expert.name))
     .slice(0, maxExperts);
 }

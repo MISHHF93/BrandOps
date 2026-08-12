@@ -471,7 +471,12 @@ html[data-app-surface='welcome'] body::after {
     z-index: 0;
     pointer-events: none;
     border-radius: 1.5rem;
-    background: linear-gradient(120deg, transparent 0%, rgb(var(--flagship-sheen) / 0.025) 42%, transparent 74%);
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      rgb(var(--flagship-sheen) / 0.025) 42%,
+      transparent 74%
+    );
     transform: translateX(-38%);
     opacity: 0.16;
   }
@@ -837,8 +842,8 @@ html[data-app-surface='welcome'] body::after {
   }
 
   .bo-chat-scroll-anchor {
-    height: max(12.5rem, calc(11.25rem + env(safe-area-inset-bottom, 0px)));
-    scroll-margin-bottom: max(12.5rem, calc(11.25rem + env(safe-area-inset-bottom, 0px)));
+    height: 0.5rem;
+    scroll-margin-bottom: max(11.85rem, calc(10rem + env(safe-area-inset-bottom, 0px)));
   }
 
   /**
@@ -1482,24 +1487,14 @@ html[data-app-surface='welcome'] body::after {
     );
   }
 
-  .bo-focus-panel--primary,
-  .bo-focus-panel--now,
   .bo-focus-panel--do {
     --focus-panel-tone: var(--color-accent);
   }
 
-  .bo-focus-panel--info,
-  .bo-focus-panel--ai {
-    --focus-panel-tone: var(--color-info);
-  }
-
-  .bo-focus-panel--warning,
-  .bo-focus-panel--fix,
   .bo-focus-panel--urgent {
     --focus-panel-tone: var(--color-warning);
   }
 
-  .bo-focus-panel--success,
   .bo-focus-panel--grow {
     --focus-panel-tone: var(--color-success);
   }
@@ -3183,12 +3178,7 @@ html[data-app-surface='welcome'] body::after {
     position: absolute;
     inset: 50% 0 auto;
     height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgb(var(--color-primary) / 0.34),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgb(var(--color-primary) / 0.34), transparent);
     pointer-events: none;
   }
 
@@ -3519,10 +3509,6 @@ html[data-app-surface='welcome'] body::after {
   .bo-icon-chip--sm {
     --icon-chip-size: 1.5rem;
     border-radius: 0.5rem;
-  }
-  .bo-icon-chip--lg {
-    --icon-chip-size: 2.25rem;
-    border-radius: 0.75rem;
   }
   .bo-icon-chip--primary {
     --icon-chip-color: var(--color-accent);
@@ -3943,5 +3929,48 @@ html[data-app-surface='welcome'] body::after {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/**
+ * Marketing site (`index.html` → `SiteApp`): reuses `.bo-mobile-app` for the flat DOS canvas + grid
+ * overlay, but the site scrolls a full page rather than a fixed-height app shell.
+ */
+@layer components {
+  .bo-site-app {
+    overflow-x: clip;
+  }
+
+  .bo-site-terminal {
+    font-family: var(--font-terminal);
+  }
+
+  .bo-site-cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1em;
+    margin-left: 1px;
+    vertical-align: -0.15em;
+    background: rgb(var(--color-accent));
+    animation: bo-site-cursor-blink 1.1s step-end infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bo-site-cursor {
+      animation: none;
+      opacity: 0.7;
+    }
+  }
+}
+
+@keyframes bo-site-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
   }
 }

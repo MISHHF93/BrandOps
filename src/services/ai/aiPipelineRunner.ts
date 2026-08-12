@@ -20,10 +20,7 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-export function buildWorkspaceDeterministicDigest(
-  workspace: BrandOpsData,
-  pipelineLabel: string
-): string {
+function buildWorkspaceDeterministicDigest(workspace: BrandOpsData, pipelineLabel: string): string {
   const activeOpps = workspace.opportunities.filter((o) => !o.archivedAt).length;
   const lines = [
     `Pipeline: ${pipelineLabel}`,
@@ -201,14 +198,17 @@ export async function runAiPipelineWithPersistence(args: {
       intent: args.completionPrompt || `AI pipeline ${args.pipelineId}`,
       mode: 'operate',
       twinId: next.digitalTwins?.activeTwinId ?? undefined,
-      workspaceId: next.digitalTwins?.twins.find((twin) => twin.id === next.digitalTwins?.activeTwinId)
-        ?.workspaceId,
+      workspaceId: next.digitalTwins?.twins.find(
+        (twin) => twin.id === next.digitalTwins?.activeTwinId
+      )?.workspaceId,
       userInput: args.completionPrompt || args.pipelineId,
       requiredOutputs: ['approval item', 'timeline event'],
       safetyLevel: 'review',
       approvalRequired: true
     },
-    generatedText: run.steps.map((step) => `${step.step_id}: ${step.status} ${step.detail ?? ''}`).join('\n')
+    generatedText: run.steps
+      .map((step) => `${step.step_id}: ${step.status} ${step.detail ?? ''}`)
+      .join('\n')
   });
   next = prependBrandOpsAICoreResult(next, aiCore);
   return { data: next, run };

@@ -12,18 +12,16 @@
       "128": "icons/128.png"
     }
   },
-  "permissions": ["storage", "activeTab", "alarms", "notifications", "identity", "tabs"],
+  "permissions": ["storage", "activeTab", "alarms", "notifications", "tabs"],
   "host_permissions": [
     "https://*.linkedin.com/*",
-    "https://www.linkedin.com/oauth/v2/*",
-    "https://api.linkedin.com/*",
-    "https://accounts.google.com/*",
-    "https://oauth2.googleapis.com/*",
-    "https://openidconnect.googleapis.com/*",
-    "https://github.com/*",
-    "https://api.github.com/*",
     "https://api.openai.com/*",
     "https://*.openai.azure.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   "options_ui": {
     "page": "integrations.html",

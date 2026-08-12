@@ -202,7 +202,9 @@ const WORKFLOW_PROFILES: readonly WorkflowProfile[] = [
   }
 ] as const;
 
-const WORKFLOW_BY_TYPE = new Map(WORKFLOW_PROFILES.map((profile) => [profile.workflowType, profile]));
+const WORKFLOW_BY_TYPE = new Map(
+  WORKFLOW_PROFILES.map((profile) => [profile.workflowType, profile])
+);
 
 function clean(value: string | undefined): string {
   return (value ?? '').replace(/\s+/g, ' ').trim();
@@ -260,7 +262,9 @@ function inferProfessionPath(
   if (hasAny(corpus, ['recruiter', 'recruiting', 'talent acquisition', 'sourcer', 'hiring'])) {
     return 'recruiter';
   }
-  if (hasAny(corpus, ['creator', 'content creator', 'newsletter', 'audience', 'community builder'])) {
+  if (
+    hasAny(corpus, ['creator', 'content creator', 'newsletter', 'audience', 'community builder'])
+  ) {
     return 'creator';
   }
   if (hasAny(corpus, ['founder', 'startup', 'entrepreneur', 'operator founder', 'ceo'])) {
@@ -316,7 +320,15 @@ function classifyWorkflow(
     return 'investor_outreach';
   }
 
-  if (hasAny(corpus, ['creator growth', 'creator', 'audience growth', 'followers', 'community growth'])) {
+  if (
+    hasAny(corpus, [
+      'creator growth',
+      'creator',
+      'audience growth',
+      'followers',
+      'community growth'
+    ])
+  ) {
     return 'creator_growth';
   }
 
@@ -324,9 +336,11 @@ function classifyWorkflow(
   if (professionWorkflow && input.mode === 'plan') return professionWorkflow;
 
   for (const profile of WORKFLOW_PROFILES) {
-    if (profile.workflowType === 'general' || profile.workflowType === 'investor_outreach') continue;
+    if (profile.workflowType === 'general' || profile.workflowType === 'investor_outreach')
+      continue;
     if (profile.workflowType === 'creator_growth') continue;
-    if (profile.workflowType === 'founder_ops' || profile.workflowType === 'recruiter_ops') continue;
+    if (profile.workflowType === 'founder_ops' || profile.workflowType === 'recruiter_ops')
+      continue;
     if (hasAny(corpus, profile.keywords)) return profile.workflowType;
   }
 
@@ -356,7 +370,8 @@ function connectedPlatformsFromWorkspace(workspace?: BrandOpsData): string[] {
   const platforms: string[] = [];
   if (workspace.settings.syncHub.google.connectionStatus === 'connected') platforms.push('google');
   if (workspace.settings.syncHub.github.connectionStatus === 'connected') platforms.push('github');
-  if (workspace.settings.syncHub.linkedin.connectionStatus === 'connected') platforms.push('linkedin');
+  if (workspace.settings.syncHub.linkedin.connectionStatus === 'connected')
+    platforms.push('linkedin');
   platforms.push(
     ...workspace.integrationHub.sources
       .filter((source) => source.status === 'connected' || source.status === 'monitoring')
@@ -403,7 +418,8 @@ export function inferAvailableExpertContext(input: ExpertRoutingEngineInput): Ex
     }
     if (workspace.contentLibrary.length) contexts.push('content_library');
     if (workspace.publishingQueue.length) contexts.push('publishing_queue');
-    if (workspace.outreachDrafts.length || workspace.outreachHistory.length) contexts.push('outreach_drafts');
+    if (workspace.outreachDrafts.length || workspace.outreachHistory.length)
+      contexts.push('outreach_drafts');
     if (workspace.contacts.length) contexts.push('contacts');
     if (workspace.opportunities.length) contexts.push('opportunities');
     if (workspace.followUps.length) contexts.push('follow_ups');
@@ -421,7 +437,10 @@ export function inferAvailableExpertContext(input: ExpertRoutingEngineInput): Ex
     if (workspace.operatorTraces?.entries.length) contexts.push('operator_traces');
     if (workspace.aiAssistantTraces?.entries.length) contexts.push('ai_assistant_traces');
     if (workspace.digitalTwins?.twins.length) contexts.push('digital_twins');
-    if (workspace.connectedIdentityEngine?.signals.length || workspace.settings.connectedIdentityLearningEnabled) {
+    if (
+      workspace.connectedIdentityEngine?.signals.length ||
+      workspace.settings.connectedIdentityLearningEnabled
+    ) {
       contexts.push('connected_identity');
     }
   }
@@ -447,7 +466,10 @@ export function inferAvailableExpertContext(input: ExpertRoutingEngineInput): Ex
   return uniq(contexts);
 }
 
-function inferTaskHints(input: ExpertRoutingEngineInput, workflow: WorkflowProfile): OperationalExpertTask[] {
+function inferTaskHints(
+  input: ExpertRoutingEngineInput,
+  workflow: WorkflowProfile
+): OperationalExpertTask[] {
   const text = normalized(input.userIntent);
   const hints: OperationalExpertTask[] = [...workflow.taskHints];
 
@@ -460,9 +482,15 @@ function inferTaskHints(input: ExpertRoutingEngineInput, workflow: WorkflowProfi
     hints.push('content_ideation', 'opportunity_scoring', 'behavior_prediction');
   }
   if (workflow.workflowType === 'recruiter_ops') {
-    hints.push('outreach_drafting', 'relationship_follow_up', 'plan_generation', 'integration_mapping');
+    hints.push(
+      'outreach_drafting',
+      'relationship_follow_up',
+      'plan_generation',
+      'integration_mapping'
+    );
   }
-  if (hasAny(text, ['position', 'audience', 'offer', 'headline'])) hints.push('positioning_strategy');
+  if (hasAny(text, ['position', 'audience', 'offer', 'headline']))
+    hints.push('positioning_strategy');
   if (hasAny(text, ['outreach', 'intro', 'dm', 'email', 'follow up', 'follow-up'])) {
     hints.push('outreach_drafting', 'relationship_follow_up');
   }
@@ -501,7 +529,9 @@ function observedSignals(
     `profession:${professionPath}`,
     twinProfile ? 'twin_profile:present' : 'twin_profile:missing',
     platforms.length ? `connected_platforms:${platforms.join(',')}` : 'connected_platforms:none',
-    behavior.hasSignals || behavior.signalCount ? `behavioral_memory:${behavior.signalCount ?? 'present'}` : 'behavioral_memory:none'
+    behavior.hasSignals || behavior.signalCount
+      ? `behavioral_memory:${behavior.signalCount ?? 'present'}`
+      : 'behavioral_memory:none'
   ];
 }
 
@@ -526,7 +556,10 @@ function activationReasons(candidate: ExpertRouteCandidate, profile: WorkflowPro
   ]);
 }
 
-function activationFrom(candidate: ExpertRouteCandidate, profile: WorkflowProfile): ExpertActivation {
+function activationFrom(
+  candidate: ExpertRouteCandidate,
+  profile: WorkflowProfile
+): ExpertActivation {
   const score = candidateScore(candidate, profile);
   return {
     expertId: candidate.expert.id,
@@ -670,10 +703,4 @@ export function summarizeExpertRoutingResolution(resolution: ExpertRoutingResolu
     `tasks=${resolution.trace.inferredTaskHints.join(',') || 'none'}`,
     `context=${resolution.trace.availableContext.join(',') || 'none'}`
   ];
-}
-
-export function activatedExpertDefinitions(resolution: ExpertRoutingResolution) {
-  return resolution.activatedExperts
-    .map((activation) => getOperationalExpert(activation.expertId))
-    .filter(Boolean);
 }

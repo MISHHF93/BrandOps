@@ -59,7 +59,7 @@ function isOperatorTraceActor(s: string): s is OperatorTraceActor {
   return s === 'user' || s === 'assistant' || s === 'automation' || s === 'bridge';
 }
 
-export function buildOperatorTraceEntry(input: OperatorTraceInput): OperatorTraceEntry {
+function buildOperatorTraceEntry(input: OperatorTraceInput): OperatorTraceEntry {
   const id = input.id ?? `trace-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const at = input.at ?? new Date().toISOString();
   const source = isOperatorTraceActor(input.source) ? input.source : 'user';

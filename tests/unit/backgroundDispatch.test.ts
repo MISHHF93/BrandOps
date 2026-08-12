@@ -32,6 +32,8 @@ describe('dispatchRuntimeMessage', () => {
       {
         scheduleAlarms,
         executeAgentWorkspaceCommand,
+        getBridgeSharedSecret: vi.fn(async () => null),
+        getBridgeAllowedActorIds: vi.fn(async () => []),
         isBridgeNonceReplayed,
         bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
       }
@@ -42,123 +44,32 @@ describe('dispatchRuntimeMessage', () => {
     expect(executeAgentWorkspaceCommand).not.toHaveBeenCalled();
   });
 
-  it('runs AGENT_CHANNEL_EVENT then reschedules alarms', async () => {
-    const scheduleAlarms = vi.fn(async () => {});
-    const executeAgentWorkspaceCommand = vi.fn(async () => agentResult({ action: 'add-note' }));
-
-    const result = await dispatchRuntimeMessage(
-      {
-        type: 'AGENT_CHANNEL_EVENT',
-        payload: {
-          platform: 'telegram',
-          text: 'add note: hello',
-          actorId: 'u1',
-          actorName: 'Ada'
-        }
-      },
-      {
-        scheduleAlarms,
-        executeAgentWorkspaceCommand,
-        isBridgeNonceReplayed: vi.fn(),
-        bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
-      }
-    );
-
-    expect(executeAgentWorkspaceCommand).toHaveBeenCalledWith({
-      text: 'add note: hello',
-      actorName: 'Ada',
-      source: 'telegram'
-    });
-    expect(scheduleAlarms).toHaveBeenCalledOnce();
-    expect(result).toMatchObject({ ok: true, action: 'add-note' });
-  });
-
-  it('returns normalization error for invalid AGENT_CHANNEL_WEBHOOK payloads', async () => {
-    const scheduleAlarms = vi.fn(async () => {});
-    const executeAgentWorkspaceCommand = vi.fn();
-
-    const result = await dispatchRuntimeMessage(
-      {
-        type: 'AGENT_CHANNEL_WEBHOOK',
-        payload: { platform: 'telegram', raw: { update_id: 1 } }
-      },
-      {
-        scheduleAlarms,
-        executeAgentWorkspaceCommand,
-        isBridgeNonceReplayed: vi.fn(),
-        bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
-      }
-    );
-
-    expect(result).toEqual({
-      ok: false,
-      error: 'Webhook payload could not be normalized for telegram.'
-    });
-    expect(executeAgentWorkspaceCommand).not.toHaveBeenCalled();
-    expect(scheduleAlarms).not.toHaveBeenCalled();
-  });
-
-  it('accepts valid webhook payloads and echoes agent outcome', async () => {
-    const scheduleAlarms = vi.fn(async () => {});
-    const executeAgentWorkspaceCommand = vi.fn(async () =>
-      agentResult({ ok: false, action: 'unsupported', summary: 'nope' })
-    );
-
-    const result = await dispatchRuntimeMessage(
-      {
-        type: 'AGENT_CHANNEL_WEBHOOK',
-        payload: {
-          platform: 'telegram',
-          raw: {
-            message: { text: 'pipeline health', from: { id: 9, first_name: 'Bo' } }
-          }
-        }
-      },
-      {
-        scheduleAlarms,
-        executeAgentWorkspaceCommand,
-        isBridgeNonceReplayed: vi.fn(),
-        bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
-      }
-    );
-
-    expect(scheduleAlarms).toHaveBeenCalledOnce();
-    expect(result).toMatchObject({
-      ok: false,
-      action: 'unsupported',
-      summary: 'nope'
-    });
-    expect(result).toMatchObject({
-      normalized: expect.objectContaining({
-        platform: 'telegram',
-        text: 'pipeline health'
-      })
-    });
-  });
-
   it('rejects replayed bridge nonces', async () => {
+    const secret = 'bridge-replay-secret';
     const scheduleAlarms = vi.fn(async () => {});
     const executeAgentWorkspaceCommand = vi.fn();
     const registerAndCheckReplay = vi.fn(() => true);
+    const unsignedEnvelope = {
+      version: 'v1' as const,
+      platform: 'telegram' as const,
+      timestamp: new Date().toISOString(),
+      nonce: 'nonce-z',
+      payload: {}
+    };
+    const signature = await signWebhookBridgeEnvelope(secret, unsignedEnvelope);
 
     const result = await dispatchRuntimeMessage(
       {
         type: 'AGENT_BRIDGE_ENVELOPE',
         payload: {
-          secret: 'ignored',
-          envelope: {
-            version: 'v1',
-            platform: 'telegram',
-            timestamp: '2026-05-02T12:00:00.000Z',
-            nonce: 'nonce-z',
-            payload: {},
-            signature: 'x'
-          }
+          envelope: { ...unsignedEnvelope, signature }
         }
       },
       {
         scheduleAlarms,
         executeAgentWorkspaceCommand,
+        getBridgeSharedSecret: vi.fn(async () => secret),
+        getBridgeAllowedActorIds: vi.fn(async () => []),
         isBridgeNonceReplayed: vi.fn(async () => {
           throw new Error('storage unavailable');
         }),
@@ -183,7 +94,7 @@ describe('dispatchRuntimeMessage', () => {
       timestamp: now.toISOString(),
       nonce: 'nonce-bridge-test',
       payload: {
-        message: { text: 'add note: signed bridge' }
+        message: { text: 'add note: signed bridge', from: { id: 42, first_name: 'Ada' } }
       }
     };
     const signature = await signWebhookBridgeEnvelope(secret, unsignedEnvelope);
@@ -197,11 +108,13 @@ describe('dispatchRuntimeMessage', () => {
     const result = await dispatchRuntimeMessage(
       {
         type: 'AGENT_BRIDGE_ENVELOPE',
-        payload: { secret, envelope }
+        payload: { envelope }
       },
       {
         scheduleAlarms,
         executeAgentWorkspaceCommand,
+        getBridgeSharedSecret: vi.fn(async () => secret),
+        getBridgeAllowedActorIds: vi.fn(async () => ['42']),
         isBridgeNonceReplayed: vi.fn(async () => false),
         bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
       }
@@ -212,12 +125,83 @@ describe('dispatchRuntimeMessage', () => {
     expect(result).toMatchObject({ ok: true, action: 'add-note' });
   });
 
+  it('rejects a valid signed envelope when its actor is not allowlisted', async () => {
+    const secret = 'bridge-actor-authorization-secret';
+    const unsignedEnvelope = {
+      version: 'v1' as const,
+      platform: 'telegram' as const,
+      timestamp: new Date().toISOString(),
+      nonce: 'nonce-unauthorized-actor',
+      payload: {
+        message: { text: 'add note: should not run', from: { id: 99, first_name: 'Mallory' } }
+      }
+    };
+    const signature = await signWebhookBridgeEnvelope(secret, unsignedEnvelope);
+    const executeAgentWorkspaceCommand = vi.fn();
+
+    const result = await dispatchRuntimeMessage(
+      {
+        type: 'AGENT_BRIDGE_ENVELOPE',
+        payload: { envelope: { ...unsignedEnvelope, signature } }
+      },
+      {
+        scheduleAlarms: vi.fn(),
+        executeAgentWorkspaceCommand,
+        getBridgeSharedSecret: vi.fn(async () => secret),
+        getBridgeAllowedActorIds: vi.fn(async () => ['42']),
+        isBridgeNonceReplayed: vi.fn(async () => false),
+        bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
+      }
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: 'Bridge actor is not authorized for telegram.'
+    });
+    expect(executeAgentWorkspaceCommand).not.toHaveBeenCalled();
+  });
+
+  it('rejects bridge envelopes when the receiver has no locally configured trust secret', async () => {
+    const isBridgeNonceReplayed = vi.fn();
+    const result = await dispatchRuntimeMessage(
+      {
+        type: 'AGENT_BRIDGE_ENVELOPE',
+        payload: {
+          envelope: {
+            version: 'v1',
+            platform: 'telegram',
+            timestamp: new Date().toISOString(),
+            nonce: 'untrusted-nonce',
+            payload: {},
+            signature: '0'.repeat(64)
+          }
+        }
+      },
+      {
+        scheduleAlarms: vi.fn(),
+        executeAgentWorkspaceCommand: vi.fn(),
+        getBridgeSharedSecret: vi.fn(async () => null),
+        getBridgeAllowedActorIds: vi.fn(async () => []),
+        isBridgeNonceReplayed,
+        bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
+      }
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: 'Bridge envelope rejected: receiver shared secret is not configured.'
+    });
+    expect(isBridgeNonceReplayed).not.toHaveBeenCalled();
+  });
+
   it('rejects unknown message types', async () => {
     const result = await dispatchRuntimeMessage(
       { type: 'UNSUPPORTED' as never },
       {
         scheduleAlarms: vi.fn(),
         executeAgentWorkspaceCommand: vi.fn(),
+        getBridgeSharedSecret: vi.fn(async () => null),
+        getBridgeAllowedActorIds: vi.fn(async () => []),
         isBridgeNonceReplayed: vi.fn(),
         bridgeReplayFallback: { registerAndCheckReplay: vi.fn() }
       }

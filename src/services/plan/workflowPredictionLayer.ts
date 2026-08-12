@@ -63,7 +63,9 @@ function clamp(value: number): number {
 }
 
 function compact(value: unknown): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim();
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function uniq(values: unknown[], cap = 8): string[] {
@@ -88,7 +90,10 @@ function normalizeTaskTitle(title: string): string {
   return compact(
     title
       .toLowerCase()
-      .replace(/\b(today|tomorrow|weekly|daily|monthly|monday|tuesday|wednesday|thursday|friday)\b/g, '')
+      .replace(
+        /\b(today|tomorrow|weekly|daily|monthly|monday|tuesday|wednesday|thursday|friday)\b/g,
+        ''
+      )
       .replace(/[^a-z0-9]+/g, ' ')
   );
 }
@@ -109,12 +114,16 @@ function workflowCommand(action: string, prediction: Omit<WorkflowPrediction, 'c
   return `ask: Workflow Prediction Layer ${action}. ${QUESTION} Keep this reviewable in PLAN. Do not save, publish, schedule, send, sync, template, reuse, automate, or mutate workspace records without explicit approval.\n\nWorkflow: ${prediction.title}\nPattern: ${prediction.repeatedPattern}\nConfidence: ${prediction.confidence}%\nEvidence: ${prediction.evidence.join(' | ')}\nRecommended steps: ${prediction.recommendedSteps.join(' | ')}\nTemplate name: ${prediction.reusableTemplateName}\nApproval gate: ${prediction.approvalGate}`;
 }
 
-function prediction(input: Omit<WorkflowPrediction, 'approvalRequired' | 'approvalGate' | 'controls'>): WorkflowPrediction {
+function prediction(
+  input: Omit<WorkflowPrediction, 'approvalRequired' | 'approvalGate' | 'controls'>
+): WorkflowPrediction {
   const draft = {
     ...input,
     evidence: input.evidence.length
       ? uniq(input.evidence, 8)
-      : ['Repeated workspace activity is available; add more traces or connected platforms to strengthen this workflow prediction.'],
+      : [
+          'Repeated workspace activity is available; add more traces or connected platforms to strengthen this workflow prediction.'
+        ],
     triggerSignals: uniq(input.triggerSignals, 6),
     recommendedSteps: uniq(input.recommendedSteps, 8),
     approvalRequired: true as const,
@@ -142,13 +151,17 @@ function repeatedSchedulerSignals(tasks: SchedulerTask[]): string[] {
   return uniq(
     [
       ...repeated.map((entry) => `${entry.count} repeated scheduler task pattern: ${entry.key}`),
-      ...tasks.slice(0, 6).map((task) => `${task.status}: ${task.title}${task.dueAt ? ` due ${task.dueAt}` : ''}`)
+      ...tasks
+        .slice(0, 6)
+        .map((task) => `${task.status}: ${task.title}${task.dueAt ? ` due ${task.dueAt}` : ''}`)
     ],
     8
   );
 }
 
-function sourceCoverage(predictions: WorkflowPrediction[]): Record<WorkflowPredictionSource, number> {
+function sourceCoverage(
+  predictions: WorkflowPrediction[]
+): Record<WorkflowPredictionSource, number> {
   return predictions.reduce<Record<WorkflowPredictionSource, number>>(
     (acc, prediction) => {
       for (const source of prediction.generatedFrom) acc[source] += 1;
@@ -183,7 +196,9 @@ export function buildWorkflowPredictionLayerReadout(
   const planningSignals = uniq(
     [
       ...(workspace.operatorTraces?.entries ?? [])
-        .filter((trace) => /plan|workflow|review|approve|queue/i.test(`${trace.surface} ${trace.verb}`))
+        .filter((trace) =>
+          /plan|workflow|review|approve|queue/i.test(`${trace.surface} ${trace.verb}`)
+        )
         .slice(0, 8)
         .map((trace) => `${trace.verb}${trace.surface ? ` on ${trace.surface}` : ''}`),
       ...(workspace.aiAssistantTraces?.entries ?? [])
@@ -200,12 +215,24 @@ export function buildWorkflowPredictionLayerReadout(
   );
   const creatorSignals = uniq(
     [
-      ...workspace.brandVault.signatureThemes.filter((theme) => /creator|series|campaign|audience/i.test(theme)),
-      ...workspace.brandVault.expertiseAreas.filter((area) => /creator|content|audience|community/i.test(area)),
-      ...(twin?.memory.approvedClaims ?? []).filter((claim) => /creator|content|audience|community|workflow/i.test(claim)),
-      ...(twin?.memory.preferences ?? []).filter((preference) => /creator|content|audience|community|workflow/i.test(preference)),
+      ...workspace.brandVault.signatureThemes.filter((theme) =>
+        /creator|series|campaign|audience/i.test(theme)
+      ),
+      ...workspace.brandVault.expertiseAreas.filter((area) =>
+        /creator|content|audience|community/i.test(area)
+      ),
+      ...(twin?.memory.approvedClaims ?? []).filter((claim) =>
+        /creator|content|audience|community|workflow/i.test(claim)
+      ),
+      ...(twin?.memory.preferences ?? []).filter((preference) =>
+        /creator|content|audience|community|workflow/i.test(preference)
+      ),
       ...workspace.contentLibrary
-        .filter((item) => /creator|series|campaign|audience|linkedin|post/i.test(`${item.title} ${item.tags.join(' ')} ${item.notes}`))
+        .filter((item) =>
+          /creator|series|campaign|audience|linkedin|post/i.test(
+            `${item.title} ${item.tags.join(' ')} ${item.notes}`
+          )
+        )
         .map((item) => `${item.status}: ${item.title}`)
     ],
     10
@@ -222,7 +249,9 @@ export function buildWorkflowPredictionLayerReadout(
     [
       ...platform.workflowState,
       ...platform.connectedApps.map((app) => `${app} connected`),
-      ...workspace.integrationHub.liveFeed.map((feed) => `${feed.source}: ${feed.title} ${feed.detail}`)
+      ...workspace.integrationHub.liveFeed.map(
+        (feed) => `${feed.source}: ${feed.title} ${feed.detail}`
+      )
     ],
     8
   );
@@ -232,12 +261,18 @@ export function buildWorkflowPredictionLayerReadout(
   const outreachEvidence = uniq(
     [
       ...outreachUrgency.map((signal) => `${signal.label}: ${signal.reason}`),
-      ...workspace.outreachDrafts.map((draft) => `${draft.status}: ${draft.targetName} ${draft.outreachGoal}`),
+      ...workspace.outreachDrafts.map(
+        (draft) => `${draft.status}: ${draft.targetName} ${draft.outreachGoal}`
+      ),
       ...workspace.outreachTemplates.map((template) => `Template: ${template.name}`),
       ...workspace.outreachHistory.map((entry) => `${entry.status}: ${entry.summary}`),
       ...platformSignals,
       ...behaviorWorkflowSignals
-        .filter((pattern) => /outreach|follow|reply|sales|pipeline/i.test(`${pattern.label} ${pattern.evidence.join(' ')}`))
+        .filter((pattern) =>
+          /outreach|follow|reply|sales|pipeline/i.test(
+            `${pattern.label} ${pattern.evidence.join(' ')}`
+          )
+        )
         .flatMap((pattern) => [pattern.label, ...pattern.evidence])
     ],
     10
@@ -248,12 +283,24 @@ export function buildWorkflowPredictionLayerReadout(
         id: 'workflow-repeated-outreach',
         kind: 'repeated-outreach',
         title: 'Repeated outreach workflow detected',
-        repeatedPattern: 'Outreach drafts, templates, history, follow-ups, or relationship moves are recurring.',
+        repeatedPattern:
+          'Outreach drafts, templates, history, follow-ups, or relationship moves are recurring.',
         suggestion: QUESTION,
         confidence: confidenceFrom(outreachEvidence.length, 3, 56),
         evidence: outreachEvidence,
-        triggerSignals: ['new warm relationship', 'draft created', 'follow-up due', 'reply or next action detected'],
-        recommendedSteps: ['Select target context', 'Draft message', 'Approve send', 'Queue follow-up', 'Track reply'],
+        triggerSignals: [
+          'new warm relationship',
+          'draft created',
+          'follow-up due',
+          'reply or next action detected'
+        ],
+        recommendedSteps: [
+          'Select target context',
+          'Draft message',
+          'Approve send',
+          'Queue follow-up',
+          'Track reply'
+        ],
         reusableTemplateName: 'Reusable Outreach Workflow',
         generatedFrom: ['outreach', 'behavioral-patterns', 'connected-platforms']
       })
@@ -266,30 +313,62 @@ export function buildWorkflowPredictionLayerReadout(
         id: 'workflow-repeated-scheduling',
         kind: 'repeated-scheduling',
         title: 'Repeated scheduling workflow detected',
-        repeatedPattern: 'Scheduler rows and due windows show repeatable calendar or reminder behavior.',
+        repeatedPattern:
+          'Scheduler rows and due windows show repeatable calendar or reminder behavior.',
         suggestion: QUESTION,
         confidence: confidenceFrom(schedulerSignals.length, 2, 54),
         evidence: schedulerSignals,
-        triggerSignals: ['task due soon', 'missed task', 'repeated reminder', 'workday window reached'],
-        recommendedSteps: ['Collect timing context', 'Choose operating window', 'Approve reminder', 'Review completion'],
+        triggerSignals: [
+          'task due soon',
+          'missed task',
+          'repeated reminder',
+          'workday window reached'
+        ],
+        recommendedSteps: [
+          'Collect timing context',
+          'Choose operating window',
+          'Approve reminder',
+          'Review completion'
+        ],
         reusableTemplateName: 'Reusable Scheduling Workflow',
         generatedFrom: ['scheduler', 'behavioral-patterns']
       })
     );
   }
 
-  if (planningSignals.length >= 2 || behaviorWorkflowSignals.some((pattern) => pattern.kind === 'plan')) {
+  if (
+    planningSignals.length >= 2 ||
+    behaviorWorkflowSignals.some((pattern) => pattern.kind === 'plan')
+  ) {
     predictions.push(
       prediction({
         id: 'workflow-repeated-planning',
         kind: 'repeated-planning',
         title: 'Repeated planning workflow detected',
-        repeatedPattern: 'ASK, PLAN, pipeline, or review behavior repeatedly turns strategy into operating steps.',
+        repeatedPattern:
+          'ASK, PLAN, pipeline, or review behavior repeatedly turns strategy into operating steps.',
         suggestion: QUESTION,
         confidence: confidenceFrom(planningSignals.length + behaviorWorkflowSignals.length, 3, 53),
-        evidence: uniq([...planningSignals, ...behaviorWorkflowSignals.flatMap((pattern) => [pattern.label, ...pattern.evidence])], 10),
-        triggerSignals: ['new strategic ask', 'PLAN review pending', 'pipeline run complete', 'approval checkpoint needed'],
-        recommendedSteps: ['Capture objective', 'Draft plan', 'Review dependencies', 'Approve next actions', 'Export receipt'],
+        evidence: uniq(
+          [
+            ...planningSignals,
+            ...behaviorWorkflowSignals.flatMap((pattern) => [pattern.label, ...pattern.evidence])
+          ],
+          10
+        ),
+        triggerSignals: [
+          'new strategic ask',
+          'PLAN review pending',
+          'pipeline run complete',
+          'approval checkpoint needed'
+        ],
+        recommendedSteps: [
+          'Capture objective',
+          'Draft plan',
+          'Review dependencies',
+          'Approve next actions',
+          'Export receipt'
+        ],
         reusableTemplateName: 'Reusable Planning Workflow',
         generatedFrom: ['planning', 'behavioral-patterns']
       })
@@ -302,12 +381,24 @@ export function buildWorkflowPredictionLayerReadout(
         id: 'workflow-repeated-creator',
         kind: 'repeated-creator-workflow',
         title: 'Repeated creator workflow detected',
-        repeatedPattern: 'Creator themes, campaigns, audiences, or publishing patterns are recurring.',
+        repeatedPattern:
+          'Creator themes, campaigns, audiences, or publishing patterns are recurring.',
         suggestion: QUESTION,
         confidence: confidenceFrom(creatorSignals.length, 3, 55),
         evidence: creatorSignals,
-        triggerSignals: ['creator theme appears', 'campaign idea emerges', 'audience hook drafted', 'publishing cadence active'],
-        recommendedSteps: ['Choose creator angle', 'Draft series arc', 'Approve assets', 'Schedule cadence', 'Measure resonance'],
+        triggerSignals: [
+          'creator theme appears',
+          'campaign idea emerges',
+          'audience hook drafted',
+          'publishing cadence active'
+        ],
+        recommendedSteps: [
+          'Choose creator angle',
+          'Draft series arc',
+          'Approve assets',
+          'Schedule cadence',
+          'Measure resonance'
+        ],
         reusableTemplateName: 'Reusable Creator Workflow',
         generatedFrom: ['creator', 'content-pipeline', 'behavioral-patterns']
       })
@@ -320,19 +411,33 @@ export function buildWorkflowPredictionLayerReadout(
         id: 'workflow-repeated-content-pipeline',
         kind: 'repeated-content-pipeline',
         title: 'Repeated content pipeline detected',
-        repeatedPattern: 'Ideas, drafts, ready content, and publishing queue items form a repeatable content pipeline.',
+        repeatedPattern:
+          'Ideas, drafts, ready content, and publishing queue items form a repeatable content pipeline.',
         suggestion: QUESTION,
         confidence: confidenceFrom(contentPipelineSignals.length, 3, 56),
         evidence: uniq([...contentPipelineSignals, ...platformSignals], 10),
-        triggerSignals: ['content idea captured', 'draft ready', 'publishing queue updated', 'resonance review needed'],
-        recommendedSteps: ['Select theme', 'Draft asset', 'Approve final copy', 'Schedule or save', 'Review performance'],
+        triggerSignals: [
+          'content idea captured',
+          'draft ready',
+          'publishing queue updated',
+          'resonance review needed'
+        ],
+        recommendedSteps: [
+          'Select theme',
+          'Draft asset',
+          'Approve final copy',
+          'Schedule or save',
+          'Review performance'
+        ],
         reusableTemplateName: 'Reusable Content Pipeline',
         generatedFrom: ['content-pipeline', 'behavioral-patterns', 'connected-platforms']
       })
     );
   }
 
-  const sorted = predictions.sort((a, b) => b.confidence - a.confidence || a.title.localeCompare(b.title));
+  const sorted = predictions.sort(
+    (a, b) => b.confidence - a.confidence || a.title.localeCompare(b.title)
+  );
   const averageConfidence = sorted.length
     ? clamp(sorted.reduce((sum, item) => sum + item.confidence, 0) / sorted.length)
     : 0;
@@ -348,4 +453,3 @@ export function buildWorkflowPredictionLayerReadout(
       : 'No repeated workflow pattern is strong enough yet; BrandOps will suggest reusable workflows once repetition appears.'
   };
 }
-

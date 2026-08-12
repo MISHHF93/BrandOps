@@ -1,5 +1,3 @@
-import { RuntimeMessage } from '../messaging/messages';
-
 type BridgePlatform = 'telegram' | 'whatsapp';
 
 export interface WebhookBridgeEnvelope {
@@ -126,13 +124,3 @@ export const verifyWebhookBridgeEnvelope = async (
 
   return { valid: true };
 };
-
-export const toRuntimeWebhookMessage = (
-  envelope: WebhookBridgeEnvelope
-): Extract<RuntimeMessage, { type: 'AGENT_CHANNEL_WEBHOOK' }> => ({
-  type: 'AGENT_CHANNEL_WEBHOOK',
-  payload: {
-    platform: envelope.platform,
-    raw: envelope.payload
-  }
-});

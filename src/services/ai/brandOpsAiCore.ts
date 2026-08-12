@@ -25,9 +25,9 @@ import {
 import { buildOperationalIntelligenceReadout } from '../operationalIntelligence/operationalIntelligence';
 import { refreshWorkspaceIntelligence } from '../workspaceIntelligence/workspaceIntelligence';
 
-export const BRANDOPS_AI_CORE_SCHEMA_VERSION = '1.0.0';
-export const MAX_BRANDOPS_AI_CORE_ARTIFACTS = 160;
-export const MAX_BRANDOPS_AI_CORE_BATCH_RUNS = 40;
+const BRANDOPS_AI_CORE_SCHEMA_VERSION = '1.0.0';
+const MAX_BRANDOPS_AI_CORE_ARTIFACTS = 160;
+const MAX_BRANDOPS_AI_CORE_BATCH_RUNS = 40;
 
 const EXTERNAL_ARTIFACT_TYPES = new Set<BrandOpsAIArtifactType>([
   'bio',
@@ -62,7 +62,10 @@ function nowIso(): string {
 }
 
 function clean(value: unknown, max = 1200): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 }
 
 function uniq(values: unknown[], cap = 10): string[] {
@@ -144,8 +147,14 @@ function validationWarnings(args: {
   if (externalOutput && !args.request.approvalRequired) {
     warnings.push('External-facing outputs require approval before use.');
   }
-  if (/guarantee|guaranteed|definitely|proven #?1/i.test(args.request.userInput ?? args.request.intent)) {
-    warnings.push('Unsupported certainty language detected; label claims as inferred unless verified.');
+  if (
+    /guarantee|guaranteed|definitely|proven #?1/i.test(
+      args.request.userInput ?? args.request.intent
+    )
+  ) {
+    warnings.push(
+      'Unsupported certainty language detected; label claims as inferred unless verified.'
+    );
   }
   return uniq(warnings, 12);
 }
@@ -289,7 +298,8 @@ function synthesizeContent(args: {
       };
     case 'meeting prep':
       return {
-        content: 'Prepare agenda, context, desired outcome, risks, and follow-up rules from current workspace state.',
+        content:
+          'Prepare agenda, context, desired outcome, risks, and follow-up rules from current workspace state.',
         confidence: baseConfidence,
         nextActions: ['Confirm meeting objective', 'Review prep packet']
       };
@@ -301,7 +311,9 @@ function synthesizeContent(args: {
       };
     case 'approval item':
       return {
-        content: generatedText || 'Approval required before this AI output can affect external surfaces or workspace records.',
+        content:
+          generatedText ||
+          'Approval required before this AI output can affect external surfaces or workspace records.',
         confidence: baseConfidence,
         nextActions: ['Preview', 'Approve or reject', 'Record receipt']
       };
@@ -350,7 +362,7 @@ function createArtifact(args: {
     id: uid('ai-core-receipt'),
     createdAt,
     mode: args.request.mode,
-    validationStatus: args.warnings.length ? 'needs_review' as const : 'passed' as const,
+    validationStatus: args.warnings.length ? ('needs_review' as const) : ('passed' as const),
     approvalRequired,
     warnings: args.warnings,
     sourceFactsUsed: args.facts,
@@ -422,18 +434,22 @@ export async function runBrandOpsAI(args: {
       requiredBefore: 'send, publish, schedule, sync, save externally, or execute'
     }));
   const batchRun =
-    args.request.mode === 'batch'
-      ? buildBatchRun(args.request, artifacts, warnings)
-      : undefined;
+    args.request.mode === 'batch' ? buildBatchRun(args.request, artifacts, warnings) : undefined;
 
   return {
     assistantMessage: args.generatedText || summarizeCoreRun(args.request, artifacts, warnings),
     artifacts,
-    planSteps: uniq(artifacts.flatMap((artifact) => artifact.nextActions), 10),
+    planSteps: uniq(
+      artifacts.flatMap((artifact) => artifact.nextActions),
+      10
+    ),
     requiredApprovals: approvals,
     warnings,
     receipts: artifacts.map((artifact) => artifact.auditReceipt),
-    nextActions: uniq(artifacts.flatMap((artifact) => artifact.nextActions), 10),
+    nextActions: uniq(
+      artifacts.flatMap((artifact) => artifact.nextActions),
+      10
+    ),
     ...(batchRun ? { batchRun } : {})
   };
 }
@@ -444,7 +460,9 @@ function summarizeCoreRun(
   warnings: string[]
 ): string {
   const artifactLine = artifacts.map((artifact) => artifact.type).join(', ');
-  const warningLine = warnings.length ? ` ${warnings.length} validation warning(s) need review.` : '';
+  const warningLine = warnings.length
+    ? ` ${warnings.length} validation warning(s) need review.`
+    : '';
   return `BrandOps AI Core handled ${request.mode} intent "${request.intent}" and captured ${artifacts.length} artifact(s): ${artifactLine}.${warningLine}`;
 }
 
@@ -459,7 +477,8 @@ function buildBatchRun(
     .map((warning) => ({
       artifactType: 'resume summary' as BrandOpsAIArtifactType,
       error: warning,
-      retryCommand: 'Open Twin setup and add verified resume/profile facts, then rerun AI Batch Run.'
+      retryCommand:
+        'Open Twin setup and add verified resume/profile facts, then rerun AI Batch Run.'
     }));
   return {
     id: uid('ai-batch'),
@@ -485,7 +504,10 @@ export function prependBrandOpsAICoreResult(
   response: BrandOpsAIResponse
 ): BrandOpsData {
   const current = normalizeBrandOpsAICoreState(workspace.aiCore);
-  const artifacts = [...response.artifacts, ...current.artifacts].slice(0, MAX_BRANDOPS_AI_CORE_ARTIFACTS);
+  const artifacts = [...response.artifacts, ...current.artifacts].slice(
+    0,
+    MAX_BRANDOPS_AI_CORE_ARTIFACTS
+  );
   const batchRuns = response.batchRun
     ? [response.batchRun, ...current.batchRuns].slice(0, MAX_BRANDOPS_AI_CORE_BATCH_RUNS)
     : current.batchRuns;
@@ -510,10 +532,14 @@ export function normalizeBrandOpsAICoreState(value: unknown): BrandOpsAICoreStat
   }
   const raw = value as { artifacts?: unknown; batchRuns?: unknown };
   const artifacts = Array.isArray(raw.artifacts)
-    ? raw.artifacts.map(normalizeArtifact).filter((item): item is BrandOpsAIArtifact => Boolean(item))
+    ? raw.artifacts
+        .map(normalizeArtifact)
+        .filter((item): item is BrandOpsAIArtifact => Boolean(item))
     : [];
   const batchRuns = Array.isArray(raw.batchRuns)
-    ? raw.batchRuns.map(normalizeBatchRun).filter((item): item is BrandOpsAIBatchRun => Boolean(item))
+    ? raw.batchRuns
+        .map(normalizeBatchRun)
+        .filter((item): item is BrandOpsAIBatchRun => Boolean(item))
     : [];
   return {
     schemaVersion: BRANDOPS_AI_CORE_SCHEMA_VERSION,
@@ -553,6 +579,8 @@ function normalizeBatchRun(value: unknown): BrandOpsAIBatchRun | null {
     failedArtifacts: Array.isArray(item.failedArtifacts) ? item.failedArtifacts.slice(0, 20) : [],
     steps: Array.isArray(item.steps) ? item.steps.slice(0, 40) : [],
     finalSummary: clean(item.finalSummary, 1000),
-    status: ['running', 'completed', 'partial', 'failed'].includes(item.status) ? item.status : 'partial'
+    status: ['running', 'completed', 'partial', 'failed'].includes(item.status)
+      ? item.status
+      : 'partial'
   };
 }

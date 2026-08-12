@@ -37,7 +37,11 @@ export interface WorkspaceOpportunitySignal {
 }
 
 export interface WorkspaceScorecardMetric {
-  id: 'identity-completeness' | 'positioning-strength' | 'workflow-maturity' | 'operational-readiness';
+  id:
+    | 'identity-completeness'
+    | 'positioning-strength'
+    | 'workflow-maturity'
+    | 'operational-readiness';
   label: string;
   value: number;
   detail: string;

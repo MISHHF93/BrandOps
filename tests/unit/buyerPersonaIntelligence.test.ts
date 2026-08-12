@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildWorkspaceSnapshot } from '../../src/pages/mobile/buildWorkspaceSnapshot';
-import { createDigitalTwinFromText, hydrateWorkspaceFromDigitalTwin } from '../../src/services/digitalTwin/digitalTwin';
+import {
+  createDigitalTwinFromText,
+  hydrateWorkspaceFromDigitalTwin
+} from '../../src/services/digitalTwin/digitalTwin';
 import { buildBuyerPersonaIntelligenceReadout } from '../../src/services/plan/buyerPersonaIntelligence';
 import { cloneSeedData } from '../helpers/fixtures';
 
@@ -137,4 +140,3 @@ describe('Buyer Persona Intelligence', () => {
     expect(snapshot.buyerPersonaIntelligence.averageConfidence).toBeGreaterThan(0);
   });
 });
-

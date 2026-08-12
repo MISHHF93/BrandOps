@@ -1,7 +1,7 @@
 import type { AIPipeline } from '../../types/aiIntegrationSuite';
 
 /** Declarative pipeline catalogue — runner executes steps progressively with persistence hooks. */
-export const AI_PIPELINE_LIBRARY: readonly AIPipeline[] = [
+const AI_PIPELINE_LIBRARY: readonly AIPipeline[] = [
   {
     pipeline_id: 'linkedin_content_generation',
     label: 'LinkedIn content generation',

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
-import type { DigitalTwinSourceType, OperatingPresetId } from '../../types/domain';
+import type { DigitalTwinSourceType, OperatingPresetId, TwinFactStatus } from '../../types/domain';
 import type { AiOperatorMode } from '../../types/aiIntegrationSuite';
 import type { AuthProviderId, LaunchMembershipState } from '../../shared/account/launchAccess';
 import { authProviderLabel } from '../../shared/account/launchAccess';
@@ -35,6 +35,8 @@ import {
   SettingsTwinDashboard
 } from './MobileSettingsAISurface';
 import { SettingsAiRoutingPanel } from './SettingsAiRoutingPanel';
+import { SettingsAiBridgePanel, type AiBridgeConfigurationInput } from './SettingsAiBridgePanel';
+import { SettingsAgentBridgeReceiverPanel } from './SettingsAgentBridgeReceiverPanel';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { SettingsCockpitCapabilityDisclosure } from './SettingsCockpitCapabilityDisclosure';
 import { LocalProductUsageReadout } from './LocalProductUsageReadout';
@@ -67,11 +69,11 @@ const primaryBtn = (btnFocus: string) =>
   `mt-2 inline-flex w-full sm:w-auto justify-center rounded-lg border border-borderStrong bg-surfaceActive px-3 py-2 text-xs font-medium text-text hover:bg-surfaceHover disabled:cursor-not-allowed disabled:opacity-50 ${btnFocus}`;
 
 function membershipLabel(status: LaunchMembershipState['status']): string {
-  if (status === 'active') return 'Active';
-  if (status === 'trialing') return 'Trialing';
-  if (status === 'past_due') return 'Past due';
-  if (status === 'canceled') return 'Canceled';
-  return 'Not subscribed';
+  if (status === 'active') return 'Local demo: active (unverified)';
+  if (status === 'trialing') return 'Local demo: trialing (unverified)';
+  if (status === 'past_due') return 'Local demo: past due (unverified)';
+  if (status === 'canceled') return 'Local demo: canceled (unverified)';
+  return 'No verified membership';
 }
 
 function AccountMembershipSection({
@@ -103,37 +105,44 @@ function AccountMembershipSection({
         Account
         <span className="ml-2 text-meta font-normal text-textSoft">
           {isAuthenticated
-            ? `${authProviderLabel(provider)} · ${membershipLabel(membership.status)}`
-            : 'Sign in'}
+            ? `Local ${authProviderLabel(provider)} preview · ${membershipLabel(membership.status)}`
+            : 'Local preview locked'}
         </span>
       </summary>
       <div className="border-t border-border/40 px-3 pb-4 pt-4">
         <MobileTabSection
           id="settings-account-membership"
-          title="Account & membership"
-          description="Sign-in provider and membership status for this workspace."
+          title="Local access & membership"
+          description="Local preview identity and membership status for this workspace."
           descriptionVisibility="sr-only"
         >
           <p className="mt-2 text-fine leading-snug text-textSoft">
-            Provider buttons set BrandOps access state for this workspace and unlock gated operator
-            actions. Provider status is stored on-device in this build.
+            These buttons choose an on-device preview identity and unlock gated operator actions.
+            They do not contact a provider, verify the placeholder email, or create an OAuth
+            session.
           </p>
           <dl className="mt-2 space-y-1.5 text-meta text-textMuted">
             <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
-              <dt>Signed in</dt>
-              <dd className="text-text">{isAuthenticated ? 'Yes' : 'No'}</dd>
+              <dt className="shrink-0">Local access</dt>
+              <dd className="min-w-0 break-words text-right text-text">
+                {isAuthenticated ? 'Unlocked' : 'Locked'}
+              </dd>
             </div>
             <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
-              <dt>Provider</dt>
-              <dd className="text-text">{authProviderLabel(provider)}</dd>
+              <dt className="shrink-0">Preview label</dt>
+              <dd className="min-w-0 break-words text-right text-text">
+                {authProviderLabel(provider)}
+              </dd>
             </div>
             <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
-              <dt>Email</dt>
-              <dd className="text-text">{email || '—'}</dd>
+              <dt className="shrink-0">Placeholder email</dt>
+              <dd className="min-w-0 break-words text-right text-text">{email || '—'}</dd>
             </div>
             <div className="flex justify-between gap-2 py-1.5">
-              <dt>Membership</dt>
-              <dd className="text-text">{membershipLabel(membership.status)}</dd>
+              <dt className="shrink-0">Local membership flag</dt>
+              <dd className="min-w-0 break-words text-right text-text">
+                {membershipLabel(membership.status)}
+              </dd>
             </div>
           </dl>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -141,19 +150,27 @@ function AccountMembershipSection({
               <div className="grid w-full gap-2">
                 <GoogleSignInButton
                   onClick={() => onSignInProvider('google')}
+                  variant="preview"
                   className={btnFocus}
                 />
-                <AppleSignInButton onClick={() => onSignInProvider('apple')} className={btnFocus} />
+                <AppleSignInButton
+                  onClick={() => onSignInProvider('apple')}
+                  variant="preview"
+                  className={btnFocus}
+                />
                 <EmailMagicLinkButton
                   onClick={() => onSignInProvider('email')}
+                  variant="preview"
                   className={btnFocus}
                 />
                 <LinkedInSignInButton
                   onClick={() => onSignInProvider('linkedin')}
+                  variant="preview"
                   className={btnFocus}
                 />
                 <GitHubSignInButton
                   onClick={() => onSignInProvider('github')}
+                  variant="preview"
                   className={btnFocus}
                 />
               </div>
@@ -164,21 +181,25 @@ function AccountMembershipSection({
                   onClick={onStartCheckout}
                   className={mobileChipClass(btnFocus)}
                 >
-                  Start checkout
+                  Open checkout link
                 </button>
                 <button
                   type="button"
                   onClick={onOpenBillingPortal}
                   className={mobileChipClass(btnFocus)}
                 >
-                  Manage billing
+                  Open billing portal link
                 </button>
                 <button type="button" onClick={onSignOut} className={mobileChipClass(btnFocus)}>
-                  Sign out
+                  Clear local access
                 </button>
               </>
             )}
           </div>
+          <p className="mt-2 text-fine leading-snug text-textSoft">
+            Billing links are navigation only. This repo has no Stripe callback, webhook, or
+            server-verified entitlement, and production membership enforcement is disabled.
+          </p>
           {membership.renewalDate ? (
             <p className="mt-2 text-fine text-textSoft">Renews: {membership.renewalDate}</p>
           ) : null}
@@ -207,7 +228,7 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
     ['AI routing · diagnostics prompts', r.aiRoutingDiagnosticsEnabled ? 'on' : 'off'],
     ['Copilot · active worker', r.copilotActiveWorkerPreview],
     ['Copilot · registry', r.copilotWorkersListPreview],
-    ['Primary identity provider', r.primaryIdentityProvider],
+    ['Primary provider preference', r.primaryIdentityProvider],
     ['Notifications enabled', r.notificationsEnabled ? 'yes' : 'no'],
     ['AI guidance mode', r.aiGuidanceMode],
     ['Preferred model', r.preferredModel],
@@ -298,7 +319,7 @@ function WorkspaceModelReadout({
               key={label}
               className="flex justify-between gap-2 border-b border-border/30 py-1.5 last:border-b-0"
             >
-              <dt className="shrink-0 text-textMuted">{label}</dt>
+              <dt className="min-w-0 break-words text-textMuted">{label}</dt>
               <dd className="min-w-0 break-words text-right text-text">{value}</dd>
             </div>
           ))}
@@ -772,9 +793,21 @@ export interface MobileSettingsViewProps {
     };
   }) => void | Promise<void>;
   onDeleteActiveDigitalTwin?: () => void | Promise<void>;
+  /** Improve-Twin fact review: approve/reject a single extracted experience/education/project row. */
+  onUpdateTwinFactStatus?: (input: {
+    twinId: string;
+    itemKind: 'experience' | 'education' | 'project';
+    itemId: string;
+    status: Exclude<TwinFactStatus, 'unverified'>;
+  }) => void | Promise<void>;
+  /** Surface and maintain the active twin's `identity.goals`. */
+  onUpdateTwinGoals?: (input: { twinId: string; goals: string[] }) => void | Promise<void>;
   /** Hosted Ask routing stance (`ask:` model scoring). */
   onAiOperatorModeChange: (mode: AiOperatorMode) => void | Promise<void>;
   onAiRoutingDiagnosticsChange: (enabled: boolean) => void | Promise<void>;
+  onSaveAiBridgeConfiguration?: (input: AiBridgeConfigurationInput) => Promise<void>;
+  onClearAiBridgeApiKey?: () => Promise<void>;
+  onTestAiBridgeConnection?: () => Promise<string>;
   /** Bump to open Unified workspace + scroll to operator twin résumé ingest (Assistant shortcut / deep link). */
   resumePhaseRevealKey?: number;
 }
@@ -809,8 +842,19 @@ export const MobileSettingsView = ({
   onPersistResumeNeuralPhaseContext = async () => {},
   onCreateDigitalTwinFromText = async () => {},
   onDeleteActiveDigitalTwin = async () => {},
+  onUpdateTwinFactStatus = async () => {},
+  onUpdateTwinGoals = async () => {},
   onAiOperatorModeChange,
   onAiRoutingDiagnosticsChange,
+  onSaveAiBridgeConfiguration = async () => {
+    throw new Error('AI bridge settings are unavailable on this surface.');
+  },
+  onClearAiBridgeApiKey = async () => {
+    throw new Error('AI bridge key storage is unavailable on this surface.');
+  },
+  onTestAiBridgeConnection = async () => {
+    throw new Error('AI bridge connection testing is unavailable on this surface.');
+  },
   resumePhaseRevealKey = 0
 }: MobileSettingsViewProps) => {
   const unifiedWorkspaceDetailsRef = useRef<HTMLDetailsElement>(null);
@@ -909,6 +953,18 @@ export const MobileSettingsView = ({
                 onDiagnosticsChange={(enabled) => void onAiRoutingDiagnosticsChange(enabled)}
               />
 
+              <SettingsAiBridgePanel
+                bridge={snapshot.aiBridgeSettings}
+                adapterMode={snapshot.aiAdapterMode}
+                btnFocus={btnFocus}
+                disabled={agentRouteBusy}
+                onSave={onSaveAiBridgeConfiguration}
+                onClearApiKey={onClearAiBridgeApiKey}
+                onTestConnection={onTestAiBridgeConnection}
+              />
+
+              <SettingsAgentBridgeReceiverPanel btnFocus={btnFocus} disabled={agentRouteBusy} />
+
               <SettingsEditablePanel
                 snapshot={snapshot}
                 applySettingsConfigure={applySettingsConfigure}
@@ -931,6 +987,8 @@ export const MobileSettingsView = ({
                 disabled={agentRouteBusy}
                 runCommand={runCommand}
                 onDeleteActiveDigitalTwin={onDeleteActiveDigitalTwin}
+                onUpdateTwinFactStatus={onUpdateTwinFactStatus}
+                onUpdateTwinGoals={onUpdateTwinGoals}
               />
             </div>
           </details>

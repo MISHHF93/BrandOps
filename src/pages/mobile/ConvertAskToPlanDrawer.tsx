@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { CheckCircle2, GitBranch, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
 import type { PlanDraft, PlanPreset } from '../../types/domain';
 import { PLAN_PRESET_LABELS, PLAN_PRESETS } from '../../services/plan/askPlanConversion';
+import { ExecutionTree } from '../../shared/ui/execution/ExecutionTree';
 
 function presetDescription(preset: PlanPreset): string {
   switch (preset) {
@@ -107,7 +108,10 @@ export function ConvertAskToPlanDrawer({
             type="button"
             disabled={busy}
             onClick={onCancel}
-            className={clsx('rounded-lg border border-border/45 bg-bgSubtle/60 p-2 text-textMuted disabled:opacity-45', btnFocus)}
+            className={clsx(
+              'rounded-lg border border-border/45 bg-bgSubtle/60 p-2 text-textMuted disabled:opacity-45',
+              btnFocus
+            )}
             aria-label="Cancel Convert to Plan"
           >
             <XCircle className="h-4 w-4" aria-hidden />
@@ -140,7 +144,9 @@ export function ConvertAskToPlanDrawer({
                   <span className="block text-sm font-semibold text-text">
                     {PLAN_PRESET_LABELS[preset]}
                   </span>
-                  <span className="mt-1 block text-fine leading-snug">{presetDescription(preset)}</span>
+                  <span className="mt-1 block text-fine leading-snug">
+                    {presetDescription(preset)}
+                  </span>
                 </button>
               ))}
             </div>
@@ -149,7 +155,10 @@ export function ConvertAskToPlanDrawer({
                 type="button"
                 disabled={busy}
                 onClick={onCancel}
-                className={clsx('rounded-lg border border-border px-3 py-2 text-sm text-textMuted disabled:opacity-45', btnFocus)}
+                className={clsx(
+                  'rounded-lg border border-border px-3 py-2 text-sm text-textMuted disabled:opacity-45',
+                  btnFocus
+                )}
               >
                 Cancel
               </button>
@@ -157,7 +166,10 @@ export function ConvertAskToPlanDrawer({
                 type="button"
                 disabled={busy}
                 onClick={onQuickConvert}
-                className={clsx('rounded-lg border border-border/45 bg-bgSubtle/70 px-3 py-2 text-sm font-semibold text-text disabled:opacity-45', btnFocus)}
+                className={clsx(
+                  'rounded-lg border border-border/45 bg-bgSubtle/70 px-3 py-2 text-sm font-semibold text-text disabled:opacity-45',
+                  btnFocus
+                )}
               >
                 Quick conversion
               </button>
@@ -165,7 +177,10 @@ export function ConvertAskToPlanDrawer({
                 type="button"
                 disabled={busy}
                 onClick={() => onGenerate(selectedPreset)}
-                className={clsx('rounded-lg border border-primary/50 bg-primarySoft/20 px-3 py-2 text-sm font-semibold text-primary disabled:opacity-45', btnFocus)}
+                className={clsx(
+                  'rounded-lg border border-primary/50 bg-primarySoft/20 px-3 py-2 text-sm font-semibold text-primary disabled:opacity-45',
+                  btnFocus
+                )}
               >
                 {busy ? 'Generating...' : 'Generate preview'}
               </button>
@@ -217,7 +232,10 @@ export function ConvertAskToPlanDrawer({
               <p className="bo-system-label">Steps</p>
               <div className="mt-2 grid gap-2">
                 {draft.steps.map((step) => (
-                  <div key={step.id} className="rounded-lg border border-border/30 bg-bgSubtle/45 px-2.5 py-2">
+                  <div
+                    key={step.id}
+                    className="rounded-lg border border-border/30 bg-bgSubtle/45 px-2.5 py-2"
+                  >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <p className="text-sm font-semibold text-text">{step.title}</p>
                       <span className="rounded-full border border-border/40 px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
@@ -239,25 +257,18 @@ export function ConvertAskToPlanDrawer({
               <details className="bo-ops-disclosure mt-3 px-3 py-2">
                 <summary className="flex items-center gap-1.5 text-sm font-semibold text-text">
                   <GitBranch className="h-4 w-4 text-primary" aria-hidden />
-                  Thought Tree
+                  Execution tree
                 </summary>
-                <div className="mt-2 grid gap-2 text-fine leading-snug text-textMuted">
-                  <p>
+                <div className="mt-2">
+                  <p className="text-fine leading-snug text-textMuted">
                     <span className="font-semibold text-text">Original question:</span>{' '}
                     {draft.thoughtTree.originalQuestion}
                   </p>
-                  <p>
+                  <p className="mt-1 text-fine leading-snug text-textMuted">
                     <span className="font-semibold text-text">Insight:</span>{' '}
                     {draft.thoughtTree.insight}
                   </p>
-                  <p>
-                    <span className="font-semibold text-text">Chosen path:</span>{' '}
-                    {draft.thoughtTree.chosenPath}
-                  </p>
-                  <p>
-                    <span className="font-semibold text-text">Branches:</span>{' '}
-                    {draft.thoughtTree.branchesOptions.slice(0, 3).join(' · ')}
-                  </p>
+                  <ExecutionTree tree={draft.thoughtTree} className="mt-2" />
                 </div>
               </details>
             ) : null}
@@ -276,7 +287,10 @@ export function ConvertAskToPlanDrawer({
                 type="button"
                 disabled={busy}
                 onClick={onCancel}
-                className={clsx('rounded-lg border border-border px-3 py-2 text-sm text-textMuted disabled:opacity-45', btnFocus)}
+                className={clsx(
+                  'rounded-lg border border-border px-3 py-2 text-sm text-textMuted disabled:opacity-45',
+                  btnFocus
+                )}
               >
                 Cancel
               </button>
@@ -284,7 +298,10 @@ export function ConvertAskToPlanDrawer({
                 type="button"
                 disabled={busy}
                 onClick={() => setEditMode((current) => !current)}
-                className={clsx('rounded-lg border border-border/45 bg-bgSubtle/70 px-3 py-2 text-sm font-semibold text-text disabled:opacity-45', btnFocus)}
+                className={clsx(
+                  'rounded-lg border border-border/45 bg-bgSubtle/70 px-3 py-2 text-sm font-semibold text-text disabled:opacity-45',
+                  btnFocus
+                )}
               >
                 Edit Plan
               </button>
@@ -292,7 +309,10 @@ export function ConvertAskToPlanDrawer({
                 type="button"
                 disabled={busy}
                 onClick={onRegenerate}
-                className={clsx('rounded-lg border border-border/45 bg-bgSubtle/70 px-3 py-2 text-sm font-semibold text-text disabled:opacity-45', btnFocus)}
+                className={clsx(
+                  'rounded-lg border border-border/45 bg-bgSubtle/70 px-3 py-2 text-sm font-semibold text-text disabled:opacity-45',
+                  btnFocus
+                )}
               >
                 <RefreshCw className="mr-1 inline h-3.5 w-3.5" aria-hidden />
                 Regenerate
@@ -301,7 +321,10 @@ export function ConvertAskToPlanDrawer({
                 type="button"
                 disabled={busy}
                 onClick={() => onSave(draft)}
-                className={clsx('rounded-lg border border-success/50 bg-successSoft/20 px-3 py-2 text-sm font-semibold text-success disabled:opacity-45', btnFocus)}
+                className={clsx(
+                  'rounded-lg border border-success/50 bg-successSoft/20 px-3 py-2 text-sm font-semibold text-success disabled:opacity-45',
+                  btnFocus
+                )}
               >
                 <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" aria-hidden />
                 {busy ? 'Saving...' : 'Save Plan'}

@@ -28,7 +28,12 @@ function planTemplate(suggestion: PredictiveOpportunitySuggestion): {
     return {
       title: 'Investor Update Flow',
       kind: 'outreach',
-      timeline: ['Gather updates', 'Draft investor narrative', 'Approve send list', 'Queue follow-ups'],
+      timeline: [
+        'Gather updates',
+        'Draft investor narrative',
+        'Approve send list',
+        'Queue follow-ups'
+      ],
       approveCommand: 'draft outreach: investor update follow-up'
     };
   }
@@ -36,7 +41,12 @@ function planTemplate(suggestion: PredictiveOpportunitySuggestion): {
     return {
       title: 'Onboarding Workflow',
       kind: 'workflow',
-      timeline: ['Intake context', 'Map onboarding stages', 'Approve checklist', 'Track completion'],
+      timeline: [
+        'Intake context',
+        'Map onboarding stages',
+        'Approve checklist',
+        'Track completion'
+      ],
       approveCommand: 'add note: onboarding workflow approved'
     };
   }
@@ -44,7 +54,12 @@ function planTemplate(suggestion: PredictiveOpportunitySuggestion): {
     return {
       title: 'Hiring Workflow',
       kind: 'workflow',
-      timeline: ['Define role need', 'Draft candidate flow', 'Approve outreach', 'Track interviews'],
+      timeline: [
+        'Define role need',
+        'Draft candidate flow',
+        'Approve outreach',
+        'Track interviews'
+      ],
       approveCommand: 'add note: hiring workflow approved'
     };
   }
@@ -52,7 +67,12 @@ function planTemplate(suggestion: PredictiveOpportunitySuggestion): {
     return {
       title: 'Creator Campaign',
       kind: 'content-calendar',
-      timeline: ['Select campaign angle', 'Draft content arc', 'Approve calendar', 'Schedule assets'],
+      timeline: [
+        'Select campaign angle',
+        'Draft content arc',
+        'Approve calendar',
+        'Schedule assets'
+      ],
       approveCommand: 'draft post: creator campaign plan'
     };
   }
@@ -117,4 +137,3 @@ export function buildOperationalPlanFromPredictiveSuggestion(
     }
   };
 }
-

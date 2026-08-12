@@ -1,4 +1,4 @@
-export type OAuthButtonVariant = 'signIn' | 'continue' | 'signUp';
+export type OAuthButtonVariant = 'signIn' | 'continue' | 'signUp' | 'preview';
 
 /**
  * Outlined “Sign in / Sign up with …” row (reference: common OAuth marketing forms):

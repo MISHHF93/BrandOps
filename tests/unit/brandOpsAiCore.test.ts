@@ -108,7 +108,9 @@ describe('BrandOps AI Core', () => {
       }
     });
 
-    expect(response.warnings.some((warning) => warning.includes('No active digital twin'))).toBe(true);
+    expect(response.warnings.some((warning) => warning.includes('No active digital twin'))).toBe(
+      true
+    );
     expect(response.warnings.some((warning) => warning.includes('External-facing'))).toBe(true);
     expect(response.requiredApprovals).toHaveLength(1);
   });
@@ -168,7 +170,8 @@ describe('BrandOps AI Core', () => {
         safetyLevel: 'review',
         approvalRequired: true
       },
-      generatedText: 'PLAN conversion payload with preview, approval gate, retry path, and export summary.'
+      generatedText:
+        'PLAN conversion payload with preview, approval gate, retry path, and export summary.'
     });
 
     expect(response.artifacts[0].type).toBe('content plan');
@@ -188,7 +191,8 @@ describe('BrandOps AI Core', () => {
         safetyLevel: 'review',
         approvalRequired: false
       },
-      generatedText: 'Approved workflow: turn founder ideas into reviewable content and outreach plans.'
+      generatedText:
+        'Approved workflow: turn founder ideas into reviewable content and outreach plans.'
     });
 
     const next = prependBrandOpsAICoreResult(workspace, response);

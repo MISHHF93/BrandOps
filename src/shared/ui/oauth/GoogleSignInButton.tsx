@@ -41,17 +41,19 @@ export function GoogleSignInButton({
   className
 }: GoogleSignInButtonProps) {
   const label =
-    variant === 'continue'
-      ? loading
-        ? 'Connecting…'
-        : 'Continue with Google'
-      : variant === 'signUp'
+    variant === 'preview'
+      ? 'Use Google preview identity'
+      : variant === 'continue'
         ? loading
           ? 'Connecting…'
-          : 'Sign up with Google'
-        : loading
-          ? 'Connecting…'
-          : 'Sign in with Google';
+          : 'Continue with Google'
+        : variant === 'signUp'
+          ? loading
+            ? 'Connecting…'
+            : 'Sign up with Google'
+          : loading
+            ? 'Connecting…'
+            : 'Sign in with Google';
 
   return (
     <button

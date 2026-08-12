@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent } fro
 import clsx from 'clsx';
 import type { AgentWorkspaceResult } from '../../services/agent/agentWorkspaceEngine';
 import { extractResumeNeuralPhaseArtifact } from '../../services/ai/resumeNeuralPhaseExtract';
-import type { DigitalTwinSourceType } from '../../types/domain';
+import type { DigitalTwin, DigitalTwinSourceType, TwinFactStatus } from '../../types/domain';
 import { twinActionPrompt } from '../../services/digitalTwin/digitalTwin';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { ComposerBlankStarter } from './configurationStarters';
@@ -10,6 +10,46 @@ import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 
 const chipBusy = (btnFocus: string) =>
   clsx(mobileChipClass(btnFocus), 'disabled:cursor-not-allowed disabled:opacity-50');
+
+type FactReviewRow = {
+  id: string;
+  itemKind: 'experience' | 'education' | 'project';
+  kindLabel: string;
+  label: string;
+  status: TwinFactStatus;
+};
+
+function factReviewRows(twin: DigitalTwin): FactReviewRow[] {
+  const rows: FactReviewRow[] = [];
+  for (const item of twin.resumeProfile.experience) {
+    rows.push({
+      id: item.id,
+      itemKind: 'experience',
+      kindLabel: 'Experience',
+      label: item.role || item.organization || 'Experience entry',
+      status: item.verificationStatus
+    });
+  }
+  for (const item of twin.resumeProfile.education) {
+    rows.push({
+      id: item.id,
+      itemKind: 'education',
+      kindLabel: 'Education',
+      label: item.institution || 'Education entry',
+      status: item.verificationStatus
+    });
+  }
+  for (const item of twin.resumeProfile.projects) {
+    rows.push({
+      id: item.id,
+      itemKind: 'project',
+      kindLabel: 'Project',
+      label: item.name || 'Project entry',
+      status: item.verificationStatus
+    });
+  }
+  return rows;
+}
 
 export function SettingsTierAOverview({
   snapshot,
@@ -497,7 +537,8 @@ export function SettingsResumeNeuralPhasePanel({
     >
       <p className="mt-2 text-meta leading-relaxed text-textSoft">
         Paste plain-text résumé/profile details, review the extracted facts, then generate your
-        local AI digital twin. PDF/DOCX parsing is not bundled yet; convert those files to text first.
+        local AI digital twin. PDF/DOCX parsing is not bundled yet; convert those files to text
+        first.
       </p>
       <div className="mt-2 rounded-lg border border-primary/35 bg-primarySoft/15 px-2.5 py-2 text-meta leading-relaxed text-textMuted">
         <span className="font-semibold text-text">Consent:</span> uploaded or pasted profile data
@@ -648,18 +689,120 @@ export function SettingsResumeNeuralPhasePanel({
   );
 }
 
+function TwinGoalsEditor({
+  twin,
+  disabled,
+  btnFocus,
+  onUpdateTwinGoals
+}: {
+  twin: DigitalTwin;
+  disabled: boolean;
+  btnFocus: string;
+  onUpdateTwinGoals: (input: { twinId: string; goals: string[] }) => void | Promise<void>;
+}) {
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState(false);
+  const goals = twin.identity.goals;
+  const applyGoals = async (nextGoals: string[]) => {
+    setSaving(true);
+    try {
+      await onUpdateTwinGoals({ twinId: twin.id, goals: nextGoals });
+    } finally {
+      setSaving(false);
+    }
+  };
+  const addGoal = async () => {
+    const next = draft.replace(/\s+/g, ' ').trim();
+    if (!next || goals.some((goal) => goal.toLowerCase() === next.toLowerCase())) return;
+    await applyGoals([...goals, next]);
+    setDraft('');
+  };
+  const removeGoal = async (goal: string) => {
+    await applyGoals(goals.filter((item) => item !== goal));
+  };
+  return (
+    <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
+      <p className="text-label font-semibold text-text">Goals</p>
+      <p className="mt-1 text-fine leading-snug text-textMuted">
+        Surface and maintain the twin&apos;s {`identity.goals`}. These are captured at creation and
+        drive twin-aware suggestions; they are plain facts, never treated as verified experience.
+      </p>
+      <div className="mt-2 flex gap-2">
+        <input
+          type="text"
+          value={draft}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') void addGoal();
+          }}
+          placeholder="Add a goal…"
+          disabled={disabled || saving}
+          className="min-w-0 flex-1 rounded-lg border border-border/50 bg-bgElevated/70 px-2.5 py-1.5 text-meta text-text placeholder:text-textSoft disabled:opacity-50"
+        />
+        <button
+          type="button"
+          disabled={disabled || saving || !draft.trim()}
+          onClick={() => void addGoal()}
+          className={clsx(
+            mobileChipClass(btnFocus),
+            'shrink-0 border-primary/40 text-primary disabled:opacity-50'
+          )}
+        >
+          Add
+        </button>
+      </div>
+      {goals.length ? (
+        <ul className="mt-2 space-y-1.5">
+          {goals.map((goal) => (
+            <li
+              key={goal}
+              className="flex items-center justify-between gap-2 rounded-lg border border-border/35 bg-bgSubtle/55 px-2.5 py-1.5"
+            >
+              <span className="min-w-0 flex-1 text-meta leading-snug text-text">{goal}</span>
+              <button
+                type="button"
+                disabled={disabled || saving}
+                onClick={() => void removeGoal(goal)}
+                aria-label={`Remove goal: ${goal}`}
+                className={clsx(
+                  'shrink-0 rounded-md border border-border/45 px-1.5 py-0.5 text-fine font-semibold text-textMuted',
+                  btnFocus,
+                  'disabled:cursor-not-allowed disabled:opacity-50'
+                )}
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-meta text-textMuted">No goals captured yet — add one above.</p>
+      )}
+    </section>
+  );
+}
+
 export function SettingsTwinDashboard({
   snapshot,
   btnFocus,
   disabled,
   runCommand,
-  onDeleteActiveDigitalTwin
+  onDeleteActiveDigitalTwin,
+  onUpdateTwinFactStatus,
+  onUpdateTwinGoals
 }: {
   snapshot: MobileWorkspaceSnapshot;
   btnFocus: string;
   disabled: boolean;
   runCommand: (command: string) => void | Promise<void>;
   onDeleteActiveDigitalTwin: () => void | Promise<void>;
+  onUpdateTwinFactStatus?: (input: {
+    twinId: string;
+    itemKind: 'experience' | 'education' | 'project';
+    itemId: string;
+    status: Exclude<TwinFactStatus, 'unverified'>;
+  }) => void | Promise<void>;
+  onUpdateTwinGoals?: (input: { twinId: string; goals: string[] }) => void | Promise<void>;
 }) {
   const twin = snapshot.activeDigitalTwin;
   if (!twin) return null;
@@ -740,7 +883,87 @@ export function SettingsTwinDashboard({
           </div>
         </section>
 
-        {(twinCoreArtifacts.length > 0 || latestBatch) ? (
+        {onUpdateTwinFactStatus ? (
+          <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
+            <p className="text-label font-semibold text-text">Improve Twin — verify facts</p>
+            <p className="mt-1 text-fine leading-snug text-textMuted">
+              Approve or reject the extracted facts. Only approved facts count as verified; anything
+              left unverified stays marked as unverified and is never treated as confirmed.
+            </p>
+            {factReviewRows(twin).length === 0 ? (
+              <p className="mt-2 text-meta text-textMuted">No extracted facts to review yet.</p>
+            ) : (
+              <ul className="mt-2 divide-y divide-border/35">
+                {factReviewRows(twin).map((row) => (
+                  <li
+                    key={row.id}
+                    className="flex flex-wrap items-center justify-between gap-2 py-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-meta font-medium text-text">{row.label}</p>
+                      <p className="text-fine text-textMuted">
+                        {row.kindLabel} · {row.status}
+                      </p>
+                    </div>
+                    <div className="flex gap-1.5">
+                      {row.status !== 'verified' ? (
+                        <button
+                          type="button"
+                          disabled={disabled}
+                          onClick={() =>
+                            void onUpdateTwinFactStatus({
+                              twinId: twin.id,
+                              itemKind: row.itemKind,
+                              itemId: row.id,
+                              status: 'verified'
+                            })
+                          }
+                          className={clsx(
+                            mobileChipClass(btnFocus),
+                            'border-success/40 text-success disabled:opacity-50'
+                          )}
+                        >
+                          Approve
+                        </button>
+                      ) : null}
+                      {row.status !== 'rejected' ? (
+                        <button
+                          type="button"
+                          disabled={disabled}
+                          onClick={() =>
+                            void onUpdateTwinFactStatus({
+                              twinId: twin.id,
+                              itemKind: row.itemKind,
+                              itemId: row.id,
+                              status: 'rejected'
+                            })
+                          }
+                          className={clsx(
+                            mobileChipClass(btnFocus),
+                            'border-danger/40 text-danger disabled:opacity-50'
+                          )}
+                        >
+                          Reject
+                        </button>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ) : null}
+
+        {onUpdateTwinGoals ? (
+          <TwinGoalsEditor
+            twin={twin}
+            disabled={disabled}
+            btnFocus={btnFocus}
+            onUpdateTwinGoals={onUpdateTwinGoals}
+          />
+        ) : null}
+
+        {twinCoreArtifacts.length > 0 || latestBatch ? (
           <section className="rounded-xl border border-primary/30 bg-primarySoft/10 p-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -752,7 +975,8 @@ export function SettingsTwinDashboard({
               </div>
               {latestBatch ? (
                 <span className="rounded-full border border-border/45 bg-bgElevated px-2 py-1 text-fine font-semibold text-textMuted">
-                  {latestBatch.status} · {latestBatch.completedArtifacts.length}/{latestBatch.steps.length}
+                  {latestBatch.status} · {latestBatch.completedArtifacts.length}/
+                  {latestBatch.steps.length}
                 </span>
               ) : null}
             </div>
@@ -762,7 +986,8 @@ export function SettingsTwinDashboard({
                 <p className="mt-1">{latestBatch.finalSummary}</p>
                 {latestBatch.failedArtifacts.length ? (
                   <p className="mt-1 text-warning">
-                    Retry needed: {latestBatch.failedArtifacts.map((item) => item.artifactType).join(', ')}
+                    Retry needed:{' '}
+                    {latestBatch.failedArtifacts.map((item) => item.artifactType).join(', ')}
                   </p>
                 ) : null}
               </div>

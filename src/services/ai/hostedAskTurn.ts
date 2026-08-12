@@ -3,7 +3,11 @@ import type { ChatCompletionMessage } from './nlpInferenceGateway';
 import { buildCopilotContextHintBlock } from './copilotWorkers';
 import { buildNeuralPhasingResumeBlock } from './neuralPhasing';
 import { buildPlatformAwareAskReadout } from './platformAwareAskContext';
-import { buildExpertOperatorAskSystemBlock } from './expertOperatorIntegration';
+import {
+  buildExpertOperatorIntegrationReadout,
+  formatExpertOperatorAskSystemBlock,
+  type ExpertOperatorIntegrationReadout
+} from './expertOperatorIntegration';
 
 const GLOBAL_ROLE_LABEL = 'Global operator role (notificationCenter.roleContext)';
 
@@ -69,7 +73,9 @@ export function buildHostedAskMessages(
   userQuestion: string,
   worker: CopilotWorker | null,
   /** Optional routing / QA hints from {@link ./aiAskRouting.ts} (keeps citations path unchanged). */
-  routingAugmentation?: string
+  routingAugmentation?: string,
+  /** Pass a readout already computed by the caller (e.g. for a checkpoint) to avoid running expert composition twice for the same turn. */
+  precomputedExpertReadout?: ExpertOperatorIntegrationReadout
 ): ChatCompletionMessage[] {
   const nc = workspace.settings.notificationCenter;
   const globalBaseline = `${GLOBAL_ROLE_LABEL}:\n${nc.roleContext.trim().slice(0, 2500)}\n\nGlobal prompt scaffold:\n${nc.promptTemplate.trim().slice(0, 2000)}`;
@@ -95,7 +101,9 @@ export function buildHostedAskMessages(
   const neuralResume = buildNeuralPhasingResumeBlock(workspace);
   const phased = neuralResume ? `\n\n${neuralResume}` : '';
   const platformContext = buildPlatformAwareAskReadout(workspace).contextBlock;
-  const expertOperatorContext = buildExpertOperatorAskSystemBlock(workspace, userQuestion);
+  const expertReadout =
+    precomputedExpertReadout ?? buildExpertOperatorIntegrationReadout(workspace, userQuestion);
+  const expertOperatorContext = formatExpertOperatorAskSystemBlock(expertReadout);
 
   let system = `${persona}\n\n${structured}\n\n${citationIx}\n\n${globalBaseline}${phased}\n\nWorkspace context:\n${ctx}${scoped}\n\n${platformContext}\n\n${expertOperatorContext}`;
   const routingBlock = routingAugmentation?.trim();

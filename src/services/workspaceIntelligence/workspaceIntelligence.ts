@@ -9,13 +9,17 @@ import type {
 } from '../../types/workspaceIntelligence';
 
 export const WORKSPACE_INTELLIGENCE_SCHEMA_VERSION = '1.0.0';
-export const MAX_WORKSPACE_DECISION_MEMORY = 80;
-export const MAX_WORKSPACE_OPPORTUNITIES = 12;
+const MAX_WORKSPACE_DECISION_MEMORY = 80;
+const MAX_WORKSPACE_OPPORTUNITIES = 12;
+const MAX_WORKSPACE_OPERATING_MANUAL_SECTIONS = 12;
 
 const nowIso = () => new Date().toISOString();
 
 function clean(value: unknown, max = 280): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 }
 
 function clampPercent(value: number): number {
@@ -23,11 +27,13 @@ function clampPercent(value: number): number {
 }
 
 function stableId(prefix: string, value: string): string {
-  return `${prefix}-${value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80) || 'item'}`;
+  return `${prefix}-${
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80) || 'item'
+  }`;
 }
 
 function uniq(values: unknown[], cap = 12): string[] {
@@ -302,28 +308,38 @@ function scorecard(workspace: BrandOpsData, dna: WorkspaceDNA): WorkspaceScoreca
       (workspace.brandVault.positioningStatement ? 20 : 0) +
       Math.min(20, dna.audience.length * 4) +
       Math.min(20, dna.approvedOutputs.length * 3) +
-      Math.min(10, workspace.aiCore?.artifacts.filter((artifact) => artifact.type === 'positioning statement').length ?? 0)
+      Math.min(
+        10,
+        workspace.aiCore?.artifacts.filter((artifact) => artifact.type === 'positioning statement')
+          .length ?? 0
+      )
   );
   const workflowMaturity = clampPercent(
     Math.min(25, dna.workflows.length * 5) +
       Math.min(20, workspace.outreachTemplates.length * 4) +
       Math.min(20, workspace.scheduler.tasks.length * 2) +
       Math.min(20, planArtifactCount * 4) +
-      (workspace.operatorTraces?.entries.some((trace) => trace.reviewStatus === 'approved') ? 15 : 0)
+      (workspace.operatorTraces?.entries.some((trace) => trace.reviewStatus === 'approved')
+        ? 15
+        : 0)
   );
   const operationalReadiness = clampPercent(
     (twin ? 20 : 0) +
       Math.min(20, dna.connectedPlatforms.length * 5) +
       Math.min(20, workspace.operatingTimeline?.events.length ?? 0) +
       Math.min(20, workspace.aiCore?.artifacts.length ?? 0) +
-      (workspace.operatorTraces?.entries.some((trace) => trace.reviewStatus === 'pending') ? 10 : 20)
+      (workspace.operatorTraces?.entries.some((trace) => trace.reviewStatus === 'pending')
+        ? 10
+        : 20)
   );
   return [
     {
       id: 'identity-completeness',
       label: 'Identity Completeness',
       value: identityCompleteness,
-      detail: twin ? `${twin.displayName} is active.` : 'Create a digital twin to strengthen identity.'
+      detail: twin
+        ? `${twin.displayName} is active.`
+        : 'Create a digital twin to strengthen identity.'
     },
     {
       id: 'positioning-strength',
@@ -361,23 +377,30 @@ function opportunityRadar(
     signals.push({
       id: 'opp-strengthen-positioning',
       title: 'Clarify the workspace positioning',
-      detail: 'BrandOps has limited approved positioning memory. A sharper statement will improve ASK, PLAN, and outreach.',
+      detail:
+        'BrandOps has limited approved positioning memory. A sharper statement will improve ASK, PLAN, and outreach.',
       expectedImpact: 'high',
       confidence: 78,
       evidence: dna.positioning.slice(0, 3),
-      suggestedAction: 'ask: Draft three positioning options using approved workspace DNA and decision memory.',
+      suggestedAction:
+        'ask: Draft three positioning options using approved workspace DNA and decision memory.',
       createdAt
     });
   }
-  if (workspace.publishingQueue.length + workspace.contentLibrary.length < 4 && dna.strengths.length) {
+  if (
+    workspace.publishingQueue.length + workspace.contentLibrary.length < 4 &&
+    dna.strengths.length
+  ) {
     signals.push({
       id: 'opp-founder-content-series',
       title: 'Create a founder content series',
-      detail: 'Strengths exist, but content inventory is thin. Turn approved expertise into a reusable content lane.',
+      detail:
+        'Strengths exist, but content inventory is thin. Turn approved expertise into a reusable content lane.',
       expectedImpact: 'high',
       confidence: 74,
       evidence: dna.strengths.slice(0, 4),
-      suggestedAction: 'ask: Build a founder content series from my Workspace DNA and approved strengths.',
+      suggestedAction:
+        'ask: Build a founder content series from my Workspace DNA and approved strengths.',
       createdAt
     });
   }
@@ -385,11 +408,15 @@ function opportunityRadar(
     signals.push({
       id: 'opp-outreach-cadence',
       title: 'Tighten outreach cadence',
-      detail: 'Open opportunities and follow-up signals can become an approval-gated outreach workflow.',
+      detail:
+        'Open opportunities and follow-up signals can become an approval-gated outreach workflow.',
       expectedImpact: 'high',
       confidence: 81,
-      evidence: workspace.opportunities.slice(0, 4).map((item) => `${item.company}: ${item.nextAction}`),
-      suggestedAction: 'ask: Build an approval-gated outreach cadence from open opportunities and rejected tone constraints.',
+      evidence: workspace.opportunities
+        .slice(0, 4)
+        .map((item) => `${item.company}: ${item.nextAction}`),
+      suggestedAction:
+        'ask: Build an approval-gated outreach cadence from open opportunities and rejected tone constraints.',
       createdAt
     });
   }
@@ -397,11 +424,16 @@ function opportunityRadar(
     signals.push({
       id: 'opp-operating-playbook',
       title: 'Turn behavior into an operating playbook',
-      detail: 'Platform context and operator traces are available. Consolidate recurring behavior into rules the twin can reuse.',
+      detail:
+        'Platform context and operator traces are available. Consolidate recurring behavior into rules the twin can reuse.',
       expectedImpact: 'medium',
       confidence: 72,
-      evidence: [...dna.connectedPlatforms.slice(0, 3), `${workspace.operatorTraces.entries.length} trace(s)`],
-      suggestedAction: 'ask: Generate my BrandOps Playbook from Workspace DNA, decisions, receipts, and platform context.',
+      evidence: [
+        ...dna.connectedPlatforms.slice(0, 3),
+        `${workspace.operatorTraces.entries.length} trace(s)`
+      ],
+      suggestedAction:
+        'ask: Generate my BrandOps Playbook from Workspace DNA, decisions, receipts, and platform context.',
       createdAt
     });
   }
@@ -412,7 +444,10 @@ function opportunityRadar(
       detail: 'Rejected memory exists. Future outputs should explicitly avoid those patterns.',
       expectedImpact: 'medium',
       confidence: 86,
-      evidence: decisions.filter((decision) => decision.polarity === 'rejected').slice(0, 4).map((decision) => decision.title),
+      evidence: decisions
+        .filter((decision) => decision.polarity === 'rejected')
+        .slice(0, 4)
+        .map((decision) => decision.title),
       suggestedAction: 'ask: Rewrite the next plan while respecting rejected decision memory.',
       createdAt
     });
@@ -459,13 +494,24 @@ function operatingManual(
     {
       id: 'voice-rules',
       title: 'Voice and Decision Rules',
-      body: [
-        dna.preferredTone[0] ? `Preferred tone: ${dna.preferredTone[0]}.` : '',
-        approved.length ? `Approved decisions: ${approved.slice(0, 3).map((item) => item.title).join('; ')}.` : '',
-        rejected.length ? `Avoid: ${rejected.slice(0, 3).map((item) => item.title).join('; ')}.` : ''
-      ]
-        .filter(Boolean)
-        .join(' ') || 'Voice rules become stronger as outputs are approved or rejected.',
+      body:
+        [
+          dna.preferredTone[0] ? `Preferred tone: ${dna.preferredTone[0]}.` : '',
+          approved.length
+            ? `Approved decisions: ${approved
+                .slice(0, 3)
+                .map((item) => item.title)
+                .join('; ')}.`
+            : '',
+          rejected.length
+            ? `Avoid: ${rejected
+                .slice(0, 3)
+                .map((item) => item.title)
+                .join('; ')}.`
+            : ''
+        ]
+          .filter(Boolean)
+          .join(' ') || 'Voice rules become stronger as outputs are approved or rejected.',
       evidenceCount: dna.preferredTone.length + decisions.length,
       updatedAt
     },
@@ -475,7 +521,8 @@ function operatingManual(
       body: dna.connectedPlatforms.length
         ? `Connected context: ${dna.connectedPlatforms.join(', ')}. External execution remains approval-gated.`
         : 'No connected platform context is active yet. BrandOps will operate from local workspace memory.',
-      evidenceCount: dna.connectedPlatforms.length + (workspace.operatingTimeline?.events.length ?? 0),
+      evidenceCount:
+        dna.connectedPlatforms.length + (workspace.operatingTimeline?.events.length ?? 0),
       updatedAt
     }
   ];
@@ -520,7 +567,9 @@ export function normalizeWorkspaceIntelligenceState(value: unknown): WorkspaceIn
   if (!value || typeof value !== 'object') return fallback;
   const raw = value as Partial<WorkspaceIntelligenceState>;
   const decisionMemory = Array.isArray(raw.decisionMemory)
-    ? raw.decisionMemory.map(normalizeDecision).filter((item): item is WorkspaceDecisionMemoryEntry => Boolean(item))
+    ? raw.decisionMemory
+        .map(normalizeDecision)
+        .filter((item): item is WorkspaceDecisionMemoryEntry => Boolean(item))
     : [];
   const opportunityRadar = Array.isArray(raw.opportunityRadar)
     ? raw.opportunityRadar
@@ -593,10 +642,45 @@ export function normalizeWorkspaceIntelligenceState(value: unknown): WorkspaceIn
   };
 }
 
-export function buildWorkspaceIntelligenceState(workspace: BrandOpsData): WorkspaceIntelligenceState {
+function mergeOperatingManual(
+  derived: WorkspaceOperatingManualSection[],
+  persisted: WorkspaceOperatingManualSection[]
+): WorkspaceOperatingManualSection[] {
+  const refreshedAt = nowIso();
+  const persistedById = new Map(persisted.map((row) => [row.id, row]));
+  const seen = new Set<string>();
+  const out: WorkspaceOperatingManualSection[] = [];
+
+  for (const row of derived) {
+    seen.add(row.id);
+    const prior = persistedById.get(row.id);
+    if (prior && (prior.evidenceCount > 0 || prior.updatedAt !== row.updatedAt)) {
+      out.push({ ...prior, updatedAt: refreshedAt });
+    } else {
+      out.push(row);
+    }
+  }
+
+  for (const row of persisted) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    out.push({ ...row, updatedAt: refreshedAt });
+  }
+
+  return out.slice(0, MAX_WORKSPACE_OPERATING_MANUAL_SECTIONS);
+}
+
+export function buildWorkspaceIntelligenceState(
+  workspace: BrandOpsData
+): WorkspaceIntelligenceState {
   const persisted = normalizeWorkspaceIntelligenceState(workspace.workspaceIntelligence);
   const dna = mergeDna(persisted.dna, buildDerivedDna(workspace));
-  const decisions = mergeDecisions(persisted.decisionMemory, decisionMemoryFromWorkspace(workspace));
+  const decisions = mergeDecisions(
+    persisted.decisionMemory,
+    decisionMemoryFromWorkspace(workspace)
+  );
+  const derivedManual = operatingManual(workspace, dna, decisions);
+  const mergedManual = mergeOperatingManual(derivedManual, persisted.operatingManual);
   return {
     schemaVersion: WORKSPACE_INTELLIGENCE_SCHEMA_VERSION,
     updatedAt: nowIso(),
@@ -604,7 +688,7 @@ export function buildWorkspaceIntelligenceState(workspace: BrandOpsData): Worksp
     decisionMemory: decisions,
     opportunityRadar: opportunityRadar(workspace, dna, decisions),
     scorecard: scorecard(workspace, dna),
-    operatingManual: operatingManual(workspace, dna, decisions)
+    operatingManual: mergedManual
   };
 }
 

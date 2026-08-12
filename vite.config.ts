@@ -1,5 +1,5 @@
 import dns from 'node:dns';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 
@@ -7,18 +7,18 @@ import { resolve } from 'node:path';
 dns.setDefaultResultOrder('ipv4first');
 
 /** Absolute base for social preview tags (`og:image`, `twitter:image`). Example: `https://your-app.vercel.app` */
-function resolveDeployedOgImageUrl(): string {
-  const origin = (process.env.VITE_PUBLIC_ORIGIN || '').trim().replace(/\/$/, '');
+function resolveDeployedOgImageUrl(publicOrigin: string): string {
+  const origin = publicOrigin.trim().replace(/\/$/, '');
   return origin ? `${origin}/branding/og-image.png` : '/branding/og-image.png';
 }
 
 /** Injects shared favicons, PWA manifest link, and Open Graph / Twitter meta into each HTML entry that contains `<!--brand-head-->`. */
-function brandHeadPlugin(): Plugin {
+function brandHeadPlugin(publicOrigin: string): Plugin {
   return {
     name: 'brandops-brand-head',
     transformIndexHtml(html) {
       if (!html.includes('<!--brand-head-->')) return html;
-      const og = resolveDeployedOgImageUrl();
+      const og = resolveDeployedOgImageUrl(publicOrigin);
       const snippet = `    <meta name="description" content="Personal brand operating system for technical AI builders." />
     <meta name="application-name" content="BrandOps" />
     <link rel="icon" type="image/svg+xml" href="/brandops-crown.svg" />
@@ -40,47 +40,57 @@ function brandHeadPlugin(): Plugin {
   };
 }
 
-export default defineConfig({
-  /** Vercel sets `VERCEL=1` during `vite build`; expose for client demo mode (see `isPreviewCockpitUngated`). */
-  define: {
-    'import.meta.env.VITE_VERCEL': JSON.stringify(process.env.VERCEL ?? '')
-  },
-  plugins: [react(), brandHeadPlugin()],
-  server: {
-    port: 5173,
-    /** Fail fast if 5173 is busy so the app never silently moves to 5174. */
-    strictPort: true,
-    /**
-     * Listen on all local addresses (`0.0.0.0` + IPv6). With `dns.setDefaultResultOrder('ipv4first')`, browsers
-     * often hit **`127.0.0.1`** for `localhost`; binding **only** `::` plus passing `--host ::` from `dev.mjs`
-     * can refuse those IPv4 connections on Windows → **`ERR_CONNECTION_REFUSED` (-102)**.
-     */
-    host: true
-  },
-  preview: {
-    port: 4173,
-    strictPort: true,
-    host: true
-  },
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        index: resolve(__dirname, 'index.html'),
-        integrations: resolve(__dirname, 'integrations.html'),
-        dashboard: resolve(__dirname, 'dashboard.html'),
-        welcome: resolve(__dirname, 'welcome.html'),
-        help: resolve(__dirname, 'help.html'),
-        mobile: resolve(__dirname, 'mobile.html'),
-        background: resolve(__dirname, 'src/background/index.ts'),
-        linkedinOverlay: resolve(__dirname, 'src/content/linkedinOverlay.ts')
-      },
-      output: {
-        entryFileNames: '[name].js',
-        chunkFileNames: 'chunks/[name].js',
-        assetFileNames: 'assets/[name].[ext]'
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  return {
+    plugins: [react(), brandHeadPlugin(env.VITE_PUBLIC_ORIGIN ?? '')],
+    server: {
+      port: 5173,
+      /** Fail fast if 5173 is busy so the app never silently moves to 5174. */
+      strictPort: true,
+      /**
+       * Listen on all local addresses (`0.0.0.0` + IPv6). With `dns.setDefaultResultOrder('ipv4first')`, browsers
+       * often hit **`127.0.0.1`** for `localhost`; binding **only** `::` plus passing `--host ::` from `dev.mjs`
+       * can refuse those IPv4 connections on Windows → **`ERR_CONNECTION_REFUSED` (-102)**.
+       */
+      host: true
+    },
+    preview: {
+      port: 4173,
+      strictPort: true,
+      host: true
+    },
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
+      /** Skip per-asset gzip/RLE size computation; the build is much faster and nothing consumes those numbers. */
+      reportCompressedSize: false,
+      rollupOptions: {
+        input: {
+          index: resolve(__dirname, 'index.html'),
+          integrations: resolve(__dirname, 'integrations.html'),
+          dashboard: resolve(__dirname, 'dashboard.html'),
+          welcome: resolve(__dirname, 'welcome.html'),
+          help: resolve(__dirname, 'help.html'),
+          mobile: resolve(__dirname, 'mobile.html'),
+          background: resolve(__dirname, 'src/background/index.ts'),
+          linkedinOverlay: resolve(__dirname, 'src/content/linkedinOverlay.ts')
+        },
+        output: {
+          entryFileNames: '[name].js',
+          chunkFileNames: 'chunks/[name].js',
+          assetFileNames: 'assets/[name].[ext]',
+          /**
+           * Stable vendor chunks so the framework/library download once across tabs, entry pages, and
+           * redeploys — instead of being re-bundled into every HTML entry's JS. Chrome MV3 + Capacitor
+           * both cache these; name stability is required by `verify-dist.mjs`.
+           */
+          manualChunks: {
+            react: ['react', 'react-dom'],
+            icons: ['lucide-react']
+          }
+        }
       }
     }
-  }
+  };
 });

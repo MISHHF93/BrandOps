@@ -87,9 +87,9 @@ export const WorkspaceCommandPalette = ({
   const runLeadIn = commandRunContext === 'plan' ? 'Run from Plan' : 'Run in Chat';
   const lockHint =
     agentLockReason === 'auth'
-      ? 'Sign in from Settings to run workspace commands. Tab navigation and Help stay open.'
+      ? 'Unlock local preview access in Settings to run workspace commands. Tab navigation and Help stay open.'
       : agentLockReason === 'membership'
-        ? 'Activate membership to run the agent from Chat and here. You can still use Settings, navigation, and Help.'
+        ? 'Enable the local development membership demo to run the agent from Chat and here. You can still use Settings, navigation, and Help.'
         : 'Workspace commands are unavailable from here right now. Navigation and Help stay open.';
   const recent = Array.from(new Set(commandHistory.map((c) => c.trim()).filter(Boolean))).slice(
     0,

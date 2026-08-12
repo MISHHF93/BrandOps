@@ -71,7 +71,11 @@ export interface BrandOpsAIBatchRun {
   status: 'running' | 'completed' | 'partial' | 'failed';
   intent: string;
   completedArtifacts: string[];
-  failedArtifacts: Array<{ artifactType: BrandOpsAIArtifactType; error: string; retryCommand: string }>;
+  failedArtifacts: Array<{
+    artifactType: BrandOpsAIArtifactType;
+    error: string;
+    retryCommand: string;
+  }>;
   steps: BrandOpsAIBatchRunStep[];
   finalSummary: string;
 }

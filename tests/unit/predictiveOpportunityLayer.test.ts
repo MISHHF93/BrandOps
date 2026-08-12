@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildWorkspaceSnapshot } from '../../src/pages/mobile/buildWorkspaceSnapshot';
-import { createDigitalTwinFromText, hydrateWorkspaceFromDigitalTwin } from '../../src/services/digitalTwin/digitalTwin';
+import {
+  createDigitalTwinFromText,
+  hydrateWorkspaceFromDigitalTwin
+} from '../../src/services/digitalTwin/digitalTwin';
 import { buildPredictiveOpportunityLayerReadout } from '../../src/services/plan/predictiveOpportunityLayer';
 import { cloneSeedData } from '../helpers/fixtures';
 
@@ -81,7 +84,8 @@ function workspaceWithPredictiveSignals() {
           sourceId: 'source-notion',
           title: 'Notion growth themes',
           artifactType: 'approved-doc-summary',
-          summary: 'Approved notes mention founder workflow bottlenecks and lifecycle growth loops.',
+          summary:
+            'Approved notes mention founder workflow bottlenecks and lifecycle growth loops.',
           tags: ['notion', 'growth', 'content'],
           createdAt: '2026-05-28T00:00:00.000Z',
           updatedAt: '2026-05-28T00:00:00.000Z'
@@ -183,9 +187,9 @@ describe('Predictive Opportunity Layer', () => {
       true
     );
     expect(readout.suggestions.every((suggestion) => suggestion.approvalRequired)).toBe(true);
-    expect(readout.suggestions.every((suggestion) => suggestion.previewCommand.startsWith('ask:'))).toBe(
-      true
-    );
+    expect(
+      readout.suggestions.every((suggestion) => suggestion.previewCommand.startsWith('ask:'))
+    ).toBe(true);
     expect(
       readout.suggestions.every((suggestion) =>
         suggestion.previewCommand.includes('Do not execute externally')
@@ -201,4 +205,3 @@ describe('Predictive Opportunity Layer', () => {
     expect(snapshot.predictiveOpportunityLayer.sourceCoverage.profession).toBeGreaterThan(0);
   });
 });
-

@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
 import clsx from 'clsx';
-import { AlertCircle, CheckCircle2, Info, Loader2, Shield } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, Shield } from 'lucide-react';
 
 type DataOpsFeedbackTone = 'info' | 'success' | 'caution';
 
@@ -92,7 +91,7 @@ export function OnDeviceTrustLine({ className }: { className?: string }) {
       )}
     >
       <Shield className="h-3 w-3 text-textSoft" strokeWidth={2} aria-hidden />
-      <span>Workspace data stays on this device</span>
+      <span>Workspace storage is local by default</span>
     </p>
   );
 }
@@ -110,67 +109,5 @@ export function OnDeviceDialogTrustFooter({ className }: { className?: string })
       <Shield className="mt-0.5 h-3 w-3 shrink-0 text-textSoft/80" strokeWidth={2} aria-hidden />
       <span>Stays on this device. No network round-trip for this step.</span>
     </p>
-  );
-}
-
-/**
- * Chat: premium loading state — perception of progress without a fake %.
- */
-export function AgentWorkingState({ label = 'BrandOps is working' }: { label?: string }) {
-  return (
-    <div
-      className="bo-agent-working space-y-2 rounded-xl border border-border/50 bg-surface/50 p-3 shadow-sm backdrop-blur-sm"
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
-      <div className="flex items-center gap-2.5">
-        <span className="bo-brand-mark bo-brand-mark--sm">
-          <Loader2
-            className="absolute h-5 w-5 text-brandGold/20 motion-safe:animate-spin [animation-duration:900ms] [animation-timing-function:linear]"
-            strokeWidth={2}
-            aria-hidden
-          />
-          <BrandOpsCrownMark className="bo-brand-mark__logo" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-text">{label}</p>
-          <p className="text-fine text-textSoft">
-            Running your command and updating the workspace on-device.
-          </p>
-        </div>
-      </div>
-      <div className="h-0.5 overflow-hidden rounded-full bg-border/40" aria-hidden>
-        <div className="bo-indeterminate h-full w-1/3 rounded-full bg-brandGold/70" />
-      </div>
-    </div>
-  );
-}
-
-export function EmptyState({
-  title,
-  body,
-  children,
-  className
-}: {
-  title: string;
-  body: string;
-  children?: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={clsx(
-        'rounded-xl border border-dashed border-border/50 bg-bgSubtle/30 px-3 py-4 text-center',
-        'bo-surface-enter',
-        className
-      )}
-    >
-      <p className="text-sm font-medium text-text">{title}</p>
-      <p className="mt-1 text-meta leading-relaxed text-textSoft">{body}</p>
-      {children ? (
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">{children}</div>
-      ) : null}
-    </div>
   );
 }

@@ -2,19 +2,12 @@ import type { OperatingPresetId } from '../../types/domain';
 import type { OperatingPresetDefinition } from '../../shared/workspace/operatingProfileCatalog';
 import {
   OPERATING_PRESETS,
-  buildOperatingPresetConfigureLine,
-  getOperatingPresetDefinition,
-  resolveOperatingPresetSlug
+  buildOperatingPresetConfigureLine
 } from '../../shared/workspace/operatingProfileCatalog';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 
 export type { OperatingPresetDefinition };
-export {
-  OPERATING_PRESETS,
-  buildOperatingPresetConfigureLine,
-  getOperatingPresetDefinition,
-  resolveOperatingPresetSlug
-};
+export { OPERATING_PRESETS, buildOperatingPresetConfigureLine };
 
 export function inferOperatingPresetId(
   snapshot: MobileWorkspaceSnapshot

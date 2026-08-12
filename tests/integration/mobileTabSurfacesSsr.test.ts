@@ -130,8 +130,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Preview');
     expect(html).toContain('Approve');
     expect(html).toContain('Export');
-    expect(html).toContain('>Run<');
-    expect(html).toContain('Membership active');
+    expect(html).toContain('>Preview<');
+    expect(html).toContain('Local membership flag active · unverified');
     expect(html).toContain('operator@fixture.test');
     expect(html).not.toContain('Workstreams');
     expect(html).not.toContain('Command center');
@@ -301,7 +301,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         messages,
         loading: false,
         onQuickCommand: noop,
-        btnFocus: '',
+        btnFocus: ''
       })
     );
     expect(html).toContain('aria-label="Ask My Twin conversation"');
@@ -627,6 +627,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Export operator traces');
     expect(html).toContain('Record operator traces locally');
     expect(html).toContain('Assistant');
+    expect(html).toContain('Hosted AI bridge');
+    expect(html).toContain('Inference base URL');
+    expect(html).toContain('Webhook receiver trust');
     expect(html).toContain('Create AI digital twin');
     expect(html).toContain('PDF/DOCX parsing is not bundled yet');
     expect(html).toContain('Generate digital twin');

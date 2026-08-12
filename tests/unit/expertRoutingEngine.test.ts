@@ -37,11 +37,7 @@ describe('expertRoutingEngine', () => {
     const activeIds = resolution.activatedExperts.map((expert) => expert.expertId);
 
     expect(resolution.trace.workflowType).toBe('investor_outreach');
-    expect(activeIds).toEqual([
-      'positioning-expert',
-      'outreach-expert',
-      'planning-expert'
-    ]);
+    expect(activeIds).toEqual(['positioning-expert', 'outreach-expert', 'planning-expert']);
     expect(activeIds).not.toContain('content-expert');
     expect(activeIds).not.toContain('integration-expert');
     expect(resolution.trace.deactivatedExperts).toContainEqual({
@@ -66,11 +62,7 @@ describe('expertRoutingEngine', () => {
     const activeIds = resolution.activatedExperts.map((expert) => expert.expertId);
 
     expect(resolution.trace.workflowType).toBe('creator_growth');
-    expect(activeIds).toEqual([
-      'content-expert',
-      'opportunity-expert',
-      'behavioral-expert'
-    ]);
+    expect(activeIds).toEqual(['content-expert', 'opportunity-expert', 'behavioral-expert']);
     expect(activeIds).not.toContain('positioning-expert');
     expect(activeIds).not.toContain('planning-expert');
     expect(resolution.trace.observedSignals).toContain('connected_platforms:linkedin,youtube');

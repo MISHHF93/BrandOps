@@ -13,7 +13,7 @@ export function taskIdFromAlarm(alarmName: string): string {
 
 export type WorkspaceStorage = Pick<
   typeof import('../services/storage/storage').storageService,
-  'getData' | 'resetToSeed' | 'setData'
+  'getData' | 'resetToSeed' | 'setData' | 'withWorkspaceMutation'
 >;
 
 export type AlarmSchedulingApi = {
@@ -70,8 +70,16 @@ export async function scheduleBrandOpsAlarms(options: {
   nowMs?: number;
 }): Promise<void> {
   const { storage, alarms, reconcileWorkspace, nowMs = Date.now() } = options;
-  const data = await loadWorkspaceSafely(storage, reconcileWorkspace);
-  const nextData = reconcileWorkspace(data);
+  let nextData: BrandOpsData;
+  try {
+    const mutation = await storage.withWorkspaceMutation((current) => reconcileWorkspace(current));
+    nextData = mutation.data;
+  } catch (error) {
+    console.error('[BrandOps] Failed to load workspace state. Restoring seeded workspace.', error);
+    const seeded = await storage.resetToSeed();
+    nextData = reconcileWorkspace(seeded);
+    await storage.setData(nextData);
+  }
 
   const existing = await alarms.getAll();
   await Promise.all(
@@ -90,8 +98,6 @@ export async function scheduleBrandOpsAlarms(options: {
         return alarms.create(alarmNameForTask(task.id), { when });
       })
   );
-
-  await storage.setData(nextData);
 }
 
 export async function sendTaskReminderNotification(options: {
@@ -102,22 +108,14 @@ export async function sendTaskReminderNotification(options: {
   taskId: string;
 }): Promise<void> {
   const { storage, notifications, reconcileWorkspace, markNotified, taskId } = options;
-  const data = await loadWorkspaceSafely(storage, reconcileWorkspace);
-  const reconciled = reconcileWorkspace(data);
-  const task = reconciled.scheduler.tasks.find((item) => item.id === taskId);
+  const { data } = await storage.withWorkspaceMutation((current) => reconcileWorkspace(current));
+  const task = data.scheduler.tasks.find((item) => item.id === taskId);
   if (!task) return;
 
   const shouldNotify =
-    task.status === 'due-soon' || task.status === 'due' || task.status === 'missed';
-  if (!shouldNotify) {
-    await storage.setData(reconciled);
-    return;
-  }
-
-  if (hasNotifiedForCurrentReminderWindow(task)) {
-    await storage.setData(reconciled);
-    return;
-  }
+    (task.status === 'due-soon' || task.status === 'due' || task.status === 'missed') &&
+    !hasNotifiedForCurrentReminderWindow(task);
+  if (!shouldNotify) return;
 
   if (notifications?.create) {
     await notifications.create(`reminder:${task.id}`, {
@@ -129,6 +127,18 @@ export async function sendTaskReminderNotification(options: {
     });
   }
 
-  const next = { ...reconciled, scheduler: markNotified(reconciled.scheduler, task.id) };
-  await storage.setData(next);
+  await storage.withWorkspaceMutation((current) => {
+    const reconciled = reconcileWorkspace(current);
+    const currentTask = reconciled.scheduler.tasks.find((item) => item.id === taskId);
+    if (
+      !currentTask ||
+      (currentTask.status !== 'due-soon' &&
+        currentTask.status !== 'due' &&
+        currentTask.status !== 'missed') ||
+      hasNotifiedForCurrentReminderWindow(currentTask)
+    ) {
+      return current;
+    }
+    return { ...reconciled, scheduler: markNotified(reconciled.scheduler, taskId) };
+  });
 }

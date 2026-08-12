@@ -244,9 +244,7 @@ describe('Behavioral Prediction Expert', () => {
       )
     ).toBe(true);
     expect(
-      readout.allPredictions.every((prediction) =>
-        prediction.planPreviewCommand.startsWith('ask:')
-      )
+      readout.allPredictions.every((prediction) => prediction.planPreviewCommand.startsWith('ask:'))
     ).toBe(true);
     expect(summarizeBehavioralPredictionExpert(readout)).toContain('approval_required=yes');
   });

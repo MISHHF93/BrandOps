@@ -14,7 +14,7 @@ import { resolveExtensionUrl } from './extensionRuntime';
 
 const r = (spec: string) => resolveExtensionUrl(spec);
 
-/** Same destination as [index.html](index.html) redirect — primary `MobileApp` document. */
+/** Primary `MobileApp` document — where `welcome.html` hands off once local preview access is unlocked. */
 export function hrefPrimaryAppDefault(): string {
   return r(PAGE.mobile);
 }

@@ -6,15 +6,18 @@ import type {
   BrandOpsOperatingTimelineTone
 } from '../../types/operatingTimeline';
 
-export const BRANDOPS_OPERATING_TIMELINE_SCHEMA_VERSION = '1.0.0';
-export const MAX_BRANDOPS_OPERATING_TIMELINE_EVENTS = 240;
+const BRANDOPS_OPERATING_TIMELINE_SCHEMA_VERSION = '1.0.0';
+const MAX_BRANDOPS_OPERATING_TIMELINE_EVENTS = 240;
 
 function uid(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function clean(value: unknown, max = 1200): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 }
 
 function clampPercent(value: unknown): number | undefined {
@@ -54,19 +57,21 @@ function categoryForArtifact(artifact: BrandOpsAIArtifact): BrandOpsOperatingTim
 export function buildOperatingTimelineEventsFromAiCoreResponse(
   response: BrandOpsAIResponse
 ): BrandOpsOperatingTimelineEvent[] {
-  const artifactEvents = response.artifacts.map((artifact): BrandOpsOperatingTimelineEvent => ({
-    id: uid('op-timeline'),
-    at: artifact.createdAt,
-    category: categoryForArtifact(artifact),
-    title: artifact.title,
-    detail: `${artifact.type} captured by BrandOps AI Core from "${artifact.sourcePrompt}".`,
-    source: 'BrandOps AI Core',
-    tone: timelineToneForArtifact(artifact),
-    entityType: 'ai-core-artifact',
-    entityId: artifact.id,
-    replayCommand: `ask: Replay this BrandOps AI Core artifact as an operating timeline memory. Explain strategic meaning, source facts, confidence, approvals, next actions, and what changed.\n\nArtifact: ${artifact.title}\nType: ${artifact.type}\nStatus: ${artifact.status}\nContent: ${artifact.content.slice(0, 1200)}`,
-    confidence: clampPercent(artifact.confidenceScore)
-  }));
+  const artifactEvents = response.artifacts.map(
+    (artifact): BrandOpsOperatingTimelineEvent => ({
+      id: uid('op-timeline'),
+      at: artifact.createdAt,
+      category: categoryForArtifact(artifact),
+      title: artifact.title,
+      detail: `${artifact.type} captured by BrandOps AI Core from "${artifact.sourcePrompt}".`,
+      source: 'BrandOps AI Core',
+      tone: timelineToneForArtifact(artifact),
+      entityType: 'ai-core-artifact',
+      entityId: artifact.id,
+      replayCommand: `ask: Replay this BrandOps AI Core artifact as an operating timeline memory. Explain strategic meaning, source facts, confidence, approvals, next actions, and what changed.\n\nArtifact: ${artifact.title}\nType: ${artifact.type}\nStatus: ${artifact.status}\nContent: ${artifact.content.slice(0, 1200)}`,
+      confidence: clampPercent(artifact.confidenceScore)
+    })
+  );
 
   const batch = response.batchRun;
   if (!batch) return artifactEvents;
@@ -78,7 +83,8 @@ export function buildOperatingTimelineEventsFromAiCoreResponse(
       title: 'AI Batch Run completed',
       detail: batch.finalSummary,
       source: 'BrandOps AI Core',
-      tone: batch.status === 'completed' ? 'success' : batch.status === 'failed' ? 'danger' : 'warning',
+      tone:
+        batch.status === 'completed' ? 'success' : batch.status === 'failed' ? 'danger' : 'warning',
       entityType: 'ai-core-batch-run',
       entityId: batch.id,
       replayCommand: `ask: Replay this BrandOps AI Batch Run. Summarize completed artifacts, failed artifacts, retry path, approvals, and strategic evolution.\n\nIntent: ${batch.intent}\nSummary: ${batch.finalSummary}`,
@@ -115,7 +121,9 @@ export function normalizeOperatingTimelineState(value: unknown): BrandOpsOperati
   }
   const raw = (value as { events?: unknown }).events;
   const events = Array.isArray(raw)
-    ? raw.map(normalizeOperatingTimelineEvent).filter((event): event is BrandOpsOperatingTimelineEvent => Boolean(event))
+    ? raw
+        .map(normalizeOperatingTimelineEvent)
+        .filter((event): event is BrandOpsOperatingTimelineEvent => Boolean(event))
     : [];
   return {
     schemaVersion: BRANDOPS_OPERATING_TIMELINE_SCHEMA_VERSION,
@@ -142,6 +150,8 @@ function normalizeOperatingTimelineEvent(value: unknown): BrandOpsOperatingTimel
     ...(item.entityType ? { entityType: clean(item.entityType, 120) } : {}),
     ...(item.entityId ? { entityId: clean(item.entityId, 160) } : {}),
     ...(item.replayCommand ? { replayCommand: clean(item.replayCommand, 1800) } : {}),
-    ...(clampPercent(item.confidence) !== undefined ? { confidence: clampPercent(item.confidence) } : {})
+    ...(clampPercent(item.confidence) !== undefined
+      ? { confidence: clampPercent(item.confidence) }
+      : {})
   };
 }

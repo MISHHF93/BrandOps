@@ -123,34 +123,36 @@
   <body>
     <main>
       <h1><span class="brand">BrandOps</span> Privacy Policy</h1>
-      <p class="meta"><strong>Effective date:</strong> April 16, 2026</p>
+      <p class="meta"><strong>Effective date:</strong> August 10, 2026</p>
 
       <section>
         <h2>1. Who this applies to</h2>
         <p>
-          Anyone who installs and uses BrandOps from the Chrome Web Store (or an equivalent distribution of this
-          extension package).
+          Anyone who uses a BrandOps web, browser-extension, or packaged mobile build.
         </p>
       </section>
 
       <section>
         <h2>2. What BrandOps stores on your device</h2>
         <p>
-          BrandOps keeps your workspace (tasks, pipeline, content, settings, and exports you create) in Chrome
-          extension storage on your device. That data stays on your device unless you export it or a future version
-          syncs to a server you configure.
+          BrandOps keeps your workspace (tasks, pipeline, content, settings, and exports you create) in browser or
+          packaged-app storage on your device. Workspace data leaves your device only when you export it or use a
+          feature that clearly names a configured external service, such as hosted Ask.
         </p>
         <p>
-          The main dashboard requires a <strong>connected</strong> federated sign-in (Google, GitHub, or LinkedIn).
+          The current account gate records an on-device access preference and a provider-labelled preview identity.
+          It does <strong>not</strong> authenticate with Google, Apple, GitHub, LinkedIn, or email.
         </p>
       </section>
 
       <section>
-        <h2>3. Federated sign-in (Google, GitHub, LinkedIn)</h2>
+        <h2>3. Account access in the current build</h2>
         <p>
-          BrandOps uses OAuth 2.0 with PKCE. Tokens and minimal profile data for “Signed in as …” are stored locally.
-          The default build does not send those tokens to a BrandOps-operated backend. OAuth client IDs are supplied
-          at build time and/or optionally in Settings; client secrets are not embedded in the extension.
+          Google-, Apple-, GitHub-, LinkedIn-, and email-labelled buttons currently choose a local preview identity only.
+          BrandOps does not open an OAuth authorization flow, send a magic-link email, obtain a provider token, verify
+          the displayed email address, or create a server-side session. Provider access and refresh tokens are not part
+          of workspace storage or exports. If a future release adds federated authentication, this policy will be
+          updated before that feature is enabled.
         </p>
         <table>
           <thead>
@@ -161,16 +163,24 @@
           </thead>
           <tbody>
             <tr>
+              <td>Apple</td>
+              <td>Local preview label only; Apple sign-in is not enabled</td>
+            </tr>
+            <tr>
+              <td>Email</td>
+              <td>Local preview label only; magic-link email is not enabled</td>
+            </tr>
+            <tr>
               <td>Google</td>
-              <td>Sign-in; name, email, avatar per granted scopes</td>
+              <td>Local preview label only; Google OAuth is not enabled</td>
             </tr>
             <tr>
               <td>GitHub</td>
-              <td>Sign-in; name, email, avatar per granted scopes</td>
+              <td>Local preview label only; GitHub OAuth is not enabled</td>
             </tr>
             <tr>
               <td>LinkedIn</td>
-              <td>Sign-in; name, email, avatar per granted scopes</td>
+              <td>Local preview label only; LinkedIn OAuth is not enabled</td>
             </tr>
           </tbody>
         </table>
@@ -178,24 +188,33 @@
 
       <section>
         <h2>4. Network requests</h2>
-        <p>Besides Chrome’s own services, BrandOps may contact:</p>
+        <p>Besides browser or packaged-app services, BrandOps may contact:</p>
         <ul>
-          <li>Google (accounts, OAuth token, OpenID userinfo) for Google sign-in.</li>
-          <li>GitHub (authorize, token, user and email APIs) for GitHub sign-in.</li>
-          <li>LinkedIn (OAuth and userinfo) for LinkedIn sign-in; a content script may run on LinkedIn pages you visit for in-product features.</li>
           <li>
-            Optional <strong>hosted Ask</strong>: when you configure an inference API URL and API key, prompts are sent only for Chat lines beginning with <strong>ask:</strong>. Included context may include workspace summaries plus an optional compressed <strong>résumé grounding</strong> artifact you save in Settings; other Chat commands stay on-device unless you use hosted Ask.
+            LinkedIn pages you visit, where the extension content script may read the current profile URL, name, role,
+            and company to prefill its companion form. Those fields are saved to the local workspace only when you use
+            the capture action.
           </li>
+          <li>
+            Optional <strong>hosted AI bridge</strong>: when you enable hosted AI and configure approved inference or
+            embeddings URLs, BrandOps may send Assistant prompts, AI-pipeline messages, selected workspace context, an
+            optional compressed <strong>résumé grounding</strong> artifact, and content-library titles and bodies selected
+            for embedding sync to those URLs. The API key is stored in device-local credential storage, excluded from
+            workspace exports, and transmitted to the approved endpoint in an authorization header. Packaged mobile
+            builds do not yet use an operating-system keychain.
+          </li>
+          <li>An optional rules URL explicitly configured by the person who built or deployed the app.</li>
+          <li>Stripe checkout or billing-portal pages only when you choose an externally configured billing link.</li>
         </ul>
         <p>We do not sell your personal information.</p>
       </section>
 
       <section>
-        <h2>5. Sign out and disconnect</h2>
+        <h2>5. Sign out</h2>
         <p>
-          Dashboard <strong>Sign out</strong> clears federated sessions as implemented. Settings
-          <strong>Disconnect</strong> removes a single provider. Removing the extension deletes locally stored data
-          subject to browser behavior.
+          Dashboard <strong>Sign out</strong> clears the local account-access preference. It does not revoke a provider
+          session because the current build does not create one. Removing the extension or packaged app deletes locally
+          stored data subject to browser, operating-system, and backup behavior.
         </p>
       </section>
 
@@ -203,7 +222,8 @@
         <h2>6. Changes and contact</h2>
         <p>
           We may update this policy when the product changes. The effective date above will be revised. For questions,
-          use the support or privacy contact on the <strong>Chrome Web Store listing</strong> for BrandOps.
+          use the support or privacy contact supplied by the store listing, website, or organization that distributed
+          your BrandOps build.
         </p>
       </section>
 
@@ -219,7 +239,7 @@
       >
         <p style="color: var(--soft); margin: 0 0 0.75rem 0">Other bundled pages (same extension package):</p>
         <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem">
-          <li><a href="dashboard.html" style="color: var(--accent)">Dashboard</a></li>
+          <li><a href="mobile.html" style="color: var(--accent)">Dashboard</a></li>
           <li><a href="welcome.html" style="color: var(--accent)">Welcome</a></li>
           <li><a href="integrations.html" style="color: var(--accent)">Integrations / Settings</a></li>
           <li><a href="help.html" style="color: var(--accent)">Knowledge Center</a></li>

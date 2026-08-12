@@ -39,6 +39,8 @@ describe('expertObservability', () => {
     expect(observed.receipt.qualityLabel).toContain('output');
     expect(observed.receipt.latencyLabel).toBe('32ms expert execution');
     expect(observed.receipt.approvalStatus).toContain('pending approval');
-    expect(JSON.stringify(observed.receipt)).not.toMatch(/developerOnly|routingTrace|observedSignals/i);
+    expect(JSON.stringify(observed.receipt)).not.toMatch(
+      /developerOnly|routingTrace|observedSignals/i
+    );
   });
 });

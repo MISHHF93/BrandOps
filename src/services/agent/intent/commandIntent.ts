@@ -54,10 +54,10 @@ export function parseAiPipelineInvocation(
 export function parseBrandOpsAIBatchInvocation(text: string): { intent: string } | null {
   const t = text.trim();
   if (!/^(run\s+)?(brandops\s+)?ai\s+(core\s+)?batch\b/i.test(t)) return null;
-  const intent = t
-    .replace(/^(run\s+)?(brandops\s+)?ai\s+(core\s+)?batch\b:?\s*/i, '')
-    .trim();
-  return { intent: intent || 'Generate a grounded BrandOps AI Core batch from the active workspace.' };
+  const intent = t.replace(/^(run\s+)?(brandops\s+)?ai\s+(core\s+)?batch\b:?\s*/i, '').trim();
+  return {
+    intent: intent || 'Generate a grounded BrandOps AI Core batch from the active workspace.'
+  };
 }
 
 export const parseCommandRoute = (text: string): CommandRoute => {

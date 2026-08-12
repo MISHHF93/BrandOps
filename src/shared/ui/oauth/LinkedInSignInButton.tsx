@@ -27,17 +27,19 @@ export function LinkedInSignInButton({
   className
 }: LinkedInSignInButtonProps) {
   const label =
-    variant === 'continue'
-      ? loading
-        ? 'Connecting…'
-        : 'Continue with LinkedIn'
-      : variant === 'signUp'
+    variant === 'preview'
+      ? 'Use LinkedIn preview identity'
+      : variant === 'continue'
         ? loading
           ? 'Connecting…'
-          : 'Sign up with LinkedIn'
-        : loading
-          ? 'Connecting…'
-          : 'Sign in with LinkedIn';
+          : 'Continue with LinkedIn'
+        : variant === 'signUp'
+          ? loading
+            ? 'Connecting…'
+            : 'Sign up with LinkedIn'
+          : loading
+            ? 'Connecting…'
+            : 'Sign in with LinkedIn';
 
   return (
     <button

@@ -160,9 +160,9 @@ describe('Behavioral Intelligence Engine', () => {
     );
     expect(readout.predictions.length).toBeGreaterThan(0);
     expect(readout.predictions.every((prediction) => prediction.approvalRequired)).toBe(true);
-    expect(readout.predictions.every((prediction) => prediction.suggestedCommand.startsWith('ask:'))).toBe(
-      true
-    );
+    expect(
+      readout.predictions.every((prediction) => prediction.suggestedCommand.startsWith('ask:'))
+    ).toBe(true);
     expect(
       readout.predictions.every((prediction) =>
         prediction.suggestedCommand.includes('Do not execute externally')
@@ -179,4 +179,3 @@ describe('Behavioral Intelligence Engine', () => {
     expect(snapshot.behavioralIntelligenceEngine.signalCoverage['ask-behavior']).toBeGreaterThan(0);
   });
 });
-

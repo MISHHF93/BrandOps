@@ -142,7 +142,9 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
   it('keeps Ask My Twin conversational instead of an execution gateway', () => {
     expect(mobileApp).toContain("const isAskSurface = sourceSurface === 'Chat'");
-    expect(mobileApp).toContain('const askQuestion = askMatch ? askMatch[1].trim() : isAskSurface ? trimmed : null');
+    expect(mobileApp).toContain(
+      'const askQuestion = askMatch ? askMatch[1].trim() : isAskSurface ? trimmed : null'
+    );
     expect(mobileApp).toContain("sourceSurface !== 'Chat' && needsDestructiveConfirm(trimmed)");
     expect(mobileApp).not.toContain('parseAiExecutablePayload');
     expect(mobileApp).not.toContain('(Auto-run)');
@@ -156,7 +158,7 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
     const chatView = read('src/pages/mobile/MobileChatView.tsx');
     expect(chatView).toContain('function StreamingAssistantText');
-    expect(chatView).toContain('generating text...');
+    expect(chatView).toContain('revealing response...');
     expect(chatView).toContain('bo-stream-caret');
     expect(chatView).toContain('onProgress={requestTranscriptFollow}');
     expect(chatView).toContain('bo-chat-scroll-anchor');
@@ -164,6 +166,10 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
   it('embeds a dismissible Getting started card on the Plan (workspace) tab', () => {
     expect(mobileApp).toMatch(/activeTab === 'workspace'[\s\S]*FirstRunJourneyCard/);
+    expect(mobileApp).toContain('const openCreateTwinSetup');
+    expect(mobileApp).toContain("commitTab('settings')");
+    expect(mobileApp).toContain('setResumePhaseRevealKey((key) => key + 1)');
+    expect(mobileApp).toContain('onOpenSettings={openCreateTwinSetup}');
   });
 
   it('threads Integrations opener into Plan hub for setup hint without dock duplication', () => {
@@ -179,7 +185,9 @@ describe('MobileApp shell tab wiring (contract)', () => {
 
     const shell = read('src/pages/mobile/mobileShellQuery.ts');
     expect(shell).toContain("return tab === 'chat' ? 'chat' : 'workspace';");
-    expect(shell).toContain('**Activity**, **Sources**, and **Setup** are normalized pages inside Plan');
+    expect(shell).toContain(
+      '**Activity**, **Sources**, and **Setup** are normalized pages inside Plan'
+    );
 
     const nav = read('src/pages/mobile/PlanSurfaceNav.tsx');
     expect(nav).toContain('aria-label="Plan pages"');

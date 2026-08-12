@@ -25,17 +25,19 @@ export function AppleSignInButton({
   className
 }: AppleSignInButtonProps) {
   const label =
-    variant === 'continue'
-      ? loading
-        ? 'Connecting…'
-        : 'Continue with Apple'
-      : variant === 'signUp'
+    variant === 'preview'
+      ? 'Use Apple preview identity'
+      : variant === 'continue'
         ? loading
           ? 'Connecting…'
-          : 'Sign up with Apple'
-        : loading
-          ? 'Connecting…'
-          : 'Sign in with Apple';
+          : 'Continue with Apple'
+        : variant === 'signUp'
+          ? loading
+            ? 'Connecting…'
+            : 'Sign up with Apple'
+          : loading
+            ? 'Connecting…'
+            : 'Sign in with Apple';
 
   return (
     <button

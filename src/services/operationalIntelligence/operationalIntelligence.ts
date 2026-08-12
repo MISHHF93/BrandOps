@@ -15,7 +15,7 @@ import type {
 import { getActiveDigitalTwin } from '../digitalTwin/digitalTwin';
 import { buildWorkspaceIntelligenceState } from '../workspaceIntelligence/workspaceIntelligence';
 
-export const OPERATIONAL_INTELLIGENCE_SCHEMA_VERSION = '1.0.0';
+const OPERATIONAL_INTELLIGENCE_SCHEMA_VERSION = '1.0.0';
 
 const GOVERNANCE_POLICY =
   'Operational Intelligence Core can recommend, draft, and prepare plans. It must not save identity-level facts, send messages, publish content, schedule work, sync tools, or mutate external systems without explicit human approval.';
@@ -25,7 +25,10 @@ function nowIso(): string {
 }
 
 function clean(value: unknown, max = 320): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 }
 
 function clampPercent(value: number): number {
@@ -73,13 +76,15 @@ function actionFromOpportunity(signal: WorkspaceOpportunitySignal): OperationalI
     confidence: signal.confidence,
     expectedImpact: signal.expectedImpact,
     evidence: signal.evidence,
-    command: signal.suggestedAction || commandFor({
-      title: signal.title,
-      detail: signal.detail,
-      why: 'Opportunity Radar found a gap or opening in the current workspace state.',
-      evidence: signal.evidence,
-      source: 'Opportunity Radar'
-    }),
+    command:
+      signal.suggestedAction ||
+      commandFor({
+        title: signal.title,
+        detail: signal.detail,
+        why: 'Opportunity Radar found a gap or opening in the current workspace state.',
+        evidence: signal.evidence,
+        source: 'Opportunity Radar'
+      }),
     primaryLabel: 'Convert to plan',
     approvalRequired: true,
     tone: signal.expectedImpact === 'high' ? 'success' : 'primary'
@@ -187,7 +192,9 @@ function buildActions(
     });
   }
 
-  const draftArtifacts = (workspace.aiCore?.artifacts ?? []).filter((artifact) => artifact.status === 'draft');
+  const draftArtifacts = (workspace.aiCore?.artifacts ?? []).filter(
+    (artifact) => artifact.status === 'draft'
+  );
   if (draftArtifacts.length) {
     const artifact = draftArtifacts[0];
     actions.push({
@@ -216,7 +223,9 @@ function buildActions(
     .filter((item, index, all) => all.findIndex((candidate) => candidate.id === item.id) === index)
     .sort((a, b) => {
       const impactScore = { high: 3, medium: 2, low: 1 };
-      return impactScore[b.expectedImpact] - impactScore[a.expectedImpact] || b.confidence - a.confidence;
+      return (
+        impactScore[b.expectedImpact] - impactScore[a.expectedImpact] || b.confidence - a.confidence
+      );
     })
     .slice(0, 8);
 }
@@ -238,7 +247,10 @@ function buildBriefing(
       detail: activeTwin
         ? `${activeTwin.displayName} is the active twin.`
         : primaryScore?.detail || 'Digital twin identity is still being built.',
-      evidence: uniq([workspace.brand.positioning, workspace.brand.primaryOffer, activeTwin?.identity.headline], 3),
+      evidence: uniq(
+        [workspace.brand.positioning, workspace.brand.primaryOffer, activeTwin?.identity.headline],
+        3
+      ),
       tone: primaryScore ? toneForScore(primaryScore.value) : 'muted'
     },
     {
@@ -279,7 +291,8 @@ function buildMissingFactQuestions(workspace: BrandOpsData): OperationalIntellig
     push({
       id: 'core-gap-primary-offer',
       question: 'What offer should the workspace optimize around?',
-      whyItMatters: 'Opportunity Radar needs a concrete offer to rank growth, content, and outreach suggestions.',
+      whyItMatters:
+        'Opportunity Radar needs a concrete offer to rank growth, content, and outreach suggestions.',
       target: 'workspace-dna'
     });
   }
@@ -287,7 +300,8 @@ function buildMissingFactQuestions(workspace: BrandOpsData): OperationalIntellig
     push({
       id: 'core-gap-positioning',
       question: 'What positioning statement is approved for this workspace?',
-      whyItMatters: 'Decision Memory should distinguish approved claims from speculative positioning.',
+      whyItMatters:
+        'Decision Memory should distinguish approved claims from speculative positioning.',
       target: 'decision-memory'
     });
   }
@@ -295,7 +309,8 @@ function buildMissingFactQuestions(workspace: BrandOpsData): OperationalIntellig
     push({
       id: 'core-gap-platform-context',
       question: 'Which connected platforms can BrandOps truthfully use as context?',
-      whyItMatters: 'The system must not claim Gmail, LinkedIn, Slack, Notion, Calendar, or CRM access without a connected source.',
+      whyItMatters:
+        'The system must not claim Gmail, LinkedIn, Slack, Notion, Calendar, or CRM access without a connected source.',
       target: 'platform-context'
     });
   }
@@ -340,7 +355,10 @@ export function buildOperationalIntelligenceReadout(
     (action) => action.tone === 'warning' || action.tone === 'danger' || action.approvalRequired
   );
   const averageScore = intelligence.scorecard.length
-    ? Math.round(intelligence.scorecard.reduce((sum, metric) => sum + metric.value, 0) / intelligence.scorecard.length)
+    ? Math.round(
+        intelligence.scorecard.reduce((sum, metric) => sum + metric.value, 0) /
+          intelligence.scorecard.length
+      )
     : 0;
   const nextAction = actions[0]?.title || 'Answer the next missing workspace question';
   return {

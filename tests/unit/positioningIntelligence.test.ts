@@ -51,7 +51,8 @@ function workspaceWithPositioningSignals() {
       sourceId: 'source-market',
       title: 'Competitor category notes',
       artifactType: 'market-summary',
-      summary: 'Competitor alternatives focus on generic CRM automation instead of operator-led workflows.',
+      summary:
+        'Competitor alternatives focus on generic CRM automation instead of operator-led workflows.',
       tags: ['competitor', 'category'],
       createdAt: '2026-05-28T00:00:00.000Z',
       updatedAt: '2026-05-28T00:00:00.000Z'
@@ -95,9 +96,9 @@ describe('Positioning Intelligence', () => {
     const readout = buildPositioningIntelligenceReadout(workspaceWithPositioningSignals());
 
     expect(readout.positioningStatements.every((statement) => statement.confidence > 0)).toBe(true);
-    expect(readout.positioningStatements.every((statement) => statement.evidenceUsed.length > 0)).toBe(
-      true
-    );
+    expect(
+      readout.positioningStatements.every((statement) => statement.evidenceUsed.length > 0)
+    ).toBe(true);
     expect(readout.evidenceUsed.background.length).toBeGreaterThan(0);
     expect(readout.evidenceUsed.skills.length).toBeGreaterThan(0);
     expect(readout.evidenceUsed.industry.length).toBeGreaterThan(0);
@@ -117,4 +118,3 @@ describe('Positioning Intelligence', () => {
     expect(snapshot.positioningIntelligence.averageConfidence).toBeGreaterThan(0);
   });
 });
-

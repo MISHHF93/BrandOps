@@ -2,6 +2,7 @@ import { localIntelligence } from '../../services/intelligence/localIntelligence
 import { operatorCadenceFlow } from '../../services/intelligence/operatorCadenceFlow';
 import type {
   AgentAuditEntry,
+  AiBridgeSettings,
   BrandOpsData,
   BrandVault,
   BrandVaultListField,
@@ -10,6 +11,7 @@ import type {
   FocusKpiSelfCheck,
   IntegrationSourceKind,
   Plan,
+  PlanReceipt,
   SchedulerTask,
   SchedulerTaskStatus
 } from '../../types/domain';
@@ -120,7 +122,7 @@ function formatAiOperatorMode(mode: AiOperatorMode): string {
 }
 
 /** One-line caption for Assistant chrome — reflects persisted routing stance (no network). */
-export function buildAiAssistantRoutingCaption(settings: BrandOpsData['settings']): string {
+function buildAiAssistantRoutingCaption(settings: BrandOpsData['settings']): string {
   const diag = settings.aiRoutingDiagnosticsEnabled ? ' · Diagnostics on' : '';
   return `${formatAiOperatorMode(settings.aiOperatorMode)} hosted routing${diag} — tune in Settings → Unified workspace.`;
 }
@@ -392,6 +394,9 @@ export interface MobileWorkspaceSnapshot {
   sshTargetsCount: number;
   nextPublishingHint: string | null;
   settingsFullReadout: MobileSettingsFullReadout;
+  /** Editable hosted gateway configuration. Secrets remain outside this snapshot/workspace JSON. */
+  aiBridgeSettings: AiBridgeSettings;
+  aiAdapterMode: BrandOpsData['settings']['aiAdapterMode'];
   /** Preview of persisted Phase R résumé artifact (`settings.operatorTwin.resumeArtifact`). */
   resumeNeuralPhaseArtifactPreview: string;
   /** Active digital twin, if the user has created one from résumé/profile data. */
@@ -603,6 +608,38 @@ function buildExpertPlanReceipts(
   }));
 }
 
+/**
+ * Maps one `PlanReceipt` to its full `PlanExecutionReceipt` view. Exported so
+ * `resolveExecutionReceipt.ts` (checkpoint-inline receipt) reuses this same
+ * shaping instead of a second, thinner receipt view for the same underlying
+ * data — see plan doc §8/"Receipts".
+ */
+export function buildPlanReceiptDetail(
+  workspace: BrandOpsData,
+  receipt: PlanReceipt
+): PlanExecutionReceipt {
+  const plan = workspace.planWorkspace?.plans.find((item) => item.id === receipt.planId);
+  return {
+    id: `receipt-${receipt.id}`,
+    action: `Converted from Ask: ${PLAN_PRESET_LABELS[receipt.planType]}`,
+    reasoningSummary:
+      receipt.summary || `Ask response ${receipt.sourceMessageId} became a structured PLAN draft.`,
+    sourceFactsUsed: plan?.source.verifiedFactsUsed.length
+      ? plan.source.verifiedFactsUsed
+      : [`source message: ${receipt.sourceMessageId}`],
+    generatedOutputs: receipt.generatedSteps,
+    approvals: plan?.requiredApprovals.length
+      ? plan.requiredApprovals
+      : ['External actions require explicit approval before execution.'],
+    startedAt: receipt.timestamp,
+    executionStatus: plan?.status ?? 'draft',
+    warningsErrors: plan?.missingInputs.length
+      ? plan.missingInputs.map((item) => `Missing input: ${item}`)
+      : [],
+    sourceLabel: 'Created from Ask My Twin'
+  };
+}
+
 function buildPlanExecutionReceipts(
   workspace: BrandOpsData,
   expertReceipts: ExpertOperatorIntegrationReadout['receipts']
@@ -610,27 +647,7 @@ function buildPlanExecutionReceipts(
   const receipts: PlanExecutionReceipt[] = [...buildExpertPlanReceipts(expertReceipts)];
 
   for (const receipt of workspace.planWorkspace?.receipts ?? []) {
-    const plan = workspace.planWorkspace?.plans.find((item) => item.id === receipt.planId);
-    receipts.push({
-      id: `receipt-${receipt.id}`,
-      action: `Converted from Ask: ${PLAN_PRESET_LABELS[receipt.planType]}`,
-      reasoningSummary:
-        receipt.summary ||
-        `Ask response ${receipt.sourceMessageId} became a structured PLAN draft.`,
-      sourceFactsUsed: plan?.source.verifiedFactsUsed.length
-        ? plan.source.verifiedFactsUsed
-        : [`source message: ${receipt.sourceMessageId}`],
-      generatedOutputs: receipt.generatedSteps,
-      approvals: plan?.requiredApprovals.length
-        ? plan.requiredApprovals
-        : ['External actions require explicit approval before execution.'],
-      startedAt: receipt.timestamp,
-      executionStatus: plan?.status ?? 'draft',
-      warningsErrors: plan?.missingInputs.length
-        ? plan.missingInputs.map((item) => `Missing input: ${item}`)
-        : [],
-      sourceLabel: 'Created from Ask My Twin'
-    });
+    receipts.push(buildPlanReceiptDetail(workspace, receipt));
   }
 
   for (const run of buildRecentAiPipelineRuns(workspace)) {
@@ -781,6 +798,8 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     opportunitiesToClose,
     cadenceHeadline,
     settingsFullReadout: buildMobileSettingsFullReadout(workspace),
+    aiBridgeSettings: { ...workspace.settings.aiBridge },
+    aiAdapterMode: workspace.settings.aiAdapterMode,
     resumeNeuralPhaseArtifactPreview: truncatePeek(getOperatorTwinResumeArtifact(workspace), 200),
     activeDigitalTwin: getActiveDigitalTwin(workspace),
     connectedIdentityEngine: buildConnectedIdentityEngineReadout(workspace),

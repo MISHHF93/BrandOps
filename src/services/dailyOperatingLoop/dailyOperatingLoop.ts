@@ -19,7 +19,7 @@ import type {
 import { getActiveDigitalTwin } from '../digitalTwin/digitalTwin';
 import { buildOperationalIntelligenceReadout } from '../operationalIntelligence/operationalIntelligence';
 
-export const DAILY_OPERATING_LOOP_SCHEMA_VERSION = '1.0.0';
+const DAILY_OPERATING_LOOP_SCHEMA_VERSION = '1.0.0';
 
 const GOVERNANCE_POLICY =
   'Daily Operating Loop is a readout and planning layer. It can recommend priorities, ask clarifying questions, and prepare PLAN previews, but external actions still require ASK -> PLAN -> approval -> receipt.';
@@ -33,7 +33,10 @@ function clampPercent(value: number): number {
 }
 
 function clean(value: unknown, max = 260): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 }
 
 function uniq(values: unknown[], cap = 8): string[] {
@@ -97,7 +100,10 @@ function metric(input: DailyBriefingMetric): DailyBriefingMetric {
   return input;
 }
 
-function buildMetrics(workspace: BrandOpsData, core: OperationalIntelligenceCoreReadout): DailyBriefingMetric[] {
+function buildMetrics(
+  workspace: BrandOpsData,
+  core: OperationalIntelligenceCoreReadout
+): DailyBriefingMetric[] {
   const activeOpportunities = workspace.opportunities.filter(isActiveOpportunity);
   const pendingApprovals = (workspace.operatorTraces?.entries ?? []).filter(
     (trace) => trace.reviewStatus === 'pending'
@@ -111,21 +117,28 @@ function buildMetrics(workspace: BrandOpsData, core: OperationalIntelligenceCore
       id: 'opportunities',
       label: 'Opportunities detected',
       value: Math.max(core.opportunityRadar.length, activeOpportunities.length),
-      detail: core.opportunityRadar[0]?.title || activeOpportunities[0]?.nextAction || 'No high-signal opportunity yet.',
+      detail:
+        core.opportunityRadar[0]?.title ||
+        activeOpportunities[0]?.nextAction ||
+        'No high-signal opportunity yet.',
       tone: activeOpportunities.length || core.opportunityRadar.length ? 'success' : 'muted'
     }),
     metric({
       id: 'approvals',
       label: 'Approvals pending',
       value: pendingApprovals.length,
-      detail: pendingApprovals[0]?.annotatorNote || pendingApprovals[0]?.verb || 'No approval is blocking execution.',
+      detail:
+        pendingApprovals[0]?.annotatorNote ||
+        pendingApprovals[0]?.verb ||
+        'No approval is blocking execution.',
       tone: pendingApprovals.length ? 'warning' : 'success'
     }),
     metric({
       id: 'stalled-workflows',
       label: 'Workflows stalled',
       value: overdueFollowUps.length + stalledTasks.length,
-      detail: overdueFollowUps[0]?.reason || stalledTasks[0]?.title || 'No stalled workflow detected.',
+      detail:
+        overdueFollowUps[0]?.reason || stalledTasks[0]?.title || 'No stalled workflow detected.',
       tone: overdueFollowUps.length + stalledTasks.length ? 'warning' : 'success'
     })
   ];
@@ -135,11 +148,18 @@ function category(input: WorkspaceHealthCategory): WorkspaceHealthCategory {
   return input;
 }
 
-function scoreFromCore(core: OperationalIntelligenceCoreReadout, id: string, fallback: number): number {
+function scoreFromCore(
+  core: OperationalIntelligenceCoreReadout,
+  id: string,
+  fallback: number
+): number {
   return core.scorecard.find((item) => item.id === id)?.value ?? fallback;
 }
 
-function buildWorkspaceHealth(workspace: BrandOpsData, core: OperationalIntelligenceCoreReadout): WorkspaceHealthScore {
+function buildWorkspaceHealth(
+  workspace: BrandOpsData,
+  core: OperationalIntelligenceCoreReadout
+): WorkspaceHealthScore {
   const connectedCount =
     workspace.integrationHub.sources.filter((source) => source.status === 'connected').length +
     [
@@ -155,7 +175,9 @@ function buildWorkspaceHealth(workspace: BrandOpsData, core: OperationalIntellig
       score: scoreFromCore(core, 'positioning-strength', workspace.brand.positioning ? 66 : 28),
       detail: core.dna.positioning[0] || 'No approved positioning statement yet.',
       improvement: 'Approve a positioning statement and reuse it across ASK and PLAN.',
-      tone: scoreTone(scoreFromCore(core, 'positioning-strength', workspace.brand.positioning ? 66 : 28))
+      tone: scoreTone(
+        scoreFromCore(core, 'positioning-strength', workspace.brand.positioning ? 66 : 28)
+      )
     }),
     category({
       id: 'audience',
@@ -163,23 +185,55 @@ function buildWorkspaceHealth(workspace: BrandOpsData, core: OperationalIntellig
       score: clampPercent(30 + core.dna.audience.length * 12 + workspace.contacts.length * 2),
       detail: core.dna.audience[0] || 'Audience memory is still thin.',
       improvement: 'Create buyer persona memory or add stronger audience segments.',
-      tone: scoreTone(clampPercent(30 + core.dna.audience.length * 12 + workspace.contacts.length * 2))
+      tone: scoreTone(
+        clampPercent(30 + core.dna.audience.length * 12 + workspace.contacts.length * 2)
+      )
     }),
     category({
       id: 'content',
       label: 'Content',
-      score: clampPercent(24 + workspace.contentLibrary.length * 7 + workspace.publishingQueue.length * 9 + workspace.brandVault.signatureThemes.length * 5),
-      detail: workspace.publishingQueue[0]?.title || workspace.contentLibrary[0]?.title || 'No active content lane yet.',
+      score: clampPercent(
+        24 +
+          workspace.contentLibrary.length * 7 +
+          workspace.publishingQueue.length * 9 +
+          workspace.brandVault.signatureThemes.length * 5
+      ),
+      detail:
+        workspace.publishingQueue[0]?.title ||
+        workspace.contentLibrary[0]?.title ||
+        'No active content lane yet.',
       improvement: 'Turn one opportunity into a content series or approved content calendar.',
-      tone: scoreTone(clampPercent(24 + workspace.contentLibrary.length * 7 + workspace.publishingQueue.length * 9 + workspace.brandVault.signatureThemes.length * 5))
+      tone: scoreTone(
+        clampPercent(
+          24 +
+            workspace.contentLibrary.length * 7 +
+            workspace.publishingQueue.length * 9 +
+            workspace.brandVault.signatureThemes.length * 5
+        )
+      )
     }),
     category({
       id: 'outreach',
       label: 'Outreach',
-      score: clampPercent(26 + workspace.outreachTemplates.length * 12 + workspace.outreachDrafts.length * 5 + workspace.opportunities.filter(isActiveOpportunity).length * 6),
-      detail: workspace.outreachDrafts[0]?.outreachGoal || workspace.opportunities.find(isActiveOpportunity)?.nextAction || 'No outreach strategy yet.',
+      score: clampPercent(
+        26 +
+          workspace.outreachTemplates.length * 12 +
+          workspace.outreachDrafts.length * 5 +
+          workspace.opportunities.filter(isActiveOpportunity).length * 6
+      ),
+      detail:
+        workspace.outreachDrafts[0]?.outreachGoal ||
+        workspace.opportunities.find(isActiveOpportunity)?.nextAction ||
+        'No outreach strategy yet.',
       improvement: 'Create an approval-gated outreach workflow for the highest-value relationship.',
-      tone: scoreTone(clampPercent(26 + workspace.outreachTemplates.length * 12 + workspace.outreachDrafts.length * 5 + workspace.opportunities.filter(isActiveOpportunity).length * 6))
+      tone: scoreTone(
+        clampPercent(
+          26 +
+            workspace.outreachTemplates.length * 12 +
+            workspace.outreachDrafts.length * 5 +
+            workspace.opportunities.filter(isActiveOpportunity).length * 6
+        )
+      )
     }),
     category({
       id: 'operations',
@@ -193,39 +247,65 @@ function buildWorkspaceHealth(workspace: BrandOpsData, core: OperationalIntellig
       id: 'integrations',
       label: 'Integrations',
       score: clampPercent(22 + connectedCount * 18),
-      detail: connectedCount ? `${connectedCount} connected context source${connectedCount === 1 ? '' : 's'}.` : 'No connected app context.',
+      detail: connectedCount
+        ? `${connectedCount} connected context source${connectedCount === 1 ? '' : 's'}.`
+        : 'No connected app context.',
       improvement: 'Connect only the tools BrandOps can truthfully use for context.',
       tone: scoreTone(clampPercent(22 + connectedCount * 18))
     }),
     category({
       id: 'memory',
       label: 'Memory',
-      score: clampPercent(28 + core.decisionMemory.length * 4 + (activeTwin?.memory.approvedClaims.length ?? 0) * 5),
+      score: clampPercent(
+        28 + core.decisionMemory.length * 4 + (activeTwin?.memory.approvedClaims.length ?? 0) * 5
+      ),
       detail: core.decisionMemory[0]?.title || 'Decision memory is just starting.',
       improvement: 'Approve, reject, or save useful outputs so tomorrow gets smarter.',
-      tone: scoreTone(clampPercent(28 + core.decisionMemory.length * 4 + (activeTwin?.memory.approvedClaims.length ?? 0) * 5))
+      tone: scoreTone(
+        clampPercent(
+          28 + core.decisionMemory.length * 4 + (activeTwin?.memory.approvedClaims.length ?? 0) * 5
+        )
+      )
     })
   ];
-  const score = clampPercent(categories.reduce((sum, item) => sum + item.score, 0) / categories.length);
+  const score = clampPercent(
+    categories.reduce((sum, item) => sum + item.score, 0) / categories.length
+  );
   return {
     score,
-    label: score >= 82 ? 'Strong operating rhythm' : score >= 64 ? 'Growing operating system' : 'Needs daily grounding',
+    label:
+      score >= 82
+        ? 'Strong operating rhythm'
+        : score >= 64
+          ? 'Growing operating system'
+          : 'Needs daily grounding',
     categories
   };
 }
 
-function buildStrategicGaps(workspace: BrandOpsData, core: OperationalIntelligenceCoreReadout): StrategicGap[] {
+function buildStrategicGaps(
+  workspace: BrandOpsData,
+  core: OperationalIntelligenceCoreReadout
+): StrategicGap[] {
   const artifacts = workspace.aiCore?.artifacts ?? [];
   const gaps: StrategicGap[] = [];
   const push = (gap: StrategicGap) => gaps.push(gap);
-  if (!artifacts.some((artifact) => artifact.type === 'buyer persona') && core.dna.audience.length < 2) {
+  if (
+    !artifacts.some((artifact) => artifact.type === 'buyer persona') &&
+    core.dna.audience.length < 2
+  ) {
     push({
       id: 'gap-buyer-persona',
       title: 'Buyer Persona',
       missing: 'Approved buyer persona or audience memory',
-      whyItMatters: 'Priorities, content, and outreach need a clear audience to avoid generic recommendations.',
+      whyItMatters:
+        'Priorities, content, and outreach need a clear audience to avoid generic recommendations.',
       recommendedFix: 'Generate a buyer persona from Workspace DNA and review it before saving.',
-      command: gapCommand('Buyer Persona', 'Approved buyer persona or audience memory', 'Audience clarity improves every daily recommendation.')
+      command: gapCommand(
+        'Buyer Persona',
+        'Approved buyer persona or audience memory',
+        'Audience clarity improves every daily recommendation.'
+      )
     });
   }
   if (!workspace.outreachTemplates.length && !workspace.outreachDrafts.length) {
@@ -235,7 +315,11 @@ function buildStrategicGaps(workspace: BrandOpsData, core: OperationalIntelligen
       missing: 'Reusable outreach template or approval-gated sequence',
       whyItMatters: 'Relationship opportunities stall when follow-up strategy is not explicit.',
       recommendedFix: 'Create a reusable outreach workflow in PLAN.',
-      command: gapCommand('Outreach Strategy', 'Reusable outreach template or sequence', 'Outreach needs a repeatable approval-gated path.')
+      command: gapCommand(
+        'Outreach Strategy',
+        'Reusable outreach template or sequence',
+        'Outreach needs a repeatable approval-gated path.'
+      )
     });
   }
   if (!workspace.brandVault.signatureThemes.length && workspace.contentLibrary.length < 3) {
@@ -245,7 +329,11 @@ function buildStrategicGaps(workspace: BrandOpsData, core: OperationalIntelligen
       missing: 'Signature themes or repeatable content lanes',
       whyItMatters: 'Daily content recommendations need stable pillars instead of one-off ideas.',
       recommendedFix: 'Turn the top opportunity into 3 content pillars.',
-      command: gapCommand('Content Pillars', 'Signature themes or repeatable content lanes', 'Content cadence compounds only when pillars are stable.')
+      command: gapCommand(
+        'Content Pillars',
+        'Signature themes or repeatable content lanes',
+        'Content cadence compounds only when pillars are stable.'
+      )
     });
   }
   if (!workspace.brand.positioning.trim() && !workspace.brandVault.positioningStatement.trim()) {
@@ -253,9 +341,14 @@ function buildStrategicGaps(workspace: BrandOpsData, core: OperationalIntelligen
       id: 'gap-positioning-statement',
       title: 'Positioning Statement',
       missing: 'Reviewed positioning statement',
-      whyItMatters: 'The Chief of Staff layer should not make strong claims without approved positioning.',
+      whyItMatters:
+        'The Chief of Staff layer should not make strong claims without approved positioning.',
       recommendedFix: 'Draft three positioning options, then approve one.',
-      command: gapCommand('Positioning Statement', 'Reviewed positioning statement', 'Approved positioning grounds ASK, PLAN, outreach, and content.')
+      command: gapCommand(
+        'Positioning Statement',
+        'Reviewed positioning statement',
+        'Approved positioning grounds ASK, PLAN, outreach, and content.'
+      )
     });
   }
   for (const question of core.missingFactQuestions.slice(0, 2)) {
@@ -277,7 +370,9 @@ function buildChiefOfStaffAlerts(
   health: WorkspaceHealthScore
 ): ChiefOfStaffAlert[] {
   const alerts: ChiefOfStaffAlert[] = [];
-  const overdue = workspace.followUps.filter((item) => !item.completed && new Date(item.dueAt).getTime() < Date.now());
+  const overdue = workspace.followUps.filter(
+    (item) => !item.completed && new Date(item.dueAt).getTime() < Date.now()
+  );
   const oldestOverdue = overdue
     .map((item) => ({ item, days: daysSince(item.dueAt) }))
     .sort((a, b) => b.days - a.days)[0];
@@ -289,7 +384,10 @@ function buildChiefOfStaffAlerts(
       detail,
       severity: oldestOverdue.days >= 7 ? 'high' : 'medium',
       evidence: [oldestOverdue.item.reason, oldestOverdue.item.dueAt],
-      command: alertCommand('Relationship follow-up is stalled', detail, [oldestOverdue.item.reason, oldestOverdue.item.dueAt])
+      command: alertCommand('Relationship follow-up is stalled', detail, [
+        oldestOverdue.item.reason,
+        oldestOverdue.item.dueAt
+      ])
     });
   }
   if (core.receiptContext.pendingApprovals) {
@@ -300,7 +398,11 @@ function buildChiefOfStaffAlerts(
       detail,
       severity: core.receiptContext.pendingApprovals > 2 ? 'high' : 'medium',
       evidence: core.attentionQueue.slice(0, 3).map((item) => item.title),
-      command: alertCommand('Execution is waiting on approvals', detail, core.attentionQueue.slice(0, 3).map((item) => item.title))
+      command: alertCommand(
+        'Execution is waiting on approvals',
+        detail,
+        core.attentionQueue.slice(0, 3).map((item) => item.title)
+      )
     });
   }
   const lowHealth = health.categories.find((item) => item.score < 50);
@@ -316,14 +418,21 @@ function buildChiefOfStaffAlerts(
     });
   }
   if (workspace.publishingQueue.length === 0 && workspace.contentLibrary.length < 3) {
-    const detail = 'Content cadence is weak because there are no queued posts and limited reusable content.';
+    const detail =
+      'Content cadence is weak because there are no queued posts and limited reusable content.';
     alerts.push({
       id: 'chief-content-cadence',
       title: 'Content cadence is slipping',
       detail,
       severity: 'low',
-      evidence: [`${workspace.contentLibrary.length} content item(s)`, `${workspace.publishingQueue.length} queued item(s)`],
-      command: alertCommand('Content cadence is slipping', detail, [`${workspace.contentLibrary.length} content item(s)`, `${workspace.publishingQueue.length} queued item(s)`])
+      evidence: [
+        `${workspace.contentLibrary.length} content item(s)`,
+        `${workspace.publishingQueue.length} queued item(s)`
+      ],
+      command: alertCommand('Content cadence is slipping', detail, [
+        `${workspace.contentLibrary.length} content item(s)`,
+        `${workspace.publishingQueue.length} queued item(s)`
+      ])
     });
   }
   return alerts.slice(0, 5);
@@ -334,22 +443,32 @@ function buildReflection(
   core: OperationalIntelligenceCoreReadout,
   priorities: OperationalIntelligenceAction[]
 ): EndOfDayReflection {
-  const completedTasks = workspace.scheduler.tasks.filter((task) => task.completedAt && isToday(task.completedAt));
+  const completedTasks = workspace.scheduler.tasks.filter(
+    (task) => task.completedAt && isToday(task.completedAt)
+  );
   const approvedTraces = (workspace.operatorTraces?.entries ?? []).filter(
     (trace) => trace.reviewStatus === 'approved' && isToday(trace.at)
   );
   const discoveredOpportunities = workspace.opportunities.filter((item) => isToday(item.createdAt));
   const completed = uniq(
     [
-      completedTasks.length ? `${completedTasks.length} plan/task${completedTasks.length === 1 ? '' : 's'} completed` : '',
-      approvedTraces.length ? `${approvedTraces.length} draft/action${approvedTraces.length === 1 ? '' : 's'} approved` : '',
-      discoveredOpportunities.length ? `${discoveredOpportunities.length} opportunit${discoveredOpportunities.length === 1 ? 'y' : 'ies'} discovered` : '',
+      completedTasks.length
+        ? `${completedTasks.length} plan/task${completedTasks.length === 1 ? '' : 's'} completed`
+        : '',
+      approvedTraces.length
+        ? `${approvedTraces.length} draft/action${approvedTraces.length === 1 ? '' : 's'} approved`
+        : '',
+      discoveredOpportunities.length
+        ? `${discoveredOpportunities.length} opportunit${discoveredOpportunities.length === 1 ? 'y' : 'ies'} discovered`
+        : '',
       core.receiptContext.latestReceiptSummary
     ],
     4
   );
   return {
-    headline: completed.length ? 'Today created operating evidence.' : 'Today is ready to become operating evidence.',
+    headline: completed.length
+      ? 'Today created operating evidence.'
+      : 'Today is ready to become operating evidence.',
     completed,
     tomorrow: buildTomorrowPreview(workspace, core, priorities)
   };
@@ -365,13 +484,18 @@ function buildTomorrowPreview(
       ...priorities.slice(0, 2).map((item) => item.title),
       core.missingFactQuestions[0]?.question,
       workspace.followUps.find((item) => !item.completed)?.reason,
-      workspace.scheduler.tasks.find((task) => task.status === 'scheduled' || task.status === 'due-soon')?.title
+      workspace.scheduler.tasks.find(
+        (task) => task.status === 'scheduled' || task.status === 'due-soon'
+      )?.title
     ],
     4
   );
 }
 
-function buildEvolutionTimeline(workspace: BrandOpsData, core: OperationalIntelligenceCoreReadout): WorkspaceEvolutionEvent[] {
+function buildEvolutionTimeline(
+  workspace: BrandOpsData,
+  core: OperationalIntelligenceCoreReadout
+): WorkspaceEvolutionEvent[] {
   const rows: WorkspaceEvolutionEvent[] = [
     ...core.decisionMemory.slice(0, 4).map((decision) => ({
       id: `evolution-decision-${decision.id}`,
@@ -423,8 +547,16 @@ function buildRelationshipMemory(workspace: BrandOpsData): RelationshipMemorySig
 }
 
 function greetingFor(workspace: BrandOpsData, timeframe: DailyOperatingLoopTimeframe): string {
-  const name = clean(workspace.brand.operatorName, 80) || getActiveDigitalTwin(workspace)?.displayName || 'operator';
-  const lead = timeframe === 'evening' ? 'Good evening' : timeframe === 'midday' ? 'Good afternoon' : 'Good morning';
+  const name =
+    clean(workspace.brand.operatorName, 80) ||
+    getActiveDigitalTwin(workspace)?.displayName ||
+    'operator';
+  const lead =
+    timeframe === 'evening'
+      ? 'Good evening'
+      : timeframe === 'midday'
+        ? 'Good afternoon'
+        : 'Good morning';
   return `${lead} ${name}.`;
 }
 
@@ -438,7 +570,8 @@ export function buildDailyOperatingLoopReadout(workspace: BrandOpsData): DailyOp
   const alerts = buildChiefOfStaffAlerts(workspace, core, health);
   const reflection = buildReflection(workspace, core, priorities);
   const tomorrowPreview = buildTomorrowPreview(workspace, core, priorities);
-  const topPriority = priorities[0]?.title || strategicGaps[0]?.title || 'Answer the next missing workspace fact';
+  const topPriority =
+    priorities[0]?.title || strategicGaps[0]?.title || 'Answer the next missing workspace fact';
   return {
     schemaVersion: DAILY_OPERATING_LOOP_SCHEMA_VERSION,
     updatedAt: nowIso(),

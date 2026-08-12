@@ -4,7 +4,8 @@ import type { MobileShellTabId } from './mobileShellQuery';
  * Dock button tooltips: short clues only — no duplicating tab labels.
  */
 export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
-  workspace: 'Plan — operational workspace, approvals, opportunities, plans, activity, and receipts.',
+  workspace:
+    'Plan — operational workspace, approvals, opportunities, plans, activity, and receipts.',
   chat: 'Ask My Twin — focused conversation for questions, brainstorming, analysis, and drafts.',
   daily: 'Plan — activity, scheduled work, cockpit, and daily operating flow.',
   integrations: 'Plan — sources and integration readiness.',

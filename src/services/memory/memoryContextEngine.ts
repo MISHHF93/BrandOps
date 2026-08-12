@@ -69,11 +69,17 @@ function clamp(value: number): number {
 }
 
 function compact(value: unknown): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim();
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function keyFor(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 72);
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 72);
 }
 
 function uniq(values: unknown[], cap = 8): string[] {
@@ -102,7 +108,9 @@ function countBy(values: unknown[]): Array<{ key: string; count: number }> {
   );
 }
 
-function entry(input: Omit<MemoryContextEntry, 'id' | 'confidence'> & { confidence?: number }): MemoryContextEntry {
+function entry(
+  input: Omit<MemoryContextEntry, 'id' | 'confidence'> & { confidence?: number }
+): MemoryContextEntry {
   return {
     id: `memory-${input.category}-${keyFor(`${input.source}-${input.label}-${input.value}`)}`,
     category: input.category,
@@ -137,16 +145,18 @@ function activeTwinMemory(twin: DigitalTwin | null): MemoryContextEntry[] {
         editable: true
       })
     ),
-    ...uniq([...twin.memory.approvedClaims, ...twin.actions.generatedAssets.map((asset) => asset.title)], 10).map(
-      (approved) =>
-        entry({
-          category: 'approved-outputs',
-          label: 'Approved output',
-          value: approved,
-          source: 'Twin approved memory',
-          confidence: twin.confidenceScore,
-          editable: true
-        })
+    ...uniq(
+      [...twin.memory.approvedClaims, ...twin.actions.generatedAssets.map((asset) => asset.title)],
+      10
+    ).map((approved) =>
+      entry({
+        category: 'approved-outputs',
+        label: 'Approved output',
+        value: approved,
+        source: 'Twin approved memory',
+        confidence: twin.confidenceScore,
+        editable: true
+      })
     ),
     ...uniq([...twin.memory.rejectedClaims], 8).map((rejected) =>
       entry({
@@ -172,7 +182,9 @@ function activeTwinMemory(twin: DigitalTwin | null): MemoryContextEntry[] {
 }
 
 function workspaceMemory(workspace: BrandOpsData): MemoryContextEntry[] {
-  const repeatedActions = countBy((workspace.operatorTraces?.entries ?? []).map((trace) => trace.verb))
+  const repeatedActions = countBy(
+    (workspace.operatorTraces?.entries ?? []).map((trace) => trace.verb)
+  )
     .filter((row) => row.count >= 2)
     .slice(0, 6);
   const rejectedTraces = (workspace.operatorTraces?.entries ?? []).filter(
@@ -209,7 +221,10 @@ function workspaceMemory(workspace: BrandOpsData): MemoryContextEntry[] {
       confidence: workspace.brand.primaryOffer ? 74 : 36,
       editable: true
     }),
-    ...uniq([...workspace.brandVault.preferredVoiceNotes, ...workspace.brandVault.bannedPhrases], 10).map((value) =>
+    ...uniq(
+      [...workspace.brandVault.preferredVoiceNotes, ...workspace.brandVault.bannedPhrases],
+      10
+    ).map((value) =>
       entry({
         category: 'preferences',
         label: 'Brand preference',
@@ -305,11 +320,16 @@ function intelligenceMemory(workspace: BrandOpsData): MemoryContextEntry[] {
   ];
 }
 
-function entriesByCategory(entries: MemoryContextEntry[]): Record<MemoryContextCategory, MemoryContextEntry[]> {
-  return CATEGORIES.reduce<Record<MemoryContextCategory, MemoryContextEntry[]>>((acc, category) => {
-    acc[category] = entries.filter((entry) => entry.category === category).slice(0, 8);
-    return acc;
-  }, {} as Record<MemoryContextCategory, MemoryContextEntry[]>);
+function entriesByCategory(
+  entries: MemoryContextEntry[]
+): Record<MemoryContextCategory, MemoryContextEntry[]> {
+  return CATEGORIES.reduce<Record<MemoryContextCategory, MemoryContextEntry[]>>(
+    (acc, category) => {
+      acc[category] = entries.filter((entry) => entry.category === category).slice(0, 8);
+      return acc;
+    },
+    {} as Record<MemoryContextCategory, MemoryContextEntry[]>
+  );
 }
 
 function controls(entries: MemoryContextEntry[]): MemoryContextControls {
@@ -328,10 +348,13 @@ function controls(entries: MemoryContextEntry[]): MemoryContextControls {
   };
 }
 
-export function buildMemoryContextEngineReadout(workspace: BrandOpsData): MemoryContextEngineReadout {
+export function buildMemoryContextEngineReadout(
+  workspace: BrandOpsData
+): MemoryContextEngineReadout {
   const twin = getActiveDigitalTwin(workspace);
   const enabled =
-    workspace.settings.operatorTraceCollectionEnabled || workspace.settings.connectedIdentityLearningEnabled;
+    workspace.settings.operatorTraceCollectionEnabled ||
+    workspace.settings.connectedIdentityLearningEnabled;
   const entries = [
     ...activeTwinMemory(twin),
     ...workspaceMemory(workspace),
@@ -351,26 +374,38 @@ export function buildMemoryContextEngineReadout(workspace: BrandOpsData): Memory
     entries,
     entriesByCategory: grouped,
     improvements: {
-      'ask-suggestions': uniq([
-        ...grouped.goals.map((item) => item.value),
-        ...grouped.preferences.map((item) => item.value),
-        ...grouped['communication-style'].map((item) => item.value)
-      ], 6),
-      'plan-generation': uniq([
-        ...grouped['preferred-workflows'].map((item) => item.label),
-        ...grouped['scheduling-habits'].map((item) => item.value),
-        ...grouped['approved-outputs'].map((item) => item.value)
-      ], 6),
-      'opportunity-prediction': uniq([
-        ...grouped.goals.map((item) => item.value),
-        ...grouped['behavioral-patterns'].map((item) => item.label),
-        ...grouped['rejected-outputs'].map((item) => `Avoid: ${item.value}`)
-      ], 6),
-      'workflow-recommendations': uniq([
-        ...grouped['recurring-actions'].map((item) => item.value),
-        ...grouped['preferred-workflows'].map((item) => item.label),
-        ...grouped['scheduling-habits'].map((item) => item.value)
-      ], 6)
+      'ask-suggestions': uniq(
+        [
+          ...grouped.goals.map((item) => item.value),
+          ...grouped.preferences.map((item) => item.value),
+          ...grouped['communication-style'].map((item) => item.value)
+        ],
+        6
+      ),
+      'plan-generation': uniq(
+        [
+          ...grouped['preferred-workflows'].map((item) => item.label),
+          ...grouped['scheduling-habits'].map((item) => item.value),
+          ...grouped['approved-outputs'].map((item) => item.value)
+        ],
+        6
+      ),
+      'opportunity-prediction': uniq(
+        [
+          ...grouped.goals.map((item) => item.value),
+          ...grouped['behavioral-patterns'].map((item) => item.label),
+          ...grouped['rejected-outputs'].map((item) => `Avoid: ${item.value}`)
+        ],
+        6
+      ),
+      'workflow-recommendations': uniq(
+        [
+          ...grouped['recurring-actions'].map((item) => item.value),
+          ...grouped['preferred-workflows'].map((item) => item.label),
+          ...grouped['scheduling-habits'].map((item) => item.value)
+        ],
+        6
+      )
     },
     averageConfidence,
     controls: controls(entries),
@@ -378,4 +413,3 @@ export function buildMemoryContextEngineReadout(workspace: BrandOpsData): Memory
     headline: `${entries.length} memory context item${entries.length === 1 ? '' : 's'} available across ${CATEGORIES.filter((category) => grouped[category].length > 0).length} categor${CATEGORIES.filter((category) => grouped[category].length > 0).length === 1 ? 'y' : 'ies'}. Memory learning is ${enabled ? 'enabled' : 'disabled'}.`
   };
 }
-

@@ -33,7 +33,12 @@ export interface MarketplaceOperationalLogic {
   entrypoint?: string;
   timeoutMs: number;
   approvalRequired: true;
-  permissions: readonly ('read_workspace' | 'write_draft' | 'propose_action' | 'call_integration')[];
+  permissions: readonly (
+    | 'read_workspace'
+    | 'write_draft'
+    | 'propose_action'
+    | 'call_integration'
+  )[];
   failureMode: 'deactivate_expert' | 'fallback_to_core_expert' | 'ask_for_human_review';
 }
 
@@ -153,10 +158,18 @@ export function validateMarketplaceExpertManifest(
   const id = manifest.id || 'unknown';
 
   if (!manifest.id.startsWith('marketplace:')) {
-    issues.push({ manifestId: id, severity: 'error', message: 'Expert id must use marketplace: scope.' });
+    issues.push({
+      manifestId: id,
+      severity: 'error',
+      message: 'Expert id must use marketplace: scope.'
+    });
   }
   if (!clean(manifest.name) || !clean(manifest.description)) {
-    issues.push({ manifestId: id, severity: 'error', message: 'Expert name and description are required.' });
+    issues.push({
+      manifestId: id,
+      severity: 'error',
+      message: 'Expert name and description are required.'
+    });
   }
   if (!manifest.professions.length && !manifest.workflows.length) {
     issues.push({
@@ -166,15 +179,30 @@ export function validateMarketplaceExpertManifest(
     });
   }
   if (!manifest.supportedModes.length) {
-    issues.push({ manifestId: id, severity: 'error', message: 'At least one supported mode is required.' });
+    issues.push({
+      manifestId: id,
+      severity: 'error',
+      message: 'At least one supported mode is required.'
+    });
   }
   if (!manifest.inputSchema?.fields || !manifest.outputSchema?.fields) {
-    issues.push({ manifestId: id, severity: 'error', message: 'Input and output schemas are required.' });
+    issues.push({
+      manifestId: id,
+      severity: 'error',
+      message: 'Input and output schemas are required.'
+    });
   }
   if (manifest.routing.baseConfidence < 0 || manifest.routing.baseConfidence > 1) {
-    issues.push({ manifestId: id, severity: 'error', message: 'Base confidence must be between 0 and 1.' });
+    issues.push({
+      manifestId: id,
+      severity: 'error',
+      message: 'Base confidence must be between 0 and 1.'
+    });
   }
-  if (manifest.routing.minimumRoutableConfidence < 0 || manifest.routing.minimumRoutableConfidence > 1) {
+  if (
+    manifest.routing.minimumRoutableConfidence < 0 ||
+    manifest.routing.minimumRoutableConfidence > 1
+  ) {
     issues.push({
       manifestId: id,
       severity: 'error',
@@ -188,7 +216,10 @@ export function validateMarketplaceExpertManifest(
       message: 'Marketplace experts must require approval for operational logic.'
     });
   }
-  if (!manifest.observability.emitsUserReceipt || !manifest.observability.developerTraceInternalOnly) {
+  if (
+    !manifest.observability.emitsUserReceipt ||
+    !manifest.observability.developerTraceInternalOnly
+  ) {
     issues.push({
       manifestId: id,
       severity: 'error',
@@ -243,11 +274,18 @@ function scoreMarketplaceExpert(
   const text = normalized(input.text);
   const taskHints = new Set(input.taskHints ?? []);
   const availableContext = new Set(input.availableContext ?? []);
-  const connectedIntegrations = new Set((input.connectedIntegrations ?? []).map((item) => normalized(item)));
+  const connectedIntegrations = new Set(
+    (input.connectedIntegrations ?? []).map((item) => normalized(item))
+  );
   const reasons: string[] = [];
-  const missingContext = manifest.requiredContext.filter((context) => !availableContext.has(context));
+  const missingContext = manifest.requiredContext.filter(
+    (context) => !availableContext.has(context)
+  );
   const missingIntegrations = manifest.integrations
-    .filter((integration) => integration.required && !connectedIntegrations.has(normalized(integration.provider)))
+    .filter(
+      (integration) =>
+        integration.required && !connectedIntegrations.has(normalized(integration.provider))
+    )
     .map((integration) => integration.provider);
 
   let score = manifest.routing.baseConfidence * 0.25;
@@ -261,7 +299,8 @@ function scoreMarketplaceExpert(
   if (
     profession &&
     manifest.professions.some(
-      (specialization) => specialization.id === profession || specialization.id === `custom:${profession}`
+      (specialization) =>
+        specialization.id === profession || specialization.id === `custom:${profession}`
     )
   ) {
     score += 0.18;
@@ -285,9 +324,18 @@ function scoreMarketplaceExpert(
   }
 
   const keywordCount =
-    manifest.professions.reduce((sum, specialization) => sum + keywordMatches(text, specialization.keywords), 0) +
-    manifest.workflows.reduce((sum, specialization) => sum + keywordMatches(text, specialization.keywords), 0) +
-    manifest.routing.conditions.reduce((sum, condition) => sum + keywordMatches(text, condition.keywords), 0);
+    manifest.professions.reduce(
+      (sum, specialization) => sum + keywordMatches(text, specialization.keywords),
+      0
+    ) +
+    manifest.workflows.reduce(
+      (sum, specialization) => sum + keywordMatches(text, specialization.keywords),
+      0
+    ) +
+    manifest.routing.conditions.reduce(
+      (sum, condition) => sum + keywordMatches(text, condition.keywords),
+      0
+    );
   if (keywordCount > 0) {
     score += Math.min(0.22, keywordCount * 0.04);
     reasons.push(`keyword_match:${keywordCount}`);
@@ -360,7 +408,8 @@ export const MARKETPLACE_EXPERT_EXAMPLES: readonly MarketplaceExpertManifest[] =
     packageName: '@brandops/marketplace-sales-expert',
     version: '0.1.0',
     name: 'Sales Expert',
-    description: 'Specializes in pipeline strategy, sales messaging, deal movement, and CRM-aware workflows.',
+    description:
+      'Specializes in pipeline strategy, sales messaging, deal movement, and CRM-aware workflows.',
     publisher: { id: 'brandops', name: 'BrandOps', trustLevel: 'first_party' },
     professions: [
       {
@@ -395,7 +444,13 @@ export const MARKETPLACE_EXPERT_EXAMPLES: readonly MarketplaceExpertManifest[] =
       baseConfidence: 0.62,
       minimumRoutableConfidence: 0.42,
       conditions: [
-        marketplaceCondition('sales-pipeline-keywords', 'Sales or CRM workflow is requested.', ['sales', 'pipeline', 'deal'], ['pipeline_movement'], ['opportunities'])
+        marketplaceCondition(
+          'sales-pipeline-keywords',
+          'Sales or CRM workflow is requested.',
+          ['sales', 'pipeline', 'deal'],
+          ['pipeline_movement'],
+          ['opportunities']
+        )
       ]
     },
     logic: {
@@ -417,7 +472,8 @@ export const MARKETPLACE_EXPERT_EXAMPLES: readonly MarketplaceExpertManifest[] =
     packageName: '@brandops/marketplace-legal-expert',
     version: '0.1.0',
     name: 'Legal Expert',
-    description: 'Reviews operational plans for legal-sensitive language, claims, approvals, and risk flags.',
+    description:
+      'Reviews operational plans for legal-sensitive language, claims, approvals, and risk flags.',
     publisher: { id: 'brandops', name: 'BrandOps', trustLevel: 'verified_partner' },
     professions: [
       {
@@ -445,7 +501,13 @@ export const MARKETPLACE_EXPERT_EXAMPLES: readonly MarketplaceExpertManifest[] =
       baseConfidence: 0.58,
       minimumRoutableConfidence: 0.44,
       conditions: [
-        marketplaceCondition('legal-risk-keywords', 'Legal-sensitive or compliance language is present.', ['legal', 'contract', 'compliance', 'risk'], ['custom:legal_review'], ['external_artifacts'])
+        marketplaceCondition(
+          'legal-risk-keywords',
+          'Legal-sensitive or compliance language is present.',
+          ['legal', 'contract', 'compliance', 'risk'],
+          ['custom:legal_review'],
+          ['external_artifacts']
+        )
       ]
     },
     logic: {
@@ -467,7 +529,8 @@ export const MARKETPLACE_EXPERT_EXAMPLES: readonly MarketplaceExpertManifest[] =
     packageName: '@brandops/marketplace-creator-monetization-expert',
     version: '0.1.0',
     name: 'Creator Monetization Expert',
-    description: 'Specializes in offers, sponsorships, audience products, creator funnels, and monetization workflows.',
+    description:
+      'Specializes in offers, sponsorships, audience products, creator funnels, and monetization workflows.',
     publisher: { id: 'brandops', name: 'BrandOps', trustLevel: 'first_party' },
     professions: [
       {
@@ -502,7 +565,13 @@ export const MARKETPLACE_EXPERT_EXAMPLES: readonly MarketplaceExpertManifest[] =
       baseConfidence: 0.64,
       minimumRoutableConfidence: 0.42,
       conditions: [
-        marketplaceCondition('creator-monetization-keywords', 'Creator monetization workflow is requested.', ['monetization', 'sponsor', 'offer'], ['opportunity_scoring'], ['content_library'])
+        marketplaceCondition(
+          'creator-monetization-keywords',
+          'Creator monetization workflow is requested.',
+          ['monetization', 'sponsor', 'offer'],
+          ['opportunity_scoring'],
+          ['content_library']
+        )
       ]
     },
     logic: {
@@ -524,7 +593,8 @@ export const MARKETPLACE_EXPERT_EXAMPLES: readonly MarketplaceExpertManifest[] =
     packageName: '@brandops/marketplace-recruiting-expert',
     version: '0.1.0',
     name: 'Recruiting Expert',
-    description: 'Specializes in candidate sourcing, hiring workflows, recruiter outreach, and ATS-aware plans.',
+    description:
+      'Specializes in candidate sourcing, hiring workflows, recruiter outreach, and ATS-aware plans.',
     publisher: { id: 'brandops', name: 'BrandOps', trustLevel: 'first_party' },
     professions: [
       {
@@ -559,7 +629,13 @@ export const MARKETPLACE_EXPERT_EXAMPLES: readonly MarketplaceExpertManifest[] =
       baseConfidence: 0.64,
       minimumRoutableConfidence: 0.42,
       conditions: [
-        marketplaceCondition('recruiting-keywords', 'Recruiting or candidate workflow is requested.', ['candidate', 'hiring', 'sourcing'], ['outreach_drafting'], ['contacts'])
+        marketplaceCondition(
+          'recruiting-keywords',
+          'Recruiting or candidate workflow is requested.',
+          ['candidate', 'hiring', 'sourcing'],
+          ['outreach_drafting'],
+          ['contacts']
+        )
       ]
     },
     logic: {

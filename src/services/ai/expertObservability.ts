@@ -99,7 +99,10 @@ function qualityFrom(
     : 0;
   const score = Math.max(
     0,
-    Math.min(1, contributionCoverage + structuredCoverage + confidence - failurePenalty - fallbackPenalty)
+    Math.min(
+      1,
+      contributionCoverage + structuredCoverage + confidence - failurePenalty - fallbackPenalty
+    )
   );
   const band: ExpertOutputQualityBand =
     score >= 0.78 ? 'strong' : score >= 0.58 ? 'usable' : 'needs_review';
@@ -110,7 +113,9 @@ function qualityFrom(
       `${composition.expertContributions.length} expert contribution${composition.expertContributions.length === 1 ? '' : 's'}`,
       `${composition.planWorkflow.steps.length} plan step${composition.planWorkflow.steps.length === 1 ? '' : 's'}`,
       `${composition.operationalRecommendations.length} recommendation${composition.operationalRecommendations.length === 1 ? '' : 's'}`,
-      failures.length ? `${failures.length} failure${failures.length === 1 ? '' : 's'} recorded` : ''
+      failures.length
+        ? `${failures.length} failure${failures.length === 1 ? '' : 's'} recorded`
+        : ''
     ].filter(Boolean)
   };
 }
@@ -130,7 +135,8 @@ function fallbackReasons(
 }
 
 function approvalStatus(approvals: ExpertApprovalSummary): string {
-  if (approvals.rejected > 0) return `${approvals.rejected} rejected · ${approvals.approved} approved`;
+  if (approvals.rejected > 0)
+    return `${approvals.rejected} rejected · ${approvals.approved} approved`;
   if (approvals.pending > 0) return `${approvals.pending} pending approval`;
   if (approvals.approved > 0) return `${approvals.approved} approved`;
   return 'No execution approval recorded';
@@ -179,7 +185,9 @@ export function observeExpertExecution(input: ExpertExecutionObservationInput): 
   const failures = input.failures ?? [];
   const fallbacks = fallbackReasons(input.composition, input.fallbackReasons ?? []);
   const latencyMs = Math.max(0, Math.round(input.endedAtMs - input.startedAtMs));
-  const routingConfidence = avg(input.composition.expertContributions.map((item) => item.confidence));
+  const routingConfidence = avg(
+    input.composition.expertContributions.map((item) => item.confidence)
+  );
   const internalTrace: ExpertExecutionTrace = {
     schemaVersion: '1.0.0',
     mode: input.mode,

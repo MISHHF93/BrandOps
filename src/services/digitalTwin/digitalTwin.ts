@@ -8,6 +8,7 @@ import type {
   ExternalArtifactRecord,
   IntegrationSource,
   MessagingVaultEntry,
+  TwinFactStatus,
   TwinSupportedActionType
 } from '../../types/domain';
 import { defaultBrandProfile } from '../../config/workspaceDefaults';
@@ -721,6 +722,113 @@ export function getActiveDigitalTwin(workspace: BrandOpsData): DigitalTwin | nul
   return state.twins.find((t) => t.id === state.activeTwinId) ?? state.twins[0] ?? null;
 }
 
+export type TwinFactItemKind = 'experience' | 'education' | 'project';
+
+export type TwinFactVerificationUpdate = {
+  twinId: string;
+  itemKind: TwinFactItemKind;
+  itemId: string;
+  status: Exclude<TwinFactStatus, 'unverified'>;
+};
+
+/**
+ * Marks a single extracted twin fact (experience/education/project row) as
+ * verified or rejected from the Improve-Twin review. Pure and immutable —
+ * returns a new workspace when the twin + item exist, otherwise the same
+ * reference. Gives `TwinFactStatus === 'verified'` its first real writer
+ * (previously reachable only in the static type and storage normalization).
+ */
+export function updateTwinFactVerificationStatus(
+  workspace: BrandOpsData,
+  update: TwinFactVerificationUpdate
+): BrandOpsData {
+  const state = workspace.digitalTwins;
+  if (!state?.twins.length) return workspace;
+  const index = state.twins.findIndex((t) => t.id === update.twinId);
+  if (index === -1) return workspace;
+  const twin = state.twins[index];
+  const profile = twin.resumeProfile;
+  if (!profile) return workspace;
+
+  const list = (() => {
+    switch (update.itemKind) {
+      case 'experience':
+        return profile.experience;
+      case 'education':
+        return profile.education;
+      case 'project':
+        return profile.projects;
+    }
+  })();
+  if (!list || !list.some((item) => item.id === update.itemId)) return workspace;
+
+  const nextProfile = { ...profile };
+  if (update.itemKind === 'experience') {
+    nextProfile.experience = profile.experience.map((item) =>
+      item.id === update.itemId ? { ...item, verificationStatus: update.status } : item
+    );
+  } else if (update.itemKind === 'education') {
+    nextProfile.education = profile.education.map((item) =>
+      item.id === update.itemId ? { ...item, verificationStatus: update.status } : item
+    );
+  } else {
+    nextProfile.projects = profile.projects.map((item) =>
+      item.id === update.itemId ? { ...item, verificationStatus: update.status } : item
+    );
+  }
+
+  const nextTwins = state.twins.slice();
+  nextTwins[index] = { ...twin, resumeProfile: nextProfile, updatedAt: new Date().toISOString() };
+  return {
+    ...workspace,
+    digitalTwins: { ...state, twins: nextTwins }
+  };
+}
+
+/**
+ * Replace the active twin's `identity.goals` with the given list (normalized:
+ * trimmed, deduped, capped). Returns `workspace` unchanged when the twin is
+ * missing, so callers can detect a no-op by identity comparison.
+ */
+export function updateTwinIdentityGoals(
+  workspace: BrandOpsData,
+  twinId: string,
+  goals: string[]
+): BrandOpsData {
+  const state = workspace.digitalTwins;
+  if (!state?.twins.length) return workspace;
+  const index = state.twins.findIndex((twin) => twin.id === twinId);
+  if (index === -1) return workspace;
+  const twin = state.twins[index];
+  const nextGoals = uniq(goals.map((goal) => goal.replace(/\s+/g, ' ').trim()).filter(Boolean), 12);
+  const nowIso = new Date().toISOString();
+  const nextTwins = state.twins.slice();
+  nextTwins[index] = {
+    ...twin,
+    updatedAt: nowIso,
+    identity: { ...twin.identity, goals: nextGoals },
+    actions: {
+      ...twin.actions,
+      auditTrail: [
+        {
+          id: `twin-goals-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          at: nowIso,
+          action: 'twin-goals-update',
+          summary:
+            nextGoals.length === 0
+              ? 'Cleared twin goals.'
+              : `Updated twin goals: ${nextGoals.join('; ')}`
+        },
+        ...twin.actions.auditTrail
+      ].slice(0, 80)
+    }
+  };
+  return {
+    ...workspace,
+    digitalTwins: { ...state, twins: nextTwins }
+  };
+}
+
 export function buildDigitalTwinContextSummary(twin: DigitalTwin | null): string {
   if (!twin) return '';
   const verifiedFacts = [
@@ -733,6 +841,9 @@ export function buildDigitalTwinContextSummary(twin: DigitalTwin | null): string
     `Status: ${twin.status}; confidence ${twin.confidenceScore}%`,
     `Positioning: ${twin.identity.professionalPositioning || twin.identity.summary}`,
     `Voice: ${twin.identity.toneOfVoice}`,
+    twin.identity.goals.length
+      ? `Goals: ${uniq(twin.identity.goals, 12).join('; ')}`
+      : 'Goals: none captured yet',
     verifiedFacts.length ? `Known facts: ${uniq(verifiedFacts, 14).join('; ')}` : '',
     twin.memory.missingInfo.length
       ? `Missing info: ${twin.memory.missingInfo.join('; ')}. Ask the user before inventing facts; ask before making unsupported claims.`

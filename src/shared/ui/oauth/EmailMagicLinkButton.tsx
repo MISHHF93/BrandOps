@@ -17,17 +17,19 @@ export function EmailMagicLinkButton({
   className
 }: EmailMagicLinkButtonProps) {
   const label =
-    variant === 'continue'
-      ? loading
-        ? 'Connecting…'
-        : 'Continue with Email'
-      : variant === 'signUp'
+    variant === 'preview'
+      ? 'Use local email preview identity'
+      : variant === 'continue'
         ? loading
           ? 'Connecting…'
-          : 'Sign up with Email'
-        : loading
-          ? 'Connecting…'
-          : 'Email magic link';
+          : 'Continue with Email'
+        : variant === 'signUp'
+          ? loading
+            ? 'Connecting…'
+            : 'Sign up with Email'
+          : loading
+            ? 'Connecting…'
+            : 'Email magic link';
 
   return (
     <button

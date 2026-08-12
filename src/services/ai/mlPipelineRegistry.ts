@@ -85,7 +85,7 @@ export const ML_PIPELINE_STAGES: readonly MlPipelineStage[] = [
 export const HOSTED_NLP_UNIFIED_IN_GATEWAY = true as const;
 
 /** Distinct neural HTTP operations from the extension (both implemented in `nlpInferenceGateway`). */
-export const HOSTED_NEURAL_HTTP_OPERATIONS = ['chat/completions', 'embeddings'] as const;
+const HOSTED_NEURAL_HTTP_OPERATIONS = ['chat/completions', 'embeddings'] as const;
 
 export function hostedNeuralHttpOperationCount(): number {
   return HOSTED_NEURAL_HTTP_OPERATIONS.length;

@@ -2,7 +2,6 @@ import { webcrypto } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
   signWebhookBridgeEnvelope,
-  toRuntimeWebhookMessage,
   verifyWebhookBridgeEnvelope
 } from '../../src/services/agent/webhookBridge';
 
@@ -73,25 +72,5 @@ describe('webhookBridge', () => {
       maxClockSkewMs: 5 * 60 * 1000
     });
     expect(verification.valid).toBe(false);
-  });
-
-  it('maps envelope to runtime webhook message', () => {
-    const envelope = {
-      version: 'v1' as const,
-      platform: 'telegram' as const,
-      timestamp: '2026-04-22T09:00:00.000Z',
-      nonce: 'nonce-000',
-      payload: { message: { text: 'add source: notion' } },
-      signature: 'ffeedd'
-    };
-
-    const runtimeMessage = toRuntimeWebhookMessage(envelope);
-    expect(runtimeMessage).toEqual({
-      type: 'AGENT_CHANNEL_WEBHOOK',
-      payload: {
-        platform: 'telegram',
-        raw: { message: { text: 'add source: notion' } }
-      }
-    });
   });
 });

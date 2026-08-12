@@ -5,13 +5,15 @@ import { storageService } from '../services/storage/storage';
 import { executeAgentWorkspaceCommand } from '../services/agent/agentWorkspaceEngine';
 import { BridgeReplayGuard } from '../services/agent/bridgeReplayGuard';
 import { isBridgeNonceReplayed } from '../services/agent/bridgeNonceStore';
-import { hasFederatedSession } from '../shared/identity/sessionAccess';
+import {
+  getAgentBridgeAllowedActorIds,
+  getAgentBridgeSharedSecret
+} from '../services/agent/bridgeSecretAccess';
 import { readLaunchAccessStateForRuntime } from '../shared/account/launchAccess';
 import { canOpenLaunchWorkspace } from '../shared/account/launchLifecycleGate';
 import { initIntelligenceRulesFromRemote } from '../rules/intelligenceRulesRuntime';
 import {
   BRANDOPS_ALARM_PREFIX,
-  loadWorkspaceSafely,
   scheduleBrandOpsAlarms,
   sendTaskReminderNotification,
   taskIdFromAlarm
@@ -82,9 +84,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 
   if (details.reason === 'install' && chrome.runtime.getURL) {
     try {
-      const data = await loadWorkspaceSafely(storageService, reconcileWorkspace);
       const launchAccess = await readLaunchAccessStateForRuntime();
-      if (!canOpenLaunchWorkspace(launchAccess) && !hasFederatedSession(data)) {
+      if (!canOpenLaunchWorkspace(launchAccess)) {
         await chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
       }
     } catch (error) {
@@ -133,6 +134,8 @@ chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResp
       const result = await dispatchRuntimeMessage(message, {
         scheduleAlarms,
         executeAgentWorkspaceCommand,
+        getBridgeSharedSecret: getAgentBridgeSharedSecret,
+        getBridgeAllowedActorIds: getAgentBridgeAllowedActorIds,
         isBridgeNonceReplayed,
         bridgeReplayFallback
       });

@@ -3,20 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>BrandOps</title>
+    <title>BrandOps — Personal Brand Operating System for AI Builders</title>
     <!--brand-head-->
   </head>
   <body>
-    <script>
-      const target = new URL('/mobile.html', window.location.origin);
-      target.search = window.location.search;
-      target.hash = window.location.hash;
-      window.location.replace(target.toString());
-    </script>
-    <p>
-      Redirecting to
-      <a href="/mobile.html">BrandOps Mobile Chatbot</a>
-      ...
-    </p>
+    <div id="root"></div>
+    <script type="module" src="/src/pages/site/main.tsx"></script>
   </body>
 </html>

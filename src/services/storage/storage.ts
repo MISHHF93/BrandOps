@@ -1,6 +1,7 @@
 import { defaultAppSettings, defaultBrandProfile } from '../../config/workspaceDefaults';
 import { seedData } from '../../modules/brandMemory/seed';
 import { browserLocalStorage } from '../../shared/storage/browserStorage';
+import type { StorageAdapter } from '../../shared/storage/browserStorage';
 import {
   ActivityNote,
   AgentAuditEntry,
@@ -58,6 +59,27 @@ import {
 } from '../../types/domain';
 import { SUPPORTED_TWIN_ACTIONS } from '../digitalTwin/digitalTwin';
 import { ALL_INTEGRATION_SOURCE_KINDS } from '../../shared/integrations/integrationSourceCatalog';
+import {
+  AGENT_CAPABILITY_IDS,
+  AgentCapabilityId,
+  AgentProposal,
+  AgentProposalStatus,
+  AgentProposalsState,
+  ContextBundleId,
+  CONTEXT_BUNDLE_IDS,
+  ExternalAgentAuditEntry,
+  ExternalAgentAuditState,
+  ExternalAgentClientKind,
+  EXTERNAL_AGENT_CLIENT_KINDS,
+  ExternalAgentEvent,
+  ExternalAgentEventKind,
+  ExternalAgentEventsState,
+  ExternalAgentEventStatus,
+  EXTERNAL_AGENT_EVENT_KINDS,
+  ExternalAgentSession,
+  ExternalAgentSessionsState,
+  TrustTier
+} from '../../types/agentInterop';
 import { OPERATING_PRESETS } from '../../shared/workspace/operatingProfileCatalog';
 import { MAX_AI_TRACE_BUNDLES, sanitizeTraceBundle } from '../ai/aiTracePersistence';
 import { normalizeAiPipelineRuns } from '../ai/aiPipelineRunPersistence';
@@ -69,6 +91,18 @@ import {
   prependOperatorTrace,
   serializeOperatorTracesJsonl
 } from '../dataset/operatorTraces';
+import { MAX_CHECKPOINT_ENTRIES } from '../execution/checkpointStore';
+import { MAX_AGENT_EVENTS } from '../interop/events';
+import { MAX_AGENT_SESSIONS } from '../interop/sessions';
+import { MAX_AGENT_PROPOSALS, MAX_INTEGRATION_ARTIFACTS } from '../interop/proposals';
+import { MAX_AUDIT_ENTRIES } from '../interop/audit';
+import type {
+  Checkpoint,
+  CheckpointActionType,
+  CheckpointType,
+  ExecutionState
+} from '../../types/executionState';
+import type { OperationalExpertId } from '../ai/expertRegistry';
 import { MAX_AI_ASSISTANT_TURN_TRACES } from '../ai/aiAssistantTraceLog';
 import { sanitizeOrphanInlineMarkers } from '../ai/aiInlineCitations';
 import { AI_IO_TRACE_SCHEMA_VERSION, sanitizeAiCitationChunks } from '../ai/aiIoProvenance';
@@ -79,6 +113,21 @@ import {
 } from '../workspaceIntelligence/workspaceIntelligence';
 
 const DATA_KEY = 'brandops:data';
+
+/** Shared workspace storage key — used by the interop gateway and the Node MCP server, not just the browser UI. */
+export const BRANDOPS_WORKSPACE_DATA_KEY = DATA_KEY;
+
+/**
+ * Reused by the external-agent gateway so protocol adapters and the UI share
+ * one normalization implementation (no duplicated backend logic).
+ */
+export function normalizeBrandOpsData(data: BrandOpsData): BrandOpsData {
+  return withDefaults(data);
+}
+
+export function isValidBrandOpsData(value: unknown): value is BrandOpsData {
+  return isBrandOpsData(value);
+}
 
 const ALLOWED_INTEGRATION_SOURCE_KINDS = new Set<string>(ALL_INTEGRATION_SOURCE_KINDS);
 
@@ -777,8 +826,6 @@ const normalizeLinkedInOAuthState = (
 
   const candidate = value as Partial<BrandOpsData['settings']['syncHub']['linkedin']['auth']>;
   return {
-    accessToken: typeof candidate.accessToken === 'string' ? candidate.accessToken : undefined,
-    refreshToken: typeof candidate.refreshToken === 'string' ? candidate.refreshToken : undefined,
     expiresAt: typeof candidate.expiresAt === 'string' ? candidate.expiresAt : undefined,
     scope: Array.isArray(candidate.scope)
       ? candidate.scope.filter(
@@ -1221,7 +1268,7 @@ const normalizeIntegrationHubState = (value: unknown): BrandOpsData['integration
   }
 
   if (Array.isArray(candidate.artifacts)) {
-    (candidate.artifacts as unknown[]).forEach((item) => {
+    (candidate.artifacts as unknown[]).slice(0, MAX_INTEGRATION_ARTIFACTS).forEach((item) => {
       if (!item || typeof item !== 'object') return;
       const artifact = item as Record<string, unknown>;
       if (
@@ -1652,6 +1699,145 @@ const normalizeOperatorTraces = (value: unknown): NonNullable<BrandOpsData['oper
   return { entries: entries.slice(0, MAX_OPERATOR_TRACE_ENTRIES) };
 };
 
+const CHECKPOINT_TYPES: readonly CheckpointType[] = [
+  'ask.question',
+  'ask.response',
+  'ask.artifact_generated',
+  'ask.convert_to_plan_requested',
+  'plan.draft_created',
+  'plan.saved',
+  'plan.approval_requested',
+  'plan.approval_granted',
+  'plan.approval_rejected',
+  'plan.execution_started',
+  'plan.step_executed',
+  'plan.execution_completed',
+  'plan.execution_blocked',
+  'plan.verified',
+  'tool.invocation',
+  'background.operation',
+  'agent.session_connected',
+  'agent.event_ingested',
+  'agent.achievement_detected',
+  'agent.achievement_verified',
+  'agent.achievement_promoted',
+  'agent.context_supplied',
+  'agent.artifact_proposed',
+  'agent.opportunity_detected',
+  'agent.action_requested'
+];
+
+const EXECUTION_STATES: readonly ExecutionState[] = [
+  'IDLE',
+  'UNDERSTANDING',
+  'PLANNING',
+  'WORKING',
+  'NEEDS_APPROVAL',
+  'EXECUTING',
+  'VERIFYING',
+  'COMPLETED',
+  'BLOCKED',
+  'FAILED',
+  'REJECTED',
+  'CANCELLED'
+];
+
+/**
+ * Unconditional (not gated by `operatorTraceCollectionEnabled`, unlike `normalizeOperatorTraces`) —
+ * approval-gating UI depends on this array always existing. See `checkpointStore.ts`.
+ */
+const normalizeCheckpoints = (value: unknown): NonNullable<BrandOpsData['checkpoints']> => {
+  if (!value || typeof value !== 'object') return { entries: [] };
+  const raw = (value as { entries?: unknown }).entries;
+  if (!Array.isArray(raw)) return { entries: [] };
+
+  const isActor = (s: unknown): s is Checkpoint['source'] =>
+    s === 'user' || s === 'assistant' || s === 'automation' || s === 'bridge';
+  const isType = (s: unknown): s is CheckpointType =>
+    typeof s === 'string' && (CHECKPOINT_TYPES as readonly string[]).includes(s);
+  const isState = (s: unknown): s is ExecutionState =>
+    typeof s === 'string' && (EXECUTION_STATES as readonly string[]).includes(s);
+  const isReview = (s: unknown): s is NonNullable<Checkpoint['approvalStatus']> =>
+    s === 'pending' || s === 'approved' || s === 'rejected';
+
+  const entries: Checkpoint[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const e = item as Record<string, unknown>;
+    if (
+      typeof e.id !== 'string' ||
+      typeof e.conversationId !== 'string' ||
+      typeof e.at !== 'string' ||
+      typeof e.summary !== 'string' ||
+      !isType(e.type) ||
+      !isState(e.state) ||
+      !isActor(e.source)
+    ) {
+      continue;
+    }
+    const checkpoint: Checkpoint = {
+      id: e.id.slice(0, 160),
+      conversationId: e.conversationId.slice(0, 160),
+      type: e.type,
+      state: e.state,
+      at: e.at,
+      summary: e.summary.slice(0, 240),
+      source: e.source
+    };
+    if (typeof e.parentCheckpointId === 'string') {
+      checkpoint.parentCheckpointId = e.parentCheckpointId.slice(0, 160);
+    }
+    if (typeof e.sourceMessageId === 'string') {
+      checkpoint.sourceMessageId = e.sourceMessageId.slice(0, 160);
+    }
+    if (e.generatedArtifactRef && typeof e.generatedArtifactRef === 'object') {
+      const ref = e.generatedArtifactRef as Record<string, unknown>;
+      if (
+        (ref.kind === 'ai_core_artifact' || ref.kind === 'trace_bundle') &&
+        typeof ref.id === 'string'
+      ) {
+        checkpoint.generatedArtifactRef = { kind: ref.kind, id: ref.id.slice(0, 160) };
+      }
+    }
+    if (e.associatedPlanRef && typeof e.associatedPlanRef === 'object') {
+      const ref = e.associatedPlanRef as Record<string, unknown>;
+      if ((ref.kind === 'draft' || ref.kind === 'saved') && typeof ref.id === 'string') {
+        checkpoint.associatedPlanRef = { id: ref.id.slice(0, 160), kind: ref.kind };
+      }
+    }
+    if (typeof e.associatedTwinId === 'string') {
+      checkpoint.associatedTwinId = e.associatedTwinId.slice(0, 160);
+    }
+    if (e.toolRef && typeof e.toolRef === 'object') {
+      const ref = e.toolRef as Record<string, unknown>;
+      const toolRef: NonNullable<Checkpoint['toolRef']> = {};
+      if (typeof ref.expertId === 'string') toolRef.expertId = ref.expertId as OperationalExpertId;
+      if (typeof ref.integrationSourceId === 'string') {
+        toolRef.integrationSourceId = ref.integrationSourceId.slice(0, 160);
+      }
+      if (Object.keys(toolRef).length > 0) checkpoint.toolRef = toolRef;
+    }
+    if (isReview(e.approvalStatus)) checkpoint.approvalStatus = e.approvalStatus;
+    if (e.errorState && typeof e.errorState === 'object') {
+      const err = e.errorState as Record<string, unknown>;
+      if (typeof err.code === 'string' && typeof err.message === 'string') {
+        checkpoint.errorState = {
+          code: err.code.slice(0, 80),
+          message: err.message.slice(0, 500),
+          recoveryActions: Array.isArray(err.recoveryActions)
+            ? (err.recoveryActions
+                .filter((a): a is CheckpointActionType => typeof a === 'string')
+                .slice(0, 6) as CheckpointActionType[])
+            : []
+        };
+      }
+    }
+    if (typeof e.receiptRef === 'string') checkpoint.receiptRef = e.receiptRef.slice(0, 160);
+    entries.push(checkpoint);
+  }
+  return { entries: entries.slice(0, MAX_CHECKPOINT_ENTRIES) };
+};
+
 const MAX_PLAN_WORKSPACE_PLANS = 40;
 const MAX_PLAN_WORKSPACE_RECEIPTS = 80;
 const PLAN_PRESETS: PlanPreset[] = [
@@ -1678,7 +1864,12 @@ const SAVED_PLAN_STATUSES: SavedPlanStatus[] = [
   'draft',
   'active',
   'pending-approval',
-  'opportunity'
+  'opportunity',
+  'approved',
+  'rejected',
+  'executing',
+  'executed',
+  'verified'
 ];
 
 const normalizePlanString = (value: unknown, fallback: string, max = 500): string => {
@@ -1768,6 +1959,15 @@ const normalizePlanNextAction = (value: unknown, index: number): PlanNextAction 
   };
 };
 
+const PLAN_SOURCE_SURFACES = [
+  'ask-my-twin',
+  'agent-proposal',
+  'agent-event',
+  'predictive-opportunity',
+  'predictive-content-ideation',
+  'workflow-prediction'
+] as const;
+
 const normalizePlan = (value: unknown): Plan | null => {
   if (!value || typeof value !== 'object') return null;
   const item = value as Record<string, unknown>;
@@ -1791,7 +1991,11 @@ const normalizePlan = (value: unknown): Plan | null => {
     id: item.id.slice(0, 160),
     title: normalizePlanString(item.title, 'Untitled plan', 180),
     summary: normalizePlanString(item.summary, 'Converted from Ask My Twin.', 600),
-    objective: normalizePlanString(item.objective, 'Operationalize the selected Ask response.', 700),
+    objective: normalizePlanString(
+      item.objective,
+      'Operationalize the selected Ask response.',
+      700
+    ),
     planType,
     confidenceScore: asNumberInRange(item.confidenceScore, 50, 0, 100),
     sourceResponseId: item.sourceResponseId.slice(0, 160),
@@ -1825,14 +2029,22 @@ const normalizePlan = (value: unknown): Plan | null => {
       : [],
     status,
     source: {
-      sourceSurface: 'ask-my-twin',
+      sourceSurface: PLAN_SOURCE_SURFACES.includes(
+        sourceRaw.sourceSurface as (typeof PLAN_SOURCE_SURFACES)[number]
+      )
+        ? (sourceRaw.sourceSurface as (typeof PLAN_SOURCE_SURFACES)[number])
+        : 'ask-my-twin',
       originalUserMessage: normalizePlanString(sourceRaw.originalUserMessage, '', 1000),
       aiResponse: normalizePlanString(sourceRaw.aiResponse, '', 1500),
       activeTwinId: typeof sourceRaw.activeTwinId === 'string' ? sourceRaw.activeTwinId : null,
       ...(typeof sourceRaw.activeTwinName === 'string' && sourceRaw.activeTwinName.trim()
         ? { activeTwinName: sourceRaw.activeTwinName.trim().slice(0, 160) }
         : {}),
-      professionContext: normalizePlanString(sourceRaw.professionContext, 'BrandOps workspace', 500),
+      professionContext: normalizePlanString(
+        sourceRaw.professionContext,
+        'BrandOps workspace',
+        500
+      ),
       verifiedFactsUsed: normalizePlanStringArray(sourceRaw.verifiedFactsUsed, 12),
       unverifiedMissingFacts: normalizePlanStringArray(sourceRaw.unverifiedMissingFacts, 12),
       timestamp: asIsoString(sourceRaw.timestamp, new Date().toISOString()),
@@ -1859,7 +2071,10 @@ const normalizePlanReceipt = (value: unknown): PlanReceipt | null => {
   return {
     id: item.id.slice(0, 160),
     planId: item.planId.slice(0, 160),
-    convertedFrom: 'Ask',
+    convertedFrom:
+      typeof item.convertedFrom === 'string' && item.convertedFrom.trim()
+        ? item.convertedFrom.trim().slice(0, 80)
+        : 'Ask',
     planType,
     sourceMessageId: normalizePlanString(item.sourceMessageId, '', 160),
     generatedSteps: normalizePlanStringArray(item.generatedSteps, 20),
@@ -2291,7 +2506,265 @@ const normalizeDigitalTwinState = (value: unknown): DigitalTwinState => {
   };
 };
 
-const withDefaults = (base: BrandOpsData): BrandOpsData => {
+const isAgentClientKind = (s: unknown): s is ExternalAgentClientKind =>
+  typeof s === 'string' && EXTERNAL_AGENT_CLIENT_KINDS.includes(s as ExternalAgentClientKind);
+
+const isContextBundleId = (s: unknown): s is ContextBundleId =>
+  typeof s === 'string' && CONTEXT_BUNDLE_IDS.includes(s as ContextBundleId);
+
+const isAgentCapabilityId = (s: unknown): s is AgentCapabilityId =>
+  typeof s === 'string' && AGENT_CAPABILITY_IDS.includes(s as AgentCapabilityId);
+
+const isTrustTier = (s: unknown): s is TrustTier =>
+  typeof s === 'string' &&
+  [
+    'USER_VERIFIED',
+    'BRANDOPS_VERIFIED',
+    'AGENT_REPORTED',
+    'EXTERNAL_SOURCE',
+    'MODEL_INFERRED',
+    'UNKNOWN'
+  ].includes(s);
+
+const isAgentEventStatus = (s: unknown): s is ExternalAgentEventStatus =>
+  typeof s === 'string' && ['proposed', 'reviewed', 'verified', 'rejected', 'promoted'].includes(s);
+
+const isAgentEventKind = (s: unknown): s is ExternalAgentEventKind =>
+  typeof s === 'string' && EXTERNAL_AGENT_EVENT_KINDS.includes(s as ExternalAgentEventKind);
+
+const isAgentProposalStatus = (s: unknown): s is AgentProposalStatus =>
+  typeof s === 'string' && ['pending', 'approved', 'rejected', 'superseded'].includes(s);
+
+const normalizeAgentSessions = (value: unknown): ExternalAgentSessionsState => {
+  if (!value || typeof value !== 'object') return { entries: [], updatedAt: '' };
+  const raw = (value as { entries?: unknown }).entries;
+  if (!Array.isArray(raw)) return { entries: [], updatedAt: '' };
+  const nowIso = new Date().toISOString();
+  const entries = raw.slice(0, MAX_AGENT_SESSIONS).flatMap((item): ExternalAgentSession[] => {
+    if (!item || typeof item !== 'object') return [];
+    const e = item as Record<string, unknown>;
+    if (
+      typeof e.id !== 'string' ||
+      typeof e.ownerUserId !== 'string' ||
+      typeof e.workspaceId !== 'string' ||
+      typeof e.tokenHash !== 'string' ||
+      !isAgentClientKind(e.clientKind)
+    ) {
+      return [];
+    }
+    const session: ExternalAgentSession = {
+      id: e.id.slice(0, 160),
+      ownerUserId: e.ownerUserId.slice(0, 160),
+      workspaceId: e.workspaceId.slice(0, 160),
+      clientKind: e.clientKind,
+      clientName: typeof e.clientName === 'string' ? e.clientName.slice(0, 120) : e.clientKind,
+      tokenHash: e.tokenHash.slice(0, 128),
+      status: e.status === 'revoked' ? 'revoked' : 'active',
+      grantedBundles: Array.isArray(e.grantedBundles)
+        ? e.grantedBundles.filter(isContextBundleId).slice(0, CONTEXT_BUNDLE_IDS.length)
+        : [],
+      grantedCapabilities: Array.isArray(e.grantedCapabilities)
+        ? e.grantedCapabilities.filter(isAgentCapabilityId).slice(0, AGENT_CAPABILITY_IDS.length)
+        : [],
+      createdAt: asIsoString(e.createdAt, nowIso),
+      lastActivityAt: asIsoString(e.lastActivityAt, nowIso)
+    };
+    if (typeof e.revokedAt === 'string') session.revokedAt = e.revokedAt;
+    if (typeof e.expiresAt === 'string') session.expiresAt = e.expiresAt;
+    return [session];
+  });
+  return {
+    entries,
+    updatedAt: asIsoString((value as { updatedAt?: unknown }).updatedAt, nowIso)
+  };
+};
+
+const normalizeAgentEvents = (value: unknown): ExternalAgentEventsState => {
+  if (!value || typeof value !== 'object') return { entries: [], updatedAt: '' };
+  const raw = (value as { entries?: unknown }).entries;
+  if (!Array.isArray(raw)) return { entries: [], updatedAt: '' };
+  const nowIso = new Date().toISOString();
+  const entries = raw.slice(0, MAX_AGENT_EVENTS).flatMap((item): ExternalAgentEvent[] => {
+    if (!item || typeof item !== 'object') return [];
+    const e = item as Record<string, unknown>;
+    if (
+      typeof e.id !== 'string' ||
+      typeof e.sessionId !== 'string' ||
+      typeof e.title !== 'string' ||
+      typeof e.detail !== 'string' ||
+      typeof e.dedupeKey !== 'string' ||
+      !isAgentClientKind(e.clientKind) ||
+      !isAgentEventKind(e.kind)
+    ) {
+      return [];
+    }
+    const event: ExternalAgentEvent = {
+      id: e.id.slice(0, 160),
+      sessionId: e.sessionId.slice(0, 160),
+      clientKind: e.clientKind,
+      kind: e.kind,
+      title: e.title.slice(0, 300),
+      detail: e.detail.slice(0, 4000),
+      evidence: Array.isArray(e.evidence)
+        ? e.evidence.slice(0, 12).flatMap((rawRef): ExternalAgentEvent['evidence'] => {
+            if (!rawRef || typeof rawRef !== 'object') return [];
+            const ref = rawRef as Record<string, unknown>;
+            if (typeof ref.ref !== 'string' || typeof ref.label !== 'string') return [];
+            const kind =
+              ref.kind === 'git' ||
+              ref.kind === 'release' ||
+              ref.kind === 'document' ||
+              ref.kind === 'milestone' ||
+              ref.kind === 'link' ||
+              ref.kind === 'other'
+                ? ref.kind
+                : 'other';
+            return [{ ref: ref.ref.slice(0, 240), kind, label: ref.label.slice(0, 200) }];
+          })
+        : [],
+      dedupeKey: e.dedupeKey.slice(0, 320),
+      status: isAgentEventStatus(e.status) ? e.status : 'proposed',
+      trustTier: isTrustTier(e.trustTier) ? e.trustTier : 'AGENT_REPORTED',
+      sourceRef: typeof e.sourceRef === 'string' ? e.sourceRef.slice(0, 240) : '',
+      createdAt: asIsoString(e.createdAt, nowIso)
+    };
+    if (typeof e.reviewedAt === 'string') event.reviewedAt = e.reviewedAt;
+    if (typeof e.verifiedAt === 'string') event.verifiedAt = e.verifiedAt;
+    if (typeof e.rejectedAt === 'string') event.rejectedAt = e.rejectedAt;
+    if (typeof e.promotedAt === 'string') event.promotedAt = e.promotedAt;
+    if (typeof e.originCheckpointId === 'string') event.originCheckpointId = e.originCheckpointId;
+    if (typeof e.convertedPlanId === 'string') event.convertedPlanId = e.convertedPlanId;
+    return [event];
+  });
+  return {
+    entries,
+    updatedAt: asIsoString((value as { updatedAt?: unknown }).updatedAt, nowIso)
+  };
+};
+
+const normalizeAgentProposals = (value: unknown): AgentProposalsState => {
+  if (!value || typeof value !== 'object') return { entries: [], updatedAt: '' };
+  const raw = (value as { entries?: unknown }).entries;
+  if (!Array.isArray(raw)) return { entries: [], updatedAt: '' };
+  const nowIso = new Date().toISOString();
+  const entries = raw.slice(0, MAX_AGENT_PROPOSALS).flatMap((item): AgentProposal[] => {
+    if (!item || typeof item !== 'object') return [];
+    const e = item as Record<string, unknown>;
+    if (typeof e.id !== 'string' || typeof e.title !== 'string' || typeof e.detail !== 'string') {
+      return [];
+    }
+    const kind =
+      e.kind === 'twin_update' ||
+      e.kind === 'artifact' ||
+      e.kind === 'content_opportunity' ||
+      e.kind === 'external_action'
+        ? e.kind
+        : 'external_action';
+    const tier =
+      e.tier === 'READ' ||
+      e.tier === 'GENERATE' ||
+      e.tier === 'PREPARE' ||
+      e.tier === 'EXTERNAL_ACTION' ||
+      e.tier === 'SENSITIVE_ACTION'
+        ? e.tier
+        : 'PREPARE';
+    const proposal: AgentProposal = {
+      id: e.id.slice(0, 160),
+      kind,
+      sessionId: typeof e.sessionId === 'string' ? e.sessionId.slice(0, 160) : undefined,
+      title: e.title.slice(0, 300),
+      detail: e.detail.slice(0, 4000),
+      rationale:
+        typeof e.rationale === 'string'
+          ? e.rationale.slice(0, 1000)
+          : 'Legacy proposal (pre-rationale schema).',
+      status: isAgentProposalStatus(e.status) ? e.status : 'pending',
+      tier,
+      checkpointId: typeof e.checkpointId === 'string' ? e.checkpointId.slice(0, 160) : undefined,
+      createdAt: asIsoString(e.createdAt, nowIso),
+      updatedAt: asIsoString(e.updatedAt, nowIso)
+    };
+    if (typeof e.planId === 'string') proposal.planId = e.planId;
+    if (typeof e.decidedAt === 'string') proposal.decidedAt = e.decidedAt;
+    if (typeof e.relatedEventId === 'string') proposal.relatedEventId = e.relatedEventId;
+    if (
+      e.twinMemoryType === 'approvedClaims' ||
+      e.twinMemoryType === 'rejectedClaims' ||
+      e.twinMemoryType === 'none'
+    ) {
+      proposal.twinMemoryType = e.twinMemoryType;
+    }
+    if (typeof e.approvedClaimText === 'string') proposal.approvedClaimText = e.approvedClaimText;
+    if (
+      e.externalAction &&
+      typeof e.externalAction === 'object' &&
+      'action' in e.externalAction &&
+      'target' in e.externalAction &&
+      'summary' in e.externalAction
+    ) {
+      proposal.externalAction = e.externalAction as AgentProposal['externalAction'];
+    }
+    if (
+      e.artifact &&
+      typeof e.artifact === 'object' &&
+      'title' in e.artifact &&
+      'artifactType' in e.artifact &&
+      'summary' in e.artifact &&
+      'tags' in e.artifact
+    ) {
+      proposal.artifact = e.artifact as AgentProposal['artifact'];
+    }
+    if (e.contentOpportunity && typeof e.contentOpportunity === 'object') {
+      proposal.contentOpportunity = e.contentOpportunity as AgentProposal['contentOpportunity'];
+    }
+    return [proposal];
+  });
+  return {
+    entries,
+    updatedAt: asIsoString((value as { updatedAt?: unknown }).updatedAt, nowIso)
+  };
+};
+
+const normalizeExternalAgentAudit = (value: unknown): ExternalAgentAuditState => {
+  if (!value || typeof value !== 'object') return { entries: [], updatedAt: '' };
+  const raw = (value as { entries?: unknown }).entries;
+  if (!Array.isArray(raw)) return { entries: [], updatedAt: '' };
+  const nowIso = new Date().toISOString();
+  const entries = raw.slice(0, MAX_AUDIT_ENTRIES).flatMap((item): ExternalAgentAuditEntry[] => {
+    if (!item || typeof item !== 'object') return [];
+    const e = item as Record<string, unknown>;
+    if (
+      typeof e.id !== 'string' ||
+      typeof e.sessionId !== 'string' ||
+      typeof e.operation !== 'string' ||
+      !isAgentClientKind(e.clientKind) ||
+      !isAgentCapabilityId(e.capabilityId)
+    ) {
+      return [];
+    }
+    const entry: ExternalAgentAuditEntry = {
+      id: e.id.slice(0, 160),
+      at: asIsoString(e.at, nowIso),
+      sessionId: e.sessionId.slice(0, 160),
+      clientKind: e.clientKind,
+      capabilityId: e.capabilityId,
+      operation: e.operation.slice(0, 120),
+      ok: e.ok !== false,
+      summary: typeof e.summary === 'string' ? e.summary.slice(0, 600) : '',
+      requestPreview: typeof e.requestPreview === 'string' ? e.requestPreview.slice(0, 200) : ''
+    };
+    if (typeof e.errorCode === 'string') entry.errorCode = e.errorCode;
+    if (typeof e.latencyMs === 'number' && Number.isFinite(e.latencyMs))
+      entry.latencyMs = e.latencyMs;
+    return [entry];
+  });
+  return {
+    entries,
+    updatedAt: asIsoString((value as { updatedAt?: unknown }).updatedAt, nowIso)
+  };
+};
+
+export const withDefaults = (base: BrandOpsData): BrandOpsData => {
   const normalized: BrandOpsData = {
     ...base,
     brand: normalizeBrandProfile(base.brand),
@@ -2325,6 +2798,11 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => {
       Boolean(base.settings?.connectedIdentityLearningEnabled)
     ),
     planWorkspace: normalizePlanWorkspace(base.planWorkspace),
+    checkpoints: normalizeCheckpoints(base.checkpoints),
+    externalAgentSessions: normalizeAgentSessions(base.externalAgentSessions),
+    externalAgentEvents: normalizeAgentEvents(base.externalAgentEvents),
+    agentProposals: normalizeAgentProposals(base.agentProposals),
+    externalAgentAudit: normalizeExternalAgentAudit(base.externalAgentAudit),
     embeddingIndex: normalizeEmbeddingIndex(base.embeddingIndex),
     scheduler: normalizeSchedulerState(base.scheduler),
     seed: {
@@ -2343,7 +2821,7 @@ const withDefaults = (base: BrandOpsData): BrandOpsData => {
         base.seed.onboardingVersion.trim().length > 0
           ? base.seed.onboardingVersion
           : seedData.seed.onboardingVersion,
-      /** Legacy guest/demo sessions removed — production requires federated OAuth. */
+      /** Legacy guest/demo timestamp is no longer persisted; account access is local preview state. */
       guestSessionAt: undefined,
       previewMagicSignInAt:
         typeof base.seed?.previewMagicSignInAt === 'string' &&
@@ -2375,6 +2853,22 @@ const isBrandOpsData = (value: unknown): value is BrandOpsData => {
 const createSeededWorkspace = () => withDefaults(withFreshSeedMetadata(seedData));
 
 /**
+ * Runtime storage injection point. The default is the browser adapter; a Node
+ * MCP server swaps in a file-backed adapter so the exact same `storageService`
+ * (and its normalization/isBrandOpsData guards) backs both the UI and the
+ * external-agent protocol — one source of truth, no duplicated backends.
+ */
+let activeStorage: StorageAdapter = browserLocalStorage;
+
+export function configureStorageAdapter(adapter: StorageAdapter): void {
+  activeStorage = adapter;
+}
+
+export function getActiveStorageAdapter(): StorageAdapter {
+  return activeStorage;
+}
+
+/**
  * In-memory default workspace (no I/O). Lets the mobile shell render Cockpit, Settings, and Integrations
  * immediately; `getData()` then replaces the snapshot with persisted data when ready.
  */
@@ -2382,33 +2876,85 @@ export function createInMemorySeededWorkspace(): BrandOpsData {
   return withDefaults(withFreshSeedMetadata(seedData));
 }
 
+/**
+ * Read the raw persisted blob plus a normalized copy. Seeding (first boot) and
+ * self-healing of a corrupt blob write here and only here, so a plain read never
+ * re-persists the whole workspace (removes the old unconditional write-on-read).
+ */
+const readWorkspace = async (): Promise<{ raw: unknown; data: BrandOpsData }> => {
+  try {
+    const raw = await activeStorage.get<unknown>(DATA_KEY);
+    if (isBrandOpsData(raw)) {
+      return { raw, data: withDefaults(raw) };
+    }
+  } catch {
+    // Corrupt storage should recover into a valid seeded workspace.
+  }
+
+  const seeded = createSeededWorkspace();
+  await activeStorage.set(DATA_KEY, seeded);
+  return { raw: seeded, data: seeded };
+};
+
+const rawMatches = (a: unknown, b: unknown): boolean => {
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+};
+
 export const storageService = {
   async getData(): Promise<BrandOpsData> {
-    try {
-      const stored = await browserLocalStorage.get<BrandOpsData>(DATA_KEY);
-      if (isBrandOpsData(stored)) {
-        const normalized = withDefaults(stored);
-        await browserLocalStorage.set(DATA_KEY, normalized);
-        return normalized;
-      }
-    } catch {
-      // Corrupt storage should recover into a valid seeded workspace.
-    }
+    const { data } = await readWorkspace();
+    return data;
+  },
 
-    const seeded = createSeededWorkspace();
-    await browserLocalStorage.set(DATA_KEY, seeded);
-    return seeded;
+  /**
+   * Read → mutate → persist with optimistic concurrency. Mutators must be pure
+   * (`(data) => data`, returning the same reference for "no change"). Before
+   * writing, the stored blob is re-read; if a concurrent writer (another
+   * extension realm, e.g. the background service worker) landed in between, the
+   * mutator is re-applied against the fresh state and retried (bounded). This
+   * converts whole-blob last-write-wins clobbering into rebase-and-retry.
+   * `chrome.storage.local` has no atomic compare-and-swap, so the final write
+   * still races in theory; the retry window is limited to `maxAttempts`.
+   */
+  async withWorkspaceMutation(
+    mutator: (data: BrandOpsData) => BrandOpsData,
+    options?: { maxAttempts?: number }
+  ): Promise<{ data: BrandOpsData; changed: boolean; attempts: number }> {
+    const maxAttempts = Math.max(1, options?.maxAttempts ?? 3);
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      const { raw, data } = await readWorkspace();
+      const next = mutator(data);
+      if (next === data) {
+        return { data, changed: false, attempts: attempt };
+      }
+      const currentRaw = await activeStorage.get<unknown>(DATA_KEY);
+      if (rawMatches(currentRaw, raw)) {
+        await this.setData(next);
+        return { data: next, changed: true, attempts: attempt };
+      }
+    }
+    const { data: finalData } = await readWorkspace();
+    const finalNext = mutator(finalData);
+    if (finalNext === finalData) {
+      return { data: finalData, changed: false, attempts: maxAttempts };
+    }
+    await this.setData(finalNext);
+    return { data: finalNext, changed: true, attempts: maxAttempts };
   },
 
   async setData(data: BrandOpsData): Promise<BrandOpsData> {
     const normalized = withDefaults(data);
-    await browserLocalStorage.set(DATA_KEY, normalized);
+    await activeStorage.set(DATA_KEY, normalized);
     return normalized;
   },
 
   async resetToSeed(): Promise<BrandOpsData> {
     const seeded = createSeededWorkspace();
-    await browserLocalStorage.set(DATA_KEY, seeded);
+    await activeStorage.set(DATA_KEY, seeded);
     return seeded;
   },
 
@@ -2427,10 +2973,8 @@ export const storageService = {
     input: Parameters<typeof prependOperatorTrace>[1]
   ): Promise<BrandOpsData | null> {
     try {
-      const data = await this.getData();
-      const next = prependOperatorTrace(data, input);
-      if (next === data) return null;
-      return await this.setData(next);
+      const result = await this.withWorkspaceMutation((data) => prependOperatorTrace(data, input));
+      return result.changed ? result.data : null;
     } catch {
       return null;
     }
@@ -2448,7 +2992,7 @@ export const storageService = {
     }
 
     const normalized = withDefaults(parsed);
-    await browserLocalStorage.set(DATA_KEY, normalized);
+    await activeStorage.set(DATA_KEY, normalized);
     return normalized;
   }
 };

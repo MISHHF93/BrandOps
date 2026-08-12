@@ -1,11 +1,10 @@
 import clsx from 'clsx';
-import type { PulseTimelineKind } from './pulseTimeline';
 
 /** Semantic accent for workspace counters — maps to Tailwind tokens (danger/warning/info/success/primary/muted). */
 export type WorkspaceSignalTone = 'danger' | 'warning' | 'info' | 'success' | 'primary' | 'muted';
 
-export const FOLLOWUPS_OPEN_DANGER = 15;
-export const FOLLOWUPS_OPEN_WARNING = 8;
+const FOLLOWUPS_OPEN_DANGER = 15;
+const FOLLOWUPS_OPEN_WARNING = 8;
 
 const DUE_TODAY_WARNING = 8;
 const DUE_TODAY_DANGER = 14;
@@ -39,46 +38,4 @@ export function metricToneTextClass(tone: WorkspaceSignalTone): string {
     tone === 'primary' && 'text-primary',
     tone === 'muted' && 'text-textSoft'
   );
-}
-
-/** Compact Plan “Today snapshot” KPI chips — border/fill tracks severity without painting whole sections. */
-export function planKpiSnapshotPillClass(tone: WorkspaceSignalTone): string {
-  return clsx(
-    'rounded-md px-2 py-0.5 text-fine tabular-nums text-textMuted',
-    tone === 'danger' && 'bg-dangerSoft/28',
-    tone === 'warning' && 'bg-warningSoft/28',
-    tone === 'info' && 'bg-infoSoft/28',
-    tone === 'success' && 'bg-successSoft/28',
-    tone === 'primary' && 'bg-primarySoft/22',
-    tone === 'muted' && 'bg-surface'
-  );
-}
-
-/** Queue row type column — readable hue per workload kind. */
-export function pulseQueueBadgeSurfaceClass(tone: WorkspaceSignalTone): string {
-  return clsx(
-    'inline-flex max-w-[10rem] truncate rounded px-1.5 py-0.5 text-fine font-semibold leading-tight',
-    metricToneTextClass(tone),
-    tone === 'danger' && 'bg-dangerSoft/18',
-    tone === 'warning' && 'bg-warningSoft/18',
-    tone === 'info' && 'bg-infoSoft/18',
-    tone === 'success' && 'bg-successSoft/18',
-    tone === 'primary' && 'bg-primarySoft/14',
-    tone === 'muted' && 'bg-bgSubtle/90 text-text'
-  );
-}
-
-export function pulseTimelineKindTone(kind: PulseTimelineKind): WorkspaceSignalTone {
-  switch (kind) {
-    case 'follow-up':
-      return 'warning';
-    case 'publishing':
-      return 'info';
-    case 'scheduler':
-      return 'success';
-    case 'outreach':
-      return 'primary';
-    default:
-      return 'muted';
-  }
 }

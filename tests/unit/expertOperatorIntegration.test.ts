@@ -92,7 +92,9 @@ describe('expertOperatorIntegration', () => {
     expect(expertReceipt.qualityLabel).toContain('output');
     expect(expertReceipt.latencyLabel).toContain('expert execution');
     expect(expertReceipt.approvalStatus).toContain('rejected');
-    expect(JSON.stringify(expertReceipt)).not.toMatch(/developerOnly|observedSignals|routingReasons/i);
+    expect(JSON.stringify(expertReceipt)).not.toMatch(
+      /developerOnly|observedSignals|routingReasons/i
+    );
     expect(planReceipt?.reasoningSummary).toContain('Expert');
     expect(planReceipt?.sourceFactsUsed.join(' ')).toContain('routing confidence');
   });

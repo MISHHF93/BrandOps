@@ -1,6 +1,6 @@
 # BrandOps
 
-**BrandOps** is a **Chrome Extension (Manifest V3)** and optional **Capacitor mobile shell** for a command-first operator workspace: local-first workspace JSON, the **Pulse** read-only metric strip on Plan and Today (filtered summaries on Integrations and Settings), Assistant chat with **`ask:`** hooks toward OpenAI-compatible hosts when configured, and LinkedIn overlay tooling. One React + TypeScript + Tailwind tree builds **`dist/`** for extension packaging and native **`webDir`**.
+**BrandOps** is a **Chrome Extension (Manifest V3)** and optional **Capacitor mobile shell** for a command-first operator workspace: local-first workspace JSON, the **Pulse** read-only metric strip on Plan and Today (filtered summaries on Integrations and Settings), optional Assistant requests to a user-configured OpenAI-compatible host, and LinkedIn overlay tooling. One React + TypeScript + Tailwind tree builds **`dist/`** for extension packaging and native **`webDir`**.
 
 ---
 
@@ -19,7 +19,7 @@ Platform installs **different store listings**; the codebase stays single-source
 ## Tech stack
 
 - **UI:** React 18, Vite 7, Tailwind CSS 3, Lucide icons, `clsx`, `cmdk` command palette patterns
-- **Extension:** MV3 service worker (`background.js` build), content scripts (LinkedIn), `chrome.storage` / **`chrome.identity`** permissions declared in [`public/manifest.template.json`](public/manifest.template.json)
+- **Extension:** MV3 service worker (`background.js` build), LinkedIn content script, alarms/notifications, and `chrome.storage` permissions declared in [`public/manifest.template.json`](public/manifest.template.json)
 - **Native wrapper:** `@capacitor/core` + Android/iOS
 - **Tests:** Vitest (unit + integration + performance scripts)
 
@@ -34,7 +34,7 @@ Platform installs **different store listings**; the codebase stays single-source
 | [`src/shared/storage/browserStorage.ts`](src/shared/storage/browserStorage.ts) | Adapter: extension → `chrome.storage.local`; WebView → `localStorage`; tests → memory                                                                                                            |
 | [`src/services/ai/`](src/services/ai/)                                         | Bridge secrets ([`aiSecretsAccess.ts`](src/services/ai/aiSecretsAccess.ts)), NLP manifests, hosted inference wiring                                                                              |
 | [`src/shared/help/`](src/shared/help/)                                         | Knowledge Center source consumed by **`help.html`**                                                                                                                                              |
-| [`public/`](public/)                                                           | Static assets, OAuth landing HTML under **`public/oauth/`**, privacy policy template                                                                                                             |
+| [`public/`](public/)                                                           | Static assets, legacy inactive OAuth callback placeholders under **`public/oauth/`**, privacy policy template                                                                                    |
 
 HTML entry points at repo root include **`mobile.html`** (main shell), **`help.html`**, **`welcome.html`**, **`dashboard.html`**, **`integrations.html`** (also MV3 options UI target).
 
@@ -59,6 +59,10 @@ fidelity source logo.
 
 Load **`dist/`** as an unpacked extension in Chrome or Edge (Developer mode).
 
+For Capacitor, `npm run android:sync` / `npm run ios:sync` first runs `cap:prepare`, which copies
+the built `mobile.html` entry over the staging `dist/index.html`. This keeps the hosted root URL as
+the marketing site while ensuring the native WebView boots the actual app shell.
+
 ---
 
 ## Shell routing (`mobile.html`)
@@ -72,12 +76,12 @@ Load **`dist/`** as an unpacked extension in Chrome or Edge (Developer mode).
 ## Local-first data
 
 - Workspace blob **`BrandOpsData`** is keyed **`brandops:data`** and persisted via the browser adapter above — extension installs use **`chrome.storage.local`**.
-- Hosted AI keys and similar secrets stay **outside** workspace JSON (see **`brandops_ai_openai_compat_key`** and Settings AI surfaces).
-- Corrupt storage triggers recovery into a **validated seeded** workspace rather than hard failure.
+- Hosted AI keys and similar secrets stay **outside** workspace JSON (see **`brandops_ai_openai_compat_key`** and Settings AI surfaces). They are device-local browser/WebView credentials, not a native mobile keychain.
+- Imported and stored workspace blobs are normalized before use. Persistence is still whole-workspace storage, so a future transactional/CAS layer is needed for robust simultaneous multi-tab writes.
 
 ### Assistant citations & AI I/O traces
 
-Hosted **`ask:`** replies may include optional structured provenance (`brandOpsAiProvenance` / answer+citations JSON — see [`hostedAskTurn.ts`](src/services/ai/hostedAskTurn.ts)). [`aiIoProvenance.ts`](src/services/ai/aiIoProvenance.ts) parses and sanitizes citations (`chunk_id` may be string or number); prose may use inline **`[cite: …]`** markers wired through [`aiInlineCitations.ts`](src/services/ai/aiInlineCitations.ts) + [`AssistantInlineCitationBody.tsx`](src/pages/mobile/AssistantInlineCitationBody.tsx) to expandable evidence cards ([`AssistantEvidenceChips.tsx`](src/pages/mobile/AssistantEvidenceChips.tsx)). Unresolved markers surface in the transcript and optional **`orphan_inline_markers`** on persisted traces. Auditable turn rows live under **`BrandOpsData.aiAssistantTraces`** ([`domain.ts`](src/types/domain.ts)), normalized in [`storage.ts`](src/services/storage/storage.ts); persistence respects **`settings.operatorTraceCollectionEnabled`** (same gate as operator traces). No API keys or raw prompts are stored in workspace JSON.
+Hosted Assistant replies may include optional structured provenance (`brandOpsAiProvenance` / answer+citations JSON — see [`hostedAskTurn.ts`](src/services/ai/hostedAskTurn.ts)). [`aiIoProvenance.ts`](src/services/ai/aiIoProvenance.ts) parses and sanitizes citations (`chunk_id` may be string or number); prose may use inline **`[cite: …]`** markers wired through [`aiInlineCitations.ts`](src/services/ai/aiInlineCitations.ts) + [`AssistantInlineCitationBody.tsx`](src/pages/mobile/AssistantInlineCitationBody.tsx) to expandable evidence cards ([`AssistantEvidenceChips.tsx`](src/pages/mobile/AssistantEvidenceChips.tsx)). Unresolved markers surface in the transcript and optional **`orphan_inline_markers`** on persisted traces. Auditable turn rows live under **`BrandOpsData.aiAssistantTraces`** ([`domain.ts`](src/types/domain.ts)), normalized in [`storage.ts`](src/services/storage/storage.ts); persistence respects **`settings.operatorTraceCollectionEnabled`** (same gate as operator traces). API keys are excluded, but enabled traces intentionally store up to 900 characters each of the user and assistant turn previews.
 
 ### AI Integration Suite (routing & pipelines)
 
@@ -85,19 +89,20 @@ Operator modes (**Fast / Balanced / Deep / Private / Evidence**) tune hosted **`
 
 ---
 
-## Secrets, OAuth, and environment
+## Secrets, account access, and environment
 
 Copy **[`.env.example`](.env.example)** → **`.env.local`** (gitignored).
 
-- **`VITE_*`** client IDs and optional **`VITE_PRIVACY_POLICY_URL`** for listings / Welcome links
-- Optional **`VITE_STRIPE_CHECKOUT_URL`** and **`VITE_STRIPE_BILLING_PORTAL_URL`** power the
-  membership CTAs when billing is enforced
-- OAuth redirect URIs must match **local dev**, **hosted preview**, or **`chrome-extension://`** flows described in `.env.example`
-- Optional preview gates (`VITE_PREVIEW_*`), intelligence rules URL, membership gate flags — all documented inline in `.env.example`
+- Optional **`VITE_PRIVACY_POLICY_URL`**, **`VITE_PUBLIC_ORIGIN`**, intelligence-rules URL, and local-preview flags are documented inline in `.env.example`.
+- Provider-labelled account buttons currently create only an on-device preview identity. There is no OAuth exchange, verified provider session, or auth backend in this repo.
+- Optional Stripe URLs are navigation links only. There is no checkout callback, webhook, or verified entitlement service; do not enable a production membership gate from this tree alone.
 
 The current repo is a local-first extension/Capacitor app, not a hosted SaaS backend. Webhook bridge
 scripts are optional server-side helpers and require a real `BRIDGE_TARGET_URL` receiver to dispatch
 signed envelopes into your own backend or extension messaging bridge.
+
+`npm run dev:fullstack` starts the UI and a self-contained bridge receiver for local protocol smoke
+testing. It does not connect HTTP webhooks to the browser extension runtime or persisted workspace.
 
 Privacy copy ships as **`public/privacy-policy.html`**; listings should align with that artifact unless you override with a hosted HTTPS URL.
 
@@ -133,7 +138,8 @@ Other **`npm run`** scripts cover resonance reports, AI stack monitoring, option
 
 These items are **tracked separately** from layout milestones:
 
-- **Extension OAuth runtime** — MV3 `chrome.identity` / `launchWebAuthFlow` exchange paths may still need application-layer wiring beyond manifest intent (README / `.env.example` describe setup targets).
+- **Verified authentication and billing** — provider OAuth, server-side sessions, Stripe webhook/session verification, and entitlement refresh are not implemented. The current account selector is explicitly local preview state.
+- **Webhook delivery integration** — the proxy validates and signs inbound provider messages, and the extension receiver requires an actor allowlist configured in Settings. A deployed receiver/browser-runtime transport, workspace binding for multi-tenant deployments, and outbound provider replies remain application work.
 - **Vendor integration sync** — Integration hub rows emphasize honesty/registry UX; automated CRM/issue ingestion is a pipeline epic.
 - **Bundled on-device NLP** — **`internal-on-device-nlp`** in [`nlpCapabilityManifest.ts`](src/services/ai/nlpCapabilityManifest.ts) is **planned**; no ONNX/WASM runtime shipped in-tree yet (`localModelEnabled` remains an adapter hook).
 

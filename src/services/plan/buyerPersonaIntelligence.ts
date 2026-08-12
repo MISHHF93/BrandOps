@@ -142,7 +142,9 @@ function platformSignals(workspace: BrandOpsData): string[] {
     [
       ...platform.connectedApps.map((app) => `${app} connected`),
       ...platform.recentActivity,
-      ...workspace.integrationHub.artifacts.map((artifact) => `${artifact.title}: ${artifact.summary}`),
+      ...workspace.integrationHub.artifacts.map(
+        (artifact) => `${artifact.title}: ${artifact.summary}`
+      ),
       ...identity.signals.map((signal) => `${signal.source}: ${signal.summary}`)
     ],
     16
@@ -178,7 +180,9 @@ function outreachSignals(workspace: BrandOpsData): string[] {
 function audienceBehaviorSignals(workspace: BrandOpsData): string[] {
   return uniq(
     [
-      ...workspace.contacts.map((contact) => `${contact.role} at ${contact.company}: ${contact.relationshipStage}`),
+      ...workspace.contacts.map(
+        (contact) => `${contact.role} at ${contact.company}: ${contact.relationshipStage}`
+      ),
       ...workspace.companies.map((company) => `${company.name}: ${company.relationshipStage}`),
       ...workspace.opportunities.map(
         (opportunity) =>
@@ -221,12 +225,9 @@ function buildIcp(input: {
   audience: string[];
 }): IdealCustomerProfile {
   const audienceHints = topCounts(
-    [
-      ...input.profession,
-      ...input.profile,
-      ...input.content,
-      ...input.audience
-    ].filter((item) => /founder|leader|operator|manager|creator|saas|product|engineering|growth/i.test(item)),
+    [...input.profession, ...input.profile, ...input.content, ...input.audience].filter((item) =>
+      /founder|leader|operator|manager|creator|saas|product|engineering|growth/i.test(item)
+    ),
     6
   );
   return {
@@ -235,7 +236,9 @@ function buildIcp(input: {
       'Best-fit buyers are people or teams whose current operating pressure matches the operator profile, proof points, outreach history, and content themes already present in BrandOps.',
     firmographics: uniq(
       [
-        ...input.profession.filter((item) => /saas|founder|product|engineering|ai|creator|growth/i.test(item)),
+        ...input.profession.filter((item) =>
+          /saas|founder|product|engineering|ai|creator|growth/i.test(item)
+        ),
         ...input.audience.filter((item) => / at |company|labs|inc|studio|team/i.test(item))
       ],
       6
@@ -322,19 +325,27 @@ function buildPersonas(input: {
       role: 'Founder, CEO, or owner-operator',
       segment: 'Growth-stage operators with strategic execution pressure',
       coreNeed: 'Turn scattered ideas, pipeline, and content into a reliable operating system.',
-      objections: ['Too busy to adopt another tool', 'Needs proof this will create business leverage'],
+      objections: [
+        'Too busy to adopt another tool',
+        'Needs proof this will create business leverage'
+      ],
       proofNeeded: proof,
       bestChannels: channels,
       recommendedMessage:
         'Lead with operational clarity, fast time-to-value, and proof that repeated work becomes a reusable system.',
-      confidence: confidenceFrom(input.profession.length, input.audience.length, input.outreach.length)
+      confidence: confidenceFrom(
+        input.profession.length,
+        input.audience.length,
+        input.outreach.length
+      )
     }),
     persona({
       id: 'persona-product-growth-leader',
       name: 'Product/Growth Leader',
       role: 'Product, growth, or GTM leader',
       segment: 'Teams translating AI, content, or outreach ideas into measurable workflows',
-      coreNeed: 'Prioritize the right campaigns, content, and follow-ups without losing execution rhythm.',
+      coreNeed:
+        'Prioritize the right campaigns, content, and follow-ups without losing execution rhythm.',
       objections: ['Needs strategic specificity', 'Will reject generic marketing or AI hype'],
       proofNeeded: proof,
       bestChannels: channels,
@@ -346,9 +357,14 @@ function buildPersonas(input: {
       id: 'persona-creator-business-builder',
       name: 'Creator Business Builder',
       role: 'Creator, advisor, consultant, or expert-led business owner',
-      segment: 'People turning expertise into content, partnerships, and repeatable revenue motions',
-      coreNeed: 'Find resonant content, credible outreach angles, and repeatable campaign workflows.',
-      objections: ['Does not want generic content prompts', 'Needs voice and proof to stay accurate'],
+      segment:
+        'People turning expertise into content, partnerships, and repeatable revenue motions',
+      coreNeed:
+        'Find resonant content, credible outreach angles, and repeatable campaign workflows.',
+      objections: [
+        'Does not want generic content prompts',
+        'Needs voice and proof to stay accurate'
+      ],
       proofNeeded: proof,
       bestChannels: channels,
       recommendedMessage:
@@ -379,7 +395,10 @@ export function buildBuyerPersonaIntelligenceReadout(
     [
       ...workspace.brandVault.audienceSegments,
       ...personas.map((p) => p.segment),
-      ...topCounts(workspace.contentLibrary.map((item) => item.audience), 4),
+      ...topCounts(
+        workspace.contentLibrary.map((item) => item.audience),
+        4
+      ),
       ...workspace.contacts.map((contact) => contact.role)
     ],
     10
@@ -409,28 +428,42 @@ export function buildBuyerPersonaIntelligenceReadout(
       'Show the before/after operating system behind a real workflow.',
       'Translate buyer pains into tactical posts with a specific next action.',
       'Reuse approved proof points across content, outreach, and follow-ups.',
-      ...localIntelligence.contentPriority(workspace.contentLibrary)
+      ...localIntelligence
+        .contentPriority(workspace.contentLibrary)
         .slice(0, 4)
         .map((signal) => `${signal.label}: ${signal.reason}`)
     ],
     8
   );
-  const supportingSignals = uniq([...profile, ...profession, ...platforms, ...content, ...outreach, ...audience], 14);
+  const supportingSignals = uniq(
+    [...profile, ...profession, ...platforms, ...content, ...outreach, ...audience],
+    14
+  );
   const versions: BuyerPersonaVersion[] = [
     {
       id: 'buyer-persona-v1-profile-led',
       label: 'Profile-led',
-      summary: 'Prioritizes uploaded profile/resume, profession, brand vault, and approved twin memory.',
+      summary:
+        'Prioritizes uploaded profile/resume, profession, brand vault, and approved twin memory.',
       basis: ['uploaded-profile', 'profession'],
       confidence: confidenceFrom(profile.length, profession.length),
-      changes: ['Sharper ICP from positioning and proof', 'More conservative claims when evidence is missing']
+      changes: [
+        'Sharper ICP from positioning and proof',
+        'More conservative claims when evidence is missing'
+      ]
     },
     {
       id: 'buyer-persona-v2-behavior-led',
       label: 'Behavior-led',
-      summary: 'Weights connected platforms, generated content, outreach patterns, and audience behavior.',
+      summary:
+        'Weights connected platforms, generated content, outreach patterns, and audience behavior.',
       basis: ['connected-platforms', 'generated-content', 'outreach-patterns', 'audience-behavior'],
-      confidence: confidenceFrom(platforms.length, content.length, outreach.length, audience.length),
+      confidence: confidenceFrom(
+        platforms.length,
+        content.length,
+        outreach.length,
+        audience.length
+      ),
       changes: ['More timely outreach angles', 'More content resonance and follow-up triggers']
     }
   ];
@@ -467,4 +500,3 @@ export function buildBuyerPersonaIntelligenceReadout(
     headline: `${personas.length} buyer persona${personas.length === 1 ? '' : 's'} and ${audienceSegments.length} audience segment${audienceSegments.length === 1 ? '' : 's'} generated from profile, profession, platform, content, outreach, and audience behavior signals.`
   };
 }
-

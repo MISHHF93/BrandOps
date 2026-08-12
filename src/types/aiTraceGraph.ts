@@ -26,38 +26,6 @@ export type RetrievalChunk = AiCitationChunk;
 /** Canonical citation alias used by provenance graphs and exporters. */
 export type AICitation = RetrievalChunk;
 
-export interface AgentStep {
-  agent_step_id: string;
-  trace_id: string;
-  created_at: string;
-  kind: 'tool_call' | 'reasoning' | 'retrieval' | 'unknown';
-  parent_step_id?: string;
-  tool_name?: string;
-  message_id?: string;
-}
-
-/** Logical input envelope — hashes/previews only when persisted (no raw secrets). */
-export interface AIInput {
-  input_id: string;
-  trace_id: string;
-  created_at: string;
-  modality: string;
-  message_id?: string;
-  prompt_hash?: string;
-  workspace_entity_id?: string;
-}
-
-/** Logical output envelope — reproducibility-oriented hashes alongside modality metadata. */
-export interface AIOutput {
-  output_id: string;
-  trace_id: string;
-  created_at: string;
-  modality: string;
-  message_id?: string;
-  output_hash?: string;
-  governance_tags?: string[];
-}
-
 export type AIArtifactKind =
   | 'user_prompt'
   | 'assistant_output'

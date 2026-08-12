@@ -95,7 +95,8 @@ const contentIdeation: PredictiveContentIdeationReadout = {
       expectedImpact: 'Sharper content planning.',
       suggestedFormat: 'LinkedIn post',
       generatedFrom: ['recent-outputs', 'audience-patterns'],
-      askToPlanCommand: 'ask: Convert this predictive content idea into a PLAN-ready content workflow.'
+      askToPlanCommand:
+        'ask: Convert this predictive content idea into a PLAN-ready content workflow.'
     }
   ],
   campaignIdeas: [],
@@ -164,4 +165,3 @@ describe('predictive ASK prompts', () => {
     expect(prompts[0]?.sourceContentIdeation?.id).toBe('content-post-idea');
   });
 });
-

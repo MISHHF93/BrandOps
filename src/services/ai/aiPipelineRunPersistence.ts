@@ -6,7 +6,7 @@ import type {
 } from '../../types/aiIntegrationSuite';
 import { AI_PIPELINE_RUN_SCHEMA_VERSION } from '../../types/aiIntegrationSuite';
 
-export const MAX_AI_PIPELINE_RUNS = 80;
+const MAX_AI_PIPELINE_RUNS = 80;
 
 export function sanitizePipelineRun(run: PipelineRun): PipelineRun {
   const run_id = run.run_id?.trim().slice(0, 120) || 'run-unknown';

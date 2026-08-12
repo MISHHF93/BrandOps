@@ -68,4 +68,3 @@ describe('predictive PLAN conversion', () => {
     expect(hiring.kind).toBe('workflow');
   });
 });
-

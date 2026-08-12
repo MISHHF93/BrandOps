@@ -155,4 +155,3 @@ describe('Predictive Operations Dashboard', () => {
     expect(snapshot.predictiveOperationsDashboard.stateLine.length).toBeGreaterThan(0);
   });
 });
-

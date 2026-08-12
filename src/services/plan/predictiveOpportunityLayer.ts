@@ -156,8 +156,10 @@ function twinSignals(twin: DigitalTwin | null): string[] {
 
 function memorySignals(workspace: BrandOpsData, twin: DigitalTwin | null): string[] {
   const traceBundles = workspace.aiTraceGraph?.bundles ?? [];
-  const knowledgeSignals = buildConnectedIdentityEngineReadout(workspace).signals
-    .filter((signal) => signal.kind === 'knowledge_memory' || signal.kind === 'content_pattern')
+  const knowledgeSignals = buildConnectedIdentityEngineReadout(workspace)
+    .signals.filter(
+      (signal) => signal.kind === 'knowledge_memory' || signal.kind === 'content_pattern'
+    )
     .map((signal) => `${signal.source}: ${signal.summary}`);
 
   return uniq(
@@ -166,7 +168,9 @@ function memorySignals(workspace: BrandOpsData, twin: DigitalTwin | null): strin
       ...(twin?.memory.preferences ?? []),
       ...(twin?.memory.approvedClaims ?? []),
       ...knowledgeSignals,
-      ...traceBundles.slice(0, 5).map((bundle) => `Trace bundle ${bundle.surface} ${bundle.created_at}`)
+      ...traceBundles
+        .slice(0, 5)
+        .map((bundle) => `Trace bundle ${bundle.surface} ${bundle.created_at}`)
     ],
     14
   );
@@ -325,8 +329,14 @@ export function buildPredictiveOpportunityLayerReadout(
         ],
         8
       ),
-      expectedImpact: 'Faster movement on warm relationships while keeping message approval explicit.',
-      generatedFrom: ['connected-platforms', 'recent-actions', 'behavioral-history', 'memory-patterns']
+      expectedImpact:
+        'Faster movement on warm relationships while keeping message approval explicit.',
+      generatedFrom: [
+        'connected-platforms',
+        'recent-actions',
+        'behavioral-history',
+        'memory-patterns'
+      ]
     }),
     makeSuggestion({
       id: 'predictive-content-ideation',
@@ -353,7 +363,8 @@ export function buildPredictiveOpportunityLayerReadout(
         ],
         8
       ),
-      expectedImpact: 'More consistent content ideation tied to actual positioning and approved proof.',
+      expectedImpact:
+        'More consistent content ideation tied to actual positioning and approved proof.',
       generatedFrom: ['profession', 'connected-platforms', 'behavioral-history', 'memory-patterns']
     }),
     makeSuggestion({
@@ -402,12 +413,15 @@ export function buildPredictiveOpportunityLayerReadout(
       supportingSignals: uniq(
         [
           ...followUpRisk.map((signal) => `${signal.label}: ${signal.reason}`),
-          ...behavioral.predictions.map((prediction) => `${prediction.title}: ${prediction.rationale}`),
+          ...behavioral.predictions.map(
+            (prediction) => `${prediction.title}: ${prediction.rationale}`
+          ),
           ...recentActions
         ],
         8
       ),
-      expectedImpact: 'Higher execution reliability and fewer stale approvals or missed operational items.',
+      expectedImpact:
+        'Higher execution reliability and fewer stale approvals or missed operational items.',
       generatedFrom: ['recent-actions', 'behavioral-history', 'memory-patterns']
     }),
     makeSuggestion({
@@ -434,7 +448,8 @@ export function buildPredictiveOpportunityLayerReadout(
         ],
         8
       ),
-      expectedImpact: 'Lower chance of stale deals, missed replies, or neglected warm relationships.',
+      expectedImpact:
+        'Lower chance of stale deals, missed replies, or neglected warm relationships.',
       generatedFrom: ['connected-platforms', 'recent-actions', 'behavioral-history']
     }),
     makeSuggestion({
@@ -448,7 +463,8 @@ export function buildPredictiveOpportunityLayerReadout(
       confidence: score({
         base: 51,
         sources: ['profession', 'twin-profile', 'connected-platforms', 'memory-patterns'],
-        signalCount: closeSignals.length + contentSignals.length + profession.length + twinProfile.length,
+        signalCount:
+          closeSignals.length + contentSignals.length + profession.length + twinProfile.length,
         hasTwin,
         platformCount: activePlatforms,
         memoryCount: memory.length
@@ -462,7 +478,8 @@ export function buildPredictiveOpportunityLayerReadout(
         ],
         8
       ),
-      expectedImpact: 'Clearer growth bets tied to actual expertise, demand, and relationship context.',
+      expectedImpact:
+        'Clearer growth bets tied to actual expertise, demand, and relationship context.',
       generatedFrom: ['profession', 'twin-profile', 'connected-platforms', 'memory-patterns']
     }),
     makeSuggestion({
@@ -489,7 +506,8 @@ export function buildPredictiveOpportunityLayerReadout(
         ],
         8
       ),
-      expectedImpact: 'Fewer missed commitments and better placement of deep work, follow-ups, and reviews.',
+      expectedImpact:
+        'Fewer missed commitments and better placement of deep work, follow-ups, and reviews.',
       generatedFrom: ['connected-platforms', 'recent-actions', 'behavioral-history']
     })
   ].sort((a, b) => b.confidence - a.confidence || a.title.localeCompare(b.title));
@@ -509,4 +527,3 @@ export function buildPredictiveOpportunityLayerReadout(
     headline: `${suggestions.length} predictive opportunit${suggestions.length === 1 ? 'y' : 'ies'} generated from ${activeSourceCount} source group${activeSourceCount === 1 ? '' : 's'}.`
   };
 }
-

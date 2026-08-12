@@ -8,6 +8,7 @@ import type {
   PlanReceipt,
   PlanRisk,
   PlanSourceMetadata,
+  PlanSourceSurface,
   PlanStep,
   PlanStepStatus,
   PlanTimelineItem,
@@ -39,6 +40,7 @@ export interface ConvertAskResponseToPlanInput {
   activeTwinId?: string | null;
   planPreset: PlanPreset;
   workspaceContext: BrandOpsData;
+  sourceSurface?: PlanSourceSurface;
   verifiedFactsUsed?: string[];
   unverifiedMissingFacts?: string[];
 }
@@ -51,6 +53,7 @@ export interface SavePlanDraftInput {
   workspace: BrandOpsData;
   draft: PlanDraft;
   userAction: PlanReceipt['userAction'];
+  convertedFromLabel?: string;
 }
 
 export interface SavePlanDraftResult {
@@ -175,7 +178,10 @@ function platformSupportStatus(workspace: BrandOpsData, platform?: string) {
 }
 
 function presetObjective(preset: PlanPreset, intent: string, response: string): string {
-  const basis = sentence(intent || response, 'Turn the selected Ask response into an execution plan.');
+  const basis = sentence(
+    intent || response,
+    'Turn the selected Ask response into an execution plan.'
+  );
   switch (preset) {
     case 'outreach-plan':
       return `Turn the insight into an approval-gated outreach sequence for: ${basis}`;
@@ -207,17 +213,29 @@ function requiredApprovals(preset: PlanPreset, unsupportedPlatform?: string): st
     'content-plan': ['Approve content angle, claims, and publishing schedule before posting.'],
     'positioning-plan': ['Approve proof points before using them in public-facing copy.'],
     'workflow-plan': ['Approve any workspace or external-state changes before execution.'],
-    'resume-profile-improvement-plan': ['Approve every rewritten claim before using it externally.'],
-    'integration-setup-plan': ['Approve permission scope before connecting or syncing any platform.'],
-    'weekly-execution-plan': ['Approve deliverables that publish, send, schedule, or modify workspace data.'],
+    'resume-profile-improvement-plan': [
+      'Approve every rewritten claim before using it externally.'
+    ],
+    'integration-setup-plan': [
+      'Approve permission scope before connecting or syncing any platform.'
+    ],
+    'weekly-execution-plan': [
+      'Approve deliverables that publish, send, schedule, or modify workspace data.'
+    ],
     'buyer-persona-plan': ['Approve persona assumptions before using them in outreach or content.'],
-    'opportunity-analysis-plan': ['Approve experiments before they contact people or change records.'],
-    'custom-plan': ['Approve external actions before sending, publishing, scheduling, syncing, or modifying records.']
+    'opportunity-analysis-plan': [
+      'Approve experiments before they contact people or change records.'
+    ],
+    'custom-plan': [
+      'Approve external actions before sending, publishing, scheduling, syncing, or modifying records.'
+    ]
   };
   return uniqueStrings(
     [
       ...(approvals[preset] ?? []),
-      unsupportedPlatform ? `${unsupportedPlatform} integration is unsupported or not connected; needs setup.` : null
+      unsupportedPlatform
+        ? `${unsupportedPlatform} integration is unsupported or not connected; needs setup.`
+        : null
     ],
     6
   );
@@ -226,13 +244,43 @@ function requiredApprovals(preset: PlanPreset, unsupportedPlatform?: string): st
 function presetOutputs(preset: PlanPreset, platform?: string): PlanOutputAsset[] {
   const base: Record<PlanPreset, string[]> = {
     'outreach-plan': ['Target audience', 'Message angle', 'Draft sequence', 'Follow-up timing'],
-    'content-plan': ['Content pillars', 'Post ideas', 'Publishing timeline', 'Platform suggestions'],
-    'positioning-plan': ['Current positioning', 'Suggested positioning', 'Differentiation', 'Proof points'],
+    'content-plan': [
+      'Content pillars',
+      'Post ideas',
+      'Publishing timeline',
+      'Platform suggestions'
+    ],
+    'positioning-plan': [
+      'Current positioning',
+      'Suggested positioning',
+      'Differentiation',
+      'Proof points'
+    ],
     'buyer-persona-plan': ['Persona segments', 'Pain points', 'Triggers', 'Messaging angles'],
-    'opportunity-analysis-plan': ['Opportunity brief', 'Why now', 'Expected impact', 'Next experiments'],
-    'workflow-plan': ['Repeatable steps', 'Owner/platform map', 'Automation potential', 'Approval checkpoints'],
-    'resume-profile-improvement-plan': ['Profile gaps', 'Improvements', 'Rewritten sections', 'Claims to verify'],
-    'integration-setup-plan': ['Platform setup steps', 'Permission scope', 'Unsupported states', 'Review checklist'],
+    'opportunity-analysis-plan': [
+      'Opportunity brief',
+      'Why now',
+      'Expected impact',
+      'Next experiments'
+    ],
+    'workflow-plan': [
+      'Repeatable steps',
+      'Owner/platform map',
+      'Automation potential',
+      'Approval checkpoints'
+    ],
+    'resume-profile-improvement-plan': [
+      'Profile gaps',
+      'Improvements',
+      'Rewritten sections',
+      'Claims to verify'
+    ],
+    'integration-setup-plan': [
+      'Platform setup steps',
+      'Permission scope',
+      'Unsupported states',
+      'Review checklist'
+    ],
     'weekly-execution-plan': ['Priorities', 'Weekly schedule', 'Approvals', 'Deliverables'],
     'custom-plan': ['Structured plan draft', 'Approval gates', 'Missing inputs', 'Expected output']
   };
@@ -280,7 +328,8 @@ function presetSteps(
     {
       id: 'step-3',
       title: `Draft ${PLAN_PRESET_LABELS[preset].toLowerCase()} assets`,
-      description: 'Create only draft assets and internal work items. Do not send, publish, sync, delete, or modify external systems.',
+      description:
+        'Create only draft assets and internal work items. Do not send, publish, sync, delete, or modify external systems.',
       owner: 'BrandOps',
       platform,
       requiredInput: 'Approved objective and verified facts',
@@ -290,7 +339,8 @@ function presetSteps(
     {
       id: 'step-4',
       title: 'Human approval checkpoint',
-      description: 'Review claims, target audience, platform support, timeline, and required approvals.',
+      description:
+        'Review claims, target audience, platform support, timeline, and required approvals.',
       owner: 'User',
       platform,
       requiredInput: 'Draft preview',
@@ -300,7 +350,8 @@ function presetSteps(
     {
       id: 'step-5',
       title: 'Execute only after explicit approval',
-      description: 'Move approved tasks into the PLAN workspace. External actions remain draft-only until supported integrations and user approval exist.',
+      description:
+        'Move approved tasks into the PLAN workspace. External actions remain draft-only until supported integrations and user approval exist.',
       owner: 'User',
       platform,
       requiredInput: 'Explicit approval and supported integration state',
@@ -342,12 +393,17 @@ function timelineFor(missingInputs: string[], unsupportedPlatform?: string): Pla
   ];
 }
 
-function risksFor(preset: PlanPreset, missingInputs: string[], unsupportedPlatform?: string): PlanRisk[] {
+function risksFor(
+  preset: PlanPreset,
+  missingInputs: string[],
+  unsupportedPlatform?: string
+): PlanRisk[] {
   const risks: PlanRisk[] = [
     {
       id: 'risk-1',
       title: 'Unsupported or unapproved external action',
-      mitigation: 'Keep actions as drafts until the user approves and the integration is supported.',
+      mitigation:
+        'Keep actions as drafts until the user approves and the integration is supported.',
       severity: 'high'
     },
     {
@@ -361,7 +417,8 @@ function risksFor(preset: PlanPreset, missingInputs: string[], unsupportedPlatfo
     risks.unshift({
       id: 'risk-platform',
       title: `${unsupportedPlatform} needs setup or is unsupported`,
-      mitigation: 'Show needs setup or unsupported integration instead of reporting fake execution.',
+      mitigation:
+        'Show needs setup or unsupported integration instead of reporting fake execution.',
       severity: 'high'
     });
   }
@@ -416,11 +473,22 @@ function validateStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
-export function validatePlanDraft(value: unknown): { ok: true; draft: PlanDraft } | { ok: false; issues: string[] } {
-  if (!value || typeof value !== 'object') return { ok: false, issues: ['Draft is not an object.'] };
+export function validatePlanDraft(
+  value: unknown
+): { ok: true; draft: PlanDraft } | { ok: false; issues: string[] } {
+  if (!value || typeof value !== 'object')
+    return { ok: false, issues: ['Draft is not an object.'] };
   const draft = value as Record<string, unknown>;
   const issues: string[] = [];
-  for (const key of ['id', 'title', 'summary', 'objective', 'sourceResponseId', 'estimatedEffort', 'expectedOutput']) {
+  for (const key of [
+    'id',
+    'title',
+    'summary',
+    'objective',
+    'sourceResponseId',
+    'estimatedEffort',
+    'expectedOutput'
+  ]) {
     if (typeof draft[key] !== 'string' || !draft[key]) issues.push(`${key} is required.`);
   }
   if (!PLAN_PRESETS.includes(draft.planType as PlanPreset)) issues.push('planType is invalid.');
@@ -436,7 +504,8 @@ export function validatePlanDraft(value: unknown): { ok: true; draft: PlanDraft 
   if (!Array.isArray(draft.risks)) issues.push('risks is required.');
   if (!Array.isArray(draft.nextActions)) issues.push('nextActions is required.');
   if (draft.status !== 'draft') issues.push('status must be draft.');
-  if (!draft.source || typeof draft.source !== 'object') issues.push('source metadata is required.');
+  if (!draft.source || typeof draft.source !== 'object')
+    issues.push('source metadata is required.');
   return issues.length ? { ok: false, issues } : { ok: true, draft: value as PlanDraft };
 }
 
@@ -457,21 +526,29 @@ export function convertAskResponseToPlan(input: ConvertAskResponseToPlanInput): 
   const unsupportedPlatform = support.supported ? undefined : support.label;
   const missingInputs = missingFacts(input.workspaceContext, input);
   const objective = presetObjective(input.planPreset, intent, response);
-  const steps = presetSteps(input.planPreset, objective, missingInputs, unsupportedPlatform, platform);
+  const steps = presetSteps(
+    input.planPreset,
+    objective,
+    missingInputs,
+    unsupportedPlatform,
+    platform
+  );
   const approvals = requiredApprovals(input.planPreset, unsupportedPlatform);
   const assumptions = uniqueStrings(
     [
       'Draft created from an Ask My Twin response; no external action has executed.',
       'PLAN owns execution, approvals, timelines, receipts, and status tracking.',
       platform ? `Platform context detected: ${platform}.` : 'No specific platform was required.',
-      unsupportedPlatform ? `${unsupportedPlatform} is not connected or supported in this workspace.` : null
+      unsupportedPlatform
+        ? `${unsupportedPlatform} is not connected or supported in this workspace.`
+        : null
     ],
     6
   );
   const outputs = presetOutputs(input.planPreset, platform);
   const risks = risksFor(input.planPreset, missingInputs, unsupportedPlatform);
   const source: PlanSourceMetadata = {
-    sourceSurface: 'ask-my-twin',
+    sourceSurface: input.sourceSurface ?? 'ask-my-twin',
     originalUserMessage: intent,
     aiResponse: response,
     activeTwinId: twin?.id ?? null,
@@ -490,7 +567,10 @@ export function convertAskResponseToPlan(input: ConvertAskResponseToPlanInput): 
     summary: sentence(response, 'Structured plan generated from Ask response.', 240),
     objective,
     planType: input.planPreset,
-    confidenceScore: Math.max(45, Math.min(92, 82 - missingInputs.length * 5 - (unsupportedPlatform ? 12 : 0))),
+    confidenceScore: Math.max(
+      45,
+      Math.min(92, 82 - missingInputs.length * 5 - (unsupportedPlatform ? 12 : 0))
+    ),
     sourceResponseId: input.messageId,
     assumptions,
     missingInputs,
@@ -503,13 +583,26 @@ export function convertAskResponseToPlan(input: ConvertAskResponseToPlanInput): 
     status: 'draft',
     source,
     estimatedEffort:
-      missingInputs.length || unsupportedPlatform ? 'Needs input before activation' : '1-2 focused work sessions',
-    expectedOutput: outputs.map((asset) => asset.title).slice(0, 4).join(', '),
+      missingInputs.length || unsupportedPlatform
+        ? 'Needs input before activation'
+        : '1-2 focused work sessions',
+    expectedOutput: outputs
+      .map((asset) => asset.title)
+      .slice(0, 4)
+      .join(', '),
     thoughtTree: {
       originalQuestion: intent || 'Ask My Twin response',
-      insight: sentence(response, 'The Ask response contains an operationally useful insight.', 180),
+      insight: sentence(
+        response,
+        'The Ask response contains an operationally useful insight.',
+        180
+      ),
       planObjective: objective,
-      branchesOptions: listFromText(response, 'Convert insight into a reviewable PLAN workflow.', 4),
+      branchesOptions: listFromText(
+        response,
+        'Convert insight into a reviewable PLAN workflow.',
+        4
+      ),
       chosenPath: `${label} with approval gates and receipts.`,
       steps: steps.map((step) => step.title),
       approvals,
@@ -534,16 +627,17 @@ export function savePlanDraftToWorkspace(input: SavePlanDraftInput): SavePlanDra
   }
   const nowIso = new Date().toISOString();
   const status = classifySavedPlan(validation.draft);
+  const convertedFromLabel = input.convertedFromLabel ?? 'Ask';
   const receipt: PlanReceipt = {
     id: `plan-receipt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     planId: validation.draft.id,
-    convertedFrom: 'Ask',
+    convertedFrom: convertedFromLabel,
     planType: validation.draft.planType,
     sourceMessageId: validation.draft.sourceResponseId,
     generatedSteps: validation.draft.steps.map((step) => step.title),
     userAction: input.userAction,
     timestamp: nowIso,
-    summary: `Converted Ask response ${validation.draft.sourceResponseId} into ${PLAN_PRESET_LABELS[validation.draft.planType]}.`
+    summary: `Converted ${convertedFromLabel} response ${validation.draft.sourceResponseId} into ${PLAN_PRESET_LABELS[validation.draft.planType]}.`
   };
   const plan: Plan = {
     ...validation.draft,
@@ -570,7 +664,8 @@ export function savePlanDraftToWorkspace(input: SavePlanDraftInput): SavePlanDra
     outcome: 'success',
     reviewStatus: status === 'pending-approval' ? 'pending' : undefined,
     labels: ['converted-from-ask', 'human-gated', PLAN_PRESET_LABELS[plan.planType]],
-    annotatorNote: 'Converted from Ask My Twin. External actions remain drafts until explicit approval.',
+    annotatorNote:
+      'Converted from Ask My Twin. External actions remain drafts until explicit approval.',
     details: {
       planType: PLAN_PRESET_LABELS[plan.planType],
       sourceMessageId: plan.sourceResponseId,

@@ -17,6 +17,7 @@ import {
 } from '../../shared/integrations/integrationSourceCatalog';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
+import { ConnectedAgentsPanel } from './ConnectedAgentsPanel';
 
 const chipDisabled = 'disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -123,6 +124,11 @@ export interface MobileIntegrationsViewProps {
   commandBusy?: boolean;
   runCommand: (command: string) => void | Promise<void>;
   documentSurface?: AppDocumentSurfaceId | 'chatbot';
+  /** Connected Agents panel data hooks (required to render the review queue). */
+  loadWorkspace?: () => Promise<import('../../types/domain').BrandOpsData>;
+  applyWorkspace?: (workspace: import('../../types/domain').BrandOpsData) => Promise<void>;
+  /** Download the current workspace JSON for the MCP gateway (Connected Agents token sync). */
+  onExportWorkspace?: () => void | Promise<void>;
 }
 
 /**
@@ -134,7 +140,10 @@ export const MobileIntegrationsView = ({
   btnFocus,
   commandBusy = false,
   runCommand,
-  documentSurface = 'mobile'
+  documentSurface = 'mobile',
+  loadWorkspace,
+  applyWorkspace,
+  onExportWorkspace
 }: MobileIntegrationsViewProps) => {
   return (
     <div className="space-y-4" aria-label="Integrations">
@@ -255,8 +264,8 @@ export const MobileIntegrationsView = ({
                 descriptionVisibility="sr-only"
               >
                 <p className="mt-2 text-meta leading-relaxed text-textMuted">
-                  Three extension sync slots only (Google, GitHub, LinkedIn). Status reflects saved
-                  preferences — OAuth completion depends on your shipped build.
+                  Three extension sync slots only (Google, GitHub, LinkedIn). Status reflects local
+                  preference rows, not verified OAuth sessions; provider OAuth is not implemented.
                 </p>
                 <ul className="mt-2 space-y-1.5 text-textMuted">
                   {snapshot.providerStatuses.map((provider) => (
@@ -448,8 +457,8 @@ export const MobileIntegrationsView = ({
             </summary>
             <div className="border-t border-border/30 px-4 pb-4 pt-4">
               <p className="sr-only">
-                Registers hub sources locally. Sync hub OAuth covers Google, GitHub, and LinkedIn
-                slots above; other vendors remain registry-only until connectors ship.
+                Registers hub sources locally. Google, GitHub, and LinkedIn rows above are
+                unverified preferences; all vendors remain registry-only until connectors ship.
               </p>
               <div className="space-y-4">
                 {INTEGRATION_QUICK_GROUPS.map((group) => (
@@ -475,6 +484,27 @@ export const MobileIntegrationsView = ({
               </div>
             </div>
           </details>
+
+          {loadWorkspace && applyWorkspace ? (
+            <details id="integrations-connected-agents" className="bo-disclosure group" open>
+              <summary
+                className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+              >
+                Connected Agents
+                <span className="ml-2 text-meta font-normal text-textSoft">
+                  Claude Code / Codex / MCP review queue
+                </span>
+              </summary>
+              <div className="border-t border-border/30 px-2 py-3 sm:px-3">
+                <ConnectedAgentsPanel
+                  loadWorkspace={loadWorkspace}
+                  applyWorkspace={applyWorkspace}
+                  onExportWorkspace={onExportWorkspace}
+                  btnFocus={btnFocus}
+                />
+              </div>
+            </details>
+          ) : null}
         </div>
       </article>
     </div>

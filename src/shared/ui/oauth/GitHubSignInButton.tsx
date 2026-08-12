@@ -27,17 +27,19 @@ export function GitHubSignInButton({
   className
 }: GitHubSignInButtonProps) {
   const label =
-    variant === 'continue'
-      ? loading
-        ? 'Connecting…'
-        : 'Continue with GitHub'
-      : variant === 'signUp'
+    variant === 'preview'
+      ? 'Use GitHub preview identity'
+      : variant === 'continue'
         ? loading
           ? 'Connecting…'
-          : 'Sign up with GitHub'
-        : loading
-          ? 'Connecting…'
-          : 'Sign in with GitHub';
+          : 'Continue with GitHub'
+        : variant === 'signUp'
+          ? loading
+            ? 'Connecting…'
+            : 'Sign up with GitHub'
+          : loading
+            ? 'Connecting…'
+            : 'Sign in with GitHub';
 
   return (
     <button

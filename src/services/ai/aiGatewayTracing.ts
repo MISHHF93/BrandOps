@@ -12,7 +12,7 @@ function lastUserContentChars(messages: { role: string; content: string }[]): nu
   return 0;
 }
 
-/** Persist one operator trace after a chat completion attempt (no raw prompts). */
+/** Persist one operator trace after a chat completion attempt (bounded previews; never API keys). */
 export async function persistChatGatewayTrace(
   loadData: () => Promise<BrandOpsData>,
   persist: (d: BrandOpsData) => Promise<void>,

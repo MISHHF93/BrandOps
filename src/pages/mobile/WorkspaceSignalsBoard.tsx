@@ -193,13 +193,13 @@ function buildCells(s: WorkspaceSignalsPick): MetricCell[] {
     },
     {
       key: 'oauth',
-      label: 'OAuth',
-      sub: 'connected',
+      label: 'Sync prefs',
+      sub: 'marked connected',
       display: String(oauth),
       icon: KeyRound,
       tone: 'success',
       fillPct: capLin(oauth, 6),
-      title: 'OAuth providers connected'
+      title: 'Locally stored sync-provider preference rows marked connected (not verified sessions)'
     },
     {
       key: 'src',

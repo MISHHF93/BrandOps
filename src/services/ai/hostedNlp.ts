@@ -15,20 +15,6 @@ export type {
   NlpGatewayFailureCode
 } from './nlpInferenceGateway';
 
-export {
-  describeHostedNlpRouting,
-  joinOpenAiCompatibleUrl,
-  runChatCompletion,
-  runEmbeddings
-} from './nlpInferenceGateway';
+export { runChatCompletion, runEmbeddings } from './nlpInferenceGateway';
 
-export {
-  documentedMlPipelineSurfaceCount,
-  HOSTED_NEURAL_HTTP_OPERATIONS,
-  HOSTED_NLP_UNIFIED_IN_GATEWAY,
-  hostedNeuralHttpOperationCount,
-  ML_PIPELINE_STAGES,
-  summarizeMlInventoryLines,
-  type MlPipelineStage,
-  type MlPipelineStageId
-} from './mlPipelineRegistry';
+export { type MlPipelineStage, type MlPipelineStageId } from './mlPipelineRegistry';

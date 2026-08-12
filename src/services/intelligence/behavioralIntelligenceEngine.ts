@@ -102,7 +102,9 @@ function uniq(values: string[], cap = 6): string[] {
   return out;
 }
 
-function sortNewest<T extends { at?: string; createdAt?: string; updatedAt?: string }>(items: T[]): T[] {
+function sortNewest<T extends { at?: string; createdAt?: string; updatedAt?: string }>(
+  items: T[]
+): T[] {
   return [...items].sort((a, b) => {
     const ta = new Date(a.at ?? a.updatedAt ?? a.createdAt ?? '').getTime();
     const tb = new Date(b.at ?? b.updatedAt ?? b.createdAt ?? '').getTime();
@@ -126,7 +128,10 @@ function normalizeTaskTitle(title: string): string {
   return compact(
     title
       .toLowerCase()
-      .replace(/\b(today|tomorrow|weekly|daily|monthly|monday|tuesday|wednesday|thursday|friday)\b/g, '')
+      .replace(
+        /\b(today|tomorrow|weekly|daily|monthly|monday|tuesday|wednesday|thursday|friday)\b/g,
+        ''
+      )
       .replace(/[^a-z0-9]+/g, ' ')
   );
 }
@@ -171,7 +176,10 @@ function prediction(input: {
   confidence: number;
   patterns: BehavioralPattern[];
 }): BehavioralPrediction {
-  const evidence = uniq(input.patterns.flatMap((pattern) => pattern.evidence), 6);
+  const evidence = uniq(
+    input.patterns.flatMap((pattern) => pattern.evidence),
+    6
+  );
   return {
     id: input.id,
     type: input.type,
@@ -200,11 +208,10 @@ function buildSignalCoverage(workspace: BrandOpsData): Record<BehavioralSignalSo
     workspace.integrationHub.artifacts.length +
     workspace.integrationHub.liveFeed.length;
   const schedulerRows = workspace.scheduler.tasks.length;
-  const repeatedTaskRows =
-    countBy([
-      ...workspace.scheduler.tasks.map((task) => normalizeTaskTitle(task.title)),
-      ...traces.map((trace) => trace.verb)
-    ]).filter((entry) => entry.count >= 2).length;
+  const repeatedTaskRows = countBy([
+    ...workspace.scheduler.tasks.map((task) => normalizeTaskTitle(task.title)),
+    ...traces.map((trace) => trace.verb)
+  ]).filter((entry) => entry.count >= 2).length;
   const timingRows = [
     ...traces.map((trace) => trace.at),
     ...workspace.scheduler.tasks.map((task) => task.dueAt),
@@ -253,7 +260,10 @@ function addAskPattern(workspace: BrandOpsData, patterns: BehavioralPattern[]) {
   const asks = sortNewest(workspace.aiAssistantTraces?.entries ?? []).slice(0, 40);
   if (asks.length === 0) return;
   const successful = asks.filter((entry) => entry.outcome === 'success').length;
-  const modelHints = uniq(asks.map((entry) => entry.model_id ?? entry.worker_id ?? ''), 3);
+  const modelHints = uniq(
+    asks.map((entry) => entry.model_id ?? entry.worker_id ?? ''),
+    3
+  );
 
   patterns.push({
     id: 'behavior-ask-usage',
@@ -286,7 +296,11 @@ function addPlanPattern(workspace: BrandOpsData, patterns: BehavioralPattern[]) 
     id: 'behavior-plan-approval-flow',
     kind: 'plan',
     label: 'PLAN approval behavior detected',
-    confidence: confidenceFrom(pending.length + approved.length + rejected.length + runs.length, 52, 7),
+    confidence: confidenceFrom(
+      pending.length + approved.length + rejected.length + runs.length,
+      52,
+      7
+    ),
     evidence: uniq(
       [
         `${pending.length} pending approval${pending.length === 1 ? '' : 's'}`,
@@ -297,7 +311,10 @@ function addPlanPattern(workspace: BrandOpsData, patterns: BehavioralPattern[]) 
       5
     ),
     sources: ['plan-behavior'],
-    lastObservedAt: latestIso([...traces.map((trace) => trace.at), ...runs.map((run) => run.started_at)])
+    lastObservedAt: latestIso([
+      ...traces.map((trace) => trace.at),
+      ...runs.map((run) => run.started_at)
+    ])
   });
 }
 
@@ -309,7 +326,11 @@ function addPlatformPattern(workspace: BrandOpsData, patterns: BehavioralPattern
     id: 'behavior-connected-platforms',
     kind: 'connected-platform',
     label: 'Connected platform context can inform next actions',
-    confidence: confidenceFrom(platform.connectedApps.length + platform.recentActivity.length, 50, 5),
+    confidence: confidenceFrom(
+      platform.connectedApps.length + platform.recentActivity.length,
+      50,
+      5
+    ),
     evidence: uniq(
       [
         `Connected apps: ${platform.connectedApps.join(', ') || 'none'}`,
@@ -348,7 +369,9 @@ function addWorkflowPattern(workspace: BrandOpsData, patterns: BehavioralPattern
 }
 
 function addRepeatedTaskPattern(workspace: BrandOpsData, patterns: BehavioralPattern[]) {
-  const taskCounts = countBy(workspace.scheduler.tasks.map((task) => normalizeTaskTitle(task.title)));
+  const taskCounts = countBy(
+    workspace.scheduler.tasks.map((task) => normalizeTaskTitle(task.title))
+  );
   const traceCounts = countBy((workspace.operatorTraces?.entries ?? []).map((trace) => trace.verb));
   const topTask = taskCounts.find((entry) => entry.count >= 2);
   const topTrace = traceCounts.find((entry) => entry.count >= 2);
@@ -421,7 +444,9 @@ function addContentPattern(workspace: BrandOpsData, patterns: BehavioralPattern[
         `${activeContent.length} active content item${activeContent.length === 1 ? '' : 's'}`,
         `${queued.length} publishing queue item${queued.length === 1 ? '' : 's'}`,
         `${ready} ready content item${ready === 1 ? '' : 's'}`,
-        topTag ? `${topTag.count} content tag occurrence${topTag.count === 1 ? '' : 's'} for "${topTag.key}"` : ''
+        topTag
+          ? `${topTag.count} content tag occurrence${topTag.count === 1 ? '' : 's'} for "${topTag.key}"`
+          : ''
       ],
       5
     ),
@@ -443,7 +468,9 @@ function addOutreachPattern(workspace: BrandOpsData, patterns: BehavioralPattern
   patterns.push({
     id: 'behavior-outreach-patterns',
     kind: 'outreach',
-    label: topCategory ? `Outreach pattern: ${topCategory.key}` : 'Outreach activity pattern detected',
+    label: topCategory
+      ? `Outreach pattern: ${topCategory.key}`
+      : 'Outreach activity pattern detected',
     confidence: confidenceFrom(activeDrafts.length + history.length + ready, 50, 5),
     evidence: uniq(
       [
@@ -457,7 +484,10 @@ function addOutreachPattern(workspace: BrandOpsData, patterns: BehavioralPattern
       5
     ),
     sources: ['outreach-patterns'],
-    lastObservedAt: latestIso([...activeDrafts.map((item) => item.updatedAt), ...history.map((item) => item.loggedAt)])
+    lastObservedAt: latestIso([
+      ...activeDrafts.map((item) => item.updatedAt),
+      ...history.map((item) => item.loggedAt)
+    ])
   });
 }
 
@@ -659,4 +689,3 @@ export function buildBehavioralIntelligenceEngineReadout(
       : 'Behavioral Intelligence Engine is watching local signals; add activity, ASK traces, PLAN approvals, or connected context to generate approval-gated predictions.'
   };
 }
-

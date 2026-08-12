@@ -30,7 +30,7 @@ export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
   steps: [
     {
       title: 'Run one command from Assistant',
-      body: 'Assistant is the default home — type commands or use Starters; lines beginning with ask: use hosted models when configured. Press ⌘K / Ctrl+K for the full catalogue. Planning Quick picks and Pulse live on Plan to avoid duplicating controls between tabs.'
+      body: 'Assistant is the default home — type commands or use Starters. Recognized workspace commands run locally; other Chat requests use the hosted model only when you explicitly configure and enable it. Press ⌘K / Ctrl+K for the full catalogue. Planning Quick picks and Pulse live on Plan to avoid duplicating controls between tabs.'
     },
     {
       title: 'Open Plan for counts and queue',
@@ -72,12 +72,13 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
   {
     id: 'first-run',
     title: 'First run and profile',
-    summary: 'Welcome uses the mobile shell; sign-in and sign-up share welcome.html.',
+    summary:
+      'Welcome uses the mobile shell; its account controls select local preview access only.',
     paragraphs: [
       'On **welcome.html** / **mobile.html** you start on **Assistant**. The **Getting started** checklist is on **Plan**: pipeline health, Pulse / Quick picks, **Today**, palette (**⌘K** / **Ctrl+K**), then **Settings** and **Help → First run and profile**.',
       '**Plan** can show **Finish setup** after you dismiss Getting started if placeholder identity fields remain — same destinations as **Edit profile** / Integrations / ⌘K.',
-      'The **Operator twin (Encode → Align → Decode)** topic explains ingest (résumé + brand), precedence on hosted **ask:**, and how Today closes the execution loop.',
-      'Sign-in and account creation share welcome.html: default is sign in (no query). Create account: welcome.html?flow=signup. Legacy ?auth= is still accepted where implemented.',
+      'The **Operator twin (Encode → Align → Decode)** topic explains ingest (résumé + brand), precedence on hosted Assistant requests, and how Today closes the execution loop.',
+      'The provider-labelled controls on welcome.html choose an on-device preview identity only. They do not perform OAuth, verify an email address, or create a server session.',
       'Under **Settings → Preferences**, pick an **Operating profile** preset (launch sprint, focused builder, etc.) and tap **Apply operating profile** — one action aligns cockpit layout/density, AI defaults, and cadence to match how you work.',
       'Operator and brand fields also surface on Today and in Settings forms; tune cadence and reminders under Settings when you need workspace-level changes.'
     ]
@@ -89,7 +90,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
       'One mental model: ingest résumé and operating context, keep an accurate operator model, then act to offload work and lift execution.',
     paragraphs: [
       '**Encode** — résumé / CV plain text, brand profile fields, live workspace entities, and integration signals all feed the same **operator twin** story (not disconnected “notification” blobs). Twin ingest for résumé lives under **Settings → Unified workspace** (same deep link: **mobile.html?section=settings#settings-resume-neural-phase**).',
-      '**Align** — curated **Brand profile** wins on conflicts vs the compressed résumé artifact; the artifact supplements hosted **ask:** turns only. Nothing is uploaded until you send a hosted line; native / on-device paths do not silently ship the résumé blob.',
+      '**Align** — curated **Brand profile** wins on conflicts vs the compressed résumé artifact; the artifact supplements hosted Assistant turns only. Nothing is transmitted to the AI endpoint until you submit a request while hosted AI is enabled; local commands do not silently ship the résumé blob.',
       '**Decode / act** — hosted Ask receives one assembled **operator twin** appendix in the system prompt; Today and Chat are where you close the loop (commands, digest, and optional **Execution check-in** vs your focus metric). See **Today: cockpit digest** for the read-only digest pattern.'
     ]
   },
@@ -102,8 +103,8 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
       'Examples that match the router: add note:, create follow up:, complete follow up:, draft outreach:, draft post:, reschedule posts …, pipeline health, update opportunity …, archive opportunity, restore opportunity, add contact:, update contact:, add content:, update publishing:, connect … source:, connect hubspot source:, connect linear source:, connect stripe source:, add source:, add integration artifact:, add ssh:, configure: …',
       'Starters in the Assistant tab are curated to these patterns; identical Quick picks stay on Plan so Ask is not cluttered. If a phrase is unsupported, the assistant explains what is available.',
       'Destructive phrases such as archive opportunity may ask for confirmation before running.',
-      'Lines beginning with **ask:** use your configured **hosted** OpenAI-compatible endpoint when enabled; everything else stays on-device.',
-      '**Operator twin — résumé ingest** is under **Settings → Unified workspace** (Phase R artifact). Paste or load plain text, then **Compress & save** — the artifact is sent only with hosted **ask:** lines (Brand profile still wins on conflicts). From Assistant use the twin ingest shortcut or **mobile.html?section=settings#settings-resume-neural-phase**. Help topic **Operator twin (Encode → Align → Decode)** explains precedence end-to-end.'
+      'Recognized workspace command patterns stay on-device. Other Chat submissions, including explicit **ask:** lines, use your configured OpenAI-compatible endpoint only when hosted mode is enabled.',
+      '**Operator twin — résumé ingest** is under **Settings → Unified workspace** (Phase R artifact). Paste or load plain text, then **Compress & save** — the artifact can be included with hosted Assistant requests (Brand profile still wins on conflicts). From Assistant use the twin ingest shortcut or **mobile.html?section=settings#settings-resume-neural-phase**. Help topic **Operator twin (Encode → Align → Decode)** explains precedence end-to-end.'
     ]
   },
   {
@@ -124,7 +125,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     paragraphs: [
       'The **Integrations** tab lists sources, providers, artifacts, SSH targets, and **Add via Chat** presets for CRM (HubSpot, Salesforce, Pipedrive), issues (Linear, Jira), support (Zendesk), docs (Notion, Drive, Airtable), ads (Meta, LinkedIn Marketing), billing (Stripe), Microsoft 365, plus engineering staples (GitHub, Slack, webhook).',
       '**Today → Connections** summarizes counts and links to the packaged integrations page when useful.',
-      'OAuth client configuration for the extension may still live in manifest-adjacent flows; workspace-level source creation uses Chat commands such as connect notion source: …',
+      'Provider OAuth is not implemented in the current build. Workspace-level source creation uses Chat commands such as connect notion source: … and creates local registry records only.',
       'Read **Integration registry (what is real today)** for local-first storage vs sync-hub slots and what “connected” means.'
     ]
   },
@@ -136,7 +137,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     paragraphs: [
       'When you use **Add via Chat** or run **connect … source:** / **add source:**, BrandOps stores an **integration hub source** in extension-local storage. That row captures kind, display name, default artifact categories, and tags so Chat, Today, and Settings stay aligned — it does **not** by itself call vendor APIs or stream live CRM/issue/doc data.',
       '**Captured artifacts** under Technical inventory are workspace objects (you or the agent add them). Treat them as structured notes until a future connector pulls from an external system.',
-      'The Pulse counters **Sources** vs **Sync hub** mean different things: **Sources** counts hub rows you registered; **Sync hub** reflects Google, GitHub, and LinkedIn **preference** rows from Settings (they may still show disconnected until OAuth is completed in your build).',
+      'The Pulse counters **Sources** vs **Sync hub** mean different things: **Sources** counts hub rows you registered; **Sync hub** reflects Google, GitHub, and LinkedIn preference rows from Settings. These rows are not verified provider sessions in the current build.',
       'For backups and audits, use **Export workspace JSON** (Settings → Data safety). Multi-device continuity is manual until optional cloud sync exists.'
     ]
   },

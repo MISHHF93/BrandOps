@@ -133,9 +133,9 @@ function hasMemoryContext(input: ExpertCompositionInput): boolean {
   const twin = input.workspace ? getActiveDigitalTwin(input.workspace) : null;
   return Boolean(
     twin &&
-      (twin.memory.approvedClaims.length ||
-        twin.memory.preferences.length ||
-        twin.memory.voiceExamples.length)
+    (twin.memory.approvedClaims.length ||
+      twin.memory.preferences.length ||
+      twin.memory.voiceExamples.length)
   );
 }
 
@@ -176,7 +176,10 @@ function syntheticMemoryActivation(
   };
 }
 
-function activationSlate(input: ExpertCompositionInput, routing: ExpertRoutingResolution): ExpertActivation[] {
+function activationSlate(
+  input: ExpertCompositionInput,
+  routing: ExpertRoutingResolution
+): ExpertActivation[] {
   const slate = [...routing.activatedExperts];
   if (shouldAddMemoryValidation(input, routing)) {
     slate.push(syntheticMemoryActivation(input, routing));
@@ -238,14 +241,15 @@ function contributionFor(
         kind: 'messaging_draft',
         summary: `Translate the strategic angle into relationship-aware messaging.`,
         structuredOutput: {
-          messageDraft:
-            `Draft direction: open with relevance, name the reason for reaching out, offer one proof point, and close with a low-friction next step for "${objective}".`,
+          messageDraft: `Draft direction: open with relevance, name the reason for reaching out, offer one proof point, and close with a low-friction next step for "${objective}".`,
           recommendations: [
             'Use one recipient-specific opener.',
             'Make one ask only.',
             'Keep approval required before sending externally.'
           ],
-          risks: ['Avoid overstating traction, investor interest, or relationship warmth without evidence.']
+          risks: [
+            'Avoid overstating traction, investor interest, or relationship warmth without evidence.'
+          ]
         },
         confidence: activation.score,
         explainability: {
@@ -339,7 +343,9 @@ function contributionFor(
             'Prioritize the opportunity with the clearest audience signal and next action.',
             'Score upside separately from execution effort.'
           ],
-          risks: ['Do not treat audience interest as revenue confidence without supporting signals.']
+          risks: [
+            'Do not treat audience interest as revenue confidence without supporting signals.'
+          ]
         },
         confidence: activation.score,
         explainability: {
@@ -360,7 +366,9 @@ function contributionFor(
           : 'Forecast likely cadence, response, or execution behavior from available memory.',
         structuredOutput: {
           recommendations: behavioralReadout?.allPredictions.length
-            ? behavioralReadout.allPredictions.slice(0, 4).map((prediction) => prediction.suggestion)
+            ? behavioralReadout.allPredictions
+                .slice(0, 4)
+                .map((prediction) => prediction.suggestion)
             : [
                 'Pick timing based on observed cadence instead of generic urgency.',
                 'Use behavioral memory as a confidence signal, not as certainty.'
@@ -427,7 +435,10 @@ function askResponseFrom(
     content: contribution.summary
   }));
   const topLine = contributions
-    .map((contribution) => contribution.structuredOutput.angle ?? contribution.structuredOutput.messageDraft)
+    .map(
+      (contribution) =>
+        contribution.structuredOutput.angle ?? contribution.structuredOutput.messageDraft
+    )
     .find(Boolean);
   return {
     headline: `Composed ${routing.trace.workflowType.replace(/_/g, ' ')} response`,
@@ -512,7 +523,9 @@ export function composeExpertTask(input: ExpertCompositionInput): ExpertComposit
         'route-before-compose',
         'preserve-routing-order',
         'structured-contributions-only',
-        shouldAddMemoryValidation(input, routing) ? 'memory-validation-added' : 'memory-validation-not-needed'
+        shouldAddMemoryValidation(input, routing)
+          ? 'memory-validation-added'
+          : 'memory-validation-not-needed'
       ],
       routingTrace: routing.trace
     }

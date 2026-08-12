@@ -387,8 +387,3 @@ export function getInputRouteHint(text: string): string | null {
   const route = parseCommandRoute(t);
   return ROUTE_PLAIN[route] ?? null;
 }
-
-export function getIntentByCommandLine(command: string): BrandOpsChatIntent | undefined {
-  const n = norm(command);
-  return BRANDOPS_CHAT_INTENTS.find((i) => norm(i.command) === n);
-}

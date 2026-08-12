@@ -16,24 +16,26 @@
  * Build helpers: `buildDashboardUrl`, `buildMobileCockpitUrl`, `buildMobileShellUrl`, `buildHelpUrl`, `buildWelcome*`.
  * Link matrix for humans: `SurfaceNavLinks`, `src/shared/navigation/navigateCrownFromExtensionSurface`.
  *
- * Layer 0 — Peripheral (not `MobileApp`; OAuth redirect / legal):
- *   public/oauth/{google,github,linkedin}-brandops.html   OAuth callback UIs
+ * Layer 0 — Peripheral (not `MobileApp`; inactive legacy callbacks / legal):
+ *   public/oauth/{google,github,linkedin}-brandops.html   inactive callback placeholders; no OAuth runtime ships
  *   public/privacy-policy.html  → bundled legal; `getPrivacyPolicyHref` may point hosted URL
  *
  * Layer 1 — Shell / HTML surfaces (each is its own document):
  *   Product UX is **one `MobileApp` shell** — `welcome`, `mobile`, `dashboard`, and `integrations` HTML
- *   pages only vary `data-app-surface` for analytics/sign-in context; bookmark **`mobile.html`** as canonical.
- *   index.html          → site root; redirects to mobile.html (chatbot-first hosted preview entry)
+ *   pages only vary `data-app-surface` for analytics/local-access context; bookmark **`mobile.html`** as canonical.
+ *   index.html          → marketing site root (`data-app-surface="site"`, not the `MobileApp` shell);
+ *                          Open-app links lead to welcome.html, the canonical local preview-access gateway
  *   mobile.html         → primary AI chatbot application surface (`data-app-surface="mobile"`)
- *   welcome.html        → chatbot surface (`data-app-surface="welcome"`)
+ *   welcome.html        → chatbot surface (`data-app-surface="welcome"`); once local access is unlocked,
+ *                          hands off to mobile.html
  *   dashboard.html      → chatbot surface; `?section` without `overlay` → redirect to `mobile.html`
  *   integrations.html  → same `MobileApp` shell (`options_ui` in manifest; `data-app-surface="integrations"`)
  *   help.html           → Knowledge Center manual (`data-app-surface="help"`)
  *   privacy-policy.html → static legal (bundled)
  *
  * Layer 2 — Welcome deep link (one optional query param):
- *   welcome.html                    → Sign in (default): same UI as “returning user”
- *   welcome.html?flow=signup        → Create account (copy + OAuth variant “sign up”)
+ *   welcome.html                    → local preview-access selector
+ *   welcome.html?flow=signup        → legacy URL variant; still the same local preview selector
  *
  * Legacy: ?auth=signup|signin is still read and normalized to ?flow= or a clean URL.
  *
@@ -58,7 +60,7 @@ export const PAGE = {
 } as const;
 
 export const QUERY = {
-  /** `signup` only. Omitted URL = sign-in flow (canonical: bare welcome.html). */
+  /** Legacy `signup` route marker. Omitted URL = canonical bare welcome.html. */
   welcomeFlow: 'flow',
   /** @deprecated Legacy; still read. Prefer `flow`. */
   welcomeAuthLegacy: 'auth',
@@ -78,12 +80,12 @@ function withQuery(file: string, params: Record<string, string | undefined>): st
   return `${file}?${qs}`;
 }
 
-/** Bare `welcome.html` — canonical sign-in entry. */
+/** Bare `welcome.html` — canonical local preview-access entry. */
 export function buildWelcomeSignInUrl(): string {
   return PAGE.welcome;
 }
 
-/** Create-account funnel only (`?flow=signup`). */
+/** Legacy create-account URL retained for compatible navigation; no remote account is created. */
 export function buildWelcomeSignUpUrl(): string {
   return withQuery(PAGE.welcome, { [QUERY.welcomeFlow]: 'signup' });
 }

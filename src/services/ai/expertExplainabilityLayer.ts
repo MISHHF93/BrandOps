@@ -1,8 +1,5 @@
 import type { ExpertContextKey, OperationalExpertId } from './expertRegistry';
-import type {
-  ExpertCompositionResult,
-  ExpertContribution
-} from './expertCompositionEngine';
+import type { ExpertCompositionResult, ExpertContribution } from './expertCompositionEngine';
 
 export type ExplainabilityConfidenceLevel = 'High' | 'Medium' | 'Low';
 
@@ -18,7 +15,12 @@ export interface ExpertExplainabilityContributor {
 }
 
 export interface ExpertExplainabilityContext {
-  key: ExpertContextKey | 'connected_platforms' | 'behavioral_memory' | 'profession' | 'twin_profile';
+  key:
+    | ExpertContextKey
+    | 'connected_platforms'
+    | 'behavioral_memory'
+    | 'profession'
+    | 'twin_profile';
   label: string;
   detail: string;
 }

@@ -44,14 +44,3 @@ export function getBrandOpsHostKind(): BrandOpsHostKind {
   cached = 'web';
   return cached;
 }
-
-/** Running inside the MV3 extension (any script with `chrome.runtime.id`). */
-export function isChromeExtensionHost(): boolean {
-  return getBrandOpsHostKind() === 'chrome-extension';
-}
-
-/** Running inside a Capacitor native WebView (Android / iOS). */
-export function isCapacitorNativeHost(): boolean {
-  const k = getBrandOpsHostKind();
-  return k === 'capacitor-android' || k === 'capacitor-ios';
-}

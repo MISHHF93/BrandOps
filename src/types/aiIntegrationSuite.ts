@@ -57,25 +57,6 @@ export interface AIModelCapability {
   reliability_score?: number;
 }
 
-export type AiPrivacyLevel = 'cloud_unknown' | 'cloud_enterprise' | 'local_device' | 'browser_only';
-
-export interface ProviderHealthStatus {
-  provider_id: string;
-  checked_at: string;
-  status: 'healthy' | 'degraded' | 'unknown' | 'offline';
-  latency_ms_effective?: number;
-  error_rate_hint?: number;
-}
-
-/** Logical vendor / deployment bucket (OpenAI-compatible aggregate counts as one logical provider row). */
-export interface AIProvider {
-  provider_id: string;
-  label: string;
-  privacy_level: AiPrivacyLevel;
-  /** Human hints — not live telemetry unless populated elsewhere */
-  health?: ProviderHealthStatus;
-}
-
 /** Named routing recipe for an operator mode × task. */
 export interface AIRoutingPolicy {
   policy_id: string;
@@ -88,15 +69,6 @@ export interface AIRoutingPolicy {
   >;
   /** Lower index = higher fallback priority when scores tie */
   fallback_priority: string[];
-}
-
-/** Named bundle tying defaults for workspace automation / future presets. */
-export interface AIIntegrationProfile {
-  profile_id: string;
-  label: string;
-  default_task_type: AITaskType;
-  preferred_provider_ids?: string[];
-  routing_policy_id?: string;
 }
 
 export type PipelineStepKind =
@@ -160,18 +132,6 @@ export interface ModelEvaluationResult {
     Record<'groundedness' | 'helpfulness' | 'concision' | 'format_compliance', number>
   >;
   notes?: string[];
-}
-
-export interface AIModelRegistryEntry {
-  model_id: string;
-  provider_id: string;
-  label: string;
-  context_window_tokens?: number;
-  modalities_supported?: Array<'text' | 'image' | 'audio' | 'video'>;
-  structured_output?: boolean;
-  citation_support?: boolean;
-  privacy_level: AiPrivacyLevel;
-  capability: AIModelCapability;
 }
 
 export const AI_PIPELINE_RUN_SCHEMA_VERSION = '1.0.0';

@@ -56,7 +56,9 @@ function templateFor(item: ContentIdeationItem): {
   }
 }
 
-export function buildOperationalPlanFromContentIdeation(item: ContentIdeationItem): OperationalPlanCard {
+export function buildOperationalPlanFromContentIdeation(
+  item: ContentIdeationItem
+): OperationalPlanCard {
   const template = templateFor(item);
   return {
     id: `content-ideation-plan-${item.id}-${Math.random().toString(36).slice(2, 7)}`,
@@ -83,4 +85,3 @@ export function buildOperationalPlanFromContentIdeation(item: ContentIdeationIte
     }
   };
 }
-

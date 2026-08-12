@@ -233,9 +233,6 @@ export interface Opportunity {
   version?: number;
 }
 
-/** Batch payload for a hypothetical future LLM that narrates pipeline risk; ranking in-app uses deterministic heuristics only. */
-export type LlmOpportunityNarrativeRequest = { opportunities: Opportunity[] };
-
 export interface Contact {
   id: string;
   name: string;
@@ -292,15 +289,6 @@ export interface MessagingVaultEntry {
   version?: number;
 }
 
-/**
- * Canonical data-model aliases used in product and docs.
- * These map directly to the active runtime entities.
- */
-export type BrandVaultEntry = MessagingVaultEntry;
-export type ContentItem = ContentLibraryItem;
-export type ScheduledPost = PublishingItem;
-export type ActivityLog = ActivityNote;
-
 export interface BrandVault {
   positioningStatement: string;
   headlineOptions: string[];
@@ -340,21 +328,14 @@ export interface AutomationRule {
   enabled: boolean;
 }
 
-export interface ExternalSyncOption {
-  id: string;
-  title: string;
-  primary?: boolean;
-}
-
 export interface LinkedInOAuthState {
-  accessToken?: string;
-  refreshToken?: string;
+  /** Non-secret metadata only. Provider tokens must live in a dedicated credential store/backend. */
   expiresAt?: string;
   scope: string[];
   tokenType?: string;
 }
 
-/** Cached OpenID userinfo subset for display (“Signed in as …”). */
+/** Legacy provider-profile metadata shape; the current build does not fetch OpenID userinfo. */
 export interface LinkedInIdentityProfile {
   sub?: string;
   name?: string;
@@ -362,7 +343,7 @@ export interface LinkedInIdentityProfile {
   picture?: string;
 }
 
-/** OAuth-linked profile for Google, GitHub, or LinkedIn (stored tokens + display fields). */
+/** Legacy provider preference/profile row (non-secret metadata + display fields; not a verified session). */
 export interface IdentityProviderSettings {
   clientId: string;
   connectionStatus: 'disconnected' | 'configured' | 'connected' | 'error';
@@ -371,8 +352,6 @@ export interface IdentityProviderSettings {
   auth: LinkedInOAuthState;
   profile?: LinkedInIdentityProfile;
 }
-
-export type LinkedInIdentitySettings = IdentityProviderSettings;
 
 export type IdentityProviderId = 'google' | 'github' | 'linkedin';
 
@@ -634,7 +613,7 @@ export interface AppSettings {
    * summaries, traces, and habits. Raw private data is never pulled automatically.
    */
   connectedIdentityLearningEnabled: boolean;
-  /** Which linked OAuth profile drives “Signed in as …” in the cockpit. */
+  /** Which local provider preference is primary for identity-context previews. */
   primaryIdentityProvider: IdentityProviderId | null;
   overlay: OverlayPreferences;
   automationRules: AutomationRule[];
@@ -871,10 +850,27 @@ export type PlanPreset =
 
 export type PlanStepStatus = 'todo' | 'blocked' | 'ready' | 'approved' | 'done' | 'failed';
 
-export type SavedPlanStatus = 'draft' | 'active' | 'pending-approval' | 'opportunity';
+export type SavedPlanStatus =
+  | 'draft'
+  | 'active'
+  | 'pending-approval'
+  | 'opportunity'
+  | 'approved'
+  | 'rejected'
+  | 'executing'
+  | 'executed'
+  | 'verified';
+
+export type PlanSourceSurface =
+  | 'ask-my-twin'
+  | 'agent-proposal'
+  | 'agent-event'
+  | 'predictive-opportunity'
+  | 'predictive-content-ideation'
+  | 'workflow-prediction';
 
 export interface PlanSourceMetadata {
-  sourceSurface: 'ask-my-twin';
+  sourceSurface: PlanSourceSurface;
   originalUserMessage: string;
   aiResponse: string;
   activeTwinId: string | null;
@@ -970,7 +966,7 @@ export interface Plan extends Omit<PlanDraft, 'status'> {
 export interface PlanReceipt {
   id: string;
   planId: string;
-  convertedFrom: 'Ask';
+  convertedFrom: string;
   planType: PlanPreset;
   sourceMessageId: string;
   generatedSteps: string[];
@@ -1131,4 +1127,14 @@ export interface BrandOpsData {
   connectedIdentityEngine?: ConnectedIdentityEngineState;
   /** First-class PLAN workspace records converted from Ask and other structured workflows. */
   planWorkspace?: PlanWorkspaceState;
+  /** Canonical execution checkpoints — the operational state graph behind Ask/Plan/approvals. Unconditional (not gated by operatorTraceCollectionEnabled). */
+  checkpoints?: import('./executionState').CheckpointLogState;
+  /** Connected external AI agents (Claude Code / Codex / VS Code / MCP clients). Session metadata only — raw tokens never enter workspace JSON. */
+  externalAgentSessions?: import('./agentInterop').ExternalAgentSessionsState;
+  /** Agent-reported professional signals (AGENT_REPORTED until user-verified). */
+  externalAgentEvents?: import('./agentInterop').ExternalAgentEventsState;
+  /** Proposed twin/artifact/action changes awaiting user decision inside PLAN. */
+  agentProposals?: import('./agentInterop').AgentProposalsState;
+  /** Unconditional audit of every external-agent invocation (capped). */
+  externalAgentAudit?: import('./agentInterop').ExternalAgentAuditState;
 }

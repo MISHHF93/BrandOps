@@ -107,10 +107,15 @@ function memoryContext(memory?: MemoryContextEngineReadout): string {
   if (!memory?.entries.length) return 'No persistent memory context yet.';
   const goals = memory.entriesByCategory.goals.slice(0, 2).map((item) => item.value);
   const prefs = memory.entriesByCategory.preferences.slice(0, 2).map((item) => item.value);
-  const style = memory.entriesByCategory['communication-style'].slice(0, 2).map((item) => item.value);
+  const style = memory.entriesByCategory['communication-style']
+    .slice(0, 2)
+    .map((item) => item.value);
   return [...goals, ...prefs, ...style].length
     ? [...goals, ...prefs, ...style].join(' | ')
-    : memory.entries.slice(0, 4).map((item) => `${item.label}: ${item.value}`).join(' | ');
+    : memory.entries
+        .slice(0, 4)
+        .map((item) => `${item.label}: ${item.value}`)
+        .join(' | ');
 }
 
 function recencyCopy(input: {
@@ -120,7 +125,8 @@ function recencyCopy(input: {
 }): string {
   const signals = uniq([
     ...input.suggestion.supportingSignals,
-    ...(input.behavioral?.patterns.flatMap((pattern) => [pattern.label, ...pattern.evidence]) ?? []),
+    ...(input.behavioral?.patterns.flatMap((pattern) => [pattern.label, ...pattern.evidence]) ??
+      []),
     ...input.recentCommandLines.slice(0, 6)
   ]);
   const topic = phraseFromSignals(signals, input.suggestion.title.toLowerCase());
@@ -130,7 +136,9 @@ function recencyCopy(input: {
     input.suggestion.generatedFrom.includes('recent-actions') ||
     input.suggestion.generatedFrom.includes('behavioral-history');
 
-  return behaviorSeen ? `You recently worked on ${topic}.` : `BrandOps sees signal around ${topic}.`;
+  return behaviorSeen
+    ? `You recently worked on ${topic}.`
+    : `BrandOps sees signal around ${topic}.`;
 }
 
 function promptQuestion(input: {
@@ -265,17 +273,15 @@ export function buildPredictiveAskPromptGroups(
     const bi = GROUP_ORDER.indexOf(b.kind);
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi) || b.confidence - a.confidence;
   });
-  const prompts = suggestions
-    .slice(0, 6)
-    .map((suggestion) =>
-      toPrompt({
-        suggestion,
-        behavioral: input.behavioralIntelligenceEngine,
-        activeDigitalTwin: input.activeDigitalTwin,
-        recentCommandLines: input.recentCommandLines ?? [],
-        memory: input.memoryContextEngine
-      })
-    );
+  const prompts = suggestions.slice(0, 6).map((suggestion) =>
+    toPrompt({
+      suggestion,
+      behavioral: input.behavioralIntelligenceEngine,
+      activeDigitalTwin: input.activeDigitalTwin,
+      recentCommandLines: input.recentCommandLines ?? [],
+      memory: input.memoryContextEngine
+    })
+  );
   const contentPrompts = (input.predictiveContentIdeationEngine?.allIdeas ?? [])
     .slice(0, 3)
     .map(toContentIdeationPrompt);
@@ -292,10 +298,10 @@ export function buildPredictiveAskPromptGroups(
     const label = prompt.sourceWorkflowPrediction
       ? 'Workflow predictions'
       : prompt.sourceContentIdeation
-      ? 'Predictive content'
-      : source
-        ? groupLabel(source.kind)
-        : 'Context-aware ASK';
+        ? 'Predictive content'
+        : source
+          ? groupLabel(source.kind)
+          : 'Context-aware ASK';
     grouped.set(label, [...(grouped.get(label) ?? []), prompt]);
   }
 
@@ -305,4 +311,3 @@ export function buildPredictiveAskPromptGroups(
     prompts: rows.slice(0, 3)
   })).slice(0, 4);
 }
-

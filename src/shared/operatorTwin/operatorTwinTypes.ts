@@ -10,8 +10,6 @@
  * **Decode**: Hosted `ask:` uses `buildOperatorTwinSystemBlock` (résumé appendix + policy). On-device commands
  * use structured workspace JSON; nothing is uploaded until the user sends a hosted line.
  */
-export type TwinAssemblyMode = 'hosted_ask_appendix';
-
 /** Raw persisted slice under `settings.operatorTwin` (partial OK before normalize). */
 export interface OperatorTwinSettings {
   /** Phase R compressed résumé / CV (pipe-separated facets). Canonical store for hosted Ask. */
@@ -31,20 +29,4 @@ export interface FocusKpiSelfCheck {
   score: 1 | 2 | 3 | 4 | 5;
   note: string;
   recordedAt: string;
-}
-
-export interface OperatorTwinInput {
-  brandOperatorName: string;
-  focusMetric: string;
-  resumeArtifact: string;
-}
-
-/** Resolved strings ready for hosted system prompt assembly (thin layer today). */
-export interface OperatorTwinResolved {
-  resumeArtifactClipped: string;
-  assemblyMode: TwinAssemblyMode;
-}
-
-export interface TwinAssemblyOptions {
-  maxResumeChars?: number;
 }

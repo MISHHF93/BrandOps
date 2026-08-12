@@ -5,6 +5,7 @@ import {
   type AgentWorkspaceResult
 } from '../../services/agent/agentWorkspaceEngine';
 import { runChatCompletion } from '../../services/ai/hostedNlp';
+import { describeAiSetupState } from '../../services/ai/aiSetupState';
 import { persistChatGatewayTrace } from '../../services/ai/aiGatewayTracing';
 import { buildHostedAskMessages } from '../../services/ai/hostedAskTurn';
 import { parseHostedAskResponse, sanitizeAiCitationChunks } from '../../services/ai/aiIoProvenance';
@@ -24,8 +25,39 @@ import {
 import { prependBrandOpsAICoreResult, runBrandOpsAI } from '../../services/ai/brandOpsAiCore';
 import { resolveActiveCopilotWorker } from '../../services/ai/copilotWorkers';
 import { resolveHostedAssistantRouting } from '../../services/ai/aiAskRouting';
+import {
+  clearOpenAiCompatibleApiKey,
+  configureOpenAiCompatibleCredentials,
+  normalizeOpenAiCompatibleEndpointOrigin
+} from '../../services/ai/aiSecretsAccess';
+import { ensureAiEndpointAccess } from '../../services/ai/aiEndpointAccess';
 import { storageService, createInMemorySeededWorkspace } from '../../services/storage/storage';
 import { prependOperatorTrace } from '../../services/dataset/operatorTraces';
+import { buildExpertOperatorIntegrationReadout } from '../../services/ai/expertOperatorIntegration';
+import {
+  findActiveCheckpoints,
+  findCheckpointChainRoot,
+  findCheckpointsByConversation,
+  findPendingApprovalCheckpoints,
+  prependCheckpoint
+} from '../../services/execution/checkpointStore';
+import {
+  approveCheckpointForPlan,
+  rejectCheckpointForPlan
+} from '../../services/execution/checkpointActions';
+import { resolveExecutionReceipt } from '../../services/execution/resolveExecutionReceipt';
+import {
+  artifactGeneratedCheckpoint,
+  beginAskCheckpoint,
+  commandCheckpoint,
+  completeAskCheckpoint,
+  expertConsultationCheckpoint,
+  failAskCheckpoint
+} from '../../services/execution/askExecutionCheckpoints';
+import { planConversionCheckpointChain } from '../../services/execution/planExecutionCheckpoints';
+import type { ActiveExecution, Checkpoint } from '../../types/executionState';
+import { isValidExecutionTransition } from '../../types/executionState';
+import { BackgroundOperationsIndicator } from '../../shared/ui/execution/BackgroundOperationsIndicator';
 import type {
   BrandOpsData,
   DigitalTwinSourceType,
@@ -52,6 +84,8 @@ import { CockpitDailyView } from './CockpitDailyView';
 import { MobileWorkspaceHubView } from './MobileWorkspaceHubView';
 import {
   MobileChatView,
+  CHAT_STICK_TO_BOTTOM_TOLERANCE_PX,
+  scrollChatTranscriptEndIntoView,
   type AskMemorySaveRequest,
   type AskPlanConversionRequest,
   type AskPlanConversionKind,
@@ -59,6 +93,7 @@ import {
 } from './MobileChatView';
 import { MobileIntegrationsView } from './MobileIntegrationsView';
 import { MobileSettingsView } from './MobileSettingsView';
+import type { AiBridgeConfigurationInput } from './SettingsAiBridgePanel';
 import {
   buildWorkspaceSnapshot,
   type MobileWorkspaceSnapshot,
@@ -87,6 +122,7 @@ import { requestExtensionSchedulerSync } from '../../services/messaging/requestE
 import { mapDocumentSurfaceToAgentSource } from '../../shared/navigation/appDocumentSurface';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import { openExtensionSurface } from '../../shared/navigation/openExtensionSurface';
+import { hrefPrimaryAppDefault } from '../../shared/navigation/navigationIntents';
 import { CircleHelp, Search } from 'lucide-react';
 import {
   SHELL_SCREEN_TITLE,
@@ -123,20 +159,27 @@ import {
   recordShellNavigation
 } from '../../services/usage/localProductUsage';
 import {
-  approveOperatorTraceEntry,
-  rejectOperatorTraceEntry
-} from '../../services/plan/reviewQueue';
+  approveCheckpointForTrace,
+  rejectCheckpointForTrace
+} from '../../services/execution/checkpointActions';
+import { executePlan } from '../../services/execution/planExecutor';
 import {
   convertAskResponseToPlan,
   savePlanDraftToWorkspace
 } from '../../services/plan/askPlanConversion';
+import {
+  persistConvertedPlan,
+  planPresetForOperationalKind
+} from '../../services/plan/persistConvertedPlan';
 import { ConvertAskToPlanDrawer } from './ConvertAskToPlanDrawer';
 import {
   buildDigitalTwinContextSummary,
   createDigitalTwinFromText,
   getActiveDigitalTwin,
   hydrateWorkspaceFromDigitalTwin,
-  removeDigitalTwinWorkspaceArtifacts
+  removeDigitalTwinWorkspaceArtifacts,
+  updateTwinFactVerificationStatus,
+  updateTwinIdentityGoals
 } from '../../services/digitalTwin/digitalTwin';
 import { evolveActiveTwinFromConnectedIdentity } from '../../services/connectedIdentity/connectedIdentityEngine';
 
@@ -153,10 +196,11 @@ interface MobileAppProps {
 const CHAT_THREAD_KEY = 'brandops:agent:chatThread';
 const CHAT_CONVERSATION_ID_KEY = 'brandops:agent:chatConversationId';
 const COMMAND_CHIPS_KEY = 'brandops:agent:commandChips';
+const ASK_PLAN_CONVERSION_KEY = 'brandops:agent:askPlanConversion';
 const MAX_PERSISTED_MESSAGES = 50;
 const MAX_COMMAND_CHIPS = 24;
 const HELLO_ASK_RESPONSE =
-  "Hello, I’m BrandOps, your AI operating partner inside this workspace: I help you think with Ask My Twin, turn useful ideas into operational plans, keep recommendations and approvals organized in Plan, and explain my reasoning in plain language so you can test text generation, review the output, save a useful insight, or convert the conversation into a plan when it is ready.";
+  'Hello, I’m BrandOps, your AI operating partner inside this workspace: I help you think with Ask My Twin, turn useful ideas into operational plans, keep recommendations and approvals organized in Plan, and explain my reasoning in plain language so you can test text generation, review the output, save a useful insight, or convert the conversation into a plan when it is ready.';
 
 function isHelloAskPrompt(input: string): boolean {
   const normalized = input
@@ -288,6 +332,49 @@ const writeChatThread = (rows: ChatMessage[]) => {
   }
 };
 
+interface StoredAskPlanConversion {
+  preset: PlanPreset;
+  request: AskPlanConversionRequest;
+  draft: PlanDraft | null;
+}
+
+const readStoredAskPlanConversion = (): StoredAskPlanConversion | null => {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(ASK_PLAN_CONVERSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredAskPlanConversion;
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (typeof parsed.preset !== 'string') return null;
+    if (!parsed.request || typeof parsed.request.askOutput !== 'string') return null;
+    return {
+      preset: parsed.preset as PlanPreset,
+      request: parsed.request,
+      draft: parsed.draft ?? null
+    };
+  } catch {
+    return null;
+  }
+};
+
+const writeStoredAskPlanConversion = (state: StoredAskPlanConversion) => {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(ASK_PLAN_CONVERSION_KEY, JSON.stringify(state));
+  } catch {
+    // ignore quota
+  }
+};
+
+const clearStoredAskPlanConversion = () => {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.removeItem(ASK_PLAN_CONVERSION_KEY);
+  } catch {
+    // ignore quota
+  }
+};
+
 const readChatConversationId = (): string => {
   const fallback = `ask-conversation-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   if (typeof localStorage === 'undefined') return fallback;
@@ -394,35 +481,35 @@ function LaunchAuthGate({
 }) {
   return (
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
-      <h2 className="text-h2 text-text">Sign in to continue</h2>
+      <h2 className="text-h2 text-text">Unlock this local preview</h2>
       <p className="mt-1 text-meta text-textMuted">
-        BrandOps keeps your workspace local-first. Continue with a provider to unlock this device;
-        production OAuth requires configured client IDs and provider redirects.
+        Choose a provider-labelled preview identity to unlock this device. This build does not
+        contact the provider, verify an email address, or create an OAuth session.
       </p>
       <div className="bo-auth-actions mt-3">
         <GoogleSignInButton
           onClick={() => onSignInProvider('google')}
-          variant="continue"
+          variant="preview"
           className={btnFocus}
         />
         <AppleSignInButton
           onClick={() => onSignInProvider('apple')}
-          variant="continue"
+          variant="preview"
           className={btnFocus}
         />
         <EmailMagicLinkButton
           onClick={() => onSignInProvider('email')}
-          variant="continue"
+          variant="preview"
           className={btnFocus}
         />
         <LinkedInSignInButton
           onClick={() => onSignInProvider('linkedin')}
-          variant="continue"
+          variant="preview"
           className={btnFocus}
         />
         <GitHubSignInButton
           onClick={() => onSignInProvider('github')}
-          variant="continue"
+          variant="preview"
           className={btnFocus}
         />
       </div>
@@ -441,10 +528,10 @@ function MembershipGate({
 }) {
   return (
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
-      <h2 className="text-h2 text-text">Activate membership</h2>
+      <h2 className="text-h2 text-text">Local membership demo</h2>
       <p className="mt-1 text-meta text-textMuted">
-        Membership protects the operator workspace when billing is enforced. Stripe checkout opens
-        only when production billing URLs are configured for this build.
+        This development-only gate reads an unverified local flag. Checkout and portal controls are
+        navigation links; this repo does not receive or verify a Stripe entitlement.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button
@@ -452,7 +539,7 @@ function MembershipGate({
           className={clsx('bo-btn-primary', btnFocus)}
           onClick={onStartCheckout}
         >
-          Open Stripe checkout
+          Open checkout link
         </button>
         <button
           type="button"
@@ -463,8 +550,7 @@ function MembershipGate({
         </button>
       </div>
       <p className="mt-2 text-fine text-textMuted">
-        If checkout is unavailable, the app is running without billing links and will explain that
-        state instead of pretending a purchase completed.
+        Production builds ignore this gate until a server-verified entitlement flow is implemented.
       </p>
     </section>
   );
@@ -506,6 +592,29 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [input, setInput] = useState('');
   /** Agent command in flight (Chat send, quick commands from any tab). */
   const [commandLoading, setCommandLoading] = useState(false);
+  /** Observable execution state for the turn in flight — additive to `commandLoading`, drives ActivityIndicator/StreamingStatus. */
+  const [activeExecution, setActiveExecution] = useState<ActiveExecution | null>(null);
+  const [executionHistory, setExecutionHistory] = useState<ActiveExecution[]>([]);
+  const pushExecutionStage = useCallback((stage: ActiveExecution) => {
+    setActiveExecution((prev) => {
+      /** No prior stage this turn (turn just started) — any starting state is turn-kind-dependent, not a real transition to validate. */
+      if (prev && !isValidExecutionTransition(prev.state, stage.state)) {
+        console.warn(
+          `BrandOps: unexpected execution transition ${prev.state} -> ${stage.state}. Non-fatal — check the emission site.`
+        );
+      }
+      return stage;
+    });
+    setExecutionHistory((prev) => [...prev, stage]);
+  }, []);
+  const clearExecutionStage = useCallback(() => {
+    setActiveExecution(null);
+    setExecutionHistory([]);
+  }, []);
+  /** Persisted checkpoint chain for the current conversation — most recent first, capped for the timeline UI. */
+  const [recentCheckpoints, setRecentCheckpoints] = useState<Checkpoint[]>([]);
+  /** Workspace-wide in-flight / pending-approval counts for BackgroundOperationsIndicator. */
+  const [operationsSummary, setOperationsSummary] = useState({ active: 0, pendingApproval: 0 });
   /** Settings Preferences `configure:` apply in flight only. */
   const [settingsApplyLoading, setSettingsApplyLoading] = useState(false);
   const [snapshot, setSnapshot] = useState<MobileWorkspaceSnapshot>(() =>
@@ -521,12 +630,36 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   );
   const [pendingClearChat, setPendingClearChat] = useState(false);
   const [pendingResetWorkspace, setPendingResetWorkspace] = useState(false);
-  const [pendingAskMemorySave, setPendingAskMemorySave] =
-    useState<AskMemorySaveRequest | null>(null);
+  const [pendingAskMemorySave, setPendingAskMemorySave] = useState<AskMemorySaveRequest | null>(
+    null
+  );
   const [pendingAskPlanConversion, setPendingAskPlanConversion] =
     useState<AskPlanConversionRequest | null>(null);
-  const [askPlanPreset, setAskPlanPreset] = useState<PlanPreset>('custom-plan');
-  const [askPlanDraft, setAskPlanDraft] = useState<PlanDraft | null>(null);
+  const [restoredAskPlanConversion] = useState(readStoredAskPlanConversion);
+  const [askPlanPreset, setAskPlanPreset] = useState<PlanPreset>(
+    restoredAskPlanConversion?.preset ?? 'custom-plan'
+  );
+  const [askPlanDraft, setAskPlanDraft] = useState<PlanDraft | null>(
+    restoredAskPlanConversion?.draft ?? null
+  );
+
+  useEffect(() => {
+    if (restoredAskPlanConversion?.request) {
+      setPendingAskPlanConversion(restoredAskPlanConversion.request);
+    }
+  }, [restoredAskPlanConversion]);
+
+  useEffect(() => {
+    if (pendingAskPlanConversion) {
+      writeStoredAskPlanConversion({
+        preset: askPlanPreset,
+        request: pendingAskPlanConversion,
+        draft: askPlanDraft
+      });
+    } else {
+      clearStoredAskPlanConversion();
+    }
+  }, [pendingAskPlanConversion, askPlanPreset, askPlanDraft]);
   const [askPlanBusy, setAskPlanBusy] = useState(false);
   const [askPlanError, setAskPlanError] = useState<string | null>(null);
   const [dataOpsHint, setDataOpsHint] = useState<string | null>(null);
@@ -536,14 +669,23 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [scrollProgress, setScrollProgress] = useState(0);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
   const [chatAttachment, setChatAttachment] = useState<ChatComposerAttachment | null>(null);
   const [launchAccess, setLaunchAccess] = useState<LaunchAccessState>(() =>
     readLaunchAccessState()
   );
+  /** `welcome.html` is the local preview-access gateway; once unlocked, hand off to the canonical app shell. */
+  useEffect(() => {
+    if (surfaceLabel !== 'welcome') return;
+    if (shouldRequireLaunchAuth(launchAccess)) return;
+    window.location.href = hrefPrimaryAppDefault();
+  }, [surfaceLabel, launchAccess]);
   const [firstRunJourneyVisible, setFirstRunJourneyVisible] = useState(
     () => !readFirstRunJourneyDismissed()
   );
   const [conversationId] = useState(readChatConversationId);
+  /** Synchronous cache of the last-read workspace — feeds receipt resolution for the checkpoint timeline without an extra async round trip per row. */
+  const workspaceDataRef = useRef<BrandOpsData | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
@@ -558,12 +700,18 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         void recordInitialShellReady(performance.now() - mountAtRef.current);
       }
       applyDocumentThemeFromAppSettings(workspace.settings);
+      workspaceDataRef.current = workspace;
       setSnapshot(buildWorkspaceSnapshot(workspace));
+      setRecentCheckpoints(findCheckpointsByConversation(workspace, conversationId).slice(0, 20));
+      setOperationsSummary({
+        active: findActiveCheckpoints(workspace).length,
+        pendingApproval: findPendingApprovalCheckpoints(workspace).length
+      });
     } catch (err) {
       console.error('BrandOps: failed to refresh workspace snapshot', err);
     }
     setCommandHistory(readCommandChips());
-  }, []);
+  }, [conversationId]);
 
   /** Records first Getting-started dismissal on workspace seed (Settings diagnostics + exports). */
   const persistGettingStartedCompletionToWorkspace = useCallback(async () => {
@@ -618,17 +766,27 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
 
   useEffect(() => {
     let frame = 0;
-    const update = () => {
-      frame = 0;
+    const computeProgress = () => {
       const doc = document.documentElement;
       const max = Math.max(1, doc.scrollHeight - window.innerHeight);
       setScrollProgress(Math.min(1, Math.max(0, window.scrollY / max)));
+    };
+    const update = () => {
+      frame = 0;
+      const doc = document.documentElement;
+      if (
+        window.innerHeight + window.scrollY <
+        doc.scrollHeight - CHAT_STICK_TO_BOTTOM_TOLERANCE_PX
+      ) {
+        stickToBottomRef.current = false;
+      }
+      computeProgress();
     };
     const requestUpdate = () => {
       if (frame) return;
       frame = window.requestAnimationFrame(update);
     };
-    update();
+    computeProgress();
     window.addEventListener('scroll', requestUpdate, { passive: true });
     window.addEventListener('resize', requestUpdate);
     return () => {
@@ -651,6 +809,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
 
   const commitTab = useCallback(
     (next: MobileShellTabId) => {
+      if (next === 'chat') stickToBottomRef.current = true;
       setActiveTab(next);
       if (isAppShellWithSectionQuery()) {
         replaceMobileShellQueryInUrl(next, cockpitWorkstream);
@@ -673,6 +832,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         new URLSearchParams(window.location.search),
         initialTab
       );
+      if (p.tab === 'chat') stickToBottomRef.current = true;
       setActiveTab(p.tab);
       setCockpitWorkstream(p.workstream ?? DEFAULT_DASHBOARD_SECTION);
     };
@@ -686,13 +846,16 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
 
   useEffect(() => {
     if (activeTab !== 'chat') return;
+    if (!stickToBottomRef.current) return;
+    const hasConversation = messages.some(
+      (message) =>
+        message.resultKind !== 'command-result' && (message.sourceSurface ?? 'Chat') === 'Chat'
+    );
+    if (!hasConversation) return;
     const el = transcriptEndRef.current;
     if (!el) return;
     requestAnimationFrame(() => {
-      el.scrollIntoView({
-        block: 'end',
-        behavior: messages.length <= 1 ? 'auto' : 'smooth'
-      });
+      scrollChatTranscriptEndIntoView(el);
     });
   }, [messages, commandLoading, activeTab]);
 
@@ -706,6 +869,26 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }, [activeTab, cockpitWorkstream]);
+
+  /** Set by "Open in Plan" (Ask message / checkpoint card) — the feed item carries a matching `id` (MobileWorkspaceHubView.tsx's `FeedItemRow`), scrolled to once the workspace tab has actually rendered it rather than just switching tabs and leaving the user to search. */
+  const [pendingPlanScrollId, setPendingPlanScrollId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!pendingPlanScrollId) return;
+    if (activeTab !== 'workspace') return;
+    const id = pendingPlanScrollId;
+    setPendingPlanScrollId(null);
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [activeTab, pendingPlanScrollId]);
+
+  const openPlanInWorkspace = useCallback(
+    (planId: string) => {
+      setPendingPlanScrollId(`saved-plan-${planId}`);
+      commitTab('workspace');
+    },
+    [commitTab]
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -780,7 +963,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     sourceSurface: 'Workspace' | 'Today' | 'Integrations' | 'Settings' | 'Chat' = 'Chat'
   ) => {
     if (!trimmed || commandLoading) return;
-    setMessages((prev) => [...prev, { id: uid(), role: 'user', text: trimmed, sourceSurface }]);
+    const userMessageId = uid();
+    stickToBottomRef.current = true;
+    setMessages((prev) => [
+      ...prev,
+      { id: userMessageId, role: 'user', text: trimmed, sourceSurface }
+    ]);
     setCommandLoading(true);
     const t0 = performance.now();
     let commandOk = false;
@@ -815,23 +1003,75 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           ]);
           commandOk = true;
         } else {
+          const askCheckpoint = beginAskCheckpoint({
+            conversationId,
+            questionText: question,
+            sourceMessageId: userMessageId
+          });
+          pushExecutionStage({
+            checkpointId: askCheckpoint.id,
+            state: 'UNDERSTANDING',
+            label: 'Understanding your question'
+          });
           const data = await storageService.getData();
           const settings = data.settings;
+          const setupState = await describeAiSetupState(settings);
+          if (setupState.needsSetup) {
+            const failureMsgId = uid();
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: failureMsgId,
+                role: 'assistant',
+                resultKind: 'ask-result',
+                ok: false,
+                text: `Ask My Twin needs AI setup first. ${setupState.guidance}`
+              }
+            ]);
+            const setupFailCheckpoint = failAskCheckpoint({
+              conversationId,
+              parentCheckpointId: askCheckpoint.id,
+              code: setupState.reason ?? 'adapter_disabled',
+              message: setupState.guidance ?? 'AI is not configured.'
+            });
+            let setupTraced = prependCheckpoint(data, askCheckpoint);
+            setupTraced = prependCheckpoint(setupTraced, setupFailCheckpoint);
+            await storageService.setData(setupTraced);
+            commandOk = false;
+            return;
+          }
+          /** Captured once and threaded into every checkpoint this turn creates below (Checkpoint.associatedTwinId) — the root ask.question checkpoint predates this read, so it alone stays untagged. */
+          const activeTwin = getActiveDigitalTwin(data);
           const workerResolved = resolveActiveCopilotWorker(settings);
           const routing = resolveHostedAssistantRouting({
             settings,
             workerModelId: workerResolved?.chatModelId ?? null
           });
-          const twinContext = buildDigitalTwinContextSummary(getActiveDigitalTwin(data));
+          const twinContext = buildDigitalTwinContextSummary(activeTwin);
           const routingAugment = [routing.behaviorHint, routing.diagnosticsDetail, twinContext]
             .filter(Boolean)
             .join('\n\n');
+          /** Computed once and threaded into `buildHostedAskMessages` below — avoids running expert composition (ASK+PLAN+OPERATE) twice for the same turn. */
+          const expertReadout = buildExpertOperatorIntegrationReadout(data, question);
           const completionMessages = buildHostedAskMessages(
             data,
             question,
             workerResolved,
-            routingAugment.length ? routingAugment : undefined
+            routingAugment.length ? routingAugment : undefined,
+            expertReadout
           );
+          const expertCheckpoint = expertConsultationCheckpoint({
+            conversationId,
+            parentCheckpointId: askCheckpoint.id,
+            expertNames: expertReadout.ask.expertNames,
+            expertIds: expertReadout.ask.expertIds,
+            associatedTwinId: activeTwin?.id
+          });
+          pushExecutionStage({
+            checkpointId: expertCheckpoint.id,
+            state: 'WORKING',
+            label: 'Consulting experts and drafting a response'
+          });
           const tHttp = performance.now();
           const workerCap = workerResolved?.maxCompletionTokens;
           const routedMax = routing.maxTokens;
@@ -876,6 +1116,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               citationCount
             }
           );
+          /**
+           * The gateway trace above is persisted against a fresh workspace snapshot. Re-read before
+           * adding the assistant result so a long hosted request cannot overwrite that trace (or a
+           * background/second-tab update) with the pre-request snapshot captured at line 916.
+           */
+          const postGatewayData = await storageService.getData();
           if (!result.ok) {
             const failureMsgId = uid();
             const failureText = `Hosted model unavailable (${result.code}): ${result.message}`;
@@ -889,7 +1135,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 text: failureText
               }
             ]);
-            const tracedFail = prependAiAssistantTurnTrace(await storageService.getData(), {
+            let tracedFail = prependAiAssistantTurnTrace(postGatewayData, {
               surface: 'assistant_chat',
               outcome: 'failure',
               user_turn_preview: question,
@@ -900,6 +1146,16 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               duration_ms: durationMs,
               message_id: failureMsgId
             });
+            const failCheckpoint = failAskCheckpoint({
+              conversationId,
+              parentCheckpointId: expertCheckpoint.id,
+              code: result.code,
+              message: result.message,
+              associatedTwinId: activeTwin?.id
+            });
+            tracedFail = prependCheckpoint(tracedFail, askCheckpoint);
+            tracedFail = prependCheckpoint(tracedFail, expertCheckpoint);
+            tracedFail = prependCheckpoint(tracedFail, failCheckpoint);
             await storageService.setData(tracedFail);
             commandOk = false;
           } else {
@@ -908,7 +1164,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             const orphans = sanitizeOrphanInlineMarkers(
               findOrphanInlineCitationMarkers(parsed.displayText, parsed.citations)
             );
-            let nextWorkspace = prependAiAssistantTurnTrace(data, {
+            let nextWorkspace = prependAiAssistantTurnTrace(postGatewayData, {
               surface: 'assistant_chat',
               outcome: 'success',
               user_turn_preview: question,
@@ -959,6 +1215,29 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             });
             nextWorkspace = prependBrandOpsAICoreResult(nextWorkspace, aiCoreResponse);
             const traceSummary = toAssistantAskTraceSummaryUI(traceBundle);
+            const completeCheckpoint = completeAskCheckpoint({
+              conversationId,
+              parentCheckpointId: expertCheckpoint.id,
+              responseSummary: parsed.displayText,
+              generatedArtifactRef: { kind: 'trace_bundle', id: traceBundle.trace_id },
+              associatedTwinId: activeTwinForCore?.id
+            });
+            nextWorkspace = prependCheckpoint(nextWorkspace, askCheckpoint);
+            nextWorkspace = prependCheckpoint(nextWorkspace, expertCheckpoint);
+            if (aiCoreResponse.artifacts.length > 0) {
+              const mintedArtifact = aiCoreResponse.artifacts[0];
+              nextWorkspace = prependCheckpoint(
+                nextWorkspace,
+                artifactGeneratedCheckpoint({
+                  conversationId,
+                  parentCheckpointId: completeCheckpoint.id,
+                  artifactId: mintedArtifact.id,
+                  artifactTitle: mintedArtifact.title,
+                  associatedTwinId: activeTwinForCore?.id
+                })
+              );
+            }
+            nextWorkspace = prependCheckpoint(nextWorkspace, completeCheckpoint);
             await storageService.setData(nextWorkspace);
             setMessages((prev) => [
               ...prev,
@@ -978,6 +1257,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         }
         await refreshWorkspaceSnapshot();
       } else {
+        pushExecutionStage({ state: 'WORKING', label: 'Running workspace command' });
         const result = await executeAgentWorkspaceCommand({
           text: trimmed,
           actorName: 'mobile-operator',
@@ -999,6 +1279,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           }
         ]);
         pushCommandChip(trimmed);
+        await storageService.setData(
+          prependCheckpoint(
+            data,
+            commandCheckpoint({ conversationId, commandText: trimmed, ok: result.ok })
+          )
+        );
         await refreshWorkspaceSnapshot();
         commandOk = result.ok;
       }
@@ -1020,6 +1306,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       const durationMs = performance.now() - t0;
       void recordCommandOutcome({ ok: commandOk, durationMs });
       setCommandLoading(false);
+      clearExecutionStage();
     }
   };
 
@@ -1137,7 +1424,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
 
   const persistAskMemorySave = useCallback(
     async (request: AskMemorySaveRequest) => {
-      const claim = `${request.title}: ${request.summary}`.replace(/\s+/g, ' ').trim().slice(0, 520);
+      const claim = `${request.title}: ${request.summary}`
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 520);
       if (!claim) return;
       try {
         const data = await storageService.getData();
@@ -1243,7 +1533,18 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           draft,
           userAction: 'save-plan'
         });
-        await storageService.setData(saved.workspace);
+        const checkpoints = planConversionCheckpointChain({
+          conversationId,
+          planId: saved.plan.id,
+          planTitle: saved.plan.title,
+          requiresApproval: saved.plan.status === 'pending-approval',
+          receiptId: saved.receipt.id
+        });
+        let workspaceWithCheckpoints = saved.workspace;
+        for (const checkpoint of checkpoints) {
+          workspaceWithCheckpoints = prependCheckpoint(workspaceWithCheckpoints, checkpoint);
+        }
+        await storageService.setData(workspaceWithCheckpoints);
         await refreshWorkspaceSnapshot();
         setMessages((prev) =>
           prev.map((message) =>
@@ -1270,7 +1571,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         setPendingAskPlanConversion(null);
         setAskPlanDraft(null);
         commitTab('workspace');
-        setDataOpsHint('ASK response saved as a PLAN draft with approvals, source link, and receipt.');
+        setDataOpsHint(
+          'ASK response saved as a PLAN draft with approvals, source link, and receipt.'
+        );
       } catch (err) {
         console.error('BrandOps: ASK to PLAN save failed', err);
         setAskPlanError(
@@ -1285,73 +1588,177 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     [
       capturePlanArtifactInAiCore,
       commitTab,
+      conversationId,
       pendingAskPlanConversion,
       refreshWorkspaceSnapshot
     ]
   );
 
   const convertPredictiveOpportunityToPlan = useCallback(
-    (suggestion: PredictiveOpportunitySuggestion) => {
+    async (suggestion: PredictiveOpportunitySuggestion) => {
       const card = buildOperationalPlanFromPredictiveSuggestion(suggestion);
-      setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
-      void capturePlanArtifactInAiCore({
-        intent: `Convert predictive opportunity "${suggestion.title}" to PLAN`,
-        userInput: `${suggestion.title}\n${suggestion.whyThisAppeared}\n${suggestion.expectedImpact}`,
-        generatedText: JSON.stringify(card, null, 2),
-        requiredOutputs: ['opportunity analysis', 'operational plan'],
-        approvalRequired: true
-      });
-      commitTab('workspace');
-      setDataOpsHint('Predictive opportunity converted to PLAN. Preview, approve, edit, retry, or export it.');
+      try {
+        const data = await storageService.getData();
+        const saved = persistConvertedPlan({
+          workspace: data,
+          conversationId,
+          messageId: `predictive-opportunity-${suggestion.id}`,
+          responseText: [
+            `Opportunity: ${suggestion.title}.`,
+            `Suggestion: ${suggestion.suggestion}`,
+            `Why this appeared: ${suggestion.whyThisAppeared}`,
+            `Expected impact: ${suggestion.expectedImpact}`,
+            `Supporting signals: ${suggestion.supportingSignals.join(' | ')}`,
+            `Confidence: ${suggestion.confidence}%`
+          ].join(' '),
+          userIntent: `Convert predictive opportunity "${suggestion.title}" to PLAN`,
+          activeTwinId: snapshot.activeDigitalTwin?.id ?? null,
+          planPreset: planPresetForOperationalKind(card.kind),
+          sourceSurface: 'predictive-opportunity',
+          convertedFromLabel: 'Predictive opportunity'
+        });
+        setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+        await storageService.setData(saved.workspace);
+        await refreshWorkspaceSnapshot();
+        await capturePlanArtifactInAiCore({
+          intent: `Convert predictive opportunity "${suggestion.title}" to PLAN`,
+          userInput: `${suggestion.title}\n${suggestion.whyThisAppeared}\n${suggestion.expectedImpact}`,
+          generatedText: JSON.stringify(saved.plan, null, 2),
+          requiredOutputs: ['opportunity analysis', 'operational plan'],
+          approvalRequired: true
+        });
+        commitTab('workspace');
+        setDataOpsHint(
+          `Predictive opportunity converted and saved to PLAN as "${saved.plan.title}". Preview, approve, edit, retry, or export it.`
+        );
+      } catch (err) {
+        console.error('BrandOps: predictive opportunity to PLAN save failed', err);
+        setDataOpsHint(
+          'Could not convert the predictive opportunity to PLAN. Nothing was changed.'
+        );
+      }
     },
-    [capturePlanArtifactInAiCore, commitTab]
+    [
+      capturePlanArtifactInAiCore,
+      commitTab,
+      conversationId,
+      refreshWorkspaceSnapshot,
+      snapshot.activeDigitalTwin
+    ]
   );
 
   const convertContentIdeationToPlan = useCallback(
-    (item: ContentIdeationItem) => {
+    async (item: ContentIdeationItem) => {
       const card = buildOperationalPlanFromContentIdeation(item);
-      setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
-      void capturePlanArtifactInAiCore({
-        intent: `Convert content idea "${item.title}" to PLAN`,
-        userInput: `${item.title}\n${item.idea}\n${item.whyNow}`,
-        generatedText: JSON.stringify(card, null, 2),
-        requiredOutputs: ['content idea', 'content plan'],
-        approvalRequired: true
-      });
-      commitTab('workspace');
-      setDataOpsHint('Content ideation converted to PLAN. Preview, approve, edit, retry, or export it.');
+      try {
+        const data = await storageService.getData();
+        const saved = persistConvertedPlan({
+          workspace: data,
+          conversationId,
+          messageId: `predictive-content-ideation-${item.id}`,
+          responseText: [
+            `Content idea: ${item.title}.`,
+            item.idea,
+            `Why now: ${item.whyNow}`,
+            `Suggested format: ${item.suggestedFormat}`,
+            `Expected impact: ${item.expectedImpact}`
+          ].join(' '),
+          userIntent: `Convert content idea "${item.title}" to PLAN`,
+          activeTwinId: snapshot.activeDigitalTwin?.id ?? null,
+          planPreset: planPresetForOperationalKind(card.kind),
+          sourceSurface: 'predictive-content-ideation',
+          convertedFromLabel: 'Content ideation'
+        });
+        setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+        await storageService.setData(saved.workspace);
+        await refreshWorkspaceSnapshot();
+        await capturePlanArtifactInAiCore({
+          intent: `Convert content idea "${item.title}" to PLAN`,
+          userInput: `${item.title}\n${item.idea}\n${item.whyNow}`,
+          generatedText: JSON.stringify(saved.plan, null, 2),
+          requiredOutputs: ['content idea', 'content plan'],
+          approvalRequired: true
+        });
+        commitTab('workspace');
+        setDataOpsHint(
+          `Content ideation converted and saved to PLAN as "${saved.plan.title}". Preview, approve, edit, retry, or export it.`
+        );
+      } catch (err) {
+        console.error('BrandOps: content ideation to PLAN save failed', err);
+        setDataOpsHint('Could not convert the content idea to PLAN. Nothing was changed.');
+      }
     },
-    [capturePlanArtifactInAiCore, commitTab]
+    [
+      capturePlanArtifactInAiCore,
+      commitTab,
+      conversationId,
+      refreshWorkspaceSnapshot,
+      snapshot.activeDigitalTwin
+    ]
   );
 
   const convertWorkflowPredictionToPlan = useCallback(
-    (prediction: WorkflowPrediction) => {
+    async (prediction: WorkflowPrediction) => {
       const card = buildOperationalPlanFromWorkflowPrediction(prediction);
-      setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
-      void capturePlanArtifactInAiCore({
-        intent: `Convert workflow prediction "${prediction.title}" to PLAN`,
-        userInput: `${prediction.title}\n${prediction.repeatedPattern}`,
-        generatedText: JSON.stringify(card, null, 2),
-        requiredOutputs: ['workflow plan'],
-        approvalRequired: true
-      });
-      commitTab('workspace');
-      setDataOpsHint('Workflow prediction converted to PLAN. Save, edit, reuse, template, or automate only after approval.');
+      try {
+        const data = await storageService.getData();
+        const saved = persistConvertedPlan({
+          workspace: data,
+          conversationId,
+          messageId: `workflow-prediction-${prediction.id}`,
+          responseText: [
+            `Workflow: ${prediction.title}.`,
+            prediction.repeatedPattern,
+            `Suggestion: ${prediction.suggestion}`,
+            `Reusable template: ${prediction.reusableTemplateName}`,
+            `Recommended steps: ${prediction.recommendedSteps.join(' → ')}`,
+            `Approval gate: ${prediction.approvalGate}`
+          ].join(' '),
+          userIntent: `Convert workflow prediction "${prediction.title}" to PLAN`,
+          activeTwinId: snapshot.activeDigitalTwin?.id ?? null,
+          planPreset: planPresetForOperationalKind(card.kind),
+          sourceSurface: 'workflow-prediction',
+          convertedFromLabel: 'Workflow prediction'
+        });
+        setConvertedOperationalPlans((prev) => [card, ...prev].slice(0, 6));
+        await storageService.setData(saved.workspace);
+        await refreshWorkspaceSnapshot();
+        await capturePlanArtifactInAiCore({
+          intent: `Convert workflow prediction "${prediction.title}" to PLAN`,
+          userInput: `${prediction.title}\n${prediction.repeatedPattern}`,
+          generatedText: JSON.stringify(saved.plan, null, 2),
+          requiredOutputs: ['workflow plan'],
+          approvalRequired: true
+        });
+        commitTab('workspace');
+        setDataOpsHint(
+          `Workflow prediction converted and saved to PLAN as "${saved.plan.title}". Save, edit, reuse, template, or automate only after approval.`
+        );
+      } catch (err) {
+        console.error('BrandOps: workflow prediction to PLAN save failed', err);
+        setDataOpsHint('Could not convert the workflow prediction to PLAN. Nothing was changed.');
+      }
     },
-    [capturePlanArtifactInAiCore, commitTab]
+    [
+      capturePlanArtifactInAiCore,
+      commitTab,
+      conversationId,
+      refreshWorkspaceSnapshot,
+      snapshot.activeDigitalTwin
+    ]
   );
 
   const onSignInProvider = useCallback((provider: AuthProviderId) => {
     const nextEmail =
       provider === 'google'
-        ? 'google.user@brandops.app'
+        ? 'google.preview@brandops.invalid'
         : provider === 'apple'
-          ? 'apple.user@brandops.app'
+          ? 'apple.preview@brandops.invalid'
           : provider === 'github'
-            ? 'github.user@brandops.app'
+            ? 'github.preview@brandops.invalid'
             : provider === 'linkedin'
-              ? 'linkedin.user@brandops.app'
-              : 'operator@brandops.app';
+              ? 'linkedin.preview@brandops.invalid'
+              : 'operator.preview@brandops.invalid';
     setLaunchAccess((prev) => ({
       ...prev,
       auth: {
@@ -1361,7 +1768,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         signedInAt: new Date().toISOString()
       }
     }));
-    setDataOpsHint(`Signed in with ${authProviderLabel(provider)}.`);
+    setDataOpsHint(`${authProviderLabel(provider)} local preview identity selected.`);
   }, []);
 
   const onSignOut = useCallback(() => {
@@ -1369,7 +1776,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       ...prev,
       auth: { isAuthenticated: false, provider: null, email: '' }
     }));
-    setDataOpsHint('Signed out.');
+    setDataOpsHint('Local preview access cleared.');
   }, []);
 
   const onStartCheckout = useCallback(() => {
@@ -1433,6 +1840,11 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     },
     [commitTab]
   );
+
+  const openCreateTwinSetup = useCallback(() => {
+    commitTab('settings');
+    setResumePhaseRevealKey((key) => key + 1);
+  }, [commitTab]);
 
   const exportWorkspace = useCallback(async () => {
     try {
@@ -1540,7 +1952,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     async (traceId: string) => {
       try {
         const data = await storageService.getData();
-        const next = approveOperatorTraceEntry(data, traceId);
+        const next = approveCheckpointForTrace(data, traceId);
         if (next === null) {
           setDataOpsHint('Trace not found.');
           return;
@@ -1564,7 +1976,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     async (traceId: string) => {
       try {
         const data = await storageService.getData();
-        const next = rejectOperatorTraceEntry(data, traceId);
+        const next = rejectCheckpointForTrace(data, traceId);
         if (next === null) {
           setDataOpsHint('Trace not found.');
           return;
@@ -1583,6 +1995,129 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     },
     [refreshWorkspaceSnapshot]
   );
+
+  /** Disables the approve/reject buttons on `ApprovalCheckpoint` cards for the duration of an in-flight decision — prevents a double-click firing two concurrent approve/reject calls. */
+  const [checkpointActionBusy, setCheckpointActionBusy] = useState(false);
+
+  /** Approve/reject wired directly from a `plan.approval_requested` checkpoint rendered in Ask's own timeline (not just Plan's review queue) — same underlying source of truth, keyed by plan id instead of trace id. */
+  const approvePlanFromCheckpoint = useCallback(
+    async (checkpoint: Checkpoint) => {
+      const planId = checkpoint.associatedPlanRef?.id;
+      if (!planId) return;
+      setCheckpointActionBusy(true);
+      try {
+        const data = await storageService.getData();
+        const next = approveCheckpointForPlan(data, planId);
+        if (!next) {
+          setDataOpsHint('No pending review found for that plan.');
+          return;
+        }
+        await storageService.setData(next);
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint('Review approved.');
+      } catch (e) {
+        console.error('BrandOps: approve plan checkpoint failed', e);
+        setDataOpsHint(e instanceof Error ? e.message : 'Could not approve.');
+      } finally {
+        setCheckpointActionBusy(false);
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  const rejectPlanFromCheckpoint = useCallback(
+    async (checkpoint: Checkpoint) => {
+      const planId = checkpoint.associatedPlanRef?.id;
+      if (!planId) return;
+      setCheckpointActionBusy(true);
+      try {
+        const data = await storageService.getData();
+        const next = rejectCheckpointForPlan(data, planId);
+        if (!next) {
+          setDataOpsHint('No pending review found for that plan.');
+          return;
+        }
+        await storageService.setData(next);
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint('Review rejected. No external action executed.');
+      } catch (e) {
+        console.error('BrandOps: reject plan checkpoint failed', e);
+        setDataOpsHint(e instanceof Error ? e.message : 'Could not reject.');
+      } finally {
+        setCheckpointActionBusy(false);
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  /**
+   * Executes an approved plan via the P0-1 executor. Execution is recorded —
+   * steps requiring a platform/approval/external action are reported as
+   * blocked, never performed. Persists the mutated workspace and surfaces
+   * `result.summary` (honest: 'executed' means recorded, not successful).
+   */
+  const executeApprovedPlan = useCallback(
+    async (planId: string) => {
+      try {
+        const data = await storageService.getData();
+        const result = executePlan(data, planId);
+        if (result.workspace === data) {
+          setDataOpsHint(result.summary);
+          return;
+        }
+        await storageService.setData(result.workspace);
+        await refreshWorkspaceSnapshot();
+        const blocked = result.blockedSteps.length
+          ? ` ${result.blockedSteps.length} step(s) blocked (external action required).`
+          : '';
+        setDataOpsHint(`${result.summary}${blocked}`);
+      } catch (e) {
+        console.error('BrandOps: execute plan failed', e);
+        setDataOpsHint(e instanceof Error ? e.message : 'Could not execute plan.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  /** Recovers the original question from a FAILED checkpoint's chain root and resends it — real retry, not a button that just hides the error. */
+  const retryAskFromCheckpoint = async (checkpoint: Checkpoint) => {
+    try {
+      const data = await storageService.getData();
+      const root = findCheckpointChainRoot(data, checkpoint.id);
+      if (!root || root.type !== 'ask.question') {
+        setDataOpsHint('Could not find the original question to retry.');
+        return;
+      }
+      /** `root.summary` is display-clamped (MAX_SUMMARY_LEN) — recover the full, untruncated question from the source message when available so a long question doesn't get silently cut off on retry. */
+      const sourceMessage = root.sourceMessageId
+        ? messages.find((m) => m.id === root.sourceMessageId)
+        : undefined;
+      const questionText = sourceMessage?.text || root.summary;
+      await executeCommandFlow(`ask: ${questionText}`, 'Chat');
+    } catch (e) {
+      console.error('BrandOps: retry ask checkpoint failed', e);
+      setDataOpsHint(e instanceof Error ? e.message : 'Could not retry.');
+    }
+  };
+
+  /** Structured-command failures have no retry (no original question to resend) — `inspect` is their only recovery action, matching the "ask: explain this JSON" pattern used elsewhere (e.g. Preview PLAN/opportunity cards) rather than leaving the failure card with no action at all. */
+  const inspectFailedCheckpoint = (checkpoint: Checkpoint) => {
+    sendQuickCommand(
+      `ask: Explain this failed checkpoint in plain language — what happened, the likely cause, and what I can safely try next. Do not execute anything.\n\n${JSON.stringify(checkpoint, null, 2)}`
+    );
+  };
+
+  const resolveCheckpointReceipt = useCallback((checkpoint: Checkpoint) => {
+    if (!workspaceDataRef.current) return null;
+    return resolveExecutionReceipt(workspaceDataRef.current, checkpoint);
+  }, []);
+
+  /** A workspace can hold several named twins — resolve which one this checkpoint's turn actually ran against, not just the currently active one. */
+  const resolveCheckpointTwinName = useCallback((checkpoint: Checkpoint) => {
+    if (!checkpoint.associatedTwinId) return null;
+    const twins = workspaceDataRef.current?.digitalTwins?.twins ?? [];
+    return twins.find((twin) => twin.id === checkpoint.associatedTwinId)?.displayName ?? null;
+  }, []);
 
   const setOperatorTraceCollection = useCallback(
     async (enabled: boolean) => {
@@ -1681,6 +2216,77 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     },
     [refreshWorkspaceSnapshot]
   );
+
+  const saveAiBridgeConfiguration = useCallback(
+    async (input: AiBridgeConfigurationInput) => {
+      const inferenceBaseUrl = input.bridge.inferenceBaseUrl.trim().replace(/\/+$/, '');
+      const embeddingBaseUrl = input.bridge.embeddingBaseUrl.trim().replace(/\/+$/, '');
+      const chatModelId = input.bridge.chatModelId.trim();
+      const embeddingModelId = input.bridge.embeddingModelId.trim();
+      const endpointBaseUrls = [inferenceBaseUrl, embeddingBaseUrl].filter(Boolean);
+
+      if (input.adapterMode === 'external-opt-in' && !inferenceBaseUrl) {
+        throw new Error('Inference base URL is required for hosted mode.');
+      }
+      if (!chatModelId) throw new Error('Chat model ID is required.');
+      if (!embeddingModelId) throw new Error('Embedding model ID is required.');
+      endpointBaseUrls.forEach(normalizeOpenAiCompatibleEndpointOrigin);
+
+      // Must remain in the direct Save click path so Chrome can show an optional-origin prompt.
+      const endpointAccess = await ensureAiEndpointAccess(endpointBaseUrls);
+      if (!endpointAccess.granted) {
+        throw new Error(
+          'Endpoint access was not granted. The AI bridge settings were not changed.'
+        );
+      }
+
+      if (input.adapterMode === 'external-opt-in' || input.apiKey) {
+        await configureOpenAiCompatibleCredentials({
+          endpointBaseUrls,
+          ...(input.apiKey ? { apiKey: input.apiKey } : {})
+        });
+      }
+
+      const data = await storageService.getData();
+      await storageService.setData({
+        ...data,
+        settings: {
+          ...data.settings,
+          aiAdapterMode: input.adapterMode,
+          aiBridge: {
+            inferenceBaseUrl,
+            embeddingBaseUrl,
+            chatModelId,
+            embeddingModelId
+          }
+        }
+      });
+      await refreshWorkspaceSnapshot();
+      setDataOpsHint('Hosted AI bridge settings saved.');
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  const clearAiBridgeApiKey = useCallback(async () => {
+    await clearOpenAiCompatibleApiKey();
+    setDataOpsHint('Hosted AI API key removed from this device.');
+  }, []);
+
+  const testAiBridgeConnection = useCallback(async (): Promise<string> => {
+    const data = await storageService.getData();
+    const startedAt = performance.now();
+    const result = await runChatCompletion(data.settings, {
+      messages: [
+        { role: 'system', content: 'You are a connectivity probe. Reply with the single word OK.' },
+        { role: 'user', content: 'Connectivity check.' }
+      ],
+      temperature: 0,
+      maxTokens: 8
+    });
+    if (!result.ok) throw new Error(`${result.code}: ${result.message}`);
+    const durationMs = Math.round(performance.now() - startedAt);
+    return `Connection succeeded with ${data.settings.aiBridge.chatModelId} (${durationMs} ms).`;
+  }, []);
 
   const importWorkspace = useCallback(
     async (raw: string) => {
@@ -1852,6 +2458,55 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     }
   }, [refreshWorkspaceSnapshot]);
 
+  const updateTwinFactStatus = useCallback(
+    async (input: {
+      twinId: string;
+      itemKind: 'experience' | 'education' | 'project';
+      itemId: string;
+      status: 'verified' | 'rejected';
+    }) => {
+      try {
+        const data = await storageService.getData();
+        const next = updateTwinFactVerificationStatus(data, input);
+        if (next === data) {
+          setDataOpsHint('Twin fact not found — nothing changed.');
+          return;
+        }
+        await storageService.setData(next);
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint(`Twin fact marked ${input.status}.`);
+      } catch (err) {
+        console.error('BrandOps: update twin fact status failed', err);
+        setDataOpsHint('Could not update twin fact verification status.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
+  const updateTwinGoals = useCallback(
+    async (input: { twinId: string; goals: string[] }) => {
+      try {
+        const data = await storageService.getData();
+        const next = updateTwinIdentityGoals(data, input.twinId, input.goals);
+        if (next === data) {
+          setDataOpsHint('Twin not found — nothing changed.');
+          return;
+        }
+        await storageService.setData(next);
+        await refreshWorkspaceSnapshot();
+        setDataOpsHint(
+          input.goals.length === 0
+            ? 'Twin goals cleared.'
+            : `Twin goals updated (${input.goals.length} total).`
+        );
+      } catch (err) {
+        console.error('BrandOps: update twin goals failed', err);
+        setDataOpsHint('Could not update twin goals.');
+      }
+    },
+    [refreshWorkspaceSnapshot]
+  );
+
   const disableMemoryContext = useCallback(async () => {
     try {
       const data = await storageService.getData();
@@ -1897,7 +2552,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           : withoutTwins.connectedIdentityEngine
       });
       await refreshWorkspaceSnapshot();
-      setDataOpsHint('Memory context deleted. Twin memory, local traces, ASK trace memory, and connected identity signals were cleared.');
+      setDataOpsHint(
+        'Memory context deleted. Twin memory, local traces, ASK trace memory, and connected identity signals were cleared.'
+      );
     } catch (err) {
       console.error('BrandOps: delete memory context failed', err);
       setDataOpsHint('Could not delete memory context.');
@@ -1980,7 +2637,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 {shellSrSummary}
               </span>
               <h1
-                className="bo-mobile-brand__title whitespace-nowrap text-lg font-semibold leading-tight tracking-tight"
+                className="bo-mobile-brand__title min-w-0 truncate text-lg font-semibold leading-tight tracking-tight"
                 aria-describedby={shellTitleDescId}
               >
                 {shellScreenTitle}
@@ -1989,6 +2646,13 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-start justify-end gap-1.5">
+            {!shouldRequireLaunchAuth(launchAccess) ? (
+              <BackgroundOperationsIndicator
+                activeCount={operationsSummary.active}
+                pendingApprovalCount={operationsSummary.pendingApproval}
+                onClick={() => commitTab('workspace')}
+              />
+            ) : null}
             {!shouldRequireLaunchAuth(launchAccess) ? (
               <AppearanceToggle
                 activeTheme={snapshot.settingsFullReadout.theme === 'light' ? 'light' : 'dark'}
@@ -2062,14 +2726,29 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             <MobileChatView
               messages={messages}
               loading={commandLoading}
+              activeExecution={activeExecution}
+              executionHistory={executionHistory}
+              checkpoints={recentCheckpoints}
+              onApprovePlanCheckpoint={approvePlanFromCheckpoint}
+              onRejectPlanCheckpoint={rejectPlanFromCheckpoint}
+              checkpointActionBusy={checkpointActionBusy}
+              onRetryAskCheckpoint={retryAskFromCheckpoint}
+              onInspectCheckpoint={inspectFailedCheckpoint}
+              resolveCheckpointReceipt={resolveCheckpointReceipt}
+              resolveCheckpointTwinName={resolveCheckpointTwinName}
               onQuickCommand={sendQuickCommand}
               activeDigitalTwin={snapshot.activeDigitalTwin}
               btnFocus={btnFocus}
               transcriptEndRef={transcriptEndRef}
+              stickToBottomRef={stickToBottomRef}
               assistantRoutingCaption={snapshot.aiAssistantRoutingCaption}
               onConvertAskToPlan={convertAskOutputToPlan}
               convertingPlanMessageId={askPlanBusy ? pendingAskPlanConversion?.messageId : null}
-              onOpenConvertedPlan={() => commitTab('workspace')}
+              onOpenConvertedPlan={openPlanInWorkspace}
+              onOpenPlanCheckpoint={(checkpoint) => {
+                if (checkpoint.associatedPlanRef?.id)
+                  openPlanInWorkspace(checkpoint.associatedPlanRef.id);
+              }}
               onRequestSaveToMemory={setPendingAskMemorySave}
             />
           </section>
@@ -2092,7 +2771,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                   runCommand={sendQuickCommandFrom('Workspace', { navigateToChat: false })}
                   onOpenToday={() => commitTab('daily')}
                   launchAccess={launchAccess}
-                  onOpenSettings={() => commitTab('settings')}
+                  onOpenSettings={openCreateTwinSetup}
                   onOpenIntegrations={() => commitTab('integrations')}
                   onOpenCommandPalette={() => setCommandPaletteOpen(true)}
                   firstRunJourneyVisible={firstRunJourneyVisible}
@@ -2101,6 +2780,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                   onDownloadPipelineRun={downloadPipelineRunJson}
                   onApproveOperatorTrace={approveOperatorTraceReview}
                   onRejectOperatorTrace={rejectOperatorTraceReview}
+                  onExecutePlan={executeApprovedPlan}
                   onConvertPredictiveOpportunityToPlan={convertPredictiveOpportunityToPlan}
                   onConvertContentIdeationToPlan={convertContentIdeationToPlan}
                   onConvertWorkflowPredictionToPlan={convertWorkflowPredictionToPlan}
@@ -2119,7 +2799,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                     }}
                     onTryCommand={sendQuickCommand}
                     onOpenAsk={() => commitTab('chat')}
-                    onOpenSettings={() => commitTab('settings')}
+                    onOpenSettings={openCreateTwinSetup}
                     onOpenHelp={() => openExtensionSurface('help')}
                   />
                 ) : null}
@@ -2147,6 +2827,12 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 commandBusy={commandLoading}
                 runCommand={sendQuickCommandFrom('Integrations')}
                 documentSurface={surfaceLabel}
+                loadWorkspace={() => storageService.getData()}
+                applyWorkspace={async (next) => {
+                  await storageService.setData(next);
+                  await refreshWorkspaceSnapshot();
+                }}
+                onExportWorkspace={exportWorkspace}
               />
             ) : null}
 
@@ -2182,9 +2868,14 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                 onPersistResumeNeuralPhaseContext={persistResumeNeuralPhaseContext}
                 onCreateDigitalTwinFromText={createDigitalTwinFromProfile}
                 onDeleteActiveDigitalTwin={deleteActiveDigitalTwin}
+                onUpdateTwinFactStatus={updateTwinFactStatus}
+                onUpdateTwinGoals={updateTwinGoals}
                 resumePhaseRevealKey={resumePhaseRevealKey}
                 onAiOperatorModeChange={patchAiOperatorMode}
                 onAiRoutingDiagnosticsChange={patchAiRoutingDiagnostics}
+                onSaveAiBridgeConfiguration={saveAiBridgeConfiguration}
+                onClearAiBridgeApiKey={clearAiBridgeApiKey}
+                onTestAiBridgeConnection={testAiBridgeConnection}
               />
             ) : null}
           </section>
@@ -2299,8 +2990,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
               Save ASK output to memory?
             </h2>
             <p className="mt-2 text-sm text-textMuted">
-              This will add the item to the active digital twin&apos;s approved memory. Workspace DNA
-              will refresh from that memory. Review before saving identity-level facts.
+              This will add the item to the active digital twin&apos;s approved memory. Workspace
+              DNA will refresh from that memory. Review before saving identity-level facts.
             </p>
             <div className="mt-2 rounded-lg border border-border/50 bg-bgSubtle/80 p-2 text-xs text-textMuted">
               <p className="font-semibold text-text">{pendingAskMemorySave.title}</p>

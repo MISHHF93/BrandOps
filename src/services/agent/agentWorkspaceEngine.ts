@@ -244,7 +244,7 @@ const addIntegrationSource = async (
           status: 'planned',
           artifactTypes: [...preset.artifactTypes],
           tags: [...preset.defaultTags, command.source, 'agent-ingest'],
-          notes: `Registered via Chat (${preset.label}). Wire OAuth or webhooks in extension flows when available.`,
+          notes: `Registered via Chat (${preset.label}). This is a local registry row; wire a verified connector when available.`,
           createdAt: now
         },
         ...workspace.integrationHub.sources
@@ -1130,7 +1130,8 @@ const runParsedRoute = async (
         return {
           ok: false,
           action: 'ai-core-batch-run',
-          summary: 'Could not parse AI Core batch command. Use: ai core batch: generate my launch kit.'
+          summary:
+            'Could not parse AI Core batch command. Use: ai core batch: generate my launch kit.'
         };
       }
       const activeTwinId = workspace.digitalTwins?.activeTwinId ?? undefined;
@@ -1140,7 +1141,8 @@ const runParsedRoute = async (
           intent: inv.intent,
           mode: 'batch',
           twinId: activeTwinId,
-          workspaceId: workspace.digitalTwins?.twins.find((twin) => twin.id === activeTwinId)?.workspaceId,
+          workspaceId: workspace.digitalTwins?.twins.find((twin) => twin.id === activeTwinId)
+            ?.workspaceId,
           userInput: inv.intent,
           safetyLevel: 'review',
           approvalRequired: true

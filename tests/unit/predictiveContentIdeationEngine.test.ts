@@ -85,7 +85,9 @@ describe('Predictive Content Ideation Engine', () => {
     expect(readout.audienceHooks.length).toBeGreaterThan(0);
     expect(readout.trendOpportunities.length).toBeGreaterThan(0);
     expect(readout.allIdeas.every((idea) => idea.evidenceUsed.length > 0)).toBe(true);
-    expect(readout.allIdeas.every((idea) => idea.askToPlanCommand.includes('Do not publish'))).toBe(true);
+    expect(readout.allIdeas.every((idea) => idea.askToPlanCommand.includes('Do not publish'))).toBe(
+      true
+    );
     expect(readout.sourceCoverage['engagement-data']).toBeGreaterThan(0);
     expect(readout.approvalPolicy).toContain('review and approve');
   });
@@ -108,4 +110,3 @@ describe('Predictive Content Ideation Engine', () => {
     expect(snapshot.predictiveContentIdeationEngine.averageConfidence).toBeGreaterThan(0);
   });
 });
-

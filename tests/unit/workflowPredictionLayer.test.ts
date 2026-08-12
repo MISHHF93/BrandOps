@@ -193,12 +193,12 @@ describe('Workflow Prediction Layer', () => {
       ])
     );
     expect(readout.predictions.every((prediction) => prediction.approvalRequired)).toBe(true);
-    expect(readout.predictions.every((prediction) => prediction.suggestion.includes('Would you like'))).toBe(
-      true
-    );
-    expect(readout.predictions.every((prediction) => prediction.controls.saveCommand.startsWith('ask:'))).toBe(
-      true
-    );
+    expect(
+      readout.predictions.every((prediction) => prediction.suggestion.includes('Would you like'))
+    ).toBe(true);
+    expect(
+      readout.predictions.every((prediction) => prediction.controls.saveCommand.startsWith('ask:'))
+    ).toBe(true);
     expect(
       readout.predictions.every((prediction) =>
         prediction.controls.automateWithApprovalsCommand.includes('approval-gated automation')
@@ -226,4 +226,3 @@ describe('Workflow Prediction Layer', () => {
     expect(snapshot.workflowPredictionLayer.averageConfidence).toBeGreaterThan(0);
   });
 });
-

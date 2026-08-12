@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import type { LucideIcon } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { dockTabForShellTab, type MobileShellTabId } from './mobileShellQuery';
 import { MOBILE_SHELL_NAV_TABS } from './mobileTabConfig';
@@ -60,43 +59,6 @@ export function MobileTabSection({
       ) : null}
       {children}
     </section>
-  );
-}
-
-export function MobileTabPageHeader({
-  title,
-  subtitle,
-  icon: Icon,
-  iconWrapperClassName,
-  iconClassName,
-  haloTone = 'primary'
-}: {
-  title: string;
-  subtitle: string;
-  icon: LucideIcon;
-  iconWrapperClassName: string;
-  iconClassName: string;
-  haloTone?: 'primary' | 'info' | 'success';
-}) {
-  return (
-    <header
-      className={clsx(
-        'bo-section-halo bo-tab-page-header space-y-1.5',
-        haloTone === 'info' && 'bo-section-halo--info',
-        haloTone === 'success' && 'bo-section-halo--success',
-        haloTone === 'primary' && 'bo-section-halo--primary'
-      )}
-    >
-      <div className="flex items-center gap-3.5">
-        <div className={clsx('h-11 w-11 shrink-0', iconWrapperClassName)}>
-          <Icon className={clsx('h-5 w-5 sm:h-6 sm:w-6', iconClassName)} aria-hidden />
-        </div>
-        <div className="min-w-0">
-          <h2 className="text-h1 text-text">{title}</h2>
-          <p className="mt-0.5 text-label text-textMuted">{subtitle}</p>
-        </div>
-      </div>
-    </header>
   );
 }
 

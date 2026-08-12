@@ -89,8 +89,17 @@ function activeTwinSignals(twin: DigitalTwin | null): {
       ],
       14
     ),
-    skills: uniq([...twin.resumeProfile.skills, ...twin.resumeProfile.tools, ...twin.resumeProfile.keywords], 14),
-    industry: uniq([...twin.resumeProfile.industries, ...twin.resumeProfile.experience.map((item) => item.organization)], 10)
+    skills: uniq(
+      [...twin.resumeProfile.skills, ...twin.resumeProfile.tools, ...twin.resumeProfile.keywords],
+      14
+    ),
+    industry: uniq(
+      [
+        ...twin.resumeProfile.industries,
+        ...twin.resumeProfile.experience.map((item) => item.organization)
+      ],
+      10
+    )
   };
 }
 
@@ -149,7 +158,9 @@ function buildEvidence(workspace: BrandOpsData): Record<PositioningSignalSource,
     goals: uniq(
       [
         workspace.brand.focusMetric,
-        ...workspace.opportunities.map((opportunity) => `${opportunity.company}: ${opportunity.nextAction}`),
+        ...workspace.opportunities.map(
+          (opportunity) => `${opportunity.company}: ${opportunity.nextAction}`
+        ),
         ...workspace.followUps.map((followUp) => followUp.reason),
         ...workspace.scheduler.tasks.map((task) => `${task.title}: ${task.detail}`)
       ],
@@ -191,12 +202,15 @@ function statement(input: {
   };
 }
 
-function actionCommand(action: string, readout: {
-  headline: string;
-  statements: PositioningStatement[];
-  strengths: string[];
-  gaps: string[];
-}): string {
+function actionCommand(
+  action: string,
+  readout: {
+    headline: string;
+    statements: PositioningStatement[];
+    strengths: string[];
+    gaps: string[];
+  }
+): string {
   return `ask: Positioning Intelligence ${action}. Do not save, publish, sync, send, or mutate workspace records automatically. Keep the result reviewable in PLAN and include confidence, evidence used, strengths, gaps, and approval requirements.\n\n${readout.headline}\nStatements: ${readout.statements.map((item) => `${item.label}: ${item.statement}`).join(' | ')}\nStrengths: ${readout.strengths.join(' | ')}\nGaps: ${readout.gaps.join(' | ')}`;
 }
 
@@ -208,7 +222,10 @@ export function buildPositioningIntelligenceReadout(
   const audienceLead = first(evidence.audience, 'high-fit operators');
   const industryLead = first(evidence.industry, 'your market');
   const goalLead = first(evidence.goals, 'measurable execution outcomes');
-  const backgroundLead = first(evidence.background, workspace.brand.positioning || workspace.brand.operatorName);
+  const backgroundLead = first(
+    evidence.background,
+    workspace.brand.positioning || workspace.brand.operatorName
+  );
   const contentLead = first(evidence.content, 'proof-led content and operating insights');
   const hasCompetitors = evidence.competitors.length > 0;
 
@@ -217,21 +234,39 @@ export function buildPositioningIntelligenceReadout(
       id: 'positioning-professional',
       label: 'Professional positioning',
       statement: `${backgroundLead} for ${audienceLead}, using ${skillLead} to create ${goalLead}.`,
-      confidence: confidenceFrom(evidence.background.length, evidence.skills.length, evidence.audience.length, evidence.goals.length),
-      evidenceUsed: [...evidence.background, ...evidence.skills, ...evidence.audience, ...evidence.goals]
+      confidence: confidenceFrom(
+        evidence.background.length,
+        evidence.skills.length,
+        evidence.audience.length,
+        evidence.goals.length
+      ),
+      evidenceUsed: [
+        ...evidence.background,
+        ...evidence.skills,
+        ...evidence.audience,
+        ...evidence.goals
+      ]
     }),
     statement({
       id: 'positioning-founder',
       label: 'Founder positioning',
       statement: `A founder-facing operator who helps ${audienceLead} turn ${contentLead} into repeatable systems, sharper decisions, and trusted follow-through.`,
-      confidence: confidenceFrom(evidence.audience.length, evidence.content.length, evidence.goals.length),
+      confidence: confidenceFrom(
+        evidence.audience.length,
+        evidence.content.length,
+        evidence.goals.length
+      ),
       evidenceUsed: [...evidence.audience, ...evidence.content, ...evidence.goals]
     }),
     statement({
       id: 'positioning-creator',
       label: 'Creator positioning',
       statement: `A creator-operator voice for ${industryLead}, translating ${skillLead} into practical content, outreach angles, and repeatable workflows.`,
-      confidence: confidenceFrom(evidence.industry.length, evidence.skills.length, evidence.content.length),
+      confidence: confidenceFrom(
+        evidence.industry.length,
+        evidence.skills.length,
+        evidence.content.length
+      ),
       evidenceUsed: [...evidence.industry, ...evidence.skills, ...evidence.content]
     })
   ];
@@ -252,7 +287,9 @@ export function buildPositioningIntelligenceReadout(
       `${industryLead} operators who need workflow systems, not one-off content or outreach help.`,
       `${audienceLead} with repeated follow-up, content, or GTM execution patterns.`,
       `Teams where ${skillLead} can become a measurable operating advantage.`,
-      ...evidence.content.filter((item) => /founder|creator|growth|workflow|ai/i.test(item)).slice(0, 3)
+      ...evidence.content
+        .filter((item) => /founder|creator|growth|workflow|ai/i.test(item))
+        .slice(0, 3)
     ],
     6
   );
@@ -280,7 +317,9 @@ export function buildPositioningIntelligenceReadout(
   );
   const gaps = uniq(
     [
-      evidence.background.length ? '' : 'Add or upload profile/resume background for stronger positioning.',
+      evidence.background.length
+        ? ''
+        : 'Add or upload profile/resume background for stronger positioning.',
       evidence.skills.length ? '' : 'Add verified skills or proof points.',
       evidence.industry.length ? '' : 'Clarify industry or market category.',
       evidence.audience.length ? '' : 'Add audience segments or buyer context.',
@@ -300,8 +339,10 @@ export function buildPositioningIntelligenceReadout(
     valuePropositions,
     nicheOpportunities,
     differentiationAngles,
-    creatorPositioning: positioningStatements.find((item) => item.id === 'positioning-creator')?.statement ?? '',
-    founderPositioning: positioningStatements.find((item) => item.id === 'positioning-founder')?.statement ?? '',
+    creatorPositioning:
+      positioningStatements.find((item) => item.id === 'positioning-creator')?.statement ?? '',
+    founderPositioning:
+      positioningStatements.find((item) => item.id === 'positioning-founder')?.statement ?? '',
     professionalPositioning:
       positioningStatements.find((item) => item.id === 'positioning-professional')?.statement ?? '',
     evidenceUsed: evidence,
@@ -310,7 +351,12 @@ export function buildPositioningIntelligenceReadout(
     competitorSignals: evidence.competitors,
     averageConfidence,
     approvalPolicy: APPROVAL_POLICY,
-    reviewCommand: actionCommand('review draft', { headline, statements: positioningStatements, strengths, gaps }),
+    reviewCommand: actionCommand('review draft', {
+      headline,
+      statements: positioningStatements,
+      strengths,
+      gaps
+    }),
     regenerateCommand: actionCommand('regenerate from latest signals', {
       headline,
       statements: positioningStatements,
@@ -326,4 +372,3 @@ export function buildPositioningIntelligenceReadout(
     headline
   };
 }
-

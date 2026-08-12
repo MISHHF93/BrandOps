@@ -59,7 +59,9 @@ function clamp(value: number): number {
 }
 
 function compact(value: unknown): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim();
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function uniq(values: unknown[], cap = 8): string[] {
@@ -137,8 +139,12 @@ function platformSignals(workspace: BrandOpsData): string[] {
     [
       ...platform.connectedApps.map((app) => `${app} connected`),
       ...platform.recentActivity,
-      ...workspace.integrationHub.liveFeed.map((feed) => `${feed.source}: ${feed.title} ${feed.detail}`),
-      ...workspace.integrationHub.artifacts.map((artifact) => `${artifact.title}: ${artifact.summary}`),
+      ...workspace.integrationHub.liveFeed.map(
+        (feed) => `${feed.source}: ${feed.title} ${feed.detail}`
+      ),
+      ...workspace.integrationHub.artifacts.map(
+        (artifact) => `${artifact.title}: ${artifact.summary}`
+      ),
       ...identity.signals.map((signal) => `${signal.source}: ${signal.summary}`)
     ],
     18
@@ -152,7 +158,9 @@ function recentOutputSignals(workspace: BrandOpsData): string[] {
       ...ranked.map((signal) => `${signal.label}: ${signal.reason}`),
       ...workspace.contentLibrary.map((item) => `${item.status}: ${item.title} (${item.goal})`),
       ...workspace.publishingQueue.map((item) => `${item.status}: ${item.title}`),
-      ...(workspace.aiPipelineRuns?.entries ?? []).slice(0, 4).map((run) => `${run.pipeline_id}: ${run.status}`)
+      ...(workspace.aiPipelineRuns?.entries ?? [])
+        .slice(0, 4)
+        .map((run) => `${run.pipeline_id}: ${run.status}`)
     ],
     18
   );
@@ -165,14 +173,17 @@ function audiencePatternSignals(workspace: BrandOpsData): string[] {
       ...workspace.contentLibrary.map((item) => item.audience),
       ...workspace.contacts.map((contact) => `${contact.role} at ${contact.company}`),
       ...workspace.companies.map((company) => `${company.name}: ${company.relationshipStage}`),
-      ...workspace.opportunities.map((opp) => `${opp.company}: ${opp.opportunityType} ${opp.status}`)
+      ...workspace.opportunities.map(
+        (opp) => `${opp.company}: ${opp.opportunityType} ${opp.status}`
+      )
     ],
     18
   );
 }
 
 function engagementSignals(workspace: BrandOpsData): string[] {
-  const engagementRegex = /engagement|impression|comment|reply|reaction|like|share|click|view|open rate|ctr|resonance|perform/i;
+  const engagementRegex =
+    /engagement|impression|comment|reply|reaction|like|share|click|view|open rate|ctr|resonance|perform/i;
   return uniq(
     [
       ...workspace.integrationHub.artifacts
@@ -221,7 +232,9 @@ function item(input: Omit<ContentIdeationItem, 'askToPlanCommand'>): ContentIdea
     ...input,
     evidenceUsed: input.evidenceUsed.length
       ? uniq(input.evidenceUsed, 8)
-      : ['Workspace profile and content context are available; add more outputs or engagement data to strengthen this idea.'],
+      : [
+          'Workspace profile and content context are available; add more outputs or engagement data to strengthen this idea.'
+        ],
     askToPlanCommand: commandFor(input)
   };
 }
@@ -236,9 +249,15 @@ export function buildPredictiveContentIdeationReadout(
   const outputs = recentOutputSignals(workspace);
   const audience = audiencePatternSignals(workspace);
   const engagement = engagementSignals(workspace);
-  const topic = first([...workspace.brandVault.signatureThemes, ...workspace.contentLibrary.flatMap((c) => c.tags)], 'operator systems');
+  const topic = first(
+    [...workspace.brandVault.signatureThemes, ...workspace.contentLibrary.flatMap((c) => c.tags)],
+    'operator systems'
+  );
   const audienceLead = first(audience, 'high-fit operators');
-  const proof = first([...workspace.brandVault.proofPoints, ...profession], 'approved proof and operating experience');
+  const proof = first(
+    [...workspace.brandVault.proofPoints, ...profession],
+    'approved proof and operating experience'
+  );
   const platformLead = first(platforms, 'BrandOps workspace context');
   const engagementLead = first(engagement, 'available audience response signals');
   const hasEngagement = engagement.length > 0;
@@ -249,10 +268,12 @@ export function buildPredictiveContentIdeationReadout(
       kind: 'theme',
       title: `${topic} as an operating system`,
       idea: `Build a theme around how ${audienceLead} can turn scattered work into repeatable operating systems.`,
-      whyNow: 'Profession, recent outputs, and audience patterns point to repeatable systems as a strong content lane.',
+      whyNow:
+        'Profession, recent outputs, and audience patterns point to repeatable systems as a strong content lane.',
       confidence: confidenceFrom(profession.length, outputs.length, audience.length),
       evidenceUsed: [...profession, ...outputs, ...audience],
-      expectedImpact: 'Creates a durable content pillar that can support posts, campaigns, and outreach.',
+      expectedImpact:
+        'Creates a durable content pillar that can support posts, campaigns, and outreach.',
       suggestedFormat: 'Weekly theme pillar',
       generatedFrom: ['profession', 'recent-outputs', 'audience-patterns']
     }),
@@ -261,7 +282,8 @@ export function buildPredictiveContentIdeationReadout(
       kind: 'post-idea',
       title: 'Proof-led breakdown post',
       idea: `Write a practical post showing how ${proof} turns into a measurable workflow improvement.`,
-      whyNow: 'Recent profile and content signals can support a specific proof-led post without inventing claims.',
+      whyNow:
+        'Recent profile and content signals can support a specific proof-led post without inventing claims.',
       confidence: confidenceFrom(profession.length, outputs.length),
       evidenceUsed: [...profession, ...outputs],
       expectedImpact: 'Improves credibility and gives ASK/PLAN a reusable proof asset.',
@@ -273,7 +295,8 @@ export function buildPredictiveContentIdeationReadout(
       kind: 'campaign',
       title: 'Creator operating loop campaign',
       idea: `Create a campaign that connects positioning, content, outreach, and follow-up into one creator operating loop.`,
-      whyNow: 'Behavioral and platform context show enough workflow signal to package a campaign instead of one-off posts.',
+      whyNow:
+        'Behavioral and platform context show enough workflow signal to package a campaign instead of one-off posts.',
       confidence: confidenceFrom(behavior.length, platforms.length, outputs.length),
       evidenceUsed: [...behavior, ...platforms, ...outputs],
       expectedImpact: 'Turns repeated content and outreach patterns into a larger narrative arc.',
@@ -285,10 +308,12 @@ export function buildPredictiveContentIdeationReadout(
       kind: 'thread-structure',
       title: 'Before/after workflow thread',
       idea: `Structure a thread around before/after states: scattered work, operating friction, system design, approved next action.`,
-      whyNow: 'Audience and content signals show workflow bottlenecks as a useful educational structure.',
+      whyNow:
+        'Audience and content signals show workflow bottlenecks as a useful educational structure.',
       confidence: confidenceFrom(audience.length, outputs.length, profession.length),
       evidenceUsed: [...audience, ...outputs, ...profession],
-      expectedImpact: 'Gives the audience a clear mental model and a practical sequence to remember.',
+      expectedImpact:
+        'Gives the audience a clear mental model and a practical sequence to remember.',
       suggestedFormat: '5-part thread',
       generatedFrom: ['audience-patterns', 'recent-outputs', 'profession']
     }),
@@ -297,7 +322,8 @@ export function buildPredictiveContentIdeationReadout(
       kind: 'creator-series',
       title: 'AI operator field notes',
       idea: `Launch a creator series documenting how ${audienceLead} can use AI-assisted planning while keeping approval and trust visible.`,
-      whyNow: 'Profession and connected-platform context support a recurring creator series with clear guardrails.',
+      whyNow:
+        'Profession and connected-platform context support a recurring creator series with clear guardrails.',
       confidence: confidenceFrom(profession.length, platforms.length, behavior.length),
       evidenceUsed: [...profession, ...platforms, ...behavior],
       expectedImpact: 'Builds trust and consistency while reinforcing differentiated positioning.',
@@ -319,7 +345,9 @@ export function buildPredictiveContentIdeationReadout(
     item({
       id: 'trend-opportunity-engagement-signal',
       kind: 'trend-opportunity',
-      title: hasEngagement ? 'Double down on resonance signals' : 'Start tracking content resonance',
+      title: hasEngagement
+        ? 'Double down on resonance signals'
+        : 'Start tracking content resonance',
       idea: hasEngagement
         ? `Use ${engagementLead} to identify a timely trend or content angle worth expanding.`
         : 'Create a lightweight resonance loop so future ideas can use engagement, replies, comments, and saves.',
@@ -328,7 +356,8 @@ export function buildPredictiveContentIdeationReadout(
         : 'No engagement data is visible yet, so BrandOps should prompt for measurable audience response.',
       confidence: confidenceFrom(engagement.length, outputs.length, platforms.length),
       evidenceUsed: [...engagement, ...outputs, platformLead],
-      expectedImpact: 'Improves timing and reduces generic ideation by weighting audience response.',
+      expectedImpact:
+        'Improves timing and reduces generic ideation by weighting audience response.',
       suggestedFormat: hasEngagement ? 'Trend response post' : 'Engagement tracking prompt',
       generatedFrom: hasEngagement
         ? ['engagement-data', 'recent-outputs', 'connected-platforms']
@@ -357,4 +386,3 @@ export function buildPredictiveContentIdeationReadout(
     headline: `${allIdeas.length} predictive content ideation item${allIdeas.length === 1 ? '' : 's'} generated across themes, posts, campaigns, threads, series, hooks, and trends.`
   };
 }
-

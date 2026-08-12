@@ -32,7 +32,7 @@ function clampPreview(s: string): string {
   return t.length <= MAX_PREVIEW_CHARS ? t : `${t.slice(0, MAX_PREVIEW_CHARS)}…`;
 }
 
-export function buildAiAssistantTurnTrace(input: AiAssistantTurnTraceInput): AiAssistantTurnTrace {
+function buildAiAssistantTurnTrace(input: AiAssistantTurnTraceInput): AiAssistantTurnTrace {
   const citations = sanitizeAiCitationChunks(input.citations as unknown);
   const orphans = sanitizeOrphanInlineMarkers(input.orphan_inline_markers ?? []);
   return {

@@ -1,13 +1,51 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { RefObject } from 'react';
+import type { MutableRefObject, RefObject } from 'react';
 import { AlertCircle, BookmarkPlus, Bot, Copy, Pin, Sparkles, User } from 'lucide-react';
 import clsx from 'clsx';
 import { AssistantEvidenceChips } from './AssistantEvidenceChips';
 import { AssistantInlineCitationBody } from './AssistantInlineCitationBody';
 import { AssistantTraceSummary } from './AssistantTraceSummary';
-import { AgentWorkingState } from '../../shared/ui/brandopsPolish';
 import type { AiCitationChunk, DigitalTwin } from '../../types/domain';
 import type { AssistantAskTraceSummaryUI } from '../../types/aiTraceGraph';
+import type {
+  ActiveExecution,
+  Checkpoint as ExecutionCheckpoint
+} from '../../types/executionState';
+import { ActivityIndicator } from '../../shared/ui/execution/ActivityIndicator';
+import { StreamingStatus } from '../../shared/ui/execution/StreamingStatus';
+import { CheckpointTimeline } from '../../shared/ui/execution/CheckpointTimeline';
+import type { CheckpointHandlers } from '../../shared/ui/execution/Checkpoint';
+import type { ExecutionReceiptData } from '../../shared/ui/execution/ExecutionReceipt';
+
+export const CHAT_STICK_TO_BOTTOM_TOLERANCE_PX = 96;
+
+/**
+ * Clearance (px) the fixed Ask composer overlays above the mobile dock.
+ * Mirrors the chat tab's `pb-*` on `main#bo-mobile-main` so transcript content can always
+ * scroll fully above the composer. Falls back to 190 when the main is not mounted (SSR/tests).
+ */
+function chatComposerClearancePx(): number {
+  if (typeof document === 'undefined') return 190;
+  const main = document.getElementById('bo-mobile-main');
+  const paddingBottom = main ? Number.parseFloat(getComputedStyle(main).paddingBottom) : 0;
+  return Number.isFinite(paddingBottom) && paddingBottom > 0 ? paddingBottom : 190;
+}
+
+/**
+ * Scrolls the shared page surface just enough for the transcript-end anchor to clear the fixed
+ * Ask composer — and does nothing when it already does, so a first response that fits on screen
+ * never forces a scroll.
+ */
+export function scrollChatTranscriptEndIntoView(anchor: HTMLElement | null): void {
+  if (!anchor || typeof window === 'undefined') return;
+  const clearance = chatComposerClearancePx();
+  const rect = anchor.getBoundingClientRect();
+  const targetBottom = window.innerHeight - clearance;
+  if (rect.bottom <= targetBottom) return;
+  const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const next = Math.min(maxScroll, Math.max(0, window.scrollY + (rect.bottom - targetBottom)));
+  window.scrollTo({ top: next, behavior: 'auto' });
+}
 
 export interface ChatMessage {
   id: string;
@@ -82,7 +120,10 @@ function compactText(text: string, max = 160): string {
   return `${compact.slice(0, Math.max(0, max - 1)).trim()}...`;
 }
 
-function sourceFactsFromMessage(message: ChatMessage, activeDigitalTwin?: DigitalTwin | null): string[] {
+function sourceFactsFromMessage(
+  message: ChatMessage,
+  activeDigitalTwin?: DigitalTwin | null
+): string[] {
   const citationFacts =
     message.citations?.slice(0, 4).map((citation) => {
       const source = citation.source?.trim() || 'Source fact';
@@ -101,7 +142,10 @@ function sourceFactsFromMessage(message: ChatMessage, activeDigitalTwin?: Digita
   return Array.from(new Set([...citationFacts, ...twinFacts])).slice(0, 5);
 }
 
-function missingFactsFromMessage(message: ChatMessage, activeDigitalTwin?: DigitalTwin | null): string[] {
+function missingFactsFromMessage(
+  message: ChatMessage,
+  activeDigitalTwin?: DigitalTwin | null
+): string[] {
   const citationGaps = message.orphanInlineMarkers?.length
     ? [`Unresolved citation markers: ${message.orphanInlineMarkers.join(', ')}`]
     : [];
@@ -138,8 +182,9 @@ function StreamingAssistantText({
 
     setVisibleCount(0);
     let index = 0;
+    const step = Math.max(8, Math.ceil(text.length / 150));
     const timer = window.setInterval(() => {
-      index = Math.min(text.length, index + 3);
+      index = Math.min(text.length, index + step);
       setVisibleCount(index);
       if (index >= text.length) window.clearInterval(timer);
     }, 18);
@@ -157,7 +202,7 @@ function StreamingAssistantText({
 
   return (
     <div className="space-y-2">
-      {isGenerating ? <span className="bo-terminal-meta">generating text...</span> : null}
+      {isGenerating ? <span className="bo-terminal-meta">revealing response...</span> : null}
       <p
         className="bo-streaming-text whitespace-pre-wrap break-words leading-relaxed"
         aria-label={text}
@@ -172,10 +217,32 @@ function StreamingAssistantText({
 export interface MobileChatViewProps {
   messages: ChatMessage[];
   loading: boolean;
+  /** Observable execution state for the turn in flight (see `src/types/executionState.ts`). */
+  activeExecution?: ActiveExecution | null;
+  /** Real stages this turn has passed through so far — never fabricated. */
+  executionHistory?: ActiveExecution[];
+  /** Persisted checkpoint chain for the current conversation, newest first. */
+  checkpoints?: ExecutionCheckpoint[];
+  /** Approve/reject a `plan.approval_requested` checkpoint from Ask's own timeline, not just Plan's review queue. */
+  onApprovePlanCheckpoint?: (checkpoint: ExecutionCheckpoint) => void;
+  onRejectPlanCheckpoint?: (checkpoint: ExecutionCheckpoint) => void;
+  /** Disables approve/reject while a decision from this timeline is in flight. */
+  checkpointActionBusy?: boolean;
+  /** Resends the original question recovered from a FAILED checkpoint's chain root. */
+  onRetryAskCheckpoint?: (checkpoint: ExecutionCheckpoint) => void;
+  /** Only recovery action for failures with no retryable question (e.g. structured commands) — surfaces the checkpoint via `ask:` rather than leaving the failure card actionless. */
+  onInspectCheckpoint?: (checkpoint: ExecutionCheckpoint) => void;
+  resolveCheckpointReceipt?: (checkpoint: ExecutionCheckpoint) => ExecutionReceiptData | null;
+  /** Resolves a checkpoint's `associatedTwinId` to that twin's display name. */
+  resolveCheckpointTwinName?: (checkpoint: ExecutionCheckpoint) => string | null;
+  /** Navigates to the Plan tab and scrolls to the checkpoint's `associatedPlanRef`, if any. */
+  onOpenPlanCheckpoint?: (checkpoint: ExecutionCheckpoint) => void;
   onQuickCommand: (command: string) => void;
   btnFocus: string;
   /** Anchor for scroll-into-view while the shell main scrolls as one surface */
   transcriptEndRef?: RefObject<HTMLDivElement>;
+  /** Shared flag: auto-follow the transcript only while the user is near the bottom; false when they scrolled up to read. */
+  stickToBottomRef?: MutableRefObject<boolean>;
   /** One-line hosted routing stance — surfaced below Assistant headline (optional). */
   assistantRoutingCaption?: string;
   /** Active digital twin, if created from reviewed resume/profile data. */
@@ -194,9 +261,21 @@ export const MobileChatView = (props: MobileChatViewProps) => {
   const {
     messages,
     loading,
+    activeExecution = null,
+    executionHistory = [],
+    checkpoints = [],
+    onApprovePlanCheckpoint,
+    onRejectPlanCheckpoint,
+    checkpointActionBusy = false,
+    onRetryAskCheckpoint,
+    onInspectCheckpoint,
+    resolveCheckpointReceipt,
+    resolveCheckpointTwinName,
+    onOpenPlanCheckpoint,
     onQuickCommand,
     btnFocus,
     transcriptEndRef,
+    stickToBottomRef,
     assistantRoutingCaption,
     activeDigitalTwin,
     onConvertAskToPlan,
@@ -225,13 +304,22 @@ export const MobileChatView = (props: MobileChatViewProps) => {
   const requestTranscriptFollow = useCallback(() => {
     if (typeof window === 'undefined') return;
     if (!transcriptEndRef?.current) return;
+    if (stickToBottomRef?.current === false) return;
+    const doc = document.documentElement;
+    const nearBottom =
+      window.innerHeight + window.scrollY >= doc.scrollHeight - CHAT_STICK_TO_BOTTOM_TOLERANCE_PX;
+    if (!nearBottom) {
+      if (stickToBottomRef) stickToBottomRef.current = false;
+      return;
+    }
     if (followScrollFrameRef.current !== null) return;
 
     followScrollFrameRef.current = window.requestAnimationFrame(() => {
       followScrollFrameRef.current = null;
-      transcriptEndRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' });
+      if (stickToBottomRef?.current === false) return;
+      scrollChatTranscriptEndIntoView(transcriptEndRef.current);
     });
-  }, [transcriptEndRef]);
+  }, [transcriptEndRef, stickToBottomRef]);
 
   useEffect(
     () => () => {
@@ -262,8 +350,34 @@ export const MobileChatView = (props: MobileChatViewProps) => {
     });
   };
 
+  const checkpointHandlers: CheckpointHandlers = useMemo(
+    () => ({
+      ...(onApprovePlanCheckpoint ? { onApprove: onApprovePlanCheckpoint } : {}),
+      ...(onRejectPlanCheckpoint ? { onReject: onRejectPlanCheckpoint } : {}),
+      ...(onRetryAskCheckpoint ? { onRetry: onRetryAskCheckpoint } : {}),
+      ...(onInspectCheckpoint ? { onInspect: onInspectCheckpoint } : {}),
+      ...(resolveCheckpointReceipt ? { resolveReceipt: resolveCheckpointReceipt } : {}),
+      ...(resolveCheckpointTwinName ? { resolveTwinName: resolveCheckpointTwinName } : {}),
+      ...(onOpenPlanCheckpoint ? { onOpenPlan: onOpenPlanCheckpoint } : {}),
+      busy: checkpointActionBusy
+    }),
+    [
+      onApprovePlanCheckpoint,
+      onRejectPlanCheckpoint,
+      checkpointActionBusy,
+      onRetryAskCheckpoint,
+      onInspectCheckpoint,
+      resolveCheckpointReceipt,
+      resolveCheckpointTwinName,
+      onOpenPlanCheckpoint
+    ]
+  );
+
   return (
-    <div aria-label="Ask My Twin conversation" className="bo-assistant-surface flex flex-col gap-2.5">
+    <div
+      aria-label="Ask My Twin conversation"
+      className="bo-assistant-surface flex flex-col gap-2.5"
+    >
       <header className="bo-ops-panel px-3 py-3 sm:px-3.5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -284,7 +398,8 @@ export const MobileChatView = (props: MobileChatViewProps) => {
               <p className="mt-2 text-fine leading-snug text-textSoft">{assistantRoutingCaption}</p>
             ) : null}
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <ActivityIndicator execution={activeExecution} />
             <span className="rounded-full border border-border/45 bg-bgSubtle/70 px-2 py-1 text-fine font-semibold text-textMuted">
               {activeDigitalTwin ? activeDigitalTwin.displayName : 'No twin selected'}
             </span>
@@ -314,6 +429,20 @@ export const MobileChatView = (props: MobileChatViewProps) => {
           </div>
         ) : null}
       </header>
+
+      {checkpoints.length > 0 ? (
+        <details
+          className="bo-disclosure mx-3 rounded-lg sm:mx-3.5"
+          open={checkpoints[0]?.state === 'FAILED' || checkpoints[0]?.state === 'NEEDS_APPROVAL'}
+        >
+          <summary className="cursor-pointer list-none px-3 py-2 text-fine font-semibold uppercase tracking-wide text-textMuted">
+            Checkpoints
+          </summary>
+          <div className="px-3 pb-3">
+            <CheckpointTimeline checkpoints={checkpoints} handlers={checkpointHandlers} />
+          </div>
+        </details>
+      ) : null}
 
       <section
         id="assistant-thread"
@@ -350,12 +479,17 @@ export const MobileChatView = (props: MobileChatViewProps) => {
               return (
                 <article
                   key={message.id}
-                  className={clsx('group flex gap-2.5 rounded-xl border border-transparent p-1.5', message.role === 'user' ? 'flex-row-reverse' : 'flex-row')}
+                  className={clsx(
+                    'group flex gap-2.5 rounded-xl border border-transparent p-1.5',
+                    message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                  )}
                 >
                   <span
                     className={clsx(
                       'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-fine font-bold',
-                      message.role === 'user' ? 'bg-surfaceActive text-text' : 'bg-accentSoft/35 text-accent'
+                      message.role === 'user'
+                        ? 'bg-surfaceActive text-text'
+                        : 'bg-accentSoft/35 text-accent'
                     )}
                     aria-hidden
                   >
@@ -366,7 +500,12 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                     )}
                   </span>
 
-                  <div className={clsx('min-w-0 flex-1 space-y-2', message.role === 'user' && 'flex flex-col items-end')}>
+                  <div
+                    className={clsx(
+                      'min-w-0 flex-1 space-y-2',
+                      message.role === 'user' && 'flex flex-col items-end'
+                    )}
+                  >
                     {message.role === 'user' ? (
                       <div className="bo-chat-bubble-user">
                         <p className="whitespace-pre-wrap break-words">{message.text}</p>
@@ -413,7 +552,9 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                                     evidence {message.citations?.length ?? 0} · trace{' '}
                                     {message.traceSummary?.evidence_completeness ?? 'review'}
                                   </span>
-                                  <span className="text-fine font-semibold text-textSoft">Details</span>
+                                  <span className="text-fine font-semibold text-textSoft">
+                                    Details
+                                  </span>
                                 </summary>
                                 <div className="mt-2 space-y-2">
                                   {message.citations?.length ? (
@@ -435,20 +576,30 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                             ) : null}
                           </>
                         ) : (
-                          <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>
+                          <p className="whitespace-pre-wrap break-words leading-relaxed">
+                            {message.text}
+                          </p>
                         )}
                       </div>
                     ) : (
                       <div className="bo-chat-bubble-assistant">
-                        <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>
+                        <p className="whitespace-pre-wrap break-words leading-relaxed">
+                          {message.text}
+                        </p>
                       </div>
                     )}
 
-                    <div className={clsx('bo-action-strip', message.role === 'user' && 'justify-end')}>
+                    <div
+                      className={clsx('bo-action-strip', message.role === 'user' && 'justify-end')}
+                    >
                       <button
                         type="button"
                         onClick={() => saveMessage(message)}
-                        className={clsx('bo-ask-card-action', isSaved && 'border-success/45 text-success', btnFocus)}
+                        className={clsx(
+                          'bo-ask-card-action',
+                          isSaved && 'border-success/45 text-success',
+                          btnFocus
+                        )}
                       >
                         <BookmarkPlus className="h-3.5 w-3.5" aria-hidden />
                         {isSaved ? 'Saved' : 'Save'}
@@ -456,7 +607,11 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                       <button
                         type="button"
                         onClick={() => togglePin(message.id)}
-                        className={clsx('bo-ask-card-action', isPinned && 'border-primary/45 text-primary', btnFocus)}
+                        className={clsx(
+                          'bo-ask-card-action',
+                          isPinned && 'border-primary/45 text-primary',
+                          btnFocus
+                        )}
                       >
                         <Pin className="h-3.5 w-3.5" aria-hidden />
                         {isPinned ? 'Pinned' : 'Pin'}
@@ -486,7 +641,10 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                               )
                             })
                           }
-                          className={clsx('bo-ask-card-action border-primary/45 text-primary', btnFocus)}
+                          className={clsx(
+                            'bo-ask-card-action border-primary/45 text-primary',
+                            btnFocus
+                          )}
                         >
                           {isConverting ? 'Preparing plan...' : 'Convert to Plan'}
                         </button>
@@ -495,7 +653,10 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                         <button
                           type="button"
                           onClick={() => onOpenConvertedPlan?.(message.planConversion!.planId)}
-                          className={clsx('bo-ask-card-action border-success/45 text-success', btnFocus)}
+                          className={clsx(
+                            'bo-ask-card-action border-success/45 text-success',
+                            btnFocus
+                          )}
                         >
                           Converted to Plan · Open in Plan
                         </button>
@@ -508,10 +669,14 @@ export const MobileChatView = (props: MobileChatViewProps) => {
           )}
           {loading ? (
             <div className="pt-1">
-              <AgentWorkingState />
+              <StreamingStatus history={executionHistory} />
             </div>
           ) : null}
-          <div ref={transcriptEndRef} className="bo-chat-scroll-anchor w-full shrink-0" aria-hidden />
+          <div
+            ref={transcriptEndRef}
+            className="bo-chat-scroll-anchor w-full shrink-0"
+            aria-hidden
+          />
         </div>
       </section>
     </div>

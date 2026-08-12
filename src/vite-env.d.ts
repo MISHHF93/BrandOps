@@ -3,43 +3,21 @@
 interface ImportMetaEnv {
   /** Public HTTPS URL to hosted privacy policy (Chrome Web Store + in-app link). */
   readonly VITE_PRIVACY_POLICY_URL?: string;
-  /** Publisher OAuth client IDs (Chrome Web Store build); optional override in Settings. */
-  readonly VITE_GOOGLE_CLIENT_ID?: string;
-  readonly VITE_GITHUB_CLIENT_ID?: string;
-  readonly VITE_LINKEDIN_CLIENT_ID?: string;
-  /**
-   * Hosted preview (e.g. Vercel): show magic-link / open preview sign-in on Welcome.
-   * Never set for Chrome Web Store release builds.
-   */
-  readonly VITE_VERCEL_PREVIEW_SIGNIN?: string;
-  /** Shared secret (≥8 chars). Magic link: `?preview_magic=<token>`. Omit if using open preview only. */
-  readonly VITE_PREVIEW_MAGIC_TOKEN?: string;
-  /** If `1`/`true`, allow one-click preview sign-in without a token (private demos only). */
-  readonly VITE_PREVIEW_OPEN_SIGNIN?: string;
-  /**
-   * Hosted preview only: allow opening dashboard.html without OAuth (seed workspace).
-   * On Vercel, cockpit is ungated automatically unless set to `0`/`false`.
-   */
-  readonly VITE_PREVIEW_COCKPIT_UNGATED?: string;
-  /** Injected on Vercel builds (`VERCEL=1`); used for hosted demo routing only. */
-  readonly VITE_VERCEL?: string;
   /**
    * Optional absolute site origin (no trailing slash), e.g. `https://your-app.vercel.app`.
    * Build-time: makes `og:image` / `twitter:image` absolute for link previews. Omit for path-only `/branding/og-image.png`.
    */
   readonly VITE_PUBLIC_ORIGIN?: string;
   /**
-   * If `1` or `true`, require active paid membership after sign-in (Chat, Today, Integrations, etc.).
-   * Omit or `0` during local development / pre-launch builds.
+   * Development-only membership gate. This repo has no verified production entitlement service.
    */
   readonly VITE_ENFORCE_MEMBERSHIP_GATE?: string;
-  /** Optional HTTPS Stripe Checkout URL used by the membership gate CTA. */
+  /** Optional HTTPS Stripe Checkout navigation URL; opening it does not activate membership. */
   readonly VITE_STRIPE_CHECKOUT_URL?: string;
-  /** Optional HTTPS Stripe Billing Portal URL used by account recovery / billing CTA. */
+  /** Optional HTTPS Stripe Billing Portal navigation URL. */
   readonly VITE_STRIPE_BILLING_PORTAL_URL?: string;
   /**
-   * If `1` or `true`, skip the launch sign-in gate so users land directly in the app (no simulated provider pick).
-   * Settings still lists account / sign-in for optional verification. Omit for Chrome Web Store / production.
+   * If `1` or `true`, skip the on-device preview-identity gate so users land directly in the app.
    */
   readonly VITE_SKIP_LAUNCH_AUTH?: string;
   /**

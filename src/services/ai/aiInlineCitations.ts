@@ -1,7 +1,7 @@
 import type { AiCitationChunk } from '../../types/domain';
 
 /** Matches `[cite: 12]`, `[cite: ISO_42001.pdf]`, etc. */
-export const INLINE_CITATION_PATTERN = /\[cite:\s*([^\]]+?)\]/gi;
+const INLINE_CITATION_PATTERN = /\[cite:\s*([^\]]+?)\]/gi;
 
 export type InlineCitationSegment =
   | { type: 'text'; text: string }
@@ -42,7 +42,7 @@ export function buildCitationLookupMap(citations: AiCitationChunk[]): Map<string
   return m;
 }
 
-export function normalizeCitationMarkerToken(raw: string): string {
+function normalizeCitationMarkerToken(raw: string): string {
   return raw
     .trim()
     .replace(/^["']|["']$/g, '')

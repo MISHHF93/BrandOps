@@ -42,10 +42,10 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       }
     >
       <a className={linkClass} href={signInHref}>
-        Sign in
+        Open app
       </a>
       <a className={linkClass} href={signUpHref}>
-        Sign up
+        New local workspace
       </a>
       <a className={linkClass} href={planHubHref} title="mobile.html?section=workspace">
         Plan

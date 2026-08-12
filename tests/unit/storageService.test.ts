@@ -21,6 +21,7 @@ vi.mock('../../src/shared/storage/browserStorage', () => ({
   }
 }));
 
+import { browserLocalStorage } from '../../src/shared/storage/browserStorage';
 import { storageService } from '../../src/services/storage/storage';
 
 const DATA_KEY = 'brandops:data';
@@ -120,6 +121,70 @@ describe('storageService', () => {
 
     expect(normalized.settings.syncHub.google.clientId).toBe('');
     expect(normalized.settings.syncHub.github.clientId).toBe('');
+  });
+
+  it('drops imported OAuth bearer tokens so workspace export cannot leak credentials', async () => {
+    const source = cloneSeedData();
+    const auth = source.settings.syncHub.google.auth as unknown as Record<string, unknown>;
+    auth.accessToken = 'oauth-access-secret';
+    auth.refreshToken = 'oauth-refresh-secret';
+    auth.scope = ['openid'];
+
+    const normalized = await storageService.setData(source);
+    const normalizedAuth = normalized.settings.syncHub.google.auth as unknown as Record<
+      string,
+      unknown
+    >;
+    const exported = await storageService.exportData();
+
+    expect(normalizedAuth.accessToken).toBeUndefined();
+    expect(normalizedAuth.refreshToken).toBeUndefined();
+    expect(exported).not.toContain('oauth-access-secret');
+    expect(exported).not.toContain('oauth-refresh-secret');
+  });
+
+  it('clamps checkpoint fields on setData the same way buildCheckpoint does for live-created rows (a crafted import should not smuggle in oversized strings)', async () => {
+    const source = cloneSeedData();
+    source.checkpoints = {
+      entries: [
+        {
+          id: 'chk-1',
+          conversationId: 'c1',
+          type: 'ask.response',
+          state: 'FAILED',
+          at: new Date().toISOString(),
+          summary: 'x'.repeat(1000),
+          source: 'assistant',
+          parentCheckpointId: 'y'.repeat(1000),
+          associatedTwinId: 'z'.repeat(1000),
+          receiptRef: 'r'.repeat(1000),
+          errorState: {
+            code: 'c'.repeat(1000),
+            message: 'm'.repeat(1000),
+            recoveryActions: [
+              'retry',
+              'inspect',
+              'save',
+              'pin',
+              'edit',
+              'cancel',
+              'approve',
+              'reject'
+            ]
+          }
+        }
+      ]
+    };
+
+    const normalized = await storageService.setData(source);
+    const entry = normalized.checkpoints?.entries[0];
+    expect(entry?.summary.length).toBeLessThanOrEqual(240);
+    expect(entry?.parentCheckpointId?.length).toBeLessThanOrEqual(160);
+    expect(entry?.associatedTwinId?.length).toBeLessThanOrEqual(160);
+    expect(entry?.receiptRef?.length).toBeLessThanOrEqual(160);
+    expect(entry?.errorState?.code.length).toBeLessThanOrEqual(80);
+    expect(entry?.errorState?.message.length).toBeLessThanOrEqual(500);
+    expect(entry?.errorState?.recoveryActions.length).toBeLessThanOrEqual(6);
   });
 
   it('rejects malformed and invalid imports with actionable errors', async () => {
@@ -282,5 +347,78 @@ describe('storageService', () => {
     expect(normalized.digitalTwins?.twins[0]?.actions.supportedActionTypes).toEqual([
       'generate_professional_bio'
     ]);
+  });
+
+  it('never writes a normalized copy back on a plain read (kills the write-on-read clobber source)', async () => {
+    await storageService.getData();
+    const setSpy = browserLocalStorage.set as unknown as { mock: { calls: unknown[][] } };
+    const before = setSpy.mock.calls.length;
+
+    const read = await storageService.getData();
+
+    expect(setSpy.mock.calls.length).toBe(before);
+    expect(read.modules.length).toBeGreaterThan(0);
+    expect(read.brand.operatorName.length).toBeGreaterThan(0);
+  });
+
+  it('persists a workspace mutation in a single attempt when nothing else wrote', async () => {
+    await storageService.getData();
+    const result = await storageService.withWorkspaceMutation((data) => ({
+      ...data,
+      brand: { ...data.brand, focusMetric: 'growth' }
+    }));
+
+    expect(result.changed).toBe(true);
+    expect(result.attempts).toBe(1);
+    const final = await storageService.getData();
+    expect(final.brand.focusMetric).toBe('growth');
+  });
+
+  it('reports changed:false without writing when the mutator returns the same reference', async () => {
+    await storageService.getData();
+    const setSpy = browserLocalStorage.set as unknown as { mock: { calls: unknown[][] } };
+    const before = setSpy.mock.calls.length;
+
+    const result = await storageService.withWorkspaceMutation((data) => data);
+
+    expect(result.changed).toBe(false);
+    expect(result.attempts).toBe(1);
+    expect(setSpy.mock.calls.length).toBe(before);
+  });
+
+  it('rebases a workspace mutation when a concurrent writer lands between read and write', async () => {
+    const base = await storageService.getData();
+    memoryStorage.set(DATA_KEY, base);
+    const concurrent = {
+      ...cloneSeedData(),
+      brand: { ...cloneSeedData().brand, operatorName: 'Concurrent UI write' }
+    };
+    let reads = 0;
+    const getSpy = browserLocalStorage.get as unknown as {
+      mockImplementation: (fn: (key: string) => Promise<unknown>) => void;
+    };
+    getSpy.mockImplementation(async () => {
+      reads += 1;
+      if (reads === 2) {
+        memoryStorage.set(DATA_KEY, concurrent);
+        return concurrent;
+      }
+      return memoryStorage.get(DATA_KEY);
+    });
+
+    try {
+      const result = await storageService.withWorkspaceMutation((data) => ({
+        ...data,
+        brand: { ...data.brand, positioning: 'SW reconcile write' }
+      }));
+
+      expect(result.changed).toBe(true);
+      expect(result.attempts).toBeGreaterThan(1);
+      const final = memoryStorage.get(DATA_KEY) as BrandOpsData;
+      expect(final.brand.operatorName).toBe('Concurrent UI write');
+      expect(final.brand.positioning).toBe('SW reconcile write');
+    } finally {
+      getSpy.mockImplementation(async (key: string) => memoryStorage.get(key));
+    }
   });
 });

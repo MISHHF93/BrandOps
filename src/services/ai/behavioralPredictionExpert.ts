@@ -63,7 +63,9 @@ function clamp(value: number): number {
 }
 
 function compact(value: unknown): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim();
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function uniq(values: unknown[], cap = 8): string[] {
@@ -96,7 +98,10 @@ function normalizeTaskTitle(title: string): string {
   return compact(
     title
       .toLowerCase()
-      .replace(/\b(today|tomorrow|weekly|daily|monthly|monday|tuesday|wednesday|thursday|friday)\b/g, '')
+      .replace(
+        /\b(today|tomorrow|weekly|daily|monthly|monday|tuesday|wednesday|thursday|friday)\b/g,
+        ''
+      )
       .replace(/[^a-z0-9]+/g, ' ')
   );
 }
@@ -123,11 +128,16 @@ function commandFor(input: {
 }
 
 function prediction(
-  input: Omit<BehavioralExpertPrediction, 'approvalRequired' | 'autonomyPolicy' | 'planPreviewCommand'>
+  input: Omit<
+    BehavioralExpertPrediction,
+    'approvalRequired' | 'autonomyPolicy' | 'planPreviewCommand'
+  >
 ): BehavioralExpertPrediction {
   const evidence = input.evidence.length
     ? uniq(input.evidence, 8)
-    : ['Add more local behavior, schedule, content, outreach, or workflow history to strengthen this suggestion.'];
+    : [
+        'Add more local behavior, schedule, content, outreach, or workflow history to strengthen this suggestion.'
+      ];
   const draft = {
     ...input,
     evidence,
@@ -203,7 +213,9 @@ function schedulingPatternSignal(workspace: BrandOpsData): BehavioralPredictionS
       `${tasks.length} scheduler task${tasks.length === 1 ? '' : 's'}`,
       `${risky.length} due/missed/snoozed task${risky.length === 1 ? '' : 's'}`,
       ...repeated.map((row) => `${row.count} repeated task title pattern: ${row.key}`),
-      topHour ? `${topHour.count} timing signal${topHour.count === 1 ? '' : 's'} around ${topHour.key}:00` : ''
+      topHour
+        ? `${topHour.count} timing signal${topHour.count === 1 ? '' : 's'} around ${topHour.key}:00`
+        : ''
     ]
   });
 }
@@ -224,7 +236,9 @@ function contentBehaviorSignal(workspace: BrandOpsData): BehavioralPredictionSig
       `${activeContent.length} active content item${activeContent.length === 1 ? '' : 's'}`,
       `${queued.length} publishing queue item${queued.length === 1 ? '' : 's'}`,
       `${ready} ready content item${ready === 1 ? '' : 's'}`,
-      ...topTags.map((row) => `${row.count} tag occurrence${row.count === 1 ? '' : 's'}: ${row.key}`)
+      ...topTags.map(
+        (row) => `${row.count} tag occurrence${row.count === 1 ? '' : 's'}: ${row.key}`
+      )
     ]
   });
 }
@@ -238,8 +252,14 @@ function outreachFrequencySignal(workspace: BrandOpsData): BehavioralPredictionS
   const ready = activeDrafts.filter((draft) => draft.status === 'ready').length;
   return signal({
     kind: 'outreach-frequency',
-    label: categories[0] ? `Outreach frequency: ${categories[0].key}` : 'Outreach frequency pattern',
-    strength: confidenceFrom(activeDrafts.length + history.length + openFollowUps.length + ready, 50, 5),
+    label: categories[0]
+      ? `Outreach frequency: ${categories[0].key}`
+      : 'Outreach frequency pattern',
+    strength: confidenceFrom(
+      activeDrafts.length + history.length + openFollowUps.length + ready,
+      50,
+      5
+    ),
     evidence: [
       `${activeDrafts.length} active outreach draft${activeDrafts.length === 1 ? '' : 's'}`,
       `${ready} ready outreach draft${ready === 1 ? '' : 's'}`,
@@ -355,7 +375,8 @@ function operationalBottlenecks(workspace: BrandOpsData): BehavioralExpertPredic
         id: `behavioral-expert-bottleneck-risk-${signal.id}`,
         category: 'operational-bottleneck',
         title: signal.label,
-        suggestion: 'Review this bottleneck and create a recovery sequence before adding more work.',
+        suggestion:
+          'Review this bottleneck and create a recovery sequence before adding more work.',
         confidence: signal.score,
         evidence: [signal.reason],
         dataUsed: ['scheduling-patterns', 'operational-habits']
@@ -367,9 +388,12 @@ function operationalBottlenecks(workspace: BrandOpsData): BehavioralExpertPredic
             id: 'behavioral-expert-bottleneck-approvals',
             category: 'operational-bottleneck',
             title: 'Clear pending approvals',
-            suggestion: 'Review pending approval traces before reusing memory or executing related workflows.',
+            suggestion:
+              'Review pending approval traces before reusing memory or executing related workflows.',
             confidence: confidenceFrom(pending.length, 64, 7),
-            evidence: pending.map((trace) => `${trace.verb}${trace.surface ? ` on ${trace.surface}` : ''}`),
+            evidence: pending.map(
+              (trace) => `${trace.verb}${trace.surface ? ` on ${trace.surface}` : ''}`
+            ),
             dataUsed: ['operational-habits', 'workflow-repetition']
           })
         ]
@@ -427,7 +451,12 @@ function outreachTiming(workspace: BrandOpsData): BehavioralExpertPrediction[] {
   );
 }
 
-function allPredictions(groups: Omit<BehavioralPredictionExpertReadout, 'allPredictions' | 'averageConfidence' | 'approvalPolicy' | 'headline' | 'signals' | 'expertId'>): BehavioralExpertPrediction[] {
+function allPredictions(
+  groups: Omit<
+    BehavioralPredictionExpertReadout,
+    'allPredictions' | 'averageConfidence' | 'approvalPolicy' | 'headline' | 'signals' | 'expertId'
+  >
+): BehavioralExpertPrediction[] {
   return [
     ...groups.nextLikelyTasks,
     ...groups.workflowOpportunities,
@@ -471,7 +500,9 @@ export function buildBehavioralPredictionExpertReadout(
   };
 }
 
-export function summarizeBehavioralPredictionExpert(readout: BehavioralPredictionExpertReadout): string[] {
+export function summarizeBehavioralPredictionExpert(
+  readout: BehavioralPredictionExpertReadout
+): string[] {
   return [
     `signals=${readout.signals.length}`,
     `predictions=${readout.allPredictions.length}`,

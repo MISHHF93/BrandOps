@@ -130,7 +130,7 @@ export async function runChatCompletion(
     };
   }
 
-  const apiKey = await getOpenAiCompatibleApiKey();
+  const apiKey = await getOpenAiCompatibleApiKey(base);
   if (!apiKey) {
     return {
       ok: false,
@@ -243,7 +243,7 @@ export async function runEmbeddings(
     };
   }
 
-  const apiKey = await getOpenAiCompatibleApiKey();
+  const apiKey = await getOpenAiCompatibleApiKey(root);
   if (!apiKey) {
     return {
       ok: false,

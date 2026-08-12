@@ -13,6 +13,23 @@ import { cloneSeedData } from '../helpers/fixtures';
 
 const iso = '2026-05-02T12:00:00.000Z';
 
+const storageWithMutation = (overrides: {
+  getData: () => Promise<BrandOpsData>;
+  resetToSeed?: () => Promise<BrandOpsData>;
+  setData: (data: BrandOpsData) => Promise<BrandOpsData>;
+}) => ({
+  getData: overrides.getData,
+  resetToSeed: overrides.resetToSeed ?? overrides.getData,
+  setData: overrides.setData,
+  withWorkspaceMutation: async (mutator: (data: BrandOpsData) => BrandOpsData) => {
+    const data = await overrides.getData();
+    const next = mutator(data);
+    if (next === data) return { data, changed: false, attempts: 1 };
+    await overrides.setData(next);
+    return { data: next, changed: true, attempts: 1 };
+  }
+});
+
 const baseTask = (
   partial: Partial<SchedulerTask> & Pick<SchedulerTask, 'id' | 'status'>
 ): SchedulerTask => ({
@@ -49,7 +66,10 @@ describe('loadWorkspaceSafely', () => {
     const setData = vi.fn(async (d: BrandOpsData) => d);
     const reconcileWorkspace = vi.fn(() => reconciled);
 
-    const result = await loadWorkspaceSafely({ getData, resetToSeed, setData }, reconcileWorkspace);
+    const result = await loadWorkspaceSafely(
+      storageWithMutation({ getData, resetToSeed, setData }),
+      reconcileWorkspace
+    );
 
     expect(result).toBe(reconciled);
     expect(resetToSeed).toHaveBeenCalledOnce();
@@ -100,14 +120,14 @@ describe('scheduleBrandOpsAlarms', () => {
     });
 
     const setSnapshots: BrandOpsData[] = [];
-    const storage = {
+    const storage = storageWithMutation({
       getData: vi.fn(async () => workspace),
       resetToSeed: vi.fn(async () => workspace),
       setData: vi.fn(async (d: BrandOpsData) => {
         setSnapshots.push(d);
         return d;
       })
-    };
+    });
 
     await scheduleBrandOpsAlarms({
       storage,
@@ -151,11 +171,11 @@ describe('sendTaskReminderNotification', () => {
     const markNotified = vi.fn((state: BrandOpsData['scheduler']) => state);
 
     await sendTaskReminderNotification({
-      storage: {
+      storage: storageWithMutation({
         getData: vi.fn(async () => workspace),
         resetToSeed: vi.fn(async () => workspace),
         setData: vi.fn(async (d) => d)
-      },
+      }),
       notifications,
       reconcileWorkspace,
       markNotified,
@@ -190,11 +210,11 @@ describe('sendTaskReminderNotification', () => {
     const setData = vi.fn(async (d: BrandOpsData) => d);
 
     await sendTaskReminderNotification({
-      storage: {
+      storage: storageWithMutation({
         getData: vi.fn(async () => workspace),
         resetToSeed: vi.fn(async () => workspace),
         setData
-      },
+      }),
       notifications,
       reconcileWorkspace,
       markNotified,
@@ -236,11 +256,11 @@ describe('sendTaskReminderNotification', () => {
     const setData = vi.fn(async (d: BrandOpsData) => d);
 
     await sendTaskReminderNotification({
-      storage: {
+      storage: storageWithMutation({
         getData: vi.fn(async () => workspace),
         resetToSeed: vi.fn(async () => workspace),
         setData
-      },
+      }),
       notifications,
       reconcileWorkspace,
       markNotified,

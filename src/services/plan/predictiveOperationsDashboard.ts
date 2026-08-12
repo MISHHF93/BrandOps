@@ -56,7 +56,9 @@ function clamp(value: number): number {
 }
 
 function compact(value: unknown): string {
-  return String(value ?? '').replace(/\s+/g, ' ').trim();
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function uniq(values: unknown[], cap = 6): string[] {
@@ -89,7 +91,9 @@ function item(input: PredictiveOperationsItem): PredictiveOperationsItem {
     confidence: clamp(input.confidence),
     signals: input.signals.length
       ? uniq(input.signals, 6)
-      : ['Workspace state is available; connect more sources or approve more memory for stronger signal.']
+      : [
+          'Workspace state is available; connect more sources or approve more memory for stronger signal.'
+        ]
   };
 }
 
@@ -189,7 +193,11 @@ export function buildPredictiveOperationsDashboardReadout(
         urgency: 'high' as const,
         confidence: 82,
         sourceLabel: 'Human approval queue',
-        signals: [trace.outcome ?? 'pending review', trace.entityType ?? '', trace.annotatorNote ?? ''],
+        signals: [
+          trace.outcome ?? 'pending review',
+          trace.entityType ?? '',
+          trace.annotatorNote ?? ''
+        ],
         command: `ask: Review this pending operator trace. Do not execute externally. Explain what happened, whether to approve/reject, memory implications, and receipt expectations.\n\nTrace: ${trace.verb}\nSurface: ${trace.surface ?? 'unknown'}\nOutcome: ${trace.outcome ?? 'unknown'}`
       })
     ),
@@ -267,9 +275,12 @@ export function buildPredictiveOperationsDashboardReadout(
 
   const growthRecommendations = predictive.suggestions
     .filter((suggestion) =>
-      ['growth-opportunity', 'content-ideation', 'positioning-analysis', 'buyer-persona-generation'].includes(
-        suggestion.kind
-      )
+      [
+        'growth-opportunity',
+        'content-ideation',
+        'positioning-analysis',
+        'buyer-persona-generation'
+      ].includes(suggestion.kind)
     )
     .slice(0, 4)
     .map((suggestion) =>
@@ -334,8 +345,12 @@ export function buildPredictiveOperationsDashboardReadout(
         command: prediction.suggestedCommand
       })
     ),
-    ...suggestedWorkflows.slice(0, 2).map((workflow) => ({ ...workflow, kind: 'next-best-action' as const })),
-    ...opportunities.slice(0, 2).map((opportunity) => ({ ...opportunity, kind: 'next-best-action' as const })),
+    ...suggestedWorkflows
+      .slice(0, 2)
+      .map((workflow) => ({ ...workflow, kind: 'next-best-action' as const })),
+    ...opportunities
+      .slice(0, 2)
+      .map((opportunity) => ({ ...opportunity, kind: 'next-best-action' as const })),
     ...contentSignals.slice(0, 2).map((signal) =>
       item({
         id: `ops-next-content-${signal.id}`,
@@ -366,7 +381,9 @@ export function buildPredictiveOperationsDashboardReadout(
     ...platformInsights,
     ...nextBestActions
   ]).slice(0, 36);
-  const urgentCount = allItems.filter((row) => row.urgency === 'critical' || row.urgency === 'high').length;
+  const urgentCount = allItems.filter(
+    (row) => row.urgency === 'critical' || row.urgency === 'high'
+  ).length;
   const approvalCount = pendingApprovals.length;
   const platformInsightCount = platformInsights.length;
   const liveScore = clamp(
@@ -398,4 +415,3 @@ export function buildPredictiveOperationsDashboardReadout(
     generatedAt: now
   };
 }
-

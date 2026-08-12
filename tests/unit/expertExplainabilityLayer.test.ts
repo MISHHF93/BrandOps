@@ -67,7 +67,9 @@ describe('expertExplainabilityLayer', () => {
     expect(text).toContain('Generated using:');
     expect(text).toContain('- Twin Memory Expert');
     expect(text).toContain('Context used:');
-    expect(text).not.toMatch(/task_match|condition:|keyword_match|context_available|missing_context/);
+    expect(text).not.toMatch(
+      /task_match|condition:|keyword_match|context_available|missing_context/
+    );
     expect(text).not.toMatch(/chain-of-thought|hidden prompt|private deliberation/i);
     expect(view.transparencyNotes).toContain('Detailed model reasoning is intentionally omitted.');
   });
