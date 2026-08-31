@@ -36,18 +36,18 @@ export function normalizeOpenAiCompatibleEndpointOrigin(endpointBaseUrl: string)
   try {
     parsed = new URL(endpointBaseUrl.trim());
   } catch {
-    throw new Error('AI bridge endpoint must be a valid absolute URL.');
+    throw new Error('Hosted AI endpoint must be a valid absolute URL.');
   }
   if (
     parsed.protocol !== 'https:' &&
     !(parsed.protocol === 'http:' && isLoopbackHost(parsed.hostname))
   ) {
     throw new Error(
-      'AI bridge endpoint must use HTTPS (HTTP is allowed only for loopback development).'
+      'Hosted AI endpoint must use HTTPS (HTTP is allowed only for loopback development).'
     );
   }
   if (parsed.username || parsed.password) {
-    throw new Error('AI bridge endpoint must not contain URL credentials.');
+    throw new Error('Hosted AI endpoint must not contain URL credentials.');
   }
   return parsed.origin;
 }
@@ -131,12 +131,12 @@ export async function configureOpenAiCompatibleCredentials(input: {
   apiKey?: string;
 }): Promise<void> {
   const allowedOrigins = uniqueApprovedOrigins(input.endpointBaseUrls);
-  if (allowedOrigins.length === 0) throw new Error('Configure at least one AI bridge endpoint.');
+  if (allowedOrigins.length === 0) throw new Error('Configure at least one Hosted AI endpoint.');
 
   const supplied = input.apiKey?.trim() ?? '';
   const existing = supplied ? null : await getOpenAiCompatibleApiKey();
   const apiKey = supplied || existing;
-  if (!apiKey) throw new Error('Enter an API key before enabling the hosted AI bridge.');
+  if (!apiKey) throw new Error('Enter an API key before enabling Hosted AI.');
 
   const record: OpenAiCompatibleCredentialRecordV1 = {
     version: 1,

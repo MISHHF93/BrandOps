@@ -183,7 +183,7 @@ export function buildTodayFocusBoard(snapshot: CockpitDailySnapshot): TodayFocus
     momentum.push({
       id: 'ops',
       line: 'Execution surface',
-      detail: `${snapshot.integrationArtifactCount} artifact(s), ${snapshot.sshTargetsCount} SSH target(s) — ops leverage compounds.`
+      detail: `${snapshot.integrationArtifactCount} artifact(s), ${snapshot.sshTargetsCount} server(s) — ops leverage compounds.`
     });
   }
 

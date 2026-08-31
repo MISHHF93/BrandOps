@@ -67,6 +67,19 @@ function clean(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+/**
+ * Whole-phrase match, not substring. Plain `.includes()` false-positives
+ * common-noun platform terms — `notion`, `meeting` — against unrelated prose
+ * in `source.notes`/`artifact.summary` (e.g. "just a notion I have"). Lower
+ * stakes here than a workflow-blocking gate (this only feeds AI context
+ * assembly), but the same fix is cheap and keeps the pattern consistent with
+ * `askPlanConversion.ts`'s `platformFromText`.
+ */
+function containsWholeWord(haystack: string, phrase: string): boolean {
+  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\b${escaped}\\b`).test(haystack);
+}
+
 function uniq(values: string[], cap = 12): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -104,7 +117,7 @@ function corpus(workspace: BrandOpsData): string {
 
 function hasTextPlatformEvidence(workspace: BrandOpsData, platform: PlatformKey): boolean {
   const text = corpus(workspace);
-  return platformTerms(platform).some((term) => text.includes(term));
+  return platformTerms(platform).some((term) => containsWholeWord(text, term));
 }
 
 function platformTerms(platform: PlatformKey): string[] {
@@ -134,8 +147,8 @@ function platformTerms(platform: PlatformKey): string[] {
 function textMatchesPlatform(text: string, platform: PlatformKey): boolean {
   const normalized = text.toLowerCase();
   return (
-    normalized.includes(PLATFORM_LABELS[platform].toLowerCase()) ||
-    platformTerms(platform).some((term) => normalized.includes(term))
+    containsWholeWord(normalized, PLATFORM_LABELS[platform].toLowerCase()) ||
+    platformTerms(platform).some((term) => containsWholeWord(normalized, term))
   );
 }
 
@@ -185,7 +198,7 @@ function approvedPlatformSummaries(workspace: BrandOpsData, platform: PlatformKe
     .filter((artifact) => {
       const text =
         `${artifact.artifactType} ${artifact.title} ${artifact.tags.join(' ')} ${artifact.summary}`.toLowerCase();
-      return text.includes(label) || textMatchesPlatform(text, platform);
+      return containsWholeWord(text, label) || textMatchesPlatform(text, platform);
     })
     .map((artifact) => `${artifact.title}: ${artifact.summary}`);
 

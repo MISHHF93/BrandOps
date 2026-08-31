@@ -58,7 +58,7 @@ export const CockpitDailyView = ({
 
   return (
     <div className="space-y-3" aria-label="Today">
-      <span className="sr-only">Today — plan and work</span>
+      <span className="sr-only">Today — twin-grounded daily operating surface with focus board, predictions, and workstreams</span>
 
       <CockpitWorkstreamBar
         btnFocus={btnFocus}

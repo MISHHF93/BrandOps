@@ -68,6 +68,45 @@ describe('Ask response to PLAN conversion', () => {
     ).toBe(true);
   });
 
+  it('does not misdetect a platform from words that merely contain the letter x', () => {
+    const workspace = cloneSeedData();
+    const result = convertAskResponseToPlan({
+      conversationId: 'conversation-3',
+      messageId: 'assistant-3',
+      responseText:
+        'Your context shows deep expertise here. For example, explain the exact positioning next.',
+      userIntent: 'How do I explain my expertise clearly?',
+      activeTwinId: null,
+      planPreset: 'positioning-plan',
+      workspaceContext: workspace
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    // Regression: `platformFromText` used to substring-match the single-letter 'x'
+    // (X/Twitter) keyword against "context"/"expertise"/"example", forcing steps
+    // BLOCKED on a platform nobody mentioned.
+    expect(result.draft.steps.some((step) => step.status === 'blocked')).toBe(false);
+    expect(result.draft.assumptions.join(' ')).not.toContain('is not connected or supported');
+  });
+
+  it('still detects a real platform mention as a whole word', () => {
+    const workspace = cloneSeedData();
+    const result = convertAskResponseToPlan({
+      conversationId: 'conversation-4',
+      messageId: 'assistant-4',
+      responseText: 'Post this update on X to reach your audience today.',
+      userIntent: 'Should I share this on X?',
+      activeTwinId: null,
+      planPreset: 'content-plan',
+      workspaceContext: workspace
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.draft.assumptions.join(' ')).toContain('Platform context detected: x');
+  });
+
   it('rejects malformed inputs instead of saving raw prose', () => {
     const result = convertAskResponseToPlan({
       conversationId: '',

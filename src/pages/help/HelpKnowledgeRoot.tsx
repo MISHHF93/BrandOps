@@ -62,9 +62,9 @@ export function HelpKnowledgeRoot() {
             <a
               href={integrationsHubHref}
               className={navLinkClass}
-              title="integrations.html — extension hub"
+              title="Integrations hub"
             >
-              Integrations page
+              Integrations hub
             </a>
           </nav>
         </div>

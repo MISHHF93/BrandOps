@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  Brain,
   CheckCircle2,
   Compass,
   FileText,
@@ -81,6 +82,7 @@ export interface MobileWorkspaceHubViewProps {
   onApproveOperatorTrace: (traceId: string) => void | Promise<void>;
   onRejectOperatorTrace?: (traceId: string) => void | Promise<void>;
   onExecutePlan?: (planId: string) => void | Promise<void>;
+  onVerifyPlan?: (planId: string) => void;
   onConvertPredictiveOpportunityToPlan?: (suggestion: PredictiveOpportunitySuggestion) => void;
   onConvertContentIdeationToPlan?: (item: ContentIdeationItem) => void;
   onConvertWorkflowPredictionToPlan?: (prediction: WorkflowPrediction) => void;
@@ -147,9 +149,9 @@ function compactTime(value: string): string {
 
 function planAgentLockCopy(reason: 'auth' | 'membership' | null): string | null {
   if (reason === 'auth')
-    return 'Unlock local preview access in Settings to run workspace commands from Plan.';
+    return 'Unlock local access in Settings to run workspace commands from Plan.';
   if (reason === 'membership')
-    return 'Enable the local development membership demo to run workspace commands from Plan.';
+    return 'Enable local membership in Settings to run workspace commands from Plan.';
   return null;
 }
 
@@ -165,31 +167,47 @@ function savedPlanTone(plan: Plan): FeedTone {
   if (plan.status === 'opportunity') return 'primary';
   if (plan.status === 'rejected') return 'danger';
   if (plan.status === 'executing') return 'info';
+  /** Recorded but not yet human-confirmed — same "needs your attention" register as draft/pending-approval. */
+  if (plan.status === 'executed') return 'warning';
   return 'success';
 }
 
-/** 'rejected'/'executed' are terminal — the review or the work is done, so this card belongs under "Recent", not the "Active" filter (which matches on `kind === 'active-plan'`). */
+/** 'rejected'/'verified' are terminal — the review or the (confirmed) work is done, so these belong under "Recent", not the "Active" filter. 'executed' is deliberately NOT terminal: BrandOps recorded execution but has not observed real outcomes, so the plan still needs a human "Confirm outcomes" pass before it's done. */
 function savedPlanFeedKind(status: Plan['status']): FeedKind {
   if (status === 'opportunity') return 'opportunity';
-  if (status === 'rejected' || status === 'executed') return 'completed-action';
+  if (status === 'rejected' || status === 'verified') return 'completed-action';
   return 'active-plan';
+}
+
+function savedPlanStatusLabel(status: Plan['status']): string {
+  if (status === 'pending-approval') return 'approval pending';
+  if (status === 'executed') return 'awaiting verification';
+  return status;
 }
 
 function savedPlanToFeedItem(
   plan: Plan,
   runCommand: MobileWorkspaceHubViewProps['runCommand'],
   disabled: boolean,
-  onExecutePlan: NonNullable<MobileWorkspaceHubViewProps['onExecutePlan']>
+  onExecutePlan: NonNullable<MobileWorkspaceHubViewProps['onExecutePlan']>,
+  onVerifyPlan: NonNullable<MobileWorkspaceHubViewProps['onVerifyPlan']>
 ): FeedItem {
   return {
     id: `saved-plan-${plan.id}`,
     kind: savedPlanFeedKind(plan.status),
     title: plan.title,
     summary: plan.objective,
-    status: plan.status === 'pending-approval' ? 'approval pending' : plan.status,
+    status: savedPlanStatusLabel(plan.status),
     tone: savedPlanTone(plan),
-    priority: plan.status === 'pending-approval' ? 15 : plan.status === 'draft' ? 40 : 60,
-    primaryAction: plan.status === 'draft' ? 'Fill gaps' : 'Preview',
+    priority:
+      plan.status === 'pending-approval'
+        ? 15
+        : plan.status === 'executed'
+          ? 25
+          : plan.status === 'draft'
+            ? 40
+            : 60,
+    primaryAction: plan.status === 'draft' ? 'Fill gaps' : 'Review',
     primaryDisabled: disabled,
     onPrimary: () =>
       runCommand(
@@ -207,7 +225,7 @@ function savedPlanToFeedItem(
       ? plan.requiredApprovals
       : ['External actions still require explicit approval.'],
     receipts: [`Receipt: ${plan.receiptId}`, `Saved ${compactTime(plan.savedAt)}`],
-    /** Only `approved` plans are executable — the executor (planExecutor.ts) refuses anything else. */
+    /** Only `approved` plans are executable (planExecutor.ts refuses anything else); only `executed` plans are verifiable (planVerifier.ts refuses anything else). */
     ...(plan.status === 'approved'
       ? {
           secondaryActions: [
@@ -216,6 +234,18 @@ function savedPlanToFeedItem(
               onClick: () => onExecutePlan(plan.id),
               disabled,
               tone: 'success' as FeedTone
+            }
+          ]
+        }
+      : {}),
+    ...(plan.status === 'executed'
+      ? {
+          secondaryActions: [
+            {
+              label: 'Confirm outcomes',
+              onClick: () => onVerifyPlan(plan.id),
+              disabled,
+              tone: 'warning' as FeedTone
             }
           ]
         }
@@ -236,7 +266,7 @@ function operationalCardToFeedItem(
         ? 'Fill missing context before activation.'
         : plan.status === 'in-progress'
           ? 'Check progress, then run the next approved step.'
-          : 'Preview it, edit if needed, then approve execution.';
+          : 'Review it, edit if needed, then approve execution.';
   return {
     id: `plan-${plan.id}`,
     kind: 'active-plan',
@@ -245,7 +275,7 @@ function operationalCardToFeedItem(
     status: plan.status.replace(/-/g, ' '),
     tone: planTone(plan),
     priority: plan.status === 'blocked' ? 18 : plan.status === 'needs-input' ? 45 : 65,
-    primaryAction: plan.status === 'needs-input' ? 'Add input' : 'Preview',
+    primaryAction: plan.status === 'needs-input' ? 'Add input' : 'Review',
     primaryDisabled: disabled,
     onPrimary: () => runCommand(plan.previewCommand),
     details: [
@@ -254,7 +284,7 @@ function operationalCardToFeedItem(
       `Progress: ${plan.progress}%`
     ],
     timeline: plan.timeline,
-    approvals: ['Preview and approve before execution.'],
+    approvals: ['Review and approve before execution.'],
     receipts: Object.keys(plan.exportPayload ?? {}).slice(0, 4),
     secondaryActions: [
       {
@@ -290,7 +320,7 @@ function approvalToFeedItem(args: {
     priority: 5,
     primaryAction: 'Review',
     primaryDisabled: disabled,
-    onPrimary: () => runCommand(approvalPrompt('Preview this approval item', item)),
+    onPrimary: () => runCommand(approvalPrompt('Review this approval item', item)),
     details: [
       item.annotatorNote || 'This needs human confirmation before execution.',
       item.surface ? `Surface: ${item.surface}` : '',
@@ -335,7 +365,7 @@ function opportunityToFeedItem(args: {
     approvals: ['Approve experiments before outreach, publishing, or record changes.'],
     receipts: item.supportingSignals.slice(0, 4),
     secondaryActions: [
-      { label: 'Preview', onClick: () => runCommand(item.previewCommand), disabled }
+      { label: 'Review', onClick: () => runCommand(item.previewCommand), disabled }
     ]
   };
 }
@@ -360,7 +390,7 @@ function recommendationToFeedItem(
     status: item.confidence ? `${item.confidence}% confidence` : 'suggested',
     tone: 'info',
     priority: 35,
-    primaryAction: 'Preview',
+    primaryAction: 'Review',
     primaryDisabled: disabled,
     onPrimary: () => runCommand(item.command),
     details: [item.why],
@@ -487,6 +517,7 @@ function buildOperationalFeed(args: {
   onApproveOperatorTrace: MobileWorkspaceHubViewProps['onApproveOperatorTrace'];
   onRejectOperatorTrace: NonNullable<MobileWorkspaceHubViewProps['onRejectOperatorTrace']>;
   onExecutePlan: NonNullable<MobileWorkspaceHubViewProps['onExecutePlan']>;
+  onVerifyPlan: NonNullable<MobileWorkspaceHubViewProps['onVerifyPlan']>;
   onConvertPredictiveOpportunityToPlan: NonNullable<
     MobileWorkspaceHubViewProps['onConvertPredictiveOpportunityToPlan']
   >;
@@ -499,7 +530,15 @@ function buildOperationalFeed(args: {
     items.push(approvalToFeedItem({ ...args, item }));
   }
   for (const plan of args.snapshot.convertedAskPlans.slice(0, 6)) {
-    items.push(savedPlanToFeedItem(plan, args.runCommand, args.disabled, args.onExecutePlan));
+    items.push(
+      savedPlanToFeedItem(
+        plan,
+        args.runCommand,
+        args.disabled,
+        args.onExecutePlan,
+        args.onVerifyPlan
+      )
+    );
   }
   for (const plan of [
     ...args.convertedOperationalPlans,
@@ -582,14 +621,22 @@ function FeedItemRow({ item, btnFocus }: { item: FeedItem; btnFocus: string }) {
   return (
     <details
       id={item.id}
-      className="group scroll-mt-28 rounded-xl border border-border/35 bg-bgElevated/55 px-3 py-2.5 open:border-primary/30 open:bg-surface/65"
+      className={clsx(
+        'group scroll-mt-28 rounded-xl border bg-bgElevated/55 px-3 py-2.5 open:border-primary/35 open:bg-surface/70',
+        item.tone === 'danger' ? 'border-danger/35' : item.tone === 'warning' ? 'border-warning/35' : 'border-border/35'
+      )}
     >
       <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
         <div className="flex items-start gap-2.5">
           <span
             className={clsx(
               'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border',
-              toneClass(item.tone)
+              item.tone === 'success' ? 'border-success/45 bg-successSoft/20 text-success' :
+              item.tone === 'warning' ? 'border-warning/45 bg-warningSoft/20 text-warning' :
+              item.tone === 'danger' ? 'border-danger/45 bg-dangerSoft/15 text-danger' :
+              item.tone === 'info' ? 'border-info/45 bg-infoSoft/15 text-info' :
+              item.tone === 'primary' ? 'border-primary/45 bg-primarySoft/20 text-primary' :
+              'border-border/45 bg-bgSubtle/70 text-textMuted'
             )}
           >
             <Icon className="h-4 w-4" aria-hidden />
@@ -600,7 +647,12 @@ function FeedItemRow({ item, btnFocus }: { item: FeedItem; btnFocus: string }) {
               <span
                 className={clsx(
                   'rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
-                  toneClass(item.tone)
+                  item.tone === 'success' ? 'border-success/45 bg-successSoft/20 text-success' :
+                  item.tone === 'warning' ? 'border-warning/45 bg-warningSoft/20 text-warning' :
+                  item.tone === 'danger' ? 'border-danger/45 bg-dangerSoft/15 text-danger' :
+                  item.tone === 'info' ? 'border-info/45 bg-infoSoft/15 text-info' :
+                  item.tone === 'primary' ? 'border-primary/45 bg-primarySoft/20 text-primary' :
+                  'border-border/45 bg-bgSubtle/70 text-textMuted'
                 )}
               >
                 {item.status}
@@ -647,7 +699,12 @@ function FeedItemRow({ item, btnFocus }: { item: FeedItem; btnFocus: string }) {
               }}
               className={clsx(
                 'rounded-lg border px-2.5 py-1.5 text-fine font-semibold disabled:opacity-45',
-                toneClass(action.tone ?? 'muted'),
+                action.tone === 'success' ? 'border-success/45 bg-successSoft/20 text-success' :
+                action.tone === 'warning' ? 'border-warning/45 bg-warningSoft/20 text-warning' :
+                action.tone === 'danger' ? 'border-danger/45 bg-dangerSoft/15 text-danger' :
+                action.tone === 'info' ? 'border-info/45 bg-infoSoft/15 text-info' :
+                action.tone === 'primary' ? 'border-primary/45 bg-primarySoft/20 text-primary' :
+                'border-border/45 bg-bgSubtle/70 text-textMuted',
                 btnFocus
               )}
             >
@@ -677,6 +734,7 @@ export const MobileWorkspaceHubView = ({
   onApproveOperatorTrace,
   onRejectOperatorTrace = () => {},
   onExecutePlan = () => {},
+  onVerifyPlan = () => {},
   onConvertPredictiveOpportunityToPlan = () => {},
   onConvertContentIdeationToPlan: _onConvertContentIdeationToPlan = () => {},
   onConvertWorkflowPredictionToPlan: _onConvertWorkflowPredictionToPlan = () => {},
@@ -694,11 +752,14 @@ export const MobileWorkspaceHubView = ({
     !snapshot.focusMetric.trim();
   const disabled = commandBusy || !canRunWorkspaceCommands;
   const lockHint = planAgentLockCopy(workspaceCommandLockReason);
-  /** 'approved'/'executing' are live, in-progress work too — not just 'active' — since the approval fan-out (checkpointActions.ts) started making 'approved' a real, reachable status. Excludes 'executed' (done), 'draft'/'pending-approval' (not yet live), 'rejected' (dead), and 'opportunity' (its own counter below). */
+  /** 'approved'/'executing' are live, in-progress work too — not just 'active' — since the approval fan-out (checkpointActions.ts) started making 'approved' a real, reachable status. 'executed' also still counts: BrandOps recorded execution but the plan needs a human "Confirm outcomes" pass before it's done. Excludes 'draft'/'pending-approval' (not yet live), 'rejected' (dead), 'verified' (done), and 'opportunity' (its own counter below). */
   const activePlanCount =
     snapshot.convertedAskPlans.filter(
       (plan) =>
-        plan.status === 'active' || plan.status === 'approved' || plan.status === 'executing'
+        plan.status === 'active' ||
+        plan.status === 'approved' ||
+        plan.status === 'executing' ||
+        plan.status === 'executed'
     ).length +
     convertedOperationalPlans.length +
     buildOperationalPlanCards(snapshot).filter((plan) => plan.status !== 'needs-input').length;
@@ -714,6 +775,7 @@ export const MobileWorkspaceHubView = ({
     onApproveOperatorTrace,
     onRejectOperatorTrace,
     onExecutePlan,
+    onVerifyPlan,
     onConvertPredictiveOpportunityToPlan,
     onExportOperationalPlan,
     onExportExecutionReceipt,
@@ -726,7 +788,7 @@ export const MobileWorkspaceHubView = ({
   const attention = feedItems.find((item) => item.priority <= 20) ?? feedItems[0];
   const member =
     launchAccess.membership.status === 'active'
-      ? 'Local membership flag active · unverified'
+      ? 'Local membership active · unverified'
       : 'No verified membership';
 
   return (
@@ -739,12 +801,12 @@ export const MobileWorkspaceHubView = ({
           <div className="min-w-0 flex-1">
             <p className="bo-system-label text-primary">
               <Sparkles className="h-4 w-4" aria-hidden />
-              AI Chief of Staff briefing stream
+              Operational workspace
             </p>
-            <h2 className="mt-1 text-h3 text-text">What needs attention now?</h2>
+            <h2 className="mt-1 text-h3 text-text">What needs your attention?</h2>
             <p className="mt-1 text-meta leading-snug text-textMuted">
-              One feed for what to do, what needs approval, what is active, what opportunities
-              exist, and what happened recently.
+              Actions, approvals, active plans, opportunities, and recent receipts — one feed,
+              prioritized by your twin context.
             </p>
           </div>
           <button
@@ -832,6 +894,78 @@ export const MobileWorkspaceHubView = ({
         </p>
       </header>
 
+      {snapshot.activeDigitalTwin ? (
+        <div className="mt-3 rounded-2xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
+          <p className="bo-system-label text-primary">
+            <UserRound className="h-3.5 w-3.5" aria-hidden />
+            What your twin knows
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-fine text-textSoft">
+            <span>
+              <strong className="font-medium text-text">{snapshot.activeDigitalTwin.displayName}</strong>
+              {' '}&middot; {snapshot.activeDigitalTwin.confidenceScore}% confidence
+            </span>
+            {snapshot.positioning ? (
+              <span className="line-clamp-1">{snapshot.positioning}</span>
+            ) : null}
+          </div>
+          {snapshot.activeDigitalTwin.resumeProfile.skills.length > 0 ? (
+            <p className="mt-1 text-fine leading-snug text-textMuted">
+              {snapshot.activeDigitalTwin.resumeProfile.skills.length} skills
+              {snapshot.activeDigitalTwin.resumeProfile.experience.length > 0
+                ? ` · ${snapshot.activeDigitalTwin.resumeProfile.experience.length} roles`
+                : ''}
+              {snapshot.activeDigitalTwin.memory.approvedClaims.length > 0
+                ? ` · ${snapshot.activeDigitalTwin.memory.approvedClaims.length} verified claims`
+                : ''}
+              {snapshot.memoryContextEngine.entries.length > 0
+                ? ` · ${snapshot.memoryContextEngine.entries.length} memory entries`
+                : ''}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {(snapshot.expertOperator.ask.expertNames.length > 0 ||
+        snapshot.predictiveOpportunityLayer.suggestions.length > 0 ||
+        snapshot.predictiveContentIdeationEngine.allIdeas.length > 0) ? (
+        <div className="mt-3 rounded-2xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
+          <p className="bo-system-label text-primary">
+            <Brain className="h-3.5 w-3.5" aria-hidden />
+            Twin intelligence
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-fine text-textSoft">
+            {snapshot.expertOperator.ask.expertNames.length > 0 ? (
+              <span>
+                <strong className="font-medium text-text">
+                  {snapshot.expertOperator.ask.expertNames.length} expert{snapshot.expertOperator.ask.expertNames.length > 1 ? 's' : ''}
+                </strong>{' '}
+                active: {snapshot.expertOperator.ask.expertNames.slice(0, 3).join(', ')}
+                {snapshot.expertOperator.ask.expertNames.length > 3 ? '…' : ''}
+              </span>
+            ) : null}
+            {snapshot.predictiveOpportunityLayer.suggestions.length > 0 ? (
+              <span>
+                <strong className="font-medium text-text">
+                  {snapshot.predictiveOpportunityLayer.suggestions.length} opportunity
+                  {snapshot.predictiveOpportunityLayer.suggestions.length > 1 ? 's' : ''}
+                </strong>{' '}
+                predicted
+              </span>
+            ) : null}
+            {snapshot.predictiveContentIdeationEngine.allIdeas.length > 0 ? (
+              <span>
+                <strong className="font-medium text-text">
+                  {snapshot.predictiveContentIdeationEngine.allIdeas.length} content idea
+                  {snapshot.predictiveContentIdeationEngine.allIdeas.length > 1 ? 's' : ''}
+                </strong>{' '}
+                ready
+              </span>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       {attention ? (
         <div className="mt-3 rounded-2xl border border-primary/25 bg-primarySoft/10 px-3 py-3">
           <p className="bo-system-label text-primary">Start here</p>
@@ -847,6 +981,19 @@ export const MobileWorkspaceHubView = ({
             </span>
           </div>
           <p className="mt-1 text-meta leading-snug text-textMuted">{attention.summary}</p>
+          {attention.primaryAction ? (
+            <button
+              type="button"
+              disabled={attention.primaryDisabled}
+              onClick={() => void attention.onPrimary?.()}
+              className={clsx(
+                'mt-2 inline-flex items-center gap-1.5 rounded-lg border border-primary/45 bg-primarySoft/20 px-3 py-1.5 text-fine font-semibold text-primary disabled:opacity-45',
+                btnFocus
+              )}
+            >
+              {attention.primaryAction}
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -859,20 +1006,41 @@ export const MobileWorkspaceHubView = ({
             <FeedItemRow key={item.id} item={item} btnFocus={btnFocus} />
           ))
         ) : (
-          <div className="rounded-xl border border-dashed border-border/50 bg-bgSubtle/30 px-3 py-4 text-center">
-            <p className="text-sm font-medium text-text">Nothing in this focus yet</p>
-            <p className="mt-1 text-meta leading-relaxed text-textSoft">
-              Switch focus or add work to bring new items into the operational stream.
+          <div className="rounded-xl border border-dashed border-border/50 bg-bgSubtle/30 px-3 py-5 text-center">
+            <p className="text-sm font-medium text-text">No items in this focus</p>
+            <p className="mt-1.5 text-meta leading-relaxed text-textSoft">
+              {feedFilter === 'approvals'
+                ? 'No approvals pending. When your twin generates actions or external agents propose changes, they appear here for your review before anything executes.'
+                : feedFilter === 'active'
+                  ? 'No active plans yet. Ask your twin a strategic question, then convert the response to a structured plan with execution steps and approval gates.'
+                  : feedFilter === 'opportunities'
+                    ? 'No opportunities detected yet. Your twin learns from workspace activity, connected platforms, and behavioral patterns — opportunities surface as context accumulates.'
+                    : 'Your operational feed is empty. Start by creating your digital twin in Setup, then ask strategic questions in Ask My Twin.'}
             </p>
+            {feedFilter === 'all' || feedFilter === 'active' ? (
+              <button
+                type="button"
+                onClick={onOpenCommandPalette}
+                className={clsx(
+                  'mt-3 inline-flex items-center gap-1.5 rounded-lg border border-primary/45 bg-primarySoft/20 px-3 py-1.5 text-fine font-semibold text-primary',
+                  btnFocus
+                )}
+              >
+                Add work
+              </button>
+            ) : null}
           </div>
         )}
       </div>
 
-      <footer className="mt-3 rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2">
+      <footer className="mt-3 rounded-xl border border-border/35 bg-bgSubtle/45 px-3 py-2.5">
         <p className="flex items-start gap-2 text-meta leading-snug text-textMuted">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
-          Safety rule: PLAN can draft actions and organize work. It cannot send, publish, sync,
-          delete, or modify external systems without supported integrations and explicit approval.
+          <span>
+            <strong className="font-medium text-text">Your workspace is local-first.</strong> Plan
+            drafts actions and organizes work. Nothing is sent, published, or deleted without your
+            explicit approval. Integrations show their real status.
+          </span>
         </p>
       </footer>
     </section>

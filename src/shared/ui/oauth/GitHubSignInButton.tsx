@@ -28,7 +28,7 @@ export function GitHubSignInButton({
 }: GitHubSignInButtonProps) {
   const label =
     variant === 'preview'
-      ? 'Use GitHub preview identity'
+      ? 'Use GitHub account'
       : variant === 'continue'
         ? loading
           ? 'Connecting…'

@@ -74,6 +74,14 @@ function iconForLineId(id: string): { Icon: LucideIcon; tone: LineTone } {
 }
 
 function LineList({ items }: { items: TodayFocusLine[] }) {
+  if (items.length === 0) {
+    return (
+      <p className="mt-1.5 text-meta text-textMuted">
+        Nothing here right now — your twin will surface items as plans execute and new signals
+        arrive.
+      </p>
+    );
+  }
   return (
     <ul className="mt-1.5 space-y-1.5" role="list">
       {items.map((item) => {
@@ -153,7 +161,7 @@ export const CockpitFocusEngine = ({
   ];
 
   return (
-    <article className="bo-flagship-surface" aria-label="Today focus engine">
+    <div className="bo-flagship-surface" aria-label="Today focus engine">
       <WorkspaceSignalsBoard
         metrics={snapshot}
         variant="today"
@@ -208,6 +216,18 @@ export const CockpitFocusEngine = ({
             hidden={activeFocus !== tab.id}
             className={panelShell(tab.id)}
           >
+            <div className="bo-focus-panel__header">
+              <span
+                className={clsx('bo-icon-chip bo-icon-chip--sm', `bo-icon-chip--${tab.tone}`)}
+                aria-hidden
+              >
+                <tab.icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+              </span>
+              <span className="bo-focus-panel__label">{tab.label}</span>
+              <span className="bo-count-pill" aria-hidden>
+                {tab.count}
+              </span>
+            </div>
             <LineList items={tab.items} />
           </div>
         ))}
@@ -247,7 +267,7 @@ export const CockpitFocusEngine = ({
                         commandBusy && 'pointer-events-none opacity-50',
                         btnFocus
                       )}
-                      title="Put in Chat composer without sending"
+                      title="Load into Chat without sending"
                     >
                       Prime
                     </button>
@@ -268,6 +288,6 @@ export const CockpitFocusEngine = ({
           />
         ) : null}
       </div>
-    </article>
+  </div>
   );
 };

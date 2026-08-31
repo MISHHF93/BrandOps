@@ -25,7 +25,11 @@ import type { BrandOpsData } from '../../types/domain';
 import { prependOperatorTrace } from '../dataset/operatorTraces';
 import { prependCheckpoint } from '../execution/checkpointStore';
 import { appendAuditEntry } from './audit';
-import { getAgentCapability, toolNameToCapabilityId, capabilityRequiresApproval } from './capabilityRegistry';
+import {
+  getAgentCapability,
+  toolNameToCapabilityId,
+  capabilityRequiresApproval
+} from './capabilityRegistry';
 import { retrieveAgentContext, searchArtifacts } from './contextRetrieval';
 import { convertAgentEventToPlan, convertOpportunityProposalToPlan } from './convertToPlan';
 import { ingestAgentEvent, isAgentEventKind } from './events';
@@ -33,6 +37,7 @@ import { findIdempotentResult, storeIdempotentResult } from './idempotency';
 import { createAgentProposal, createContentOpportunity } from './proposals';
 import { resolveAgentSession, touchAgentSession } from './sessions';
 import { detectPromptInjection, sanitizeAgentText } from './validation';
+import { runBuilderHandler } from './mcp/builderToolHandlers';
 
 export interface ExecuteAgentToolCallInput {
   workspace: BrandOpsData;
@@ -411,6 +416,20 @@ function runHandler(
         }
       };
     }
+
+    // ── Builder intelligence capability dispatch ─────────────────────
+    default: {
+      if (capabilityId.startsWith('builder.')) {
+        return runBuilderHandler(workspace, session, capabilityId, args);
+      }
+      return {
+        workspace,
+        ok: false,
+        errorCode: 'unknown_capability',
+        error: `Unknown capability: ${capabilityId}`,
+        data: {}
+      };
+    }
   }
 }
 
@@ -516,8 +535,7 @@ export async function executeAgentToolCall(
    */
   const approvalRequired = capabilityRequiresApproval(capabilityId);
   if (approvalRequired) {
-    const proposalId =
-      (handler.data as { proposalId?: string } | undefined)?.proposalId ?? null;
+    const proposalId = (handler.data as { proposalId?: string } | undefined)?.proposalId ?? null;
     const pendingApprovalRequest = proposalId
       ? (handler.workspace.agentProposals?.entries ?? []).some(
           (p) => p.id === proposalId && p.status === 'pending'

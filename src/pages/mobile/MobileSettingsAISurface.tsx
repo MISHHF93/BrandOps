@@ -532,13 +532,13 @@ export function SettingsResumeNeuralPhasePanel({
     <MobileTabSection
       id="settings-resume-neural-phase"
       title="Create AI digital twin"
-      description="Paste a plain-text résumé or profile, review the extracted facts, then generate a local AI digital twin. Missing facts stay visible and should become questions, not invented claims."
+      description="Create a persistent Digital Twin from your professional identity, expertise, goals, and work history. The twin powers contextual memory, expert routing, predictive intelligence, and plan generation across BrandOps."
       descriptionVisibility="sr-only"
     >
       <p className="mt-2 text-meta leading-relaxed text-textSoft">
-        Paste plain-text résumé/profile details, review the extracted facts, then generate your
-        local AI digital twin. PDF/DOCX parsing is not bundled yet; convert those files to text
-        first.
+        Paste your résumé, LinkedIn profile, or professional bio — then review the extracted facts and
+        generate your local AI twin. The twin learns from verified facts over time, improving Ask
+        quality, Plan recommendations, and Execute routing. PDF/DOCX: convert to text first.
       </p>
       <div className="mt-2 rounded-lg border border-primary/35 bg-primarySoft/15 px-2.5 py-2 text-meta leading-relaxed text-textMuted">
         <span className="font-semibold text-text">Consent:</span> uploaded or pasted profile data
@@ -549,10 +549,10 @@ export function SettingsResumeNeuralPhasePanel({
         <span className="font-medium text-textSoft">Twin status</span>
         <p className="mt-1 text-text">
           {snapshot.activeDigitalTwin
-            ? `${snapshot.activeDigitalTwin.displayName} · ${snapshot.activeDigitalTwin.status} · ${snapshot.activeDigitalTwin.confidenceScore}% confidence`
+            ? `${snapshot.activeDigitalTwin.displayName} · ${snapshot.activeDigitalTwin.status} · ${snapshot.activeDigitalTwin.confidenceScore}% confidence — higher scores indicate stronger fact coverage across skills, experience, and positioning`
             : 'No digital twin yet'}
         </p>
-        <span className="mt-2 block font-medium text-textSoft">Stored profile preview</span>
+        <span className="mt-2 block font-medium text-textSoft">Stored profile</span>
         <p className="mt-1 min-w-0 break-words leading-relaxed text-text">
           {snapshot.resumeNeuralPhaseArtifactPreview.trim().length > 0
             ? snapshot.resumeNeuralPhaseArtifactPreview
@@ -639,8 +639,8 @@ export function SettingsResumeNeuralPhasePanel({
         >
           <p className="text-label font-semibold text-text">Review extracted profile</p>
           <p className="mt-1 text-fine text-textMuted">
-            Edit anything that is wrong. Unverified fields remain marked as needing review in the
-            twin.
+            Edit anything that is wrong. Unverified fields stay unverified and are never treated as
+            confirmed — the twin only uses approved facts for positioning and expert routing.
           </p>
           <div className="mt-3 grid gap-2">
             {(
@@ -724,8 +724,9 @@ function TwinGoalsEditor({
     <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
       <p className="text-label font-semibold text-text">Goals</p>
       <p className="mt-1 text-fine leading-snug text-textMuted">
-        Surface and maintain the twin&apos;s {`identity.goals`}. These are captured at creation and
-        drive twin-aware suggestions; they are plain facts, never treated as verified experience.
+        Professional goals drive twin-aware suggestions, expert routing, and plan prioritization.
+        Captured at creation and updated here — these are plain facts, never treated as verified
+        experience.
       </p>
       <div className="mt-2 flex gap-2">
         <input
@@ -887,8 +888,9 @@ export function SettingsTwinDashboard({
           <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
             <p className="text-label font-semibold text-text">Improve Twin — verify facts</p>
             <p className="mt-1 text-fine leading-snug text-textMuted">
-              Approve or reject the extracted facts. Only approved facts count as verified; anything
-              left unverified stays marked as unverified and is never treated as confirmed.
+              Approved facts strengthen your twin's positioning accuracy, improve expert routing, and
+              increase the precision of predictions and recommendations across Ask, Plan, and Execute.
+              Unverified facts stay unverified — nothing is auto-confirmed.
             </p>
             {factReviewRows(twin).length === 0 ? (
               <p className="mt-2 text-meta text-textMuted">No extracted facts to review yet.</p>
@@ -1099,7 +1101,7 @@ export function SettingsTwinDashboard({
         <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
           <p className="text-label font-semibold text-text">Twin Action Studio</p>
           <p className="mt-1 text-fine text-textMuted">
-            Input → preview happens in Chat via hosted <code className="font-mono">ask:</code>.
+            Input and review happens in Chat via hosted Ask.
             Confirm before external outreach or publishing. Results can be copied or saved from the
             transcript/workspace.
           </p>
@@ -1117,7 +1119,7 @@ export function SettingsTwinDashboard({
               >
                 {label}
                 <span className="mt-1 block text-fine font-normal text-textMuted">
-                  Preview → confirm → copy/save.
+                  Review → confirm → copy/save.
                 </span>
               </button>
             ))}

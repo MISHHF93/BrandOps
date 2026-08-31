@@ -28,9 +28,12 @@ export function KpiSelfCheckStrip({
       className="rounded-xl border border-border/40 bg-bgElevated/40 px-3 py-3 text-meta text-textMuted"
       aria-label="Focus metric check-in"
     >
-      <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
-        Execution check-in
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-fine font-semibold uppercase tracking-wide text-textSoft">
+          Execution check-in
+        </p>
+        <span className="text-overline text-textSoft">{checks.length} logged</span>
+      </div>
       <p className="mt-1 line-clamp-3 text-meta leading-snug text-textSoft" title={focusMetric}>
         Rate yourself vs{' '}
         <span className="font-medium text-text">{focusMetric.trim() || 'focus metric'}</span>.
@@ -38,12 +41,12 @@ export function KpiSelfCheckStrip({
       {checks.length > 0 ? (
         <ul className="mt-2 space-y-1 text-fine text-textMuted" aria-label="Recent check-ins">
           {checks.slice(0, 3).map((c, i) => (
-            <li key={`${c.recordedAt}-${i}`}>
+            <li key={`${c.recordedAt}-${i}`} className="flex items-center gap-2">
               <span className="font-semibold text-text">{c.score}/5</span>
               <span className="text-textSoft"> · </span>
-              <span>{new Date(c.recordedAt).toLocaleDateString()}</span>
+              <span className="text-textSoft">{new Date(c.recordedAt).toLocaleDateString()}</span>
               {c.note.trim() ? (
-                <span className="text-textSoft"> — {c.note.trim().slice(0, 80)}</span>
+                <span className="text-textSoft line-clamp-1"> — {c.note.trim().slice(0, 80)}</span>
               ) : null}
             </li>
           ))}

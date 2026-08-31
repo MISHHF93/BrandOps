@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MutableRefObject, RefObject } from 'react';
-import { AlertCircle, BookmarkPlus, Bot, Copy, Pin, Sparkles, User } from 'lucide-react';
+import { AlertCircle, BookmarkPlus, Bot, Copy, GitBranch, Pin, Sparkles, User } from 'lucide-react';
 import clsx from 'clsx';
 import { AssistantEvidenceChips } from './AssistantEvidenceChips';
 import { AssistantInlineCitationBody } from './AssistantInlineCitationBody';
@@ -11,7 +11,6 @@ import type {
   ActiveExecution,
   Checkpoint as ExecutionCheckpoint
 } from '../../types/executionState';
-import { ActivityIndicator } from '../../shared/ui/execution/ActivityIndicator';
 import { StreamingStatus } from '../../shared/ui/execution/StreamingStatus';
 import { CheckpointTimeline } from '../../shared/ui/execution/CheckpointTimeline';
 import type { CheckpointHandlers } from '../../shared/ui/execution/Checkpoint';
@@ -67,12 +66,14 @@ export interface ChatMessage {
   orphanInlineMarkers?: string[];
   /** Compact provenance summary for this assistant turn (optional). */
   traceSummary?: AssistantAskTraceSummaryUI;
+  /** Optional twin confidence score for this response (0-100). */
+  confidenceScore?: number;
   /** Saved PLAN bridge created from this Ask response. */
   planConversion?: {
     planId: string;
     planTitle: string;
     convertedAt: string;
-  };
+  } & { readonly planId: string };
 }
 
 export type AskPlanConversionKind =
@@ -156,7 +157,7 @@ function missingFactsFromMessage(
 function messageTitle(message: ChatMessage): string {
   if (message.role === 'user') return 'Ask My Twin question';
   if (message.resultKind === 'ask-result') return 'Ask My Twin response';
-  return 'Conversation item';
+  return 'Twin response';
 }
 
 function StreamingAssistantText({
@@ -202,7 +203,7 @@ function StreamingAssistantText({
 
   return (
     <div className="space-y-2">
-      {isGenerating ? <span className="bo-terminal-meta">revealing response...</span> : null}
+      {isGenerating ? <span className="bo-terminal-meta">twin reasoning from verified facts...</span> : null}
       <p
         className="bo-streaming-text whitespace-pre-wrap break-words leading-relaxed"
         aria-label={text}
@@ -261,7 +262,7 @@ export const MobileChatView = (props: MobileChatViewProps) => {
   const {
     messages,
     loading,
-    activeExecution = null,
+    activeExecution: _activeExecution = null,
     executionHistory = [],
     checkpoints = [],
     onApprovePlanCheckpoint,
@@ -381,32 +382,45 @@ export const MobileChatView = (props: MobileChatViewProps) => {
       <header className="bo-ops-panel px-3 py-3 sm:px-3.5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 text-text">
-              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-bgElevated text-accent">
-                <Bot className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+            <div className="flex items-center gap-2.5 text-text">
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-bgElevated text-accent ring-1 ring-border/30">
+                <Bot className="h-4.5 w-4.5" strokeWidth={2.25} aria-hidden />
               </span>
               <div className="min-w-0">
-                <h2 className="text-base font-semibold leading-tight tracking-tight text-text">
-                  Ask My Twin
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-semibold leading-tight tracking-tight text-text">
+                    Ask My Twin
+                  </h2>
+                  {activeDigitalTwin ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primarySoft/15 px-1.5 py-0.5 text-overline font-semibold uppercase tracking-wide text-primary">
+                      <span className="h-1 w-1 rounded-full bg-primary" aria-hidden />
+                      {activeDigitalTwin.displayName}
+                    </span>
+                  ) : null}
+                </div>
                 <p className="mt-0.5 text-fine leading-snug text-textMuted">
-                  Conversation only. Think, draft, analyze, then convert strong outputs into Plan.
+                  Twin-grounded reasoning. Think, draft, analyze, then convert strong outputs into
+                  structured Plans for approval, execution, and verification.
                 </p>
               </div>
             </div>
             {assistantRoutingCaption?.trim() ? (
               <p className="mt-2 text-fine leading-snug text-textSoft">{assistantRoutingCaption}</p>
             ) : null}
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <ActivityIndicator execution={activeExecution} />
-            <span className="rounded-full border border-border/45 bg-bgSubtle/70 px-2 py-1 text-fine font-semibold text-textMuted">
-              {activeDigitalTwin ? activeDigitalTwin.displayName : 'No twin selected'}
-            </span>
-            {activeDigitalTwin ? (
-              <span className="rounded-full border border-primary/35 bg-primarySoft/15 px-2 py-1 text-fine font-semibold text-primary">
-                {activeDigitalTwin.confidenceScore}% confidence
-              </span>
+            {activeDigitalTwin && activeDigitalTwin.confidenceScore > 0 ? (
+              <div className="mt-2 flex items-center gap-2 text-fine">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-bgSubtle/60 px-2 py-1 text-textMuted">
+                  <Sparkles size={11} aria-hidden />
+                  <span className="font-medium">{activeDigitalTwin.confidenceScore}%</span>
+                  <span className="text-textSoft">twin confidence</span>
+                </span>
+                {activeDigitalTwin.memory.missingInfo.length > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/30 bg-warningSoft/15 px-2 py-1 text-textSoft">
+                    <AlertCircle size={11} aria-hidden />
+                    <span className="text-warning font-medium">{activeDigitalTwin.memory.missingInfo.length} fact factor</span>
+                  </span>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </div>
@@ -457,15 +471,31 @@ export const MobileChatView = (props: MobileChatViewProps) => {
           aria-atomic="false"
         >
           {!hasConversation ? (
-            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border/45 bg-bgSubtle/45 px-3 py-9 text-center sm:px-4 sm:py-10">
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-border/35 bg-bgSubtle/40 px-4 py-10 text-center sm:px-5 sm:py-12">
               <span className="bo-assistant-empty-state-icon">
-                <Sparkles className="h-5 w-5" strokeWidth={2} aria-hidden />
+                <Sparkles className="h-6 w-6" strokeWidth={1.75} aria-hidden />
               </span>
-              <p className="text-sm font-semibold text-text">Start a conversation with your twin</p>
-              <p className="max-w-[min(100%,22rem)] text-meta leading-relaxed text-textMuted">
-                Ask for positioning, personas, content ideas, outreach drafts, opportunities, or
-                strategic thinking. Plan owns the operating workspace.
+              <p className="text-base font-semibold text-text">Ask your twin anything</p>
+              <p className="max-w-[min(100%,24rem)] text-meta leading-relaxed text-textMuted">
+                Positioning strategy, content ideas, outreach drafts, persona analysis, or strategic
+                thinking — grounded in your verified professional identity. Convert strong responses
+                into Plans for execution, approval, and verification.
               </p>
+              <div className="mt-1 flex flex-wrap justify-center gap-1.5">
+                {suggestedPrompts.slice(0, 3).map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => onQuickCommand(prompt)}
+                    className={clsx(
+                      'rounded-full border border-border/45 bg-surface/50 px-2.5 py-1 text-fine text-textSoft transition-colors hover:border-borderStrong hover:bg-surfaceActive/65 hover:text-text',
+                      btnFocus
+                    )}
+                  >
+                    {prompt.replace(/^ask:\s*/i, '')}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             conversationMessages.map((message, index) => {
@@ -475,7 +505,7 @@ export const MobileChatView = (props: MobileChatViewProps) => {
               const priorUserMessage = [...conversationMessages.slice(0, index)]
                 .reverse()
                 .find((item) => item.role === 'user');
-              const isConverting = convertingPlanMessageId === message.id;
+              const _isConverting = convertingPlanMessageId === message.id;
               return (
                 <article
                   key={message.id}
@@ -509,9 +539,15 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                     {message.role === 'user' ? (
                       <div className="bo-chat-bubble-user">
                         <p className="whitespace-pre-wrap break-words">{message.text}</p>
+                        {message.sourceSurface ? (
+                          <span className="bo-chat-bubble-meta mt-1.5 inline-flex items-center gap-1 text-overline uppercase tracking-wide text-textSoft/60">
+                            <span className="h-1 w-1 rounded-full bg-textSoft/40" aria-hidden />
+                            {message.sourceSurface}
+                          </span>
+                        ) : null}
                       </div>
                     ) : message.resultKind === 'ask-result' ? (
-                      <div className="bo-chat-bubble-assistant space-y-2">
+                      <div className="bo-chat-bubble-assistant space-y-2.5">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <p className="bo-chat-meta-label">Twin response</p>
                           {typeof message.ok === 'boolean' && !message.ok ? (
@@ -519,6 +555,32 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                               <AlertCircle size={11} aria-hidden />
                               Unavailable
                             </span>
+                          ) : null}
+                          {activeDigitalTwin && message.sourceSurface !== 'Settings' ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primarySoft/15 px-1.5 py-0.5 text-overline font-semibold uppercase tracking-wide text-primary">
+                              <span className="h-1 w-1 rounded-full bg-primary" aria-hidden />
+                              {activeDigitalTwin.displayName}
+                            </span>
+                          ) : null}
+                          {message.confidenceScore != null && message.confidenceScore > 0 ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-bgSubtle/60 px-1.5 py-0.5 text-overline font-medium uppercase tracking-wide text-textMuted">
+                              <Sparkles size={11} aria-hidden />
+                              {message.confidenceScore}% grounded
+                            </span>
+                          ) : null}
+                          {message.planConversion ? (
+                            <button
+                              type="button"
+                              onClick={() => onOpenConvertedPlan?.(message.planConversion!.planId)}
+                              className={clsx(
+                                'inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primarySoft/20 px-1.5 py-0.5 text-overline font-semibold uppercase tracking-wide text-primary hover:bg-primarySoft/30 transition-colors',
+                                btnFocus
+                              )}
+                              title="Open converted plan"
+                            >
+                              <GitBranch size={11} aria-hidden />
+                              Plan
+                            </button>
                           ) : null}
                         </div>
                         {message.ok !== false ? (
@@ -592,6 +654,40 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                     <div
                       className={clsx('bo-action-strip', message.role === 'user' && 'justify-end')}
                     >
+                      {canConvert && priorUserMessage && message.role === 'assistant' ? (
+                        <button
+                          type="button"
+                          onClick={() => onConvertAskToPlan?.({
+                            kind: 'execution-plan',
+                            askOutput: message.text,
+                            messageId: message.id,
+                            originalUserMessage: priorUserMessage.text,
+                            verifiedFactsUsed: sourceFactsFromMessage(message, activeDigitalTwin),
+                            unverifiedMissingFacts: missingFactsFromMessage(message, activeDigitalTwin)
+                          })}
+                          className={clsx(
+                            'inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primarySoft/15 px-2 py-1 text-overline font-semibold uppercase tracking-wide text-primary transition-colors hover:bg-primarySoft/30',
+                            btnFocus
+                          )}
+                          title="Convert this response into a Plan"
+                        >
+                          <GitBranch size={12} aria-hidden />
+                          Convert to Plan
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(message.text)}
+                        className={clsx(
+                          'bo-ask-card-action',
+                          'border-border/40 hover:border-borderStrong',
+                          btnFocus
+                        )}
+                        title="Copy to clipboard"
+                      >
+                        <Copy className="h-3.5 w-3.5" aria-hidden />
+                        Copy
+                      </button>
                       <button
                         type="button"
                         onClick={() => saveMessage(message)}
@@ -616,39 +712,6 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                         <Pin className="h-3.5 w-3.5" aria-hidden />
                         {isPinned ? 'Pinned' : 'Pin'}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(message.text)}
-                        className={clsx('bo-ask-card-action', btnFocus)}
-                      >
-                        <Copy className="h-3.5 w-3.5" aria-hidden />
-                        Copy
-                      </button>
-                      {canConvert ? (
-                        <button
-                          type="button"
-                          disabled={isConverting}
-                          onClick={() =>
-                            onConvertAskToPlan({
-                              kind: 'execution-plan',
-                              askOutput: message.text,
-                              messageId: message.id,
-                              originalUserMessage: priorUserMessage?.text ?? '',
-                              verifiedFactsUsed: sourceFactsFromMessage(message, activeDigitalTwin),
-                              unverifiedMissingFacts: missingFactsFromMessage(
-                                message,
-                                activeDigitalTwin
-                              )
-                            })
-                          }
-                          className={clsx(
-                            'bo-ask-card-action border-primary/45 text-primary',
-                            btnFocus
-                          )}
-                        >
-                          {isConverting ? 'Preparing plan...' : 'Convert to Plan'}
-                        </button>
-                      ) : null}
                       {message.planConversion ? (
                         <button
                           type="button"
@@ -658,7 +721,8 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                             btnFocus
                           )}
                         >
-                          Converted to Plan · Open in Plan
+                          <GitBranch size={12} aria-hidden />
+                          Open Plan
                         </button>
                       ) : null}
                     </div>

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Knowledge Center: static in-repo topics (no markdown pipeline).
  * Order reflects onboarding priority: surfaces first, then execution concepts.
  * Copy matches the **MobileApp** shell (`mobile.html` and siblings), not legacy dashboard pages.
@@ -38,7 +38,7 @@ export const knowledgeCenterDailyPlaybook: KnowledgeCenterDailyPlaybook = {
     },
     {
       title: 'Open Today for the cockpit digest',
-      body: 'Use the Today tab (or mobile.html?section=today) for metrics, pipeline signals, publishing peeks, and connection counts. Lists are read-only — actions are buttons that open Chat or run a command immediately.'
+      body: 'Use the Today tab for metrics, pipeline signals, publishing peeks, and connection counts. Lists are read-only — actions are buttons that open Chat or run a command immediately.'
     },
     {
       title: 'Clear one revenue or follow-up motion',
@@ -60,26 +60,26 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     id: 'surfaces',
     title: 'Where BrandOps runs',
     summary:
-      'Primary UI is mobile.html (Assistant + Workspace dock; deeper panels for Today / Integrations / Settings). welcome.html, dashboard.html, integrations.html, and help.html mount the same shell or this manual.',
+      'The main app opens the Assistant and Plan dock, with deeper panels for Today, Integrations, and Settings. Separate windows open the Integrations hub, Help, or the primary app.',
     paragraphs: [
-      'The product is a browser extension. **mobile.html** is the primary workspace: Assistant (default), Plan (dock), Today, Integrations, and Settings (Assistant + Plan are the dock; Plan surfaces a read-only **workspace profile** — edits live under Settings → Preferences). Deeper tabs use ⌘K or actions from Plan.',
-      '**welcome.html** uses the same shell and lands on **Assistant** first — open **Plan** for the **Getting started** checklist (Plan / Today / palette / Settings / Help).',
-      '**dashboard.html** loads the same shell; legacy ?section= workstream links redirect to mobile.html so deep links stay consistent.',
-      '**integrations.html** is the Chrome options_ui entry (Integrations tab by default). **help.html** is this Knowledge Center.',
-      'Use ?section= on mobile.html or integrations.html for tabs and cockpit workstreams (today, pipeline, brand-content, connections). See the mobile shell query parser in the codebase for the full token list.'
+      'The product runs as a browser extension. The primary workspace shows Assistant (default), Plan (dock), Today, Integrations, and Settings. Plan surfaces a read-only workspace profile — edits live under Settings → Preferences. Deeper tabs use the command palette or actions from Plan.',
+      'The main app opens to Assistant by default. The Getting started checklist is on Plan: pipeline health, Pulse, Quick picks, Today, the command palette, then Settings and Help.',
+      'A legacy dashboard window loads the same shell; workstream links redirect to the primary app so deep links stay consistent.',
+      'The Integrations hub opens the Integrations tab by default. The Help page opens this Knowledge Center.',
+      'Use the bottom tab bar and workstream pills to navigate. Workstream pills on Today scroll to the matching section.'
     ]
   },
   {
     id: 'first-run',
     title: 'First run and profile',
     summary:
-      'Welcome uses the mobile shell; its account controls select local preview access only.',
+      'The welcome screen uses the same shell; its account controls select local access only.',
     paragraphs: [
-      'On **welcome.html** / **mobile.html** you start on **Assistant**. The **Getting started** checklist is on **Plan**: pipeline health, Pulse / Quick picks, **Today**, palette (**⌘K** / **Ctrl+K**), then **Settings** and **Help → First run and profile**.',
-      '**Plan** can show **Finish setup** after you dismiss Getting started if placeholder identity fields remain — same destinations as **Edit profile** / Integrations / ⌘K.',
-      'The **Operator twin (Encode → Align → Decode)** topic explains ingest (résumé + brand), precedence on hosted Assistant requests, and how Today closes the execution loop.',
-      'The provider-labelled controls on welcome.html choose an on-device preview identity only. They do not perform OAuth, verify an email address, or create a server session.',
-      'Under **Settings → Preferences**, pick an **Operating profile** preset (launch sprint, focused builder, etc.) and tap **Apply operating profile** — one action aligns cockpit layout/density, AI defaults, and cadence to match how you work.',
+      'On the welcome screen you start on Assistant. The Getting started checklist is on Plan: pipeline health, Pulse, Quick picks, Today, the command palette, then Settings and Help.',
+      'Plan can show Finish setup after you dismiss Getting started if placeholder identity fields remain — same destinations as Edit profile, Integrations, or the command palette.',
+      'The Operator twin (Encode → Align → Decode) topic explains ingest (résumé + brand), precedence on hosted Assistant requests, and how Today closes the execution loop.',
+      'The provider-labelled controls on the welcome screen choose an on-device sign-in provider only. They do not use server sign-in, verify an email address, or create a server session.',
+      'Under Settings → Preferences, pick an Operating profile preset (launch sprint, focused builder, etc.) and tap Apply operating profile — one action aligns cockpit layout, density, AI defaults, and cadence to match how you work.',
       'Operator and brand fields also surface on Today and in Settings forms; tune cadence and reminders under Settings when you need workspace-level changes.'
     ]
   },
@@ -89,7 +89,7 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     summary:
       'One mental model: ingest résumé and operating context, keep an accurate operator model, then act to offload work and lift execution.',
     paragraphs: [
-      '**Encode** — résumé / CV plain text, brand profile fields, live workspace entities, and integration signals all feed the same **operator twin** story (not disconnected “notification” blobs). Twin ingest for résumé lives under **Settings → Unified workspace** (same deep link: **mobile.html?section=settings#settings-resume-neural-phase**).',
+      '**Encode** — résumé / CV plain text, brand profile fields, live workspace entities, and integration signals all feed the same **operator twin** story (not disconnected “notification” blobs). Twin ingest for résumé lives under **Settings → Unified workspace** (same section in Settings → Unified workspace).',
       '**Align** — curated **Brand profile** wins on conflicts vs the compressed résumé artifact; the artifact supplements hosted Assistant turns only. Nothing is transmitted to the AI endpoint until you submit a request while hosted AI is enabled; local commands do not silently ship the résumé blob.',
       '**Decode / act** — hosted Ask receives one assembled **operator twin** appendix in the system prompt; Today and Chat are where you close the loop (commands, digest, and optional **Execution check-in** vs your focus metric). See **Today: cockpit digest** for the read-only digest pattern.'
     ]
@@ -98,13 +98,13 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     id: 'chat-commands',
     title: 'Chat commands (agent vocabulary)',
     summary:
-      'Commands map to deterministic routes (parseCommandRoute) before executeAgentWorkspaceCommand runs.',
+      'Recognized command phrases trigger workspace actions; anything else is handled as a conversational ask.',
     paragraphs: [
-      'Examples that match the router: add note:, create follow up:, complete follow up:, draft outreach:, draft post:, reschedule posts …, pipeline health, update opportunity …, archive opportunity, restore opportunity, add contact:, update contact:, add content:, update publishing:, connect … source:, connect hubspot source:, connect linear source:, connect stripe source:, add source:, add integration artifact:, add ssh:, configure: …',
+      'Examples of recognized commands: add note:, create follow up:, complete follow up:, draft outreach:, draft post:, reschedule posts …, pipeline health, update opportunity …, archive opportunity, restore opportunity, add contact:, update contact:, add content:, update publishing:, connect … source:, connect hubspot source:, connect linear source:, connect stripe source:, add source:, add integration artifact:, add ssh:, configure: …',
       'Starters in the Assistant tab are curated to these patterns; identical Quick picks stay on Plan so Ask is not cluttered. If a phrase is unsupported, the assistant explains what is available.',
       'Destructive phrases such as archive opportunity may ask for confirmation before running.',
       'Recognized workspace command patterns stay on-device. Other Chat submissions, including explicit **ask:** lines, use your configured OpenAI-compatible endpoint only when hosted mode is enabled.',
-      '**Operator twin — résumé ingest** is under **Settings → Unified workspace** (Phase R artifact). Paste or load plain text, then **Compress & save** — the artifact can be included with hosted Assistant requests (Brand profile still wins on conflicts). From Assistant use the twin ingest shortcut or **mobile.html?section=settings#settings-resume-neural-phase**. Help topic **Operator twin (Encode → Align → Decode)** explains precedence end-to-end.'
+      '**Operator twin — résumé ingest** is under **Settings → Unified workspace**. Paste or load plain text, then **Compress & save** — the artifact can be included with hosted Assistant requests (Brand profile still wins on conflicts). From Assistant use the twin ingest shortcut. Help topic **Operator twin (Encode → Align → Decode)** explains precedence end-to-end.'
     ]
   },
   {
@@ -112,8 +112,8 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     title: 'Today: cockpit digest (not a second CRM UI)',
     summary: 'Today combines metrics, intelligence signals, and peeks from the workspace snapshot.',
     paragraphs: [
-      'Today shows scheduler tasks, notes, contacts, pipeline projection, outreach templates/history, opportunities, brand vault preview, content library slice, publishing queue slice, and companies.',
-      'Row actions that say “Open in Chat” prime the composer; chips that run commands switch to Chat and execute so you always see the thread.',
+      'Today shows scheduler tasks, notes, contacts, pipeline projection, outreach templates/history, opportunities, brand vault, content library slice, publishing queue slice, and companies.',
+      'Row actions prime the composer or switch to Chat and run a command so you always see the thread.',
       'Heavy spreadsheet-style editing is intentionally out of scope — use Chat commands or future dedicated surfaces if product adds them.'
     ]
   },
@@ -123,9 +123,9 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     summary:
       'Integrations tab and Today · Connections both summarize connectivity; Chat registers new sources.',
     paragraphs: [
-      'The **Integrations** tab lists sources, providers, artifacts, SSH targets, and **Add via Chat** presets for CRM (HubSpot, Salesforce, Pipedrive), issues (Linear, Jira), support (Zendesk), docs (Notion, Drive, Airtable), ads (Meta, LinkedIn Marketing), billing (Stripe), Microsoft 365, plus engineering staples (GitHub, Slack, webhook).',
-      '**Today → Connections** summarizes counts and links to the packaged integrations page when useful.',
-      'Provider OAuth is not implemented in the current build. Workspace-level source creation uses Chat commands such as connect notion source: … and creates local registry records only.',
+      'The **Integrations** tab lists sources, providers, artifacts, servers, and **Add via Chat** presets for CRM (HubSpot, Salesforce, Pipedrive), issues (Linear, Jira), support (Zendesk), docs (Notion, Drive, Airtable), ads (Meta, LinkedIn Marketing), billing (Stripe), Microsoft 365, plus engineering staples (GitHub, Slack, webhook).',
+      '**Today → Connections** summarizes counts and links to the packaged Integrations hub when useful.',
+      'Server sign-in is not available yet. Workspace-level source creation uses Chat commands such as connect notion source: … and creates local registry records only.',
       'Read **Integration registry (what is real today)** for local-first storage vs sync-hub slots and what “connected” means.'
     ]
   },
@@ -135,19 +135,19 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     summary:
       'Hub sources are workspace records on this device. Automated vendor sync ships incrementally; the Pulse strip’s Sync hub counts Google, GitHub, and LinkedIn preferences only.',
     paragraphs: [
-      'When you use **Add via Chat** or run **connect … source:** / **add source:**, BrandOps stores an **integration hub source** in extension-local storage. That row captures kind, display name, default artifact categories, and tags so Chat, Today, and Settings stay aligned — it does **not** by itself call vendor APIs or stream live CRM/issue/doc data.',
+      'When you use **Add via Chat** or run **connect … source:** / **add source:**, BrandOps stores an **integration hub source** in local storage. That row captures kind, display name, default artifact categories, and tags so Chat, Today, and Settings stay aligned — it does **not** by itself call vendor APIs or stream live CRM/issue/doc data.',
       '**Captured artifacts** under Technical inventory are workspace objects (you or the agent add them). Treat them as structured notes until a future connector pulls from an external system.',
-      'The Pulse counters **Sources** vs **Sync hub** mean different things: **Sources** counts hub rows you registered; **Sync hub** reflects Google, GitHub, and LinkedIn preference rows from Settings. These rows are not verified provider sessions in the current build.',
+      'The Pulse counters **Sources** vs **Sync hub** mean different things: **Sources** counts hub rows you registered; **Sync hub** reflects Google, GitHub, and LinkedIn preference rows from Settings. These rows are not verified provider sessions yet.',
       'For backups and audits, use **Export workspace JSON** (Settings → Data safety). Multi-device continuity is manual until optional cloud sync exists.'
     ]
   },
   {
     id: 'shortcuts',
     title: 'Shortcuts and navigation',
-    summary: 'Bottom tab bar and ?section= deep links are the primary navigation.',
+    summary: 'Bottom tab bar switches between the main BrandOps sections.',
     paragraphs: [
-      'Use the bottom nav to switch tabs. Workstream pills on Today update the URL (e.g. ?section=pipeline) and scroll to the matching section.',
-      'From Chat, “Other sections” buttons jump to Today, Integrations, or Settings without losing your thread.'
+      'Use the bottom nav to switch tabs. Workstream pills on Today scroll to the matching section.',
+      'From Chat, "Other sections" buttons jump to Today, Integrations, or Settings without losing your thread.'
     ]
   },
   {
@@ -163,12 +163,11 @@ export const knowledgeCenterTopics: KnowledgeCenterTopic[] = [
     id: 'intelligence-tuning',
     title: 'Optional intelligence tuning',
     summary:
-      'Ranking helpers use built-in defaults; hosted builds can layer brandops-intelligence-rules.json.',
+      'Ranking helpers use built-in defaults; hosted builds can layer custom intelligence rules.',
     paragraphs: [
       'Content priority, outreach urgency, overdue risk, pipeline health, and publishing windows use fixed, explainable math.',
-      'When you self-host a preview, maintainers may supply rules JSON or an environment URL so coefficients can be tuned without shipping a new binary.',
-      'If no file or URL is provided, defaults stay in effect.',
-      'Remote intelligence rules use validated defaults plus optional signed remote payloads — keep schemas versioned when extending.'
+      'When you self-host BrandOps, maintainers may supply custom rules so scoring can be tuned to your workspace.',
+      'If no custom rules file is provided, defaults stay in effect.'
     ]
   }
 ];

@@ -11,6 +11,7 @@ import { runChatCompletion } from './nlpInferenceGateway';
 import { buildHostedAskMessages } from './hostedAskTurn';
 import { resolveActiveCopilotWorker } from './copilotWorkers';
 import { prependBrandOpsAICoreResult, runBrandOpsAI } from './brandOpsAiCore';
+import { screenAskInput } from '../../services/interop/validation';
 
 function uid() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -40,6 +41,18 @@ async function hostedAssistBrief(args: {
   userPrompt: string;
 }): Promise<{ ok: boolean; text?: string; detail: string }> {
   const settings = args.workspace.settings;
+
+  // Screen user input for prompt injection before it enters the AI pipeline.
+  // The user is the authorized operator, but user-provided context (pasted web
+  // content, uploaded documents, received messages) can carry indirect injection.
+  const askScreen = screenAskInput(args.userPrompt);
+  if (askScreen.injected) {
+    return {
+      ok: false,
+      detail: `ask_input_blocked: ${askScreen.reason}`
+    };
+  }
+
   const worker = resolveActiveCopilotWorker(settings);
   const routing = resolveHostedAssistantRouting({
     settings,

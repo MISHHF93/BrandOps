@@ -71,6 +71,38 @@ describe('platform-aware ASK context', () => {
     expect(readout.contextBlock).toContain('Gmail founder conversation summary');
   });
 
+  /**
+   * Regression guard: platform-term matching used to be a plain substring
+   * scan, so the platform term "notion" matched inside an unrelated *word*
+   * containing that substring — "notional" (as in "notional value", common
+   * finance phrasing) — flagging Notion as evidence-backed from a source
+   * that has nothing to do with it. (Matching the standalone word "notion"
+   * itself is correct and unaffected; this specifically guards the
+   * substring-inside-another-word case.)
+   */
+  it('does not treat "notional" as evidence of the Notion platform', () => {
+    const workspace = cloneSeedData();
+    workspace.integrationHub.sources = [
+      {
+        id: 'source-generic',
+        name: 'Generic finance doc',
+        kind: 'custom-api',
+        status: 'connected',
+        artifactTypes: ['note'],
+        tags: [],
+        notes: 'Tracks notional value for hedging exercises, unrelated to any platform.',
+        createdAt: '2026-05-28T00:00:00.000Z'
+      }
+    ];
+    workspace.integrationHub.artifacts = [];
+    workspace.externalSync = { links: [], updatedAt: '2026-05-28T00:00:00.000Z' };
+
+    const readout = buildPlatformAwareAskReadout(workspace);
+
+    expect(readout.connectedApps).not.toContain('Notion');
+    expect(readout.unavailableApps).toContain('Notion');
+  });
+
   it('injects platform guardrails into hosted ASK system prompts', () => {
     const workspace = cloneSeedData();
     workspace.integrationHub.sources = [];

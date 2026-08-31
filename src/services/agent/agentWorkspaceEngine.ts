@@ -367,7 +367,7 @@ const addSshTargetCommand = async (
       ]
     }
   });
-  return { ok: true, action: 'add-ssh-target', summary: `SSH target "${name}" added.` };
+  return { ok: true, action: 'add-ssh-target', summary: `Server "${name}" added.` };
 };
 
 const addOutreachDraft = async (

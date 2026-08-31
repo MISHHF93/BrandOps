@@ -69,7 +69,7 @@ const approvalSnapshot = () => {
         entityType: 'outreach',
         entityId: 'draft-1',
         details: {
-          output: 'Preview this outreach before sending.',
+          output: 'Review this outreach before sending.',
           version: 'v2'
         },
         labels: ['external-action', 'human-gated'],
@@ -101,8 +101,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Plan"');
-    expect(html).toContain('AI Chief of Staff briefing stream');
-    expect(html).toContain('What needs attention now?');
+    expect(html).toContain('Operational workspace');
+    expect(html).toContain('What needs your attention?');
     expect(html).toContain('Twin Status');
     expect(html).toContain('Pending Approvals');
     expect(html).toContain('Opportunities');
@@ -117,7 +117,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Recommended next move');
     expect(html).toContain('Active plan');
     expect(html).toContain('Recent receipt');
-    expect(html).toContain('Safety rule');
+    expect(html).toContain('Your workspace is local-first');
     expect(html).toContain('Details');
     expect(html).toContain('Timeline');
     expect(html).toContain('Approvals');
@@ -127,11 +127,10 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Content Calendar');
     expect(html).toContain('Execution Sequence');
     expect(html).toContain('Approval Flow');
-    expect(html).toContain('Preview');
     expect(html).toContain('Approve');
     expect(html).toContain('Export');
-    expect(html).toContain('>Preview<');
-    expect(html).toContain('Local membership flag active · unverified');
+    expect(html).toContain('>Review<');
+    expect(html).toContain('Local membership active · unverified');
     expect(html).toContain('operator@fixture.test');
     expect(html).not.toContain('Workstreams');
     expect(html).not.toContain('Command center');
@@ -181,6 +180,32 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).not.toContain('Add your offer, voice, and focus metric');
+  });
+
+  it('Plan hub: twin context and intelligence surfaces render when twin is present', () => {
+    const html = renderToString(
+      React.createElement(MobileWorkspaceHubView, {
+        snapshot: twinSnapshot(),
+        btnFocus: '',
+        commandBusy: false,
+        runCommand: noop,
+        onOpenToday: noop,
+        launchAccess: planLaunchFixture,
+        onOpenSettings: noop,
+        onOpenIntegrations: noop,
+        onOpenCommandPalette: noop,
+        firstRunJourneyVisible: true,
+        canRunWorkspaceCommands: true,
+        workspaceCommandLockReason: null,
+        onDownloadPipelineRun: noop,
+        onApproveOperatorTrace: asyncNoop
+      })
+    );
+    expect(html).toContain('What your twin knows');
+    expect(html).toContain('Maya Rivera');
+    expect(html).toContain('confidence');
+    expect(html).toContain('skills');
+    expect(html).toContain('Twin intelligence');
   });
 
   it('Plan hub: renders converted ASK cards in the operational studio', () => {
@@ -247,8 +272,8 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     );
 
     expect(html).toContain('draft outreach');
-    expect(html).toContain('Preview this outreach before sending.');
-    expect(html).toContain('Preview');
+    expect(html).toContain('Review this outreach before sending.');
+    expect(html).toContain('Review');
     expect(html).toContain('Reject');
     expect(html).toContain('Approve');
   });
@@ -306,7 +331,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     );
     expect(html).toContain('aria-label="Ask My Twin conversation"');
     expect(html).toContain('Ask My Twin');
-    expect(html).toContain('Conversation only');
+    expect(html).toContain('Twin-grounded reasoning');
     expect(html).toContain('id="assistant-thread"');
     expect(html).toContain('Ask My Twin conversation timeline');
     expect(html).toContain('Save');
@@ -334,13 +359,18 @@ describe('Mobile tab surfaces (SSR integration)', () => {
 
     expect(html).toContain('Maya Rivera');
     expect(html).toContain('confidence');
-    expect(html).toContain('Start a conversation with your twin');
+    expect(html).toContain('Ask your twin anything');
     expect(html).not.toContain('Twin Context Mode');
     expect(html).not.toContain('Actionable outputs');
   });
 
   it('ASK: hosted outputs expose Convert to Plan handoff actions', () => {
     const messages: ChatMessage[] = [
+      {
+        id: 'user-1',
+        role: 'user',
+        text: 'Draft a plan for this.'
+      },
       {
         id: 'ask-1',
         role: 'assistant',
@@ -406,9 +436,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
     expect(html).toContain('aria-label="Start here — first session"');
-    expect(html).toContain('Ask My Twin. Plan.');
-    expect(html).toContain('Ask is for thinking');
-    expect(html).toContain('Plan is the flat operating surface');
+    expect(html).toContain('Your AI-native brand operating system');
+    expect(html).toContain('Create a persistent Digital Twin');
+    expect(html).toContain('experts route, plans execute, verified results compound');
     expect(html).toContain('Create twin');
     expect(html).toContain('Ask twin');
     expect(html).toContain('Dismiss getting started');
@@ -441,12 +471,12 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     );
     expect(html).toContain('aria-label="Today"');
     // The visible header is just "Today" now; the long form survives as an sr-only fallback.
-    expect(html).toContain('Today — plan and work');
+    expect(html).toContain('Today — twin-grounded daily operating surface with focus board, predictions, and workstreams');
     expect(html).toContain('Work areas');
     expect(html).toContain('>Do today<');
     expect(html).toContain('>Urgent<');
     expect(html).toContain('>Momentum<');
-    expect(html).toContain('>Pulse<');
+    expect(html).toContain('>BrandOps pulse<');
     expect(html).toContain('Pulse metric instruments');
     expect(html).toContain('Publish queue');
     expect(html).toContain('Sync hub');
@@ -488,7 +518,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Northstar Robotics');
     expect(html).toContain('Brand vault (read-only)');
     expect(html).toContain('Connections workstream Chat starters');
-    expect(html).toContain('Review in Chat');
+    expect(html).toContain('Add note');
   });
 
   it('Integrations: sources, registered list, provider status, quick add', () => {
@@ -504,7 +534,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Sources');
     expect(html).toContain('Connect tools and data');
     expect(html).toContain('Registered sources');
-    expect(html).toContain('Open integrations page');
+    expect(html).toContain('Open Integrations hub');
     expect(html).toContain('Sync hub');
     expect(html).toContain('How the registry works');
     expect(html).toContain('Add via Chat');
@@ -512,7 +542,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('HubSpot');
     expect(html).toContain('preset shortcuts');
     expect(html).toContain('Captured artifacts');
-    expect(html).toContain('SSH targets');
+    expect(html).toContain('Servers');
   });
 
   it('Integrations (demo): external sync and hub activity when present', () => {
@@ -537,7 +567,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         runCommand: noop
       })
     );
-    expect(html).toContain('Review in Chat');
+    expect(html).toContain('Check source');
     expect(html).toContain('Saved locally');
     expect(html).not.toContain('No sources in this workspace yet');
   });
@@ -627,15 +657,15 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Export operator traces');
     expect(html).toContain('Record operator traces locally');
     expect(html).toContain('Assistant');
-    expect(html).toContain('Hosted AI bridge');
+    expect(html).toContain('Hosted AI');
     expect(html).toContain('Inference base URL');
     expect(html).toContain('Webhook receiver trust');
     expect(html).toContain('Create AI digital twin');
     expect(html).toContain('PDF/DOCX parsing is not bundled yet');
     expect(html).toContain('Generate digital twin');
     expect(html).toContain('Diagnostics');
-    expect(html).toContain('Extension shell');
-    expect(html).toContain('Open integrations page in a new tab');
+    expect(html).toContain('Integrations hub');
+    expect(html).toContain('Open Integrations hub in a new tab');
     expect(html).toContain('Dataset lineage');
     expect(html).toContain('production-empty');
     expect(html).toContain('Intelligence rules (effective)');
@@ -741,7 +771,7 @@ describe('Mobile tab surfaces (SSR integration)', () => {
         documentSurface: 'integrations'
       })
     );
-    expect(html).toContain('same shell as');
+    expect(html).toContain('same interface as');
     expect(html).not.toContain('Open integrations page in a new tab');
   });
 });

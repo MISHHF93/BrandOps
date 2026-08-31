@@ -28,7 +28,7 @@ export function LinkedInSignInButton({
 }: LinkedInSignInButtonProps) {
   const label =
     variant === 'preview'
-      ? 'Use LinkedIn preview identity'
+      ? 'Use LinkedIn account'
       : variant === 'continue'
         ? loading
           ? 'Connecting…'

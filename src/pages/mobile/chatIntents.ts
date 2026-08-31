@@ -53,7 +53,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'check-pipeline',
     groupId: 'essentials',
     title: 'Check pipeline',
-    subtitle: 'Health and ranked opportunities',
+    subtitle: 'Twin-grounded pipeline health and prioritized opportunities',
     command: 'pipeline health',
     pickWeight: 100,
     showAsChip: true
@@ -62,7 +62,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'jot-note',
     groupId: 'essentials',
     title: 'Jot a note',
-    subtitle: 'Capture a thought to the workspace',
+    subtitle: 'Capture a thought — save to workspace or convert to a plan',
     command: 'add note: follow up on launch feedback',
     pickWeight: 90,
     showAsChip: true
@@ -71,7 +71,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'follow-up',
     groupId: 'essentials',
     title: 'New follow-up',
-    subtitle: 'Add something to your task list',
+    subtitle: 'Add a follow-up for Plan execution and approval routing',
     command: 'create follow up: check warm lead status',
     pickWeight: 88,
     showAsChip: true
@@ -80,7 +80,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'outreach',
     groupId: 'pipeline',
     title: 'Draft outreach',
-    subtitle: 'Email or DM angle from context',
+    subtitle: 'Twin-grounded outreach draft from professional context',
     command: 'draft outreach: follow up on warm lead from demo',
     pickWeight: 70,
     showAsChip: true
@@ -98,7 +98,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'opportunity',
     groupId: 'pipeline',
     title: 'Move a deal',
-    subtitle: 'Update opportunity stage',
+    subtitle: 'Move opportunity through pipeline stages',
     command: 'update opportunity to proposal',
     pickWeight: 62,
     showAsChip: true
@@ -125,7 +125,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'content-idea',
     groupId: 'content',
     title: 'Add content idea',
-    subtitle: 'Save an article or idea for later',
+    subtitle: 'Save for the content engine — feeds Plan conversion',
     command: 'add content: weekly insight memo',
     pickWeight: 55,
     showAsChip: true
@@ -134,7 +134,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'reschedule',
     groupId: 'essentials',
     title: 'Reschedule publishing',
-    subtitle: 'Move a scheduled post to a new time',
+    subtitle: 'Reschedule a planned publication or follow-up',
     command: 'reschedule publishing: move next post to Friday 9am',
     pickWeight: 50,
     showAsChip: false
@@ -143,7 +143,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'complete-fu',
     groupId: 'essentials',
     title: 'Complete follow-up',
-    subtitle: 'Mark a task as done',
+    subtitle: 'Mark complete — generates an execution receipt',
     command: 'complete follow up: call notes logged',
     pickWeight: 48,
     showAsChip: false
@@ -152,7 +152,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'notion',
     groupId: 'connect',
     title: 'Connect Notion',
-    subtitle: 'Link a source workspace for ideas',
+    subtitle: 'Link a data source — feeds the integration hub',
     command: 'connect notion source: Growth workspace',
     pickWeight: 58,
     showAsChip: true
@@ -161,7 +161,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'add-source',
     groupId: 'connect',
     title: 'Connect a source',
-    subtitle: 'Generic “connect” phrasing also works',
+    subtitle: 'Link a data source, CRM, or workspace',
     command: 'add source: HubSpot pipeline feed',
     pickWeight: 45,
     showAsChip: false
@@ -170,7 +170,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'update-content',
     groupId: 'content',
     title: 'Tweak a draft',
-    subtitle: 'Update an existing item',
+    subtitle: 'Edit an existing draft or artifact',
     command: 'update content: tighten hook on weekly insight',
     pickWeight: 40,
     showAsChip: false
@@ -179,7 +179,7 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
     id: 'configure',
     groupId: 'essentials',
     title: 'Change workspace style',
-    subtitle: 'Settings-style configure line',
+    subtitle: 'Adjust voice, tone, or workspace behavior',
     command: 'configure: tone: concise, no emojis in drafts',
     pickWeight: 35,
     showAsChip: false
@@ -187,8 +187,8 @@ const CHAT_INTENT_RAW: BrandOpsChatIntent[] = [
   {
     id: 'sync-embeddings',
     groupId: 'essentials',
-    title: 'Sync embeddings',
-    subtitle: 'Refresh content library vectors',
+    title: 'Sync content',
+    subtitle: 'Refresh content library index',
     command: 'sync content embeddings',
     pickWeight: 44,
     showAsChip: false
@@ -211,25 +211,25 @@ const BRANDOPS_CHAT_INTENTS: BrandOpsChatIntent[] = CHAT_INTENT_RAW;
 const CHAT_EXAMPLE_GROUPS: { id: string; label: string; commandIds: string[] }[] = [
   {
     id: 'strategy',
-    label: 'Strategy engine',
+    label: 'Twin intelligence',
     commandIds: ['audit-positioning', 'offer-stack', 'brand-narrative']
   },
   {
     id: 'essentials',
-    label: 'Start fast',
+    label: 'Quick moves',
     commandIds: ['check-pipeline', 'jot-note', 'follow-up', 'sync-embeddings']
   },
   {
     id: 'pipeline',
-    label: 'Pipeline & people',
+    label: 'Pipeline & contacts',
     commandIds: ['outreach', 'add-contact', 'opportunity']
   },
   {
     id: 'content',
-    label: 'Content & calendar',
+    label: 'Content engine',
     commandIds: ['content-angles', 'post', 'content-idea']
   },
-  { id: 'connect', label: 'Connections', commandIds: ['notion', 'add-source'] }
+  { id: 'connect', label: 'Data sources & integrations', commandIds: ['notion', 'add-source'] }
 ];
 
 const byId = new Map(BRANDOPS_CHAT_INTENTS.map((i) => [i.id, i]));
@@ -352,9 +352,9 @@ const ROUTE_PLAIN: Record<CommandRoute, string> = {
   'brand-function': 'Runs a structured BrandOps strategy function',
   'add-note': 'Adds a note to your workspace',
   'reschedule-publishing': 'Reschedules a publishing post',
-  'add-integration-source': 'Connects a new source (Notion, etc.)',
+  'add-integration-source': 'Connects a data source or agent to the integration hub',
   'add-integration-artifact': 'Attaches an integration artifact',
-  'add-ssh-target': 'Registers an SSH target for automation',
+  'add-ssh-target': 'Registers a server or automation target',
   'add-outreach-draft': 'Drafts outreach text',
   'add-publishing-draft': 'Drafts a social post',
   'archive-opportunity': 'Archives a deal (needs confirmation if destructive)',
@@ -371,17 +371,17 @@ const ROUTE_PLAIN: Record<CommandRoute, string> = {
   'update-publishing': 'Changes publishing / queue',
   'configure-workspace': 'Applies workspace settings',
   'pipeline-health': 'Runs a pipeline check',
-  'sync-content-embeddings': 'Syncs hosted embeddings for content library (batch)',
-  'ai-pipeline-run': 'Runs an AI suite pipeline from the catalog',
-  'ai-core-batch-run': 'Runs a unified BrandOps AI Core batch',
+  'sync-content-embeddings': 'Syncs content library index',
+  'ai-pipeline-run': 'Runs an AI workspace analysis',
+  'ai-core-batch-run': 'Runs a BrandOps AI review',
   'update-opportunity': 'Updates a deal or stage',
-  unsupported: 'We will do our best to interpret or guide you to a supported request'
+  unsupported: 'I will try to interpret your request or route it to the right expert — try Ask My Twin for open-ended questions'
 };
 
 export function getInputRouteHint(text: string): string | null {
   const t = text.trim();
   if (/^ask\s*:/i.test(t)) {
-    return 'Hosted model (configure AI bridge + external-opt-in mode)';
+    return 'Routed to Ask My Twin — twin-grounded conversation with expert routing';
   }
   if (t.length < 2) return null;
   const route = parseCommandRoute(t);

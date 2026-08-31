@@ -1,6 +1,8 @@
 import type { BrandOpsData, Plan } from '../../types/domain';
 import { prependCheckpoint } from './checkpointStore';
 import { prependOperatorTrace } from '../dataset/operatorTraces';
+import { updatePlanStatus } from './planStore';
+import { recordLearningSignal, recordOutcome } from '../builder/outcomeLearning';
 
 export interface VerifyStepOutcome {
   stepId: string;
@@ -22,31 +24,6 @@ export interface VerifyPlanResult {
   confirmedCount: number;
   notAchievedCount: number;
   unconfirmedStepIds: string[];
-}
-
-function updatePlanStatus(
-  data: BrandOpsData,
-  planId: string,
-  status: Plan['status']
-): BrandOpsData {
-  const plans = data.planWorkspace?.plans ?? [];
-  const index = plans.findIndex((p) => p.id === planId);
-  if (index === -1) return data;
-  const nextPlans = plans.slice();
-  const plan = nextPlans[index];
-  const stepStatusById = new Map(
-    plan.steps.map((step) => [step.id, step.status])
-  );
-  nextPlans[index] = { ...plan, status };
-  void stepStatusById;
-  return {
-    ...data,
-    planWorkspace: {
-      plans: nextPlans,
-      receipts: data.planWorkspace?.receipts ?? [],
-      updatedAt: new Date().toISOString()
-    }
-  };
 }
 
 function applyStepStatuses(
@@ -86,6 +63,59 @@ function findVerificationLeaf(data: BrandOpsData, planId: string) {
     .filter((c) => c.associatedPlanRef?.id === planId && c.type === 'plan.verified')
     .sort((a, b) => (a.at < b.at ? 1 : -1));
   return matching[0] ?? null;
+}
+
+/**
+ * Closes the other half of Learn: agent-reported achievements already flow
+ * into Twin memory once a human verifies them (`promoteAgentEventToTwin` in
+ * `interop/events.ts`), but work the operator plans, executes, and verifies
+ * themselves inside BrandOps did not — despite the operator's own "Achieved"
+ * click already being a stronger trust signal than an external agent report.
+ * No separate promotion gate is needed here for that reason: full outcome
+ * verification (`allAchieved`) already *is* the human confirmation.
+ * Mirrors `promoteAgentEventToTwin`'s claim shape/dedup/cap so the same
+ * consumers (`opportunityEngine.ts`, `positioningIntelligence.ts`,
+ * `predictiveContentIdeationEngine.ts`, `buyerPersonaIntelligence.ts`) pick
+ * it up with no changes on their side.
+ */
+function recordVerifiedPlanOnTwin(
+  data: BrandOpsData,
+  plan: Plan,
+  outcomeCounts: string
+): BrandOpsData {
+  const twinState = data.digitalTwins;
+  if (!twinState?.twins.length) return data;
+  const active = twinState.twins.find((t) => t.id === twinState.activeTwinId) ?? twinState.twins[0];
+  const claim = `${plan.title} — completed and verified (${outcomeCounts}).`;
+  const hasClaim = active.memory.approvedClaims.some(
+    (c) => c.toLowerCase() === claim.toLowerCase()
+  );
+  const hasAchievement = active.resumeProfile.achievements.some(
+    (a) => a.toLowerCase() === claim.toLowerCase()
+  );
+  if (hasClaim && hasAchievement) return data;
+
+  const now = new Date().toISOString();
+  const twins = twinState.twins.map((twin) => {
+    if (twin.id !== active.id) return twin;
+    return {
+      ...twin,
+      updatedAt: now,
+      memory: {
+        ...twin.memory,
+        approvedClaims: hasClaim
+          ? twin.memory.approvedClaims
+          : [claim, ...twin.memory.approvedClaims].slice(0, 60)
+      },
+      resumeProfile: {
+        ...twin.resumeProfile,
+        achievements: hasAchievement
+          ? twin.resumeProfile.achievements
+          : [claim, ...twin.resumeProfile.achievements].slice(0, 120)
+      }
+    };
+  });
+  return { ...data, digitalTwins: { ...twinState, twins } };
 }
 
 /**
@@ -143,7 +173,9 @@ export function verifyPlanOutcomes(
   }
   const confirmed = plan.steps.filter((step) => achievedByStep.has(step.id));
   const confirmedCount = confirmed.length;
-  const notAchievedCount = plan.steps.filter((step) => achievedByStep.get(step.id) === false).length;
+  const notAchievedCount = plan.steps.filter(
+    (step) => achievedByStep.get(step.id) === false
+  ).length;
   const unconfirmedStepIds = plan.steps
     .filter((step) => !achievedByStep.has(step.id))
     .map((step) => step.id);
@@ -203,12 +235,41 @@ export function verifyPlanOutcomes(
     }
   });
 
+  const withTwinMemory = allAchieved
+    ? recordVerifiedPlanOnTwin(traced, plan, outcomeCounts)
+    : traced;
+
+  /**
+   * Outcome→Learning (XXII): record a durable, inspectable learning signal and
+   * an outcome score once verification closes. All-achieved plans are a positive
+   * plan-completion signal; partially-failed plans yield a negative signal and a
+   * weaker outcome score. Signals carry a 90-day expiry and are never used to
+   * silently mutate verified identity — they only bias future context/policy.
+   */
+  const completionRate = plan.steps.length
+    ? (confirmedCount - notAchievedCount) / plan.steps.length
+    : 0;
+  let learned = recordOutcome({
+    workspace: withTwinMemory,
+    planId,
+    dimension: 'plan-completion-rate',
+    score: completionRate,
+    evidence: [outcomeCounts],
+    notedBy: 'operator-verification'
+  });
+  learned = recordLearningSignal({
+    workspace: learned,
+    signalType: allAchieved ? 'plan-completed-successfully' : 'plan-failed',
+    source: 'planVerifier',
+    detail: `${plan.title} — verified with ${confirmedCount}/${plan.steps.length} steps confirmed`,
+    strength: allAchieved ? 0.8 : Math.max(0.3, 1 - completionRate)
+  });
+
   return {
-    workspace: traced,
+    workspace: learned,
     verified: true,
     allAchieved,
-    summary:
-      `Verification recorded: ${outcomeCounts}. Plan status set to verified.`,
+    summary: `Verification recorded: ${outcomeCounts}. Plan status set to verified.`,
     confirmedCount,
     notAchievedCount,
     unconfirmedStepIds

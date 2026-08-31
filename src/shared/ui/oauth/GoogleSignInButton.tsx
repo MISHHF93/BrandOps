@@ -42,7 +42,7 @@ export function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
   const label =
     variant === 'preview'
-      ? 'Use Google preview identity'
+      ? 'Use Google account'
       : variant === 'continue'
         ? loading
           ? 'Connecting…'

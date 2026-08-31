@@ -31,7 +31,7 @@ describe('describeAiSetupState', () => {
     const state = await describeAiSetupState(settingsWith({}));
     expect(state.needsSetup).toBe(true);
     expect(state.reason).toBe('adapter_disabled');
-    expect(state.guidance).toContain('AI bridge');
+    expect(state.guidance).toContain('Hosted AI');
   });
 
   it('flags adapter_disabled for local-only mode without consulting the key', async () => {

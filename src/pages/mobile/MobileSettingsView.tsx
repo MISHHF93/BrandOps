@@ -51,9 +51,9 @@ function forConfigureQuoting(value: string) {
 function intelligenceRulesSourceLabel(mode: IntelligenceRulesLoadMode): string {
   switch (mode) {
     case 'env-url':
-      return 'Remote (VITE_INTELLIGENCE_RULES_URL)';
+      return 'Remote (custom URL)';
     case 'bundled-json':
-      return 'Packaged brandops-intelligence-rules.json';
+      return 'Bundled defaults';
     default:
       return 'Embedded defaults';
   }
@@ -105,20 +105,20 @@ function AccountMembershipSection({
         Account
         <span className="ml-2 text-meta font-normal text-textSoft">
           {isAuthenticated
-            ? `Local ${authProviderLabel(provider)} preview · ${membershipLabel(membership.status)}`
-            : 'Local preview locked'}
+            ? `Local ${authProviderLabel(provider)} account · ${membershipLabel(membership.status)}`
+            : 'Local access locked'}
         </span>
       </summary>
       <div className="border-t border-border/40 px-3 pb-4 pt-4">
         <MobileTabSection
           id="settings-account-membership"
           title="Local access & membership"
-          description="Local preview identity and membership status for this workspace."
+          description="Local account and membership status for this workspace."
           descriptionVisibility="sr-only"
         >
           <p className="mt-2 text-fine leading-snug text-textSoft">
-            These buttons choose an on-device preview identity and unlock gated operator actions.
-            They do not contact a provider, verify the placeholder email, or create an OAuth
+            These buttons choose an on-device sign-in provider and unlock gated operator actions.
+            They do not contact a provider, verify the placeholder email, or create a server sign-in
             session.
           </p>
           <dl className="mt-2 space-y-1.5 text-meta text-textMuted">
@@ -129,7 +129,7 @@ function AccountMembershipSection({
               </dd>
             </div>
             <div className="flex justify-between gap-2 border-b border-border/30 py-1.5">
-              <dt className="shrink-0">Preview label</dt>
+              <dt className="shrink-0">Provider</dt>
               <dd className="min-w-0 break-words text-right text-text">
                 {authProviderLabel(provider)}
               </dd>
@@ -197,8 +197,8 @@ function AccountMembershipSection({
             )}
           </div>
           <p className="mt-2 text-fine leading-snug text-textSoft">
-            Billing links are navigation only. This repo has no Stripe callback, webhook, or
-            server-verified entitlement, and production membership enforcement is disabled.
+            Billing links are for navigation only. Membership verification is handled locally in this
+            version of BrandOps.
           </p>
           {membership.renewalDate ? (
             <p className="mt-2 text-fine text-textSoft">Renews: {membership.renewalDate}</p>
@@ -220,10 +220,10 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
     ['Operating profile last applied', r.operatingProfileLastApplied],
     ['Local model enabled', r.localModelEnabled ? 'yes' : 'no'],
     ['AI adapter mode', r.aiAdapterMode],
-    ['AI bridge · inference endpoint', r.aiInferenceEndpointPreview],
-    ['AI bridge · embeddings endpoint', r.aiEmbeddingEndpointPreview],
-    ['AI bridge · chat model id', r.aiBridgeChatModelId],
-    ['AI bridge · embedding model id', r.aiBridgeEmbeddingModelId],
+    ['Hosted AI · chat endpoint', r.aiInferenceEndpointPreview],
+    ['Hosted AI · embeddings endpoint', r.aiEmbeddingEndpointPreview],
+    ['Hosted AI · chat model id', r.aiBridgeChatModelId],
+    ['Hosted AI · embedding model id', r.aiBridgeEmbeddingModelId],
     ['AI routing · operator mode', r.aiOperatorMode],
     ['AI routing · diagnostics prompts', r.aiRoutingDiagnosticsEnabled ? 'on' : 'off'],
     ['Copilot · active worker', r.copilotActiveWorkerPreview],
@@ -234,7 +234,7 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
     ['Preferred model', r.preferredModel],
     ['Role context', r.roleContextPreview],
     ['Prompt template', r.promptTemplatePreview],
-    ['Operator twin — résumé (preview)', r.resumeNeuralPhasePreview],
+    ['Operator twin — résumé (current)', r.resumeNeuralPhasePreview],
     ['Dataset review', r.datasetReviewEnabled ? 'yes' : 'no'],
     ['Integration review', r.integrationReviewEnabled ? 'yes' : 'no'],
     ['Deep work blocks', String(r.deepWorkBlockCount)],
@@ -249,7 +249,7 @@ function workspaceModelRows(r: MobileSettingsFullReadout): Array<[string, string
     ['Overlay contact insights', r.overlayContactInsights ? 'yes' : 'no'],
     ['Automation rules', String(r.automationRuleCount)],
     ['Automation summary', r.automationRulesSummary],
-    ['Brand voice (preview)', r.brandVoiceGuidePreview]
+    ['Brand voice (current)', r.brandVoiceGuidePreview]
   ];
 }
 
@@ -847,13 +847,13 @@ export const MobileSettingsView = ({
   onAiOperatorModeChange,
   onAiRoutingDiagnosticsChange,
   onSaveAiBridgeConfiguration = async () => {
-    throw new Error('AI bridge settings are unavailable on this surface.');
+    throw new Error('Hosted AI settings are unavailable on this surface.');
   },
   onClearAiBridgeApiKey = async () => {
-    throw new Error('AI bridge key storage is unavailable on this surface.');
+    throw new Error('Hosted AI key storage is unavailable on this surface.');
   },
   onTestAiBridgeConnection = async () => {
-    throw new Error('AI bridge connection testing is unavailable on this surface.');
+    throw new Error('Hosted AI connection testing is unavailable on this surface.');
   },
   resumePhaseRevealKey = 0
 }: MobileSettingsViewProps) => {
@@ -1148,7 +1148,7 @@ export const MobileSettingsView = ({
                       </dd>
                     </div>
                     <div className="flex justify-between gap-2 py-1.5">
-                      <dt className="shrink-0 text-textMuted">Publishing preview slice</dt>
+                      <dt className="shrink-0 text-textMuted">Publishing queue slice</dt>
                       <dd className="text-right text-text">
                         {snapshot.intelligenceRulesReadout.previewQueueSlice}
                       </dd>
@@ -1158,7 +1158,7 @@ export const MobileSettingsView = ({
                 <p className="mt-2 text-fine text-textSoft">
                   Template:{' '}
                   <code className="rounded bg-surface/90 px-1 text-fine text-textSoft">
-                    public/brandops-intelligence-rules.example.json
+                    brandops-intelligence-rules.example.json
                   </code>
                 </p>
               </MobileTabSection>
@@ -1192,7 +1192,7 @@ export const MobileSettingsView = ({
                           }
                           className={`mt-2 ${settingsRunChipClass(btnFocus)}`}
                         >
-                          Open in Chat
+                          Review snippet
                         </button>
                       </li>
                     ))}
@@ -1255,28 +1255,25 @@ export const MobileSettingsView = ({
                 aria-labelledby="settings-extension-escape"
               >
                 <h3 id="settings-extension-escape" className="text-sm font-semibold text-text">
-                  Extension shell
+                  Integrations hub
                 </h3>
                 {documentSurface === 'integrations' ? (
                   <p className="mt-1 text-meta text-textMuted">
-                    This is the extension options page using the same shell as{' '}
-                    <code>mobile.html</code>.
+                    You are viewing the Integrations hub — it shares the same interface as
+                    the mobile app.
                   </p>
                 ) : (
                   <>
                     <p className="mt-1 text-meta text-textMuted">
-                      Opens{' '}
-                      <code className="rounded bg-surface/90 px-1 text-fine text-textMuted">
-                        integrations.html
-                      </code>{' '}
-                      in a new tab (same UI as Chrome extension options).
+                      Opens the Integrations hub in a new tab — same interface as
+                      this workspace.
                     </p>
                     <button
                       type="button"
                       onClick={() => openExtensionSurface('integrations')}
                       className={`mt-2 w-full rounded-lg border border-borderStrong/50 bg-surface/55 px-2.5 py-2 text-left text-meta text-textMuted ${btnFocus}`}
                     >
-                      Open integrations page in a new tab
+                      Open Integrations hub in a new tab
                     </button>
                   </>
                 )}

@@ -57,9 +57,7 @@ export const ConnectedAgentsPanel = ({
   }, []);
 
   const mcpSnippet = useMemo(() => {
-    const tokenLine = createdToken
-      ? createdToken
-      : '<paste-token>';
+    const tokenLine = createdToken ? createdToken : '<paste-token>';
     return buildClaudeCodeMcpSnippet(tokenLine);
   }, [createdToken]);
 
@@ -173,13 +171,14 @@ export const ConnectedAgentsPanel = ({
         >
           Sessions
           <span className="ml-2 text-meta font-normal text-textSoft">
-            Authorized agent clients (bearer tokens, never stored)
+            Authorized agent clients — each scoped to specific capabilities (read, propose, act)
           </span>
         </summary>
         <div className="space-y-3 border-t border-border/30 px-4 pb-4 pt-3">
           {sessions.length === 0 ? (
             <p className="text-meta text-textMuted">
-              No sessions yet. Create one, then point your agent at the MCP tools.
+              No sessions yet. Create one to authorize an agent — then connect it to send
+              verified achievements or suggest twin updates.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -247,7 +246,7 @@ export const ConnectedAgentsPanel = ({
                   'shrink-0 px-3 py-1.5 text-fine text-primary'
                 )}
               >
-                Export workspace for MCP
+                Export workspace for agent
               </button>
             ) : null}
           </div>
@@ -255,23 +254,22 @@ export const ConnectedAgentsPanel = ({
             <p className="text-fine leading-snug text-textSoft">
               Token (shown once):{' '}
               <code className="break-all font-mono text-info">{createdToken}</code>. Use it as the
-              MCP bearer token. Hash is stored in the workspace; the raw token is not.
+              session token. Hash is stored in the workspace; the raw token is not.
             </p>
           ) : null}
           {onExportWorkspace ? (
             <p className="text-fine leading-snug text-textSoft">
               The gateway authenticates your token against a workspace file. After creating a
-              session, press <span className="font-semibold text-text">Export workspace for MCP</span>{' '}
-              and set <code className="font-mono">BRANDOPS_MCP_WORKSPACE</code> below to the saved
-              file path — otherwise the token cannot resolve and every call returns
-              E_UNAUTHORIZED.
+              session, press{' '}
+              <span className="font-semibold text-text">Export workspace for agent</span> and set the
+              workspace file path below to the saved file — otherwise the token cannot resolve.
             </p>
           ) : null}
           <div className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-fine text-textSoft">
-                Claude Code connect config — add this to{' '}
-                <code className="font-mono">~/.claude/settings.json</code> then restart Claude Code.
+                Claude Code connect config — add this to your Claude settings and
+                restart Claude Code.
               </p>
               <button
                 type="button"
@@ -300,12 +298,15 @@ export const ConnectedAgentsPanel = ({
         >
           Agent signals
           <span className="ml-2 text-meta font-normal text-textSoft">
-            AGENT_REPORTED — promote only after you verify
+            Signals from connected agents — review before entering the Twin
           </span>
         </summary>
         <div className="space-y-3 border-t border-border/30 px-4 pb-4 pt-3">
           {events.length === 0 ? (
-            <p className="text-meta text-textMuted">No agent-reported signals yet.</p>
+            <p className="text-meta text-textMuted">
+              No agent signals yet. Create a session, then have an agent send
+              verified achievements or propose twin updates.
+            </p>
           ) : (
             <ul className="space-y-2">
               {events.slice(0, 20).map((event) => (
@@ -380,12 +381,15 @@ export const ConnectedAgentsPanel = ({
         >
           Proposals
           <span className="ml-2 text-meta font-normal text-textSoft">
-            Changes agents want — never applied without your approval
+            Changes agents propose — never applied without your approval
           </span>
         </summary>
         <div className="space-y-3 border-t border-border/30 px-4 pb-4 pt-3">
           {proposals.length === 0 ? (
-            <p className="text-meta text-textMuted">No proposals yet.</p>
+            <p className="text-meta text-textMuted">
+              No proposals yet. Agents can propose twin updates, content ideas, or artifact changes
+              — each one surfaces here for your review.
+            </p>
           ) : (
             <ul className="space-y-2">
               {proposals.slice(0, 20).map((proposal) => (
@@ -446,7 +450,7 @@ export const ConnectedAgentsPanel = ({
         >
           Audit trail
           <span className="ml-2 text-meta font-normal text-textSoft">
-            Every tool call, scoped by session and capability
+            Every agent action, scoped by session and capability
           </span>
         </summary>
         <div className="space-y-2 border-t border-border/30 px-4 pb-4 pt-3">
@@ -482,9 +486,10 @@ export const ConnectedAgentsPanel = ({
         <summary
           className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
         >
-          MCP tools
+          Agent capabilities
           <span className="ml-2 text-meta font-normal text-textSoft">
-            {tools.length} tools exposed to authorized agents
+            {tools.length} capabilities let the agent read workspace context, propose achievements, create artifacts, and
+            request approvals — scoped by session and capability tier
           </span>
         </summary>
         <div className="border-t border-border/30 px-4 pb-4 pt-3">

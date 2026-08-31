@@ -39,6 +39,45 @@ describe('storageService', () => {
     expect(memoryStorage.get(DATA_KEY)).toBeDefined();
   });
 
+  /**
+   * Regression guard: reading used to gate repair behind a strict shape
+   * check (all of modules/publishingQueue/contentLibrary/contacts/
+   * opportunities present as arrays, plus settings). A blob that failed on
+   * just one of those — a renamed field from a schema change, a partial
+   * write, a manual edit — discarded the *entire* workspace and reseeded
+   * from scratch, even though `withDefaults`'s per-field normalizers are
+   * individually built to backfill exactly that. This proves a one-field
+   * omission now gets repaired in place instead of wiping real user data.
+   */
+  it('repairs a persisted blob missing one required field instead of discarding the whole workspace', async () => {
+    const source = cloneSeedData();
+    const partiallyMalformed = {
+      ...source,
+      brand: { ...source.brand, operatorName: 'Distinctive Real Operator Name' },
+      contacts: [{ id: 'contact-keep', name: 'Keep Me', role: '', company: '', notes: [] }],
+      modules: undefined
+    };
+    memoryStorage.set(DATA_KEY, partiallyMalformed);
+
+    const data = await storageService.getData();
+
+    // The field that was missing got a real, valid fallback...
+    expect(Array.isArray(data.modules)).toBe(true);
+    expect(data.modules.length).toBeGreaterThan(0);
+    // ...instead of every other field in the workspace being thrown away.
+    expect(data.brand.operatorName).toBe('Distinctive Real Operator Name');
+    expect(data.contacts.some((c) => c.id === 'contact-keep')).toBe(true);
+  });
+
+  it('still reseeds when the persisted payload is not object-shaped at all', async () => {
+    memoryStorage.set(DATA_KEY, 'not-an-object');
+
+    const data = await storageService.getData();
+
+    expect(data.modules.length).toBeGreaterThan(0);
+    expect(data.brand.operatorName.length).toBeGreaterThan(0);
+  });
+
   it('normalizes malformed persisted data during setData', async () => {
     const source = cloneSeedData();
     const malformed = {
@@ -414,9 +453,58 @@ describe('storageService', () => {
 
       expect(result.changed).toBe(true);
       expect(result.attempts).toBeGreaterThan(1);
+      expect(result.forced).toBe(false);
       const final = memoryStorage.get(DATA_KEY) as BrandOpsData;
       expect(final.brand.operatorName).toBe('Concurrent UI write');
       expect(final.brand.positioning).toBe('SW reconcile write');
+    } finally {
+      getSpy.mockImplementation(async (key: string) => memoryStorage.get(key));
+    }
+  });
+
+  /**
+   * Regression guard: under sustained contention (every attempt loses the CAS
+   * race), the fallback used to fall through to a bare unconditional write —
+   * recomputed from a stale read, with no re-check — silently reproducing
+   * the exact last-write-wins clobbering this function exists to prevent, in
+   * a return shape identical to a clean success. This proves the forced
+   * write (a) still happens, so the caller's mutation is never dropped, (b)
+   * is reported via `forced: true` so it's distinguishable from a real CAS
+   * win, and (c) rebases against the freshest concurrent state it observed
+   * instead of discarding it.
+   */
+  it('forces the write when every attempt loses the CAS race, without discarding the last observed concurrent write', async () => {
+    const base = await storageService.getData();
+    memoryStorage.set(DATA_KEY, base);
+    let writeCount = 0;
+    const getSpy = browserLocalStorage.get as unknown as {
+      mockImplementation: (fn: (key: string) => Promise<unknown>) => void;
+    };
+    getSpy.mockImplementation(async () => {
+      writeCount += 1;
+      const concurrent = {
+        ...cloneSeedData(),
+        brand: { ...cloneSeedData().brand, operatorName: `Concurrent write #${writeCount}` }
+      };
+      memoryStorage.set(DATA_KEY, concurrent);
+      return concurrent;
+    });
+
+    try {
+      const result = await storageService.withWorkspaceMutation(
+        (data) => ({ ...data, brand: { ...data.brand, positioning: 'forced write test' } }),
+        { maxAttempts: 2 }
+      );
+
+      expect(result.changed).toBe(true);
+      expect(result.forced).toBe(true);
+      expect(result.attempts).toBe(2);
+      // The forced write must still carry the caller's mutation...
+      expect(result.data.brand.positioning).toBe('forced write test');
+      // ...applied on top of the last concurrent state it actually observed, not stale data.
+      expect(result.data.brand.operatorName).toBe(`Concurrent write #${writeCount}`);
+      const final = memoryStorage.get(DATA_KEY) as BrandOpsData;
+      expect(final.brand.positioning).toBe('forced write test');
     } finally {
       getSpy.mockImplementation(async (key: string) => memoryStorage.get(key));
     }

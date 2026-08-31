@@ -82,7 +82,7 @@ export const CockpitPipelineWorkstreamSection = ({
         </p>
         <div
           role="group"
-          aria-label="Pipeline projection figures, read-only — not buttons"
+          aria-label="Weighted projection summary"
           className="bo-scroll-x-lane -mx-0.5 mt-2 flex gap-1.5 pb-0.5"
         >
           {pulseTile(
@@ -176,7 +176,7 @@ export const CockpitPipelineWorkstreamSection = ({
                   }
                   className={`mt-2 ${rowChip(btnFocus)}`}
                 >
-                  Review in Chat
+                  Refine template
                 </button>
               </li>
             ))}
@@ -211,7 +211,7 @@ export const CockpitPipelineWorkstreamSection = ({
                   }
                   className={`mt-2 ${rowChip(btnFocus)}`}
                 >
-                  Review in Chat
+                  Add note
                 </button>
               </li>
             ))}
@@ -249,7 +249,7 @@ export const CockpitPipelineWorkstreamSection = ({
                   }
                   className={rowChip(btnFocus)}
                 >
-                  Review in Chat
+                  Review deal
                 </button>
               </div>
             </li>

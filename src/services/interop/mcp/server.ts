@@ -145,6 +145,193 @@ const TOOL_ARG_SCHEMAS: Record<
       summary: { type: 'string', description: 'Why and what exactly should happen.' }
     },
     required: ['action', 'target', 'summary']
+  },
+  // ── Builder intelligence MCP tool schemas ──────────────────────────────
+  brandops_get_builder_context: {
+    properties: {
+      query: {
+        type: 'string',
+        description: 'Optional natural-language filter for builder context.'
+      },
+      bundles: {
+        type: 'array',
+        items: { type: 'string' },
+        description: "Builder context bundles to fetch: builder-context, project-context, content-context. Defaults to all granted."
+      },
+      maxItems: { type: 'number', description: 'Max items per bundle (1–20, default 8).' }
+    },
+    required: []
+  },
+  brandops_list_achievements: {
+    properties: {
+      status: {
+        type: 'string',
+        description: "Filter by verification status: verified, unverified, or all (default)."
+      },
+      limit: { type: 'number', description: 'Max results (1–50, default 20).' }
+    },
+    required: []
+  },
+  brandops_verify_achievement: {
+    properties: {
+      achievementId: { type: 'string', description: 'Achievement id to verify.' },
+      verificationStatus: {
+        type: 'string',
+        description: "Verification status: USER_VERIFIED (default) or INDEPENDENTLY_SUPPORTED."
+      }
+    },
+    required: ['achievementId']
+  },
+  brandops_dismiss_achievement: {
+    properties: {
+      achievementId: { type: 'string', description: 'Achievement id to dismiss.' }
+    },
+    required: ['achievementId']
+  },
+  brandops_list_opportunities: {
+    properties: {
+      limit: { type: 'number', description: 'Max results (1–20, default 10).' }
+    },
+    required: []
+  },
+  brandops_convert_opportunity_to_plan: {
+    properties: {
+      opportunityId: { type: 'string', description: 'Opportunity id to convert to a Plan.' },
+      achievementId: { type: 'string', description: 'Alternative: verified achievement id to convert.' },
+      preset: {
+        type: 'string',
+        description: 'Plan preset template: content-plan, outreach-plan, positioning-plan, launch-plan, portfolio-plan, etc.'
+      },
+      userIntent: { type: 'string', description: 'Optional user intent or instructions for the plan.' }
+    },
+    required: ['opportunityId', 'achievementId']
+  },
+  brandops_dismiss_opportunity: {
+    properties: {
+      opportunityId: { type: 'string', description: 'Opportunity id to dismiss.' }
+    },
+    required: ['opportunityId']
+  },
+  brandops_list_twin_proposals: {
+    properties: {
+      limit: { type: 'number', description: 'Max results (1–20, default 10).' }
+    },
+    required: []
+  },
+  brandops_accept_twin_proposal: {
+    properties: {
+      proposalId: { type: 'string', description: 'Twin update proposal id to accept and apply.' }
+    },
+    required: ['proposalId']
+  },
+  brandops_reject_twin_proposal: {
+    properties: {
+      proposalId: { type: 'string', description: 'Twin update proposal id to reject.' }
+    },
+    required: ['proposalId']
+  },
+  brandops_list_projects: {
+    properties: {
+      limit: { type: 'number', description: 'Max results (1–50, default 20).' }
+    },
+    required: []
+  },
+  brandops_get_project_intelligence: {
+    properties: {
+      projectId: { type: 'string', description: 'Project id to get intelligence for.' }
+    },
+    required: ['projectId']
+  },
+  brandops_list_receipts: {
+    properties: {
+      limit: { type: 'number', description: 'Max results (1–50, default 20).' }
+    },
+    required: []
+  },
+  brandops_list_connected_sessions: {
+    properties: {
+      limit: { type: 'number', description: 'Max results (1–20, default 20).' }
+    },
+    required: []
+  },
+  brandops_revoke_session: {
+    properties: {
+      sessionId: { type: 'string', description: 'Session id to revoke.' }
+    },
+    required: ['sessionId']
+  },
+  brandops_ingest_activity: {
+    properties: {
+      kind: {
+        type: 'string',
+        description: 'Activity kind: feature-built, repository-released, product-launched, documentation-published, benchmark-improved, hackathon-submission, project-milestone, integration-completed, significant-refactor, or skill-demonstrated.'
+      },
+      title: { type: 'string', description: 'Short title of the activity (max 300 chars).' },
+      detail: { type: 'string', description: 'What happened, who was involved, and any measurable outcome.' },
+      confidence: { type: 'number', description: 'Confidence in the activity accuracy (0–1, default 0.7).' },
+      sourceId: { type: 'string', description: 'External source identifier for dedup.' },
+      entityRefs: {
+        type: 'array',
+        items: { type: 'object', properties: { type: { type: 'string' }, id: { type: 'string' } } },
+        description: 'Links to related workspace objects (projects, goals, artifacts).'
+      },
+      evidence: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            ref: { type: 'string', description: 'e.g. git:owner/repo@sha, release:v1.2.3, file:docs/api.md' },
+            kind: { type: 'string', description: 'git | release | document | milestone | link | other' },
+            label: { type: 'string' }
+          }
+        },
+        description: 'Pointers the agent can cite as evidence.'
+      }
+    },
+    required: ['kind', 'title', 'detail']
+  },
+  brandops_ingest_session_summary: {
+    properties: {
+      sessionId: { type: 'string', description: 'Session identifier from the development environment.' },
+      workDescription: { type: 'string', description: 'What was worked on during the session.' },
+      problemsSolved: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Problems that were solved during the session.'
+      },
+      technologiesUsed: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Technologies used during the session.'
+      },
+      evidence: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            type: { type: 'string', description: 'file | commit | test | build | artifact | link' },
+            ref: { type: 'string' },
+            label: { type: 'string' },
+            content: { type: 'string', description: 'Only include if explicitly authorized.' }
+          }
+        },
+        description: 'Optional evidence items (only if explicitly authorized).'
+      }
+    },
+    required: ['sessionId', 'workDescription']
+  },
+  brandops_get_skill_instructions: {
+    properties: {
+      skillId: {
+        type: 'string',
+        description: 'Skill pack id: capture-achievement, turn-build-into-content, review-project-positioning, generate-builder-update, prepare-launch-narrative, convert-work-session-to-portfolio-evidence, review-professional-profile, create-weekly-builder-review.'
+      }
+    },
+    required: ['skillId']
+  },
+  brandops_get_feature_registry: {
+    properties: {},
+    required: []
   }
 };
 
@@ -192,7 +379,6 @@ export async function handleCallToolRequest(input: CallToolInput): Promise<Agent
  * injected so the host can persist workspace state between messages. Node-only
  * transport; never invoked from the browser SPA.
  */
-/* eslint-disable no-undef */
 export function startMcpStdioServer(handlers: {
   callTool: (
     toolName: string,
@@ -201,13 +387,10 @@ export function startMcpStdioServer(handlers: {
   ) => Promise<AgentToolResult>;
   getToken: () => string;
 }): () => void {
-  const listeners: Array<
-    (toolName: string, args: Record<string, unknown>) => Promise<AgentToolResult>
-  > = [(toolName, args) => handlers.callTool(toolName, args)];
-  void listeners;
-
   let buffer = '';
+  // eslint-disable-next-line no-undef -- Node-only stdio transport
   const stdin = process.stdin;
+  // eslint-disable-next-line no-undef -- Node-only stdio transport
   const stdout = process.stdout;
 
   const respond = (
@@ -281,6 +464,7 @@ export function startMcpStdioServer(handlers: {
     }
   };
 
+  // eslint-disable-next-line no-undef -- Node Buffer type
   stdin.on('data', (data: Buffer) => onData(data.toString('utf8')));
   stdin.resume();
 

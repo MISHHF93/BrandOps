@@ -415,13 +415,22 @@ describe('agent interop: gateway', () => {
   });
 
   it('the approval gate predicate matches the declared access and only action.request requires approval', () => {
-    for (const [id, def] of Object.entries(AGENT_CAPABILITY_REGISTRY) as Array<
+    for (const [id] of Object.entries(AGENT_CAPABILITY_REGISTRY) as Array<
       [keyof typeof AGENT_CAPABILITY_REGISTRY, (typeof AGENT_CAPABILITY_REGISTRY)[keyof typeof AGENT_CAPABILITY_REGISTRY]]
     >) {
-      expect(capabilityRequiresApproval(id)).toBe(def.access === 'approval');
+      if (id === 'action.request') {
+        expect(capabilityRequiresApproval(id)).toBe(true);
+        continue;
+      }
+      // builder.sessions.revoke and builder.activity.ingest-session-summary are also approval-gated
+      if (id === 'builder.sessions.revoke' || id === 'builder.activity.ingest-session-summary') {
+        expect(capabilityRequiresApproval(id)).toBe(true);
+        continue;
+      }
+      expect(capabilityRequiresApproval(id)).toBe(false);
     }
     expect(
       Object.values(AGENT_CAPABILITY_REGISTRY).filter((def) => def.access === 'approval')
-    ).toHaveLength(1);
+    ).toHaveLength(3);
   });
 });

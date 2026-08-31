@@ -59,8 +59,7 @@ import {
 } from '../../types/domain';
 import { SUPPORTED_TWIN_ACTIONS } from '../digitalTwin/digitalTwin';
 import { ALL_INTEGRATION_SOURCE_KINDS } from '../../shared/integrations/integrationSourceCatalog';
-import {
-  AGENT_CAPABILITY_IDS,
+import { AGENT_CAPABILITY_IDS,
   AgentCapabilityId,
   AgentProposal,
   AgentProposalStatus,
@@ -1481,6 +1480,12 @@ const normalizeSettings = (settings: unknown): BrandOpsData['settings'] => {
     theme: candidate.theme === 'light' ? 'light' : 'dark',
     cockpitLayout: candidate.cockpitLayout === 'unified-scroll' ? 'unified-scroll' : 'sections',
     cockpitDensity: candidate.cockpitDensity === 'compact' ? 'compact' : 'comfortable',
+    professionPackId:
+      candidate.professionPackId === 'founder-consultant' ||
+      candidate.professionPackId === 'sales-marketing' ||
+      candidate.professionPackId === 'research-analytical'
+        ? candidate.professionPackId
+        : undefined,
     localModelEnabled: Boolean(candidate.localModelEnabled),
     aiAdapterMode:
       candidate.aiAdapterMode === 'local-only' || candidate.aiAdapterMode === 'external-opt-in'
@@ -2841,7 +2846,6 @@ const isBrandOpsData = (value: unknown): value is BrandOpsData => {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<BrandOpsData>;
   return (
-    Array.isArray(candidate.modules) &&
     Array.isArray(candidate.publishingQueue) &&
     Array.isArray(candidate.contentLibrary) &&
     Array.isArray(candidate.contacts) &&
@@ -2923,27 +2927,27 @@ export const storageService = {
   async withWorkspaceMutation(
     mutator: (data: BrandOpsData) => BrandOpsData,
     options?: { maxAttempts?: number }
-  ): Promise<{ data: BrandOpsData; changed: boolean; attempts: number }> {
+  ): Promise<{ data: BrandOpsData; changed: boolean; attempts: number; forced: boolean }> {
     const maxAttempts = Math.max(1, options?.maxAttempts ?? 3);
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       const { raw, data } = await readWorkspace();
       const next = mutator(data);
       if (next === data) {
-        return { data, changed: false, attempts: attempt };
+        return { data, changed: false, attempts: attempt, forced: false };
       }
       const currentRaw = await activeStorage.get<unknown>(DATA_KEY);
       if (rawMatches(currentRaw, raw)) {
         await this.setData(next);
-        return { data: next, changed: true, attempts: attempt };
+        return { data: next, changed: true, attempts: attempt, forced: false };
       }
     }
     const { data: finalData } = await readWorkspace();
     const finalNext = mutator(finalData);
     if (finalNext === finalData) {
-      return { data: finalData, changed: false, attempts: maxAttempts };
+      return { data: finalData, changed: false, attempts: maxAttempts, forced: false };
     }
     await this.setData(finalNext);
-    return { data: finalNext, changed: true, attempts: maxAttempts };
+    return { data: finalNext, changed: true, attempts: maxAttempts, forced: true };
   },
 
   async setData(data: BrandOpsData): Promise<BrandOpsData> {

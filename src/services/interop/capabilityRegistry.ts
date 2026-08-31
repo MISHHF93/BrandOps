@@ -107,6 +107,195 @@ export const AGENT_CAPABILITY_REGISTRY: Readonly<
     tier: 'EXTERNAL_ACTION',
     access: 'approval',
     readOnly: false
+  },
+  // ── Builder intelligence capabilities ────────────────────────────────
+  'builder.context.read': {
+    id: 'builder.context.read',
+    toolName: 'brandops_get_builder_context',
+    label: 'Get builder context',
+    description:
+      'Retrieve builder intelligence context: recent activity, verified achievements, active projects, and proposed opportunities.',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.achievements.list': {
+    id: 'builder.achievements.list',
+    toolName: 'brandops_list_achievements',
+    label: 'List achievements',
+    description:
+      'List verified and unverified achievements with their kind, confidence, and evidence.',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.achievements.verify': {
+    id: 'builder.achievements.verify',
+    toolName: 'brandops_verify_achievement',
+    label: 'Verify achievement',
+    description:
+      'Verify an unverified achievement as USER_VERIFIED or INDEPENDENTLY_SUPPORTED. Never auto-promotes to a verified Twin fact.',
+    tier: 'PREPARE',
+    access: 'auto',
+    readOnly: false
+  },
+  'builder.achievements.dismiss': {
+    id: 'builder.achievements.dismiss',
+    toolName: 'brandops_dismiss_achievement',
+    label: 'Dismiss achievement',
+    description:
+      'Dismiss an unverified achievement (marks it as rejected for auditability).',
+    tier: 'PREPARE',
+    access: 'auto',
+    readOnly: false
+  },
+  'builder.opportunities.list': {
+    id: 'builder.opportunities.list',
+    toolName: 'brandops_list_opportunities',
+    label: 'List opportunities',
+    description:
+      'List ranked opportunity recommendations from verified achievements.',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.opportunities.convert-to-plan': {
+    id: 'builder.opportunities.convert-to-plan',
+    toolName: 'brandops_convert_opportunity_to_plan',
+    label: 'Convert opportunity to plan',
+    description:
+      'Convert a high-value opportunity into a structured PlanDraft using the appropriate template.',
+    tier: 'PREPARE',
+    access: 'auto',
+    readOnly: false
+  },
+  'builder.opportunities.dismiss': {
+    id: 'builder.opportunities.dismiss',
+    toolName: 'brandops_dismiss_opportunity',
+    label: 'Dismiss opportunity',
+    description: 'Dismiss an opportunity recommendation.',
+    tier: 'PREPARE',
+    access: 'auto',
+    readOnly: false
+  },
+  'builder.twin-proposals.list': {
+    id: 'builder.twin-proposals.list',
+    toolName: 'brandops_list_twin_proposals',
+    label: 'List Twin proposals',
+    description:
+      'List pending Twin update proposals from the professional signal engine or activity graph.',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.twin-proposals.accept': {
+    id: 'builder.twin-proposals.accept',
+    toolName: 'brandops_accept_twin_proposal',
+    label: 'Accept Twin proposal',
+    description:
+      'Accept a Twin update proposal (applies deltas to the Twin).',
+    tier: 'PREPARE',
+    access: 'auto',
+    readOnly: false
+  },
+  'builder.twin-proposals.reject': {
+    id: 'builder.twin-proposals.reject',
+    toolName: 'brandops_reject_twin_proposal',
+    label: 'Reject Twin proposal',
+    description: 'Reject a Twin update proposal.',
+    tier: 'PREPARE',
+    access: 'auto',
+    readOnly: false
+  },
+  'builder.projects.list': {
+    id: 'builder.projects.list',
+    toolName: 'brandops_list_projects',
+    label: 'List projects',
+    description:
+      'List canonical Project objects with their status, achievements, and intelligence.',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.projects.intelligence': {
+    id: 'builder.projects.intelligence',
+    toolName: 'brandops_get_project_intelligence',
+    label: 'Get project intelligence',
+    description:
+      'Get derived project intelligence: status, recent milestones, professional value, documentation gaps, content potential.',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.receipts.list': {
+    id: 'builder.receipts.list',
+    toolName: 'brandops_list_receipts',
+    label: 'List execution receipts',
+    description:
+      'List execution receipts for recent commands with request, approval, result, and affected objects.',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.sessions.list': {
+    id: 'builder.sessions.list',
+    toolName: 'brandops_list_connected_sessions',
+    label: 'List connected sessions',
+    description:
+      'List connected external agent sessions with status, scopes, and last activity.',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.sessions.revoke': {
+    id: 'builder.sessions.revoke',
+    toolName: 'brandops_revoke_session',
+    label: 'Revoke session',
+    description:
+      'Revoke an external agent session (immediate, token can never be re-activated). Approval-gated.',
+    tier: 'EXTERNAL_ACTION',
+    access: 'approval',
+    readOnly: false
+  },
+  'builder.activity.ingest': {
+    id: 'builder.activity.ingest',
+    toolName: 'brandops_ingest_activity',
+    label: 'Ingest activity event',
+    description:
+      'Ingest an activity event from an authorized source (user action, agent, integration, skill pack, dev hook, session-to-brand).',
+    tier: 'GENERATE',
+    access: 'auto',
+    readOnly: false
+  },
+  'builder.activity.ingest-session-summary': {
+    id: 'builder.activity.ingest-session-summary',
+    toolName: 'brandops_ingest_session_summary',
+    label: 'Ingest session summary',
+    description:
+      'Ingest a development session summary from Session-to-Brand: work completed, problems solved, technologies used, potential achievement.',
+    tier: 'GENERATE',
+    access: 'approval',
+    readOnly: false
+  },
+  'builder.skill-packed-instructions': {
+    id: 'builder.skill-packed-instructions',
+    toolName: 'brandops_get_skill_instructions',
+    label: 'Get skill instructions',
+    description:
+      'Get the portable instruction steps for a named skill pack (capture-achievement, turn-build-into-content, etc.).',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.feature-registry.read': {
+    id: 'builder.feature-registry.read',
+    toolName: 'brandops_get_feature_registry',
+    label: 'Get feature registry',
+    description:
+      'Get the machine-readable feature registry with maturity, wiring status, and test coverage for each capability.',
+    tier: 'READ',
+    access: 'auto',
+    readOnly: true
   }
 };
 
@@ -129,7 +318,7 @@ export function capabilityRequiresApproval(id: AgentCapabilityId): boolean {
 
 /** Read capabilities — the only ones a read-only session may be granted. */
 export function isReadCapability(id: AgentCapabilityId): boolean {
-  return AGENT_CAPABILITY_REGISTRY[id].readOnly;
+  return id.endsWith('.read');
 }
 
 /** Reverse map: MCP tool name → canonical capability id. */

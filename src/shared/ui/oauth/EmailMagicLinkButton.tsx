@@ -18,7 +18,7 @@ export function EmailMagicLinkButton({
 }: EmailMagicLinkButtonProps) {
   const label =
     variant === 'preview'
-      ? 'Use local email preview identity'
+      ? 'Use local email account'
       : variant === 'continue'
         ? loading
           ? 'Connecting…'

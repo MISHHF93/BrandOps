@@ -17,6 +17,8 @@ import type {
 import type { BrandOpsData, ContentLibraryItem } from '../../types/domain';
 import { getActiveDigitalTwin } from '../digitalTwin/digitalTwin';
 import { provenanceSummary } from './trustBoundaries';
+import { searchContentByRelevance } from '../ai/embeddingSearch';
+import { getProfessionPackForWorkspace } from '../builder/professionPacks';
 
 export interface ContextRetrievalOptions {
   query?: string;
@@ -471,7 +473,11 @@ function positioningContextItems(workspace: BrandOpsData, now: Date): AgentConte
   return out;
 }
 
-function contentContextItems(workspace: BrandOpsData, now: Date): AgentContextPayloadItem[] {
+function contentContextItems(
+  workspace: BrandOpsData,
+  now: Date,
+  query?: string
+): AgentContextPayloadItem[] {
   const out: AgentContextPayloadItem[] = [];
   const push = (
     text: string,
@@ -500,6 +506,22 @@ function contentContextItems(workspace: BrandOpsData, now: Date): AgentContextPa
       item.updatedAt
     );
   }
+
+  if (query?.trim()) {
+    const embeddingMatches = searchContentByRelevance(workspace, query, 5);
+    const seenIds = new Set(
+      workspace.contentLibrary.slice(0, 10).map((item) => item.id)
+    );
+    for (const match of embeddingMatches) {
+      if (seenIds.has(match.itemId)) continue;
+      seenIds.add(match.itemId);
+      push(
+        `Embedding match [score ${match.score.toFixed(2)}]: ${match.title} — ${match.body}`,
+        `contentLibrary/${match.itemId}`
+      );
+    }
+  }
+
   for (const draft of workspace.publishingQueue.slice(0, 6)) {
     push(
       `Publishing draft [${draft.status}]: ${draft.title} — ${draft.body}`,
@@ -517,8 +539,114 @@ function contentContextItems(workspace: BrandOpsData, now: Date): AgentContextPa
   return out;
 }
 
+function professionContextItems(workspace: BrandOpsData, now: Date): AgentContextPayloadItem[] {
+  const out: AgentContextPayloadItem[] = [];
+  const intel = workspace.workspaceIntelligence;
+  const professionLabel =
+    intel?.dna.profession?.trim() ||
+    workspace.settings?.notificationCenter?.roleContext?.trim() ||
+    'General professional';
+
+  const push = (
+    text: string,
+    entityId: string,
+    tier: TrustTier,
+    updatedAt?: string,
+    source: AgentContextPayloadItem['source'] = 'workspace'
+  ) => {
+    if (!text.trim()) return;
+    out.push(
+      ctxItem({
+        bundleId: 'PROFESSION_CONTEXT',
+        text,
+        source,
+        entityId,
+        trustTier: tier,
+        updatedAt: updatedAt ?? intel?.updatedAt,
+        now,
+        provenanceRef: `brandops://profession/${entityId}`
+      })
+    );
+  };
+
+  push(
+    `Configured profession: ${professionLabel}`,
+    'profession/identity',
+    'USER_VERIFIED',
+    intel?.updatedAt
+  );
+
+  const pack = getProfessionPackForWorkspace(workspace);
+  if (!pack) {
+    push(
+      `This workspace is not mapped to a reference profession pack. It uses the generic professional operating runtime with profession-independent primitives (ASK, PLAN, Evidence, Verification, Receipt, Learning).`,
+      'profession/pack',
+      'BRANDOPS_VERIFIED'
+    );
+    return out;
+  }
+
+  const banner =
+    `Active profession pack: ${pack.name} (${pack.category}). ` +
+    `Common objectives: ${pack.commonObjectives.slice(0, 6).join('; ')}. ` +
+    `Common tasks: ${pack.commonTasks.slice(0, 8).join('; ')}.`;
+  push(banner, 'profession/pack', 'BRANDOPS_VERIFIED', intel?.updatedAt);
+
+  push(
+    `Relevant knowledge domains: ${pack.knowledgeDomains.join(', ')}`,
+    'profession/knowledge',
+    'BRANDOPS_VERIFIED',
+    intel?.updatedAt
+  );
+  push(
+    `Common skills: ${pack.commonSkills.join(', ')}`,
+    'profession/skills',
+    'BRANDOPS_VERIFIED',
+    intel?.updatedAt
+  );
+  push(
+    `Evidence expectations: ${pack.evidenceExpectations.join('; ')}`,
+    'profession/evidence',
+    'BRANDOPS_VERIFIED',
+    intel?.updatedAt
+  );
+  push(
+    `Typical artifact types produced: ${pack.artifactTypes.join(', ')}`,
+    'profession/artifacts',
+    'BRANDOPS_VERIFIED',
+    intel?.updatedAt
+  );
+  push(
+    `Relevant capabilities: ${pack.relevantCapabilities.join(', ')}`,
+    'profession/capabilities',
+    'BRANDOPS_VERIFIED',
+    intel?.updatedAt
+  );
+  if (pack.commonConnectors.length)
+    push(
+      `Common connectors: ${pack.commonConnectors.join(', ')}`,
+      'profession/connectors',
+      'BRANDOPS_VERIFIED',
+      intel?.updatedAt
+    );
+  if (pack.commonTools.length)
+    push(
+      `Common tools: ${pack.commonTools.join(', ')}`,
+      'profession/tools',
+      'BRANDOPS_VERIFIED',
+      intel?.updatedAt
+    );
+  push(
+    `Vocabulary: ${pack.vocabulary.join(', ')}`,
+    'profession/vocabulary',
+    'BRANDOPS_VERIFIED',
+    intel?.updatedAt
+  );
+  return out;
+}
+
 const BUNDLE_BUILDERS: Readonly<
-  Record<ContextBundleId, (workspace: BrandOpsData, now: Date) => AgentContextPayloadItem[]>
+  Record<ContextBundleId, (workspace: BrandOpsData, now: Date, query?: string) => AgentContextPayloadItem[]>
 > = {
   PUBLIC_IDENTITY: publicIdentityItems,
   BUILDER_CONTEXT: builderContextItems,
@@ -526,7 +654,8 @@ const BUNDLE_BUILDERS: Readonly<
   WRITING_VOICE: writingVoiceItems,
   CURRENT_GOALS: currentGoalsItems,
   POSITIONING_CONTEXT: positioningContextItems,
-  CONTENT_CONTEXT: contentContextItems
+  CONTENT_CONTEXT: contentContextItems,
+  PROFESSION_CONTEXT: professionContextItems
 };
 
 export function retrieveAgentContext(
@@ -538,7 +667,7 @@ export function retrieveAgentContext(
   const max = options.maxItemsPerBundle ?? DEFAULT_MAX_PER_BUNDLE;
   return options.bundles.map((bundleId) => {
     const builder = BUNDLE_BUILDERS[bundleId];
-    const items = builder ? builder(workspace, now) : [];
+    const items = builder ? builder(workspace, now, query) : [];
     const { items: ranked, truncated } = finalize(items, query, now, max);
     return { bundleId, items: ranked, truncated, provenance: provenanceSummary(ranked) };
   });

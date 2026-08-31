@@ -47,24 +47,24 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       <a className={linkClass} href={signUpHref}>
         New local workspace
       </a>
-      <a className={linkClass} href={planHubHref} title="mobile.html?section=workspace">
+      <a className={linkClass} href={planHubHref} title="Plan workspace">
         Plan
       </a>
       <a className={linkClass} href={mainAppChatHref}>
         ASK
       </a>
-      <a className={linkClass} href={todayHref} title="mobile.html?section=today">
+      <a className={linkClass} href={todayHref} title="Today dashboard">
         Today
       </a>
-      <a className={linkClass} href={integrationsTabHref} title="mobile.html?section=integrations">
+      <a className={linkClass} href={integrationsTabHref} title="Integrations tab">
         Integrations tab
       </a>
       <a
         className={linkClass}
         href={integrationsHubHref}
-        title="integrations.html — extension hub / options"
+        title="Integrations hub"
       >
-        Integrations page
+        Integrations hub
       </a>
       <a className={linkClass} href={settingsHref}>
         Settings

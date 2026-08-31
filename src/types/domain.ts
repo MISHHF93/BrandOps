@@ -598,6 +598,8 @@ export interface AppSettings {
   defaultReminderLeadHours: number;
   weekStartsOn: 'monday' | 'sunday';
   theme: UiTheme;
+  /** Optional explicit profession pack id (founder-consultant | sales-marketing | research-analytical). When unset, the profession label heuristic selects a pack. */
+  professionPackId?: string;
   cockpitLayout: CockpitLayoutMode;
   cockpitDensity: CockpitDensityMode;
   localModelEnabled: boolean;
@@ -667,6 +669,20 @@ export interface BrandProfile {
 export type DigitalTwinSourceType = 'resume' | 'linkedin' | 'portfolio' | 'brand' | 'manual';
 export type DigitalTwinStatus = 'draft' | 'processing' | 'ready' | 'needs_review' | 'failed';
 export type TwinFactStatus = 'verified' | 'unverified' | 'rejected';
+
+export type PermissionTier =
+  | 'READ'
+  | 'GENERATE'
+  | 'PREPARE'
+  | 'EXTERNAL_ACTION'
+  | 'SENSITIVE_ACTION';
+
+export interface PermissionBundle {
+  id: string;
+  name: string;
+  description: string;
+  scopes: string[];
+}
 
 export interface TwinIdentity {
   headline: string;
@@ -1129,6 +1145,13 @@ export interface BrandOpsData {
   planWorkspace?: PlanWorkspaceState;
   /** Canonical execution checkpoints — the operational state graph behind Ask/Plan/approvals. Unconditional (not gated by operatorTraceCollectionEnabled). */
   checkpoints?: import('./executionState').CheckpointLogState;
+  /** Builder intelligence — activity, achievements, projects, signals, twin proposals, and opportunities. */
+  builderActivity?: import('./builder').BuilderActivityState;
+  /** Machine-readable registry of BrandOps capabilities (optional; normalized on read). */
+  featureRegistry?: {
+    entries: import('./builder').FeatureRegistryEntry[];
+    updatedAt: string;
+  };
   /** Connected external AI agents (Claude Code / Codex / VS Code / MCP clients). Session metadata only — raw tokens never enter workspace JSON. */
   externalAgentSessions?: import('./agentInterop').ExternalAgentSessionsState;
   /** Agent-reported professional signals (AGENT_REPORTED until user-verified). */
@@ -1137,4 +1160,6 @@ export interface BrandOpsData {
   agentProposals?: import('./agentInterop').AgentProposalsState;
   /** Unconditional audit of every external-agent invocation (capped). */
   externalAgentAudit?: import('./agentInterop').ExternalAgentAuditState;
+  /** Agent handoffs - explicit task delegation between agents. */
+  agentHandoffs?: import('./agentInterop').AgentHandoffsState;
 }

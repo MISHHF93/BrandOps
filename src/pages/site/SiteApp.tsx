@@ -74,7 +74,7 @@ const STEPS: Array<{ step: string; title: string; body: string }> = [
   {
     step: '01',
     title: 'Open the local workspace',
-    body: 'Choose an on-device preview identity label. The current build does not contact or authenticate with Google, Apple, GitHub, LinkedIn, or email.'
+    body: 'Choose an on-device sign-in provider label. This version does not contact or authenticate with Google, Apple, GitHub, LinkedIn, or email.'
   },
   {
     step: '02',
@@ -119,14 +119,17 @@ function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-border/34 bg-bg/95 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <a href="/" className={clsx('flex min-w-0 items-center gap-2.5', FOCUS_RING)}>
+        <a
+          href="/"
+          className={clsx('flex min-w-0 items-center gap-2.5 overflow-hidden', FOCUS_RING)}
+        >
           <span
             className="bo-mobile-brand__mark bo-mobile-brand__mark--compact shrink-0"
             aria-hidden
           >
             <BrandOpsCrownMark className="bo-mobile-brand__logo" />
           </span>
-          <span className="bo-mobile-brand__wordmark">BrandOps</span>
+          <span className="bo-mobile-brand__wordmark truncate">BrandOps</span>
         </a>
         <nav className="hidden items-center gap-6 text-meta font-medium text-textMuted md:flex">
           <a className={clsx('transition-colors hover:text-text', FOCUS_RING)} href="#features">
@@ -152,10 +155,13 @@ function SiteHeader() {
           >
             Open app
           </a>
+          {/* The Hero and FinalCta sections repeat this CTA below the fold; hiding it here on
+              narrow viewports is what keeps the wordmark from being squeezed to zero width and
+              visually overlapping "Open app" (see the sibling `shrink-0` on this button row). */}
           <a
             href={hrefSignUp()}
             className={clsx(
-              'rounded-lg bg-accent px-3.5 py-2 text-label font-semibold text-bg transition-colors hover:brightness-105',
+              'hidden rounded-lg bg-accent px-3.5 py-2 text-label font-semibold text-bg transition-colors hover:brightness-105 sm:inline-flex',
               FOCUS_RING
             )}
           >

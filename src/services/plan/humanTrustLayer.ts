@@ -295,9 +295,9 @@ export function buildHumanTrustLayer(workspace: BrandOpsData): HumanTrustLayerRe
     totalActions: actions.length,
     controlTypes: HUMAN_TRUST_CONTROL_TYPES,
     policy:
-      'BrandOps may preview, draft, edit, retry, explain, and queue cross-platform work, but sending, posting, scheduling, syncing, or writing to external systems always requires visible human control.',
+      'BrandOps may review, draft, edit, retry, explain, and queue cross-platform work, but sending, posting, scheduling, syncing, or writing to external systems always requires visible human control.',
     headline: actions.length
-      ? `${actions.length} cross-platform action${actions.length === 1 ? '' : 's'} protected by preview, approval, edit, reject, retry, receipts, and audit history.`
+      ? `${actions.length} cross-platform action${actions.length === 1 ? '' : 's'} protected by review, approval, edit, reject, retry, receipts, and audit history.`
       : 'No cross-platform actions are available yet; connect platforms or create a PLAN to activate trust controls.'
   };
 }

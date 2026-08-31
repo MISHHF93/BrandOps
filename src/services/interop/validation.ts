@@ -47,7 +47,7 @@ const INJECTION_PATTERNS: ReadonlyArray<{ pattern: RegExp; label: string }> = [
     label: 'markup-injection attempt'
   },
   {
-    pattern: /\breveal\s+(your|the)\s+(system|hidden)\s+(prompt|instructions?)\b/i,
+    pattern: /\breveal\s+(your|the)\s+(?:(?:system|hidden)\s+)*(?:system|hidden)\s+(?:prompt|instructions?)\b/i,
     label: 'prompt-exfiltration attempt'
   },
   {
@@ -70,7 +70,7 @@ export function detectPromptInjection(text: string): InjectionVerdict {
   const sample = text.slice(0, 2000);
   for (const { pattern, label } of INJECTION_PATTERNS) {
     if (pattern.test(sample)) {
-      return { injected: true, reason: `Suspected ${label} in inbound agent text.` };
+      return { injected: true, reason: `Suspected ${label} in inbound text.` };
     }
   }
   return { injected: false };
@@ -87,6 +87,19 @@ export function assertNoPromptInjection(...texts: Array<string | undefined>): vo
       );
     }
   }
+}
+
+/**
+ * Screen user ASK input for prompt injection before it enters the AI pipeline.
+ * Unlike agent text (which is fully rejected), ASK input from the user is the
+ * authorized operator — but user-provided context (pasted web content, uploaded
+ * documents, received messages) can carry indirect injection attempts.
+ *
+ * Returns the detection result. The caller decides whether to block, warn, or
+ * proceed with a provenance note. This does NOT throw — it reports.
+ */
+export function screenAskInput(text: string): InjectionVerdict {
+  return detectPromptInjection(text);
 }
 
 export class AgentInputError extends Error {

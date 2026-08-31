@@ -106,7 +106,7 @@ export function SettingsAgentBridgeReceiverPanel({
     <MobileTabSection
       id="settings-agent-bridge-receiver"
       title="Webhook receiver trust"
-      description="Configure the extension-side HMAC trust anchor and exact Telegram or WhatsApp actor IDs allowed to run workspace commands."
+      description="Configure the trust key and allowed Telegram or WhatsApp actor IDs for workspace commands."
     >
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="text-meta text-textMuted sm:col-span-2">
@@ -147,10 +147,9 @@ export function SettingsAgentBridgeReceiverPanel({
         </label>
       </div>
       <p className="mt-2 text-fine leading-snug text-textSoft">
-        This enables receiver-side verification only. You still need a deployed HTTPS receiver that
-        delivers signed envelopes into the extension runtime; the local full-stack script is a
-        protocol smoke test and does not provide that transport or send replies to the messaging
-        provider.
+        This enables receiver-side verification only. You still need a deployed HTTPS endpoint that
+        delivers signed messages to the app; the local script is a protocol test and does not provide
+        that transport or send replies to the messaging provider.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button

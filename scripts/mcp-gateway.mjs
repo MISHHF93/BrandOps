@@ -44,11 +44,11 @@ import { startMcpStdioServer } from '../src/services/interop/mcp/server';
 const isBrandOpsWorkspaceShape = (value) =>
   Boolean(
     value &&
-      typeof value === 'object' &&
-      Array.isArray(value.modules) &&
-      Array.isArray(value.publishingQueue) &&
-      Array.isArray(value.contentLibrary) &&
-      Boolean(value.settings)
+    typeof value === 'object' &&
+    Array.isArray(value.modules) &&
+    Array.isArray(value.publishingQueue) &&
+    Array.isArray(value.contentLibrary) &&
+    Boolean(value.settings)
   );
 
 const token = process.env.BRANDOPS_MCP_TOKEN;
@@ -132,7 +132,8 @@ if (!diagnostic.resolved) {
       'the workspace has no agent sessions at all (create one in the Connected Agents panel)',
     'not-found':
       'the token hash does not match any session in the loaded workspace (wrong/expired token, or the workspace predates the session)',
-    revoked: 'the matching session has been revoked (create a new session in the Connected Agents panel)',
+    revoked:
+      'the matching session has been revoked (create a new session in the Connected Agents panel)',
     expired: 'the matching session has expired (create a new session in the Connected Agents panel)'
   };
   const hint = workspacePath

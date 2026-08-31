@@ -11,7 +11,7 @@ describe('HelpKnowledgeRoot (SSR)', () => {
     expect(html).toContain('Assistant');
     expect(html).toContain('>Today</a>');
     expect(html).toContain('Integrations tab');
-    expect(html).toContain('Integrations page');
+    expect(html).toContain('Integrations hub');
     expect(html).toContain('Settings');
     expect(html).toContain('Reference');
     expect(html).toContain('Start here');

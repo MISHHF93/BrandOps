@@ -671,7 +671,7 @@ function buildPlanExecutionReceipts(
       endedAt: run.ended_at,
       executionStatus: run.status,
       warningsErrors,
-      sourceLabel: 'AI pipeline run'
+      sourceLabel: 'AI workspace analysis'
     });
   }
 

@@ -97,7 +97,7 @@ export const CockpitTodayWorkstreamSection = ({
                   onClick={() => primeChat(`add note: scheduler task — ${row.title}`)}
                   className={rowChip(btnFocus)}
                 >
-                  Review in Chat
+                  Add note
                 </button>
               </div>
             </li>
@@ -127,7 +127,7 @@ export const CockpitTodayWorkstreamSection = ({
                 }
                 className={`mt-2 ${rowChip(btnFocus)}`}
               >
-                Review in Chat
+                Refine note
               </button>
             </li>
           ))}
@@ -156,7 +156,7 @@ export const CockpitTodayWorkstreamSection = ({
                   onClick={() => primeChat(`update contact: ${row.name}, ${row.company}`)}
                   className={rowChip(btnFocus)}
                 >
-                  Review in Chat
+                  Update contact
                 </button>
               </div>
             </li>

@@ -46,7 +46,7 @@ export const cockpitCapabilities: CockpitCapability[] = [
     id: 'integrations-manual',
     label: 'Manual integrations hub',
     summary:
-      'Integrations tab — sources, artifacts, SSH nodes. Register and refine via Chat when needed.',
+      'Integrations tab — sources, artifacts, servers. Register and refine via Chat when needed.',
     primaryTab: 'integrations',
     secondaryTabs: ['chat', 'daily']
   },

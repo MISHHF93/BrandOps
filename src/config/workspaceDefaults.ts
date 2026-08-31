@@ -36,6 +36,7 @@ export const defaultAppSettings = {
   theme: 'dark',
   cockpitLayout: 'sections',
   cockpitDensity: 'compact',
+  professionPackId: undefined,
   localModelEnabled: false,
   aiAdapterMode: 'disabled',
   debugMode: false,

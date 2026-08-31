@@ -258,7 +258,7 @@ const createTechnicalActions = (data: BrandOpsData): DailyNotificationAction[] =
     actions.push({
       id: 'tech-ssh',
       stream: 'technical',
-      title: `Review ${sshTargets.length} operational SSH target${sshTargets.length > 1 ? 's' : ''}`,
+      title: `Review ${sshTargets.length} operational server${sshTargets.length > 1 ? 's' : ''}`,
       detail:
         'Validate command hints, access assumptions, and which systems still need automation coverage.',
       sectionId: 'connections',

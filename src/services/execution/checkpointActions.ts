@@ -1,6 +1,7 @@
-import type { BrandOpsData, SavedPlanStatus } from '../../types/domain';
+import type { BrandOpsData } from '../../types/domain';
 import type { Checkpoint } from '../../types/executionState';
 import { prependCheckpoint } from './checkpointStore';
+import { updatePlanStatus } from './planStore';
 import { approveOperatorTraceEntry, rejectOperatorTraceEntry } from '../plan/reviewQueue';
 
 function findPendingPlanCheckpoint(data: BrandOpsData, planId: string): Checkpoint | null {
@@ -8,26 +9,6 @@ function findPendingPlanCheckpoint(data: BrandOpsData, planId: string): Checkpoi
   return (
     entries.find((c) => c.associatedPlanRef?.id === planId && c.state === 'NEEDS_APPROVAL') ?? null
   );
-}
-
-function updatePlanStatus(
-  data: BrandOpsData,
-  planId: string,
-  status: SavedPlanStatus
-): BrandOpsData {
-  const plans = data.planWorkspace?.plans ?? [];
-  const index = plans.findIndex((p) => p.id === planId);
-  if (index === -1) return data;
-  const nextPlans = plans.slice();
-  nextPlans[index] = { ...nextPlans[index], status };
-  return {
-    ...data,
-    planWorkspace: {
-      plans: nextPlans,
-      receipts: data.planWorkspace?.receipts ?? [],
-      updatedAt: new Date().toISOString()
-    }
-  };
 }
 
 /**

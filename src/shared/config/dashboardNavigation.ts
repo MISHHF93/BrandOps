@@ -50,33 +50,33 @@ export const cockpitNavigationGroups: Array<{
 }> = [
   {
     title: 'Work areas',
-    description: 'Today (this tab), Pipeline, Brand & content, Connections — use chips to scroll.',
+    description: 'Today (this tab), Pipeline, Brand & content, Connections — twin-grounded daily operating surface.',
     items: [
       {
         id: 'nav-overview',
         label: 'Today',
-        description: 'Mission map and priorities.',
+        description: 'Twin-grounded focus board, predictions, and next-best-move intelligence.',
         type: 'section',
         target: 'today'
       },
       {
         id: 'nav-growth',
         label: 'Pipeline',
-        description: 'Outreach and pipeline.',
+        description: 'Outreach drafts, pipeline moves, contacts, and approval-gated follow-ups.',
         type: 'section',
         target: 'pipeline'
       },
       {
         id: 'nav-content',
         label: 'Brand & content',
-        description: 'Library, queue, narrative assets.',
+        description: 'Content library, publishing queue, and twin-voice narrative assets.',
         type: 'section',
         target: 'brand-content'
       },
       {
         id: 'nav-systems',
         label: 'Connections',
-        description: 'Integrations, sync, and controls.',
+        description: 'Connected agents, data sources, sync hubs, and workspace I/O.',
         type: 'section',
         target: 'connections'
       }
@@ -85,27 +85,27 @@ export const cockpitNavigationGroups: Array<{
   {
     title: 'Other windows',
     description:
-      'Same five-tab shell in another HTML entry (extension packaging): Integrations options page, Help, or primary mobile with Chat selected.',
+      'The same BrandOps shell opens in separate windows: the Integrations hub, Help, or the main app with Chat selected.',
     items: [
       {
         id: 'nav-integrations',
-        label: 'Integrations page',
+        label: 'Integrations hub',
         description:
-          'Packaged page (MV3 options_ui): sources, providers, and Settings in the same shell.',
+          'Sources, providers, and Settings in the same BrandOps shell.',
         type: 'surface',
         target: 'integrations'
       },
       {
         id: 'nav-knowledge',
         label: 'Help page',
-        description: 'Full manual (opens help.html, starts on Today tab in the same shell).',
+        description: 'Full product manual, opens to the Today tab.',
         type: 'surface',
         target: 'help'
       },
       {
         id: 'nav-dashboard',
         label: 'Primary app (Chat)',
-        description: 'Canonical route is mobile.html with the Chat tab selected.',
+        description: 'Main app with the Chat tab selected.',
         type: 'surface',
         target: 'dashboard'
       }

@@ -26,7 +26,7 @@ export function AppleSignInButton({
 }: AppleSignInButtonProps) {
   const label =
     variant === 'preview'
-      ? 'Use Apple preview identity'
+      ? 'Use Apple account'
       : variant === 'continue'
         ? loading
           ? 'Connecting…'

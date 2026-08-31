@@ -297,7 +297,7 @@ export interface WorkspaceSignalsBoardProps {
 }
 
 function defaultMastHeadline(filtered: boolean): string {
-  return filtered ? 'Workspace vitality' : 'Pulse';
+  return filtered ? 'Workspace vitality' : 'BrandOps pulse';
 }
 
 function vitalitySrId(variant: WorkspaceSignalsBoardVariant) {
@@ -319,19 +319,19 @@ function vitalitySubtitle(variant: WorkspaceSignalsBoardVariant, filtered: boole
   if (filtered) {
     switch (variant) {
       case 'integrations':
-        return 'Connection-facing counts for this workspace — expand sections below for full lists.';
+        return 'Connected sources, agents, and sync status — expand sections below for full detail.';
       case 'settings':
-        return 'Selected counts while you configure behavior — matches Plan / Today pulse strip math.';
+        return 'Workspace counts while you configure behavior — matches the live cockpit pulse strip.';
       case 'chat':
-        return 'Counters from your live snapshot — run commands below to shift these.';
+        return 'Live snapshot from your workspace — run commands to shift these counters.';
       default:
         return 'Selected counters from your workspace snapshot — read-only instruments.';
     }
   }
   if (variant === 'pulse') {
-    return 'Live workspace counters — publishing pipeline, cadence, captures, and sync hub — queue below is soonest-first, not a feed.';
+    return 'Live workspace intelligence — publishing pipeline, cadence, captures, and sync hub. Queue below is soonest-first.';
   }
-  return 'Same pulse strip as Plan — read-only counters; scroll for Today focus lanes.';
+  return 'Same pulse strip as Workspace — read-only counters; scroll for the focus board below.';
 }
 
 /**

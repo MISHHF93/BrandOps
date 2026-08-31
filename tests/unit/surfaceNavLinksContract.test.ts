@@ -7,11 +7,11 @@ import { SurfaceNavLinks } from '../../src/shared/navigation/SurfaceNavLinks';
  * Asserts link intent (destinations/labels) without brittle long prose.
  */
 describe('SurfaceNavLinks (contract)', () => {
-  it('exposes one Help link and distinct Integrations tab vs page labels', () => {
+  it('exposes one Help link and distinct Integrations tab vs hub labels', () => {
     const html = renderToString(React.createElement(SurfaceNavLinks));
     expect(html).toContain('>Help</a>');
     expect(html).toContain('>Integrations tab</a>');
-    expect(html).toContain('>Integrations page</a>');
+    expect(html).toContain('>Integrations hub</a>');
     expect((html.match(/>Help</g) ?? []).length).toBe(1);
   });
 

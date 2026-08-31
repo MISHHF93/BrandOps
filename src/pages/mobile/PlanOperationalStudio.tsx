@@ -83,7 +83,7 @@ export function buildOperationalPlanCards(
       id: 'workflow-reasoning',
       title: 'Workflow Plan',
       kind: 'workflow',
-      promise: `${snapshot.expertOperator.plan.headline}: turn a strategic idea into executable steps, dependencies, risks, and artifacts.`,
+      promise: `${snapshot.expertOperator.plan.headline}: turn a strategic idea into executable steps, dependencies, risks, and artifacts — then verify outcomes and feed results back to the twin.`,
       previewCommand: twinAwareAsk(
         snapshot,
         'Turn my next best idea into an execution workflow with risks, dependencies, artifacts, decision gates, and follow-up questions for any missing facts.'
@@ -109,7 +109,7 @@ export function buildOperationalPlanCards(
       id: 'outreach-plan',
       title: 'Outreach Plan',
       kind: 'outreach',
-      promise: 'Convert positioning and proof into draft outreach, follow-ups, and approvals.',
+      promise: 'Convert positioning and proof into draft outreach, follow-ups, and approvals — with execution receipts that strengthen the twin.',
       previewCommand: twinPrompt(
         snapshot,
         'draft_outreach',
@@ -120,7 +120,7 @@ export function buildOperationalPlanCards(
       status:
         snapshot.outreachDrafts > 0 || snapshot.incompleteFollowUps > 0 ? 'in-progress' : 'ready',
       progress: Math.min(100, snapshot.outreachDrafts * 20 + snapshot.incompleteFollowUps * 10),
-      timeline: ['Preview targets', 'Approve draft', 'Queue follow-up', 'Review replies'],
+      timeline: ['Review targets', 'Approve draft', 'Queue follow-up', 'Review replies'],
       exportPayload: {
         type: 'outreach',
         outreachDrafts: snapshot.outreachDrafts,
@@ -132,7 +132,7 @@ export function buildOperationalPlanCards(
       id: 'content-calendar',
       title: 'Content Calendar',
       kind: 'content-calendar',
-      promise: 'Transform twin ideas into a repeatable content calendar and publish queue.',
+      promise: 'Transform twin ideas into a repeatable content calendar and publish queue — verified posts feed back into positioning intelligence.',
       previewCommand: twinPrompt(
         snapshot,
         'create_30_day_content_plan',
@@ -158,7 +158,7 @@ export function buildOperationalPlanCards(
       id: 'execution-sequence',
       title: 'Execution Sequence',
       kind: 'execution-sequence',
-      promise: `${snapshot.expertOperator.operate.headline}: sequence tasks, pipeline moves, scheduler items, and daily operating priorities.`,
+      promise: `${snapshot.expertOperator.operate.headline}: sequence tasks, pipeline moves, scheduler items, and daily operating priorities — verified results compound into twin intelligence.`,
       previewCommand: twinAwareAsk(
         snapshot,
         'Build an execution sequence for today using my queue, follow-ups, opportunities, constraints, twin voice, and positioning.'
@@ -184,7 +184,7 @@ export function buildOperationalPlanCards(
       id: 'approval-flow',
       title: 'Approval Flow',
       kind: 'approval-flow',
-      promise: 'Keep AI-generated work gated by review, approval, retry, and export.',
+      promise: 'Keep AI-generated work gated by human review, approval, retry, and export — verified outcomes strengthen future predictions.',
       previewCommand: twinAwareAsk(
         snapshot,
         'Review my pending approvals and explain what needs human confirmation before execution. Flag unsupported claims and ask for missing facts.'
@@ -195,7 +195,7 @@ export function buildOperationalPlanCards(
       editTarget: 'palette',
       status: approvalBlocked ? 'blocked' : 'ready',
       progress: approvalBlocked ? 35 : 100,
-      timeline: ['Preview generated work', 'Human approval', 'Retry if blocked', 'Export audit'],
+      timeline: ['Review generated work', 'Human approval', 'Retry if blocked', 'Export audit'],
       exportPayload: {
         type: 'approval-flow',
         pendingReviews: snapshot.planPendingReviewCount,

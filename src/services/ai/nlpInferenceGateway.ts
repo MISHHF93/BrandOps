@@ -1,6 +1,7 @@
 import type { AppSettings } from '../../types/domain';
 import { aiRuntimePolicy } from '../aiAdapters/runtimePolicy';
 import { getOpenAiCompatibleApiKey, describeAiSecretsStorageHint } from './aiSecretsAccess';
+import { retryFetch } from './retryWithBackoff';
 
 export type NlpGatewayFailureCode =
   | 'adapter_disabled'
@@ -145,7 +146,7 @@ export async function runChatCompletion(
   const timer = globalThis.setTimeout(() => controller.abort(), 55_000);
 
   try {
-    const res = await fetch(url, {
+    const res = await retryFetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -258,7 +259,7 @@ export async function runEmbeddings(
   const timer = globalThis.setTimeout(() => controller.abort(), 55_000);
 
   try {
-    const res = await fetch(url, {
+    const res = await retryFetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

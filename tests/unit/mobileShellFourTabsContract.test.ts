@@ -154,11 +154,11 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toContain('const HELLO_ASK_RESPONSE');
     expect(mobileApp).toContain('function isHelloAskPrompt');
     expect(mobileApp).toMatch(/isHelloAskPrompt\(question\)[\s\S]*?text: HELLO_ASK_RESPONSE/);
-    expect(mobileApp).toContain('your AI operating partner inside this workspace');
+    expect(mobileApp).toContain("I'm your BrandOps twin");
 
     const chatView = read('src/pages/mobile/MobileChatView.tsx');
     expect(chatView).toContain('function StreamingAssistantText');
-    expect(chatView).toContain('revealing response...');
+    expect(chatView).toContain('twin reasoning from verified facts...');
     expect(chatView).toContain('bo-stream-caret');
     expect(chatView).toContain('onProgress={requestTranscriptFollow}');
     expect(chatView).toContain('bo-chat-scroll-anchor');
@@ -204,6 +204,23 @@ describe('MobileApp shell tab wiring (contract)', () => {
     expect(mobileApp).toContain('getAgentCommandLock(launchAccess, activeTab)');
 
     expect(mobileApp).toContain('agentLockReason={agentCommandLock}');
+  });
+
+  it('wires the VERIFY stage (Ask -> Plan -> Approve -> Execute -> Verify) end to end', () => {
+    const workspaceJsx = mobileApp.match(/<MobileWorkspaceHubView[\s\S]*?\/>/)?.[0] ?? '';
+    expect(workspaceJsx).toContain('onVerifyPlan={setVerifyPlanId}');
+
+    expect(mobileApp).toContain('<VerifyPlanOutcomesDrawer');
+    expect(mobileApp).toContain('recordPlanVerification');
+    expect(mobileApp).toContain("from '../../services/execution/planVerifier'");
+
+    const hubView = read('src/pages/mobile/MobileWorkspaceHubView.tsx');
+    expect(hubView).toContain("label: 'Confirm outcomes'");
+    expect(hubView).toContain('onVerifyPlan(plan.id)');
+    /** 'executed' must stay reachable in the Active filter — it is not terminal until a human verifies it. */
+    expect(hubView).toMatch(
+      /savedPlanFeedKind[\s\S]*?status === 'rejected' \|\| status === 'verified'/
+    );
   });
 });
 

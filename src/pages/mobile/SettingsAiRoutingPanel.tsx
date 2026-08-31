@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import type { AiOperatorMode } from '../../types/aiIntegrationSuite';
-import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
+import { MobileTabSection } from './mobileTabPrimitives';
 
 const MODE_OPTIONS: Array<{ id: AiOperatorMode; label: string; hint: string }> = [
   { id: 'fast', label: 'Fast', hint: 'Latency/cost first' },
@@ -23,7 +23,6 @@ export function SettingsAiRoutingPanel({
   onModeChange: (m: AiOperatorMode) => void;
   onDiagnosticsChange: (enabled: boolean) => void;
 }) {
-  const chip = mobileChipClass(btnFocus);
   return (
     <MobileTabSection
       id="settings-ai-routing"
@@ -35,18 +34,30 @@ export function SettingsAiRoutingPanel({
         Simple modes tune latency, reasoning depth, privacy posture, and citation bias. Advanced:
         expose routing scores inside system prompts for troubleshooting.
       </p>
-      <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="AI operator mode">
-        {MODE_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            onClick={() => onModeChange(opt.id)}
-            title={opt.hint}
-            className={clsx(chip, mode === opt.id && 'border-primary/60 bg-primarySoft/25')}
-          >
-            {opt.label}
-          </button>
-        ))}
+      <div className="mt-3">
+        <p className="text-fine font-medium uppercase tracking-wide text-textMuted">
+          Routing mode
+        </p>
+        <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
+          {MODE_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onModeChange(opt.id)}
+              title={opt.hint}
+              className={clsx(
+                'rounded-xl border px-2.5 py-2 text-left transition-colors',
+                mode === opt.id
+                  ? 'border-primary/60 bg-primarySoft/20 text-text shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+                  : 'border-border/40 bg-bgSubtle/45 text-textMuted hover:border-borderStrong hover:text-text',
+                btnFocus
+              )}
+            >
+              <p className="text-sm font-semibold">{opt.label}</p>
+              <p className="mt-0.5 text-overline text-textSoft/80">{opt.hint}</p>
+            </button>
+          ))}
+        </div>
       </div>
       <label className="mt-4 flex cursor-pointer items-start gap-2 text-meta text-textMuted">
         <input

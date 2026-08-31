@@ -206,9 +206,9 @@ export function buildCrossPlatformOperationalTimeline(
         whatHappened: card.title,
         whereItHappened: card.platform,
         whatAiDid:
-          'Prepared a connected-platform action preview. External execution still requires approval.',
+          'Prepared a connected-platform action draft. External execution still requires approval.',
         at: nowIso(),
-        status: 'preview available',
+        status: 'draft ready',
         command: card.command
       })
     );

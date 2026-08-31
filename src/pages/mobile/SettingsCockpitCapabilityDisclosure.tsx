@@ -19,9 +19,9 @@ export function SettingsCockpitCapabilityDisclosure({ btnFocus }: { btnFocus: st
             </span>
           </span>
         </summary>
-        <ul className="mt-3 space-y-3 text-meta">
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {cockpitCapabilities.map((c) => (
-            <li key={c.id} className="rounded-lg border border-border/30 bg-surface/55 p-2.5">
+            <div key={c.id} className="rounded-lg border border-border/30 bg-surface/55 p-2.5">
               <p className="font-medium text-text">{c.label}</p>
               <p className="mt-1 text-fine leading-snug text-textMuted">{c.summary}</p>
               <p className="mt-1.5 text-fine text-textSoft">
@@ -30,9 +30,9 @@ export function SettingsCockpitCapabilityDisclosure({ btnFocus }: { btnFocus: st
                   <> · Secondary: {c.secondaryTabs.map((t) => appShellTabLabel(t)).join(', ')}</>
                 ) : null}
               </p>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       </details>
     </MobileTabSection>
   );

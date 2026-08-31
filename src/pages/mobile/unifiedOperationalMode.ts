@@ -50,7 +50,7 @@ function aiGuidanceSentence(mode: string): string {
 function hostedInferenceSentence(readout: MobileSettingsFullReadout): string {
   const preview = readout.aiInferenceEndpointPreview.trim();
   if (!preview || preview === '—') {
-    return 'No inference URL on file — configure AI bridge for hosted chat/embeddings.';
+    return 'No AI connection configured — set up an AI provider in Settings for hosted chat.';
   }
   return 'Inference endpoint configured — hosted Ask can use your OpenAI-compatible bridge.';
 }

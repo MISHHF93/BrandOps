@@ -1,9 +1,22 @@
 import clsx from 'clsx';
 import { useState } from 'react';
-import { CheckCircle2, GitBranch, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
+import { CheckCircle2, GitBranch, RefreshCw, ShieldCheck, XCircle, ArrowRight, Clock, Lightbulb, BookOpen, PenLine, Calendar, Workflow } from 'lucide-react';
 import type { PlanDraft, PlanPreset } from '../../types/domain';
 import { PLAN_PRESET_LABELS, PLAN_PRESETS } from '../../services/plan/askPlanConversion';
 import { ExecutionTree } from '../../shared/ui/execution/ExecutionTree';
+
+const PRESET_ICONS: Record<PlanPreset, typeof GitBranch> = {
+  'outreach-plan': PenLine,
+  'content-plan': Calendar,
+  'positioning-plan': BookOpen,
+  'buyer-persona-plan': BookOpen,
+  'opportunity-analysis-plan': Lightbulb,
+  'workflow-plan': Workflow,
+  'resume-profile-improvement-plan': PenLine,
+  'integration-setup-plan': GitBranch,
+  'weekly-execution-plan': Clock,
+  'custom-plan': GitBranch,
+};
 
 function presetDescription(preset: PlanPreset): string {
   switch (preset) {
@@ -42,7 +55,7 @@ function DraftList({ title, items }: { title: string; items: string[] }) {
           ))}
         </ul>
       ) : (
-        <p className="mt-1 text-fine text-textMuted">None detected.</p>
+        <p className="mt-1 text-fine text-textMuted">None identified from this response.</p>
       )}
     </div>
   );
@@ -100,8 +113,9 @@ export function ConvertAskToPlanDrawer({
               What kind of plan should this become?
             </h2>
             <p className="mt-1 text-meta leading-snug text-textMuted">
-              Ask My Twin stays for thinking. PLAN turns the selected response into execution,
-              approvals, timelines, and receipts. Nothing external runs from this preview.
+              Ask stays for thinking. A Plan turns the selected response into structured execution,
+              human-gated approvals, execution receipts, verification, and learning — so verified
+              outcomes compound into better future recommendations.
             </p>
           </div>
           <button
@@ -127,28 +141,44 @@ export function ConvertAskToPlanDrawer({
         {!draft ? (
           <>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {PLAN_PRESETS.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => onSelectPreset(preset)}
-                  className={clsx(
-                    'rounded-xl border px-3 py-2 text-left disabled:opacity-45',
-                    selectedPreset === preset
-                      ? 'border-primary/55 bg-primarySoft/15 text-text'
-                      : 'border-border/40 bg-bgSubtle/45 text-textMuted',
-                    btnFocus
-                  )}
-                >
-                  <span className="block text-sm font-semibold text-text">
-                    {PLAN_PRESET_LABELS[preset]}
-                  </span>
-                  <span className="mt-1 block text-fine leading-snug">
-                    {presetDescription(preset)}
-                  </span>
-                </button>
-              ))}
+              {PLAN_PRESETS.map((preset) => {
+                const Icon = PRESET_ICONS[preset];
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onSelectPreset(preset)}
+                    className={clsx(
+                      'group rounded-xl border px-3 py-2 text-left disabled:opacity-45 transition-colors',
+                      selectedPreset === preset
+                        ? 'border-primary/55 bg-primarySoft/15 text-text shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+                        : 'border-border/40 bg-bgSubtle/45 text-textMuted hover:border-borderStrong hover:text-text',
+                      btnFocus
+                    )}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span className={clsx(
+                        'mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border',
+                        selectedPreset === preset ? 'border-primary/40 bg-primarySoft/20 text-primary' : 'border-border/40 bg-bgElevated text-textMuted'
+                      )}>
+                        <Icon className="h-3.5 w-3.5" aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <span className="block text-sm font-semibold text-text">
+                          {PLAN_PRESET_LABELS[preset]}
+                        </span>
+                        <span className="mt-1 block text-fine leading-snug text-textMuted">
+                          {presetDescription(preset)}
+                        </span>
+                      </div>
+                    </div>
+                    {selectedPreset === preset && (
+                      <ArrowRight className="mt-1.5 ml-auto h-3.5 w-3.5 text-primary" aria-hidden />
+                    )}
+                  </button>
+                );
+              })}
             </div>
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <button
@@ -182,14 +212,25 @@ export function ConvertAskToPlanDrawer({
                   btnFocus
                 )}
               >
-                {busy ? 'Generating...' : 'Generate preview'}
+                {busy ? 'Generating...' : 'Generate plan'}
               </button>
             </div>
           </>
         ) : (
           <>
             <div className="mt-3 rounded-xl border border-primary/30 bg-primarySoft/10 p-3">
-              <p className="bo-system-label">Preview before saving</p>
+              <p className="bo-system-label">Review before saving</p>
+              <div className="mt-2 flex flex-wrap gap-1.5 text-fine">
+                <span className="rounded-full border border-border/40 bg-bgElevated px-2 py-1">
+                  {PLAN_PRESET_LABELS[draft.planType]}
+                </span>
+                <span className="rounded-full border border-border/40 bg-bgElevated px-2 py-1">
+                  {draft.confidenceScore}% confidence
+                </span>
+                <span className="rounded-full border border-border/40 bg-bgElevated px-2 py-1">
+                  {draft.estimatedEffort}
+                </span>
+              </div>
               <input
                 value={draft.title}
                 onChange={(event) => onUpdateDraft({ ...draft, title: event.target.value })}
@@ -205,17 +246,6 @@ export function ConvertAskToPlanDrawer({
                 aria-label="Plan objective"
               />
               <p className="mt-2 text-meta leading-snug text-textMuted">{draft.summary}</p>
-              <div className="mt-2 flex flex-wrap gap-1.5 text-fine">
-                <span className="rounded-full border border-border/40 bg-bgElevated px-2 py-1">
-                  {PLAN_PRESET_LABELS[draft.planType]}
-                </span>
-                <span className="rounded-full border border-border/40 bg-bgElevated px-2 py-1">
-                  {draft.confidenceScore}% confidence
-                </span>
-                <span className="rounded-full border border-border/40 bg-bgElevated px-2 py-1">
-                  {draft.estimatedEffort}
-                </span>
-              </div>
             </div>
 
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -228,17 +258,19 @@ export function ConvertAskToPlanDrawer({
               <DraftList title="Risks" items={draft.risks.map((risk) => risk.title)} />
             </div>
 
-            <div className="mt-3 rounded-xl border border-border/35 bg-bgElevated/55 p-3">
+            <hr className="my-3 border-border/30" />
+
+            <div className="mt-4 rounded-xl border border-border/35 bg-bgElevated/55 p-3">
               <p className="bo-system-label">Steps</p>
-              <div className="mt-2 grid gap-2">
+              <ol className="mt-2 grid gap-2">
                 {draft.steps.map((step) => (
-                  <div
+                  <li
                     key={step.id}
-                    className="rounded-lg border border-border/30 bg-bgSubtle/45 px-2.5 py-2"
+                    className="rounded-lg border border-border/40 bg-bgSubtle/60 px-2.5 py-2.5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <p className="text-sm font-semibold text-text">{step.title}</p>
-                      <span className="rounded-full border border-border/40 px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
+                      <span className="rounded-full border border-border/50 bg-bgElevated px-2 py-0.5 text-overline font-bold uppercase text-textMuted">
                         {step.status}
                       </span>
                     </div>
@@ -248,9 +280,9 @@ export function ConvertAskToPlanDrawer({
                       {step.platform ? ` · Platform: ${step.platform}` : ''} · Approval:{' '}
                       {step.approvalRequired ? 'required' : 'not required'}
                     </p>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ol>
             </div>
 
             {draft.thoughtTree ? (
@@ -303,7 +335,7 @@ export function ConvertAskToPlanDrawer({
                   btnFocus
                 )}
               >
-                Edit Plan
+                {editMode ? 'View only' : 'Edit plan'}
               </button>
               <button
                 type="button"
@@ -327,7 +359,7 @@ export function ConvertAskToPlanDrawer({
                 )}
               >
                 <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" aria-hidden />
-                {busy ? 'Saving...' : 'Save Plan'}
+                {busy ? 'Saving…' : 'Save plan'}
               </button>
             </div>
           </>

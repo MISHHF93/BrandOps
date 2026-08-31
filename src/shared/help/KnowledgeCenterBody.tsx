@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { knowledgeCenterDailyPlaybook, knowledgeCenterTopics } from './knowledgeCenterTopics';
 import { KnowledgeTopicIcon } from './knowledgeCenterTopicIcons';
 import { QUERY } from '../navigation/extensionLinks';
@@ -6,6 +7,26 @@ export type KnowledgeCenterBodyProps = {
   /** Full help page uses `?topic=`; embedded overlay uses in-panel `#` jumps. */
   topicLinkMode: 'page-query' | 'embedded-hash';
 };
+
+/**
+ * Knowledge Center copy uses `**term**` for emphasis (UI element names inside
+ * dense instructional prose), but the file has no markdown pipeline — plain
+ * `{text}` interpolation rendered the literal asterisks to the user. Splits
+ * on the marker pairs and wraps matches in `<strong>` instead of ever parsing
+ * HTML, so untrusted-looking content still can't inject markup.
+ */
+export function renderInlineBold(text: string): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong key={index} className="font-semibold text-text">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
 
 export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps) {
   const playbook = knowledgeCenterDailyPlaybook;
@@ -26,7 +47,7 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
           <h2 id="kc-daily-heading" className="text-lg font-semibold text-text">
             {playbook.title}
           </h2>
-          <p className="max-w-prose text-sm text-textMuted">{playbook.intro}</p>
+          <p className="max-w-prose text-sm text-textMuted">{renderInlineBold(playbook.intro)}</p>
         </header>
         <ol className="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
           {playbook.steps.map((step, index) => (
@@ -38,7 +59,9 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
                 Step {index + 1}
               </p>
               <p className="mt-1.5 text-sm font-semibold text-text">{step.title}</p>
-              <p className="mt-1.5 max-w-prose text-xs text-textMuted">{step.body}</p>
+              <p className="mt-1.5 max-w-prose text-xs text-textMuted">
+                {renderInlineBold(step.body)}
+              </p>
             </li>
           ))}
         </ol>
@@ -88,7 +111,9 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
                   <KnowledgeTopicIcon topicId={topic.id} size={18} />
                   {topic.title}
                 </h2>
-                {preview ? <p className="text-sm text-textMuted">{preview}</p> : null}
+                {preview ? (
+                  <p className="text-sm text-textMuted">{renderInlineBold(preview)}</p>
+                ) : null}
                 <details className="group rounded-xl border border-border/80 bg-bg/35 p-2.5">
                   <summary className="cursor-pointer list-none text-sm font-medium text-text [&::-webkit-details-marker]:hidden">
                     <span className="underline decoration-border underline-offset-2 group-open:no-underline">
@@ -98,7 +123,7 @@ export function KnowledgeCenterBody({ topicLinkMode }: KnowledgeCenterBodyProps)
                   <div className="mt-3 max-w-prose space-y-2.5 border-t border-border/60 pt-3">
                     {topic.paragraphs.map((paragraph, index) => (
                       <p key={index} className="text-sm text-textMuted">
-                        {paragraph}
+                        {renderInlineBold(paragraph)}
                       </p>
                     ))}
                   </div>

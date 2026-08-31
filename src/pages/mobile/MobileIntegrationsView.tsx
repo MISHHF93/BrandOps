@@ -110,7 +110,7 @@ const INTEGRATION_QUICK_GROUPS: {
           'add integration artifact: title: Weekly metrics rollup summary: Paste export highlights'
       },
       {
-        label: 'SSH staging',
+        label: 'Server staging',
         command: 'add ssh: name: staging host: staging.internal port: 22 user: deploy'
       }
     ]
@@ -173,16 +173,16 @@ export const MobileIntegrationsView = ({
               <summary
                 className={`cursor-pointer list-none text-textSoft [&::-webkit-details-marker]:hidden ${btnFocus}`}
               >
-                <span className="font-medium text-text">Extension options (Chrome)</span>
+                <span className="font-medium text-text">Open in new window</span>
               </summary>
               <p className="mt-1.5 leading-snug">
                 <a
                   href={hrefExtensionIntegrationsPage()}
                   className={`font-medium text-info underline underline-offset-2 ${btnFocus}`}
                 >
-                  Open integrations page
+                  Open Integrations hub
                 </a>
-                <span className="text-textMuted"> — opens extension options.</span>
+                <span className="text-textMuted"> — opens in a new tab.</span>
               </p>
             </details>
           ) : null}
@@ -244,7 +244,7 @@ export const MobileIntegrationsView = ({
                           }
                           className={`${mobileChipClass(btnFocus)} ${chipDisabled} shrink-0`}
                         >
-                          Review in Chat
+                          Check source
                         </button>
                       </li>
                     ))}
@@ -264,8 +264,8 @@ export const MobileIntegrationsView = ({
                 descriptionVisibility="sr-only"
               >
                 <p className="mt-2 text-meta leading-relaxed text-textMuted">
-                  Three extension sync slots only (Google, GitHub, LinkedIn). Status reflects local
-                  preference rows, not verified OAuth sessions; provider OAuth is not implemented.
+                  Three sync slots only (Google, GitHub, LinkedIn). Status reflects local
+                  preference rows — server sign-in is not available yet.
                 </p>
                 <ul className="mt-2 space-y-1.5 text-textMuted">
                   {snapshot.providerStatuses.map((provider) => (
@@ -315,7 +315,7 @@ export const MobileIntegrationsView = ({
                             }
                             className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
                           >
-                            Review in Chat
+                            Review sync
                           </button>
                         </li>
                       ))}
@@ -368,7 +368,7 @@ export const MobileIntegrationsView = ({
             >
               Technical inventory
               <span className="ml-2 text-meta font-normal text-textSoft">
-                Captured artifacts and SSH targets
+                Captured artifacts and servers
               </span>
             </summary>
             <div className="space-y-4 border-t border-border/30 px-4 pb-4 pt-4">
@@ -401,7 +401,7 @@ export const MobileIntegrationsView = ({
                           }
                           className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
                         >
-                          Review in Chat
+                          Review artifact
                         </button>
                       </li>
                     ))}
@@ -411,13 +411,13 @@ export const MobileIntegrationsView = ({
 
               <MobileTabSection
                 id="integrations-ssh"
-                title="SSH targets"
+                title="Servers"
                 description="Infrastructure targets registered in the workspace."
                 descriptionVisibility="sr-only"
               >
                 {snapshot.sshTargetsPeek.length === 0 ? (
                   <p className="mt-2 text-meta text-textMuted">
-                    No SSH targets. Total: {snapshot.sshTargetsCount}.
+                    No servers registered. Total: {snapshot.sshTargetsCount}.
                   </p>
                 ) : (
                   <ul className="mt-2 space-y-2">
@@ -432,11 +432,11 @@ export const MobileIntegrationsView = ({
                           type="button"
                           disabled={commandBusy}
                           onClick={() =>
-                            void runCommand(`add note: SSH target ${row.name} (${row.host})`)
+                            void runCommand(`add note: server ${row.name} (${row.host})`)
                           }
                           className={`mt-2 ${mobileChipClass(btnFocus)} ${chipDisabled}`}
                         >
-                          Review in Chat
+                          Review target
                         </button>
                       </li>
                     ))}
@@ -490,9 +490,9 @@ export const MobileIntegrationsView = ({
               <summary
                 className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
               >
-                Connected Agents
+                Connected Agents & integrations
                 <span className="ml-2 text-meta font-normal text-textSoft">
-                  Claude Code / Codex / MCP review queue
+                  9 tools · external agents read context, propose achievements, and request approvals
                 </span>
               </summary>
               <div className="border-t border-border/30 px-2 py-3 sm:px-3">

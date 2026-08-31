@@ -11,25 +11,25 @@ const PLAN_PAGE_ITEMS: ReadonlyArray<{
   {
     tab: 'workspace',
     label: 'Plan',
-    description: 'Operational feed',
+    description: 'Feed and approvals',
     Icon: LayoutDashboard
   },
   {
     tab: 'daily',
     label: 'Activity',
-    description: 'Daily work',
+    description: 'Daily work and focus',
     Icon: CalendarRange
   },
   {
     tab: 'integrations',
     label: 'Sources',
-    description: 'Connected context',
+    description: 'Connected data',
     Icon: PlugZap
   },
   {
     tab: 'settings',
     label: 'Setup',
-    description: 'Preferences',
+    description: 'Twin and preferences',
     Icon: Settings
   }
 ];

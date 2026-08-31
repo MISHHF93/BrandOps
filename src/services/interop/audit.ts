@@ -13,6 +13,8 @@ import type { BrandOpsData } from '../../types/domain';
 
 export const MAX_AUDIT_ENTRIES = 500;
 
+export type { AgentCapabilityId, ExternalAgentAuditEntry, ExternalAgentClientKind } from '../../types/agentInterop';
+
 export interface AppendAuditEntryInput {
   sessionId: string;
   clientKind: ExternalAgentClientKind;

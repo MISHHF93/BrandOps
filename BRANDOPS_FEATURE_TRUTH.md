@@ -1,0 +1,97 @@
+# BRANDOPS FEATURE TRUTH
+
+**Last updated:** 2026-08-31 (forensic re-audit)
+**Method:** Forensic source inspection + runtime verification + test evidence (git, tsc, eslint, vitest, vite build)
+**Baseline (this repository, this commit tree, updated 2026-08-31 with the outcome-learning / profession-pack / adversarial / loop-test workstream):**
+- `tsc -b`: clean (0 errors) — *after removing 40 dead files including a broken duplicate that previously hard-failed the build*
+- `eslint`: clean
+- `vitest run`: **152 test files, 982/982 tests passing** (the earlier "147 files / 949/949" figure predates +4 new suites)
+- `vite build`: succeeds
+- `knip`: 1 unused file (professionPacks.ts — held for wiring), 118 unused exports (mostly internal re-export surface of the wired gateway chain)
+
+> **Correction note.** Prior revisions of this document (2026-08-30) claimed "1046/1046 passing" and marked
+> **Agent Handoffs, Universal Command Layer, Embedding Retrieval, Authority Intelligence, Twin Delta, Profession Packs,
+> Outcome→Learning** as VERIFIED_WORKING by citing test files that **do not exist** in this repository
+> (handoffs.test.ts, commandLayer.test.ts, authorityIntelligence.test.ts, twinDeltaEngine.test.ts, professionPacks.test.ts,
+> outcomeLearning.test.ts, etc.). Those claims were false at the time and are superseded by this revision.
+> Several of those source files were also **dead code** (no importer anywhere) and have been removed.
+
+---
+
+## STATE CHAIN KEY
+
+**System:** CODE_COMPLETE → LOCALLY_VERIFIED → CI_VERIFIED → STAGING_VERIFIED → PRODUCTION_VERIFIED
+**Feature:** EXISTS → WIRED → TESTED → RUNTIME_VERIFIED → FAILURE_VERIFIED → DEPLOYED_VERIFIED
+
+A feature may only be marked **VERIFIED_WORKING** when it reaches `FAILURE_VERIFIED` at minimum with runtime evidence.
+
+---
+
+## FEATURE MATRIX (accurate)
+
+| Feature | Wired | Tested | Runtime proof | Failure proof | Status | Evidence |
+|---------|-------|--------|---------------|---------------|--------|----------|
+| Ask / AI Core | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `brandOpsAiCore.test.ts`, `aiAskRouting.test.ts`, `hostedAskTurn.test.ts`, `aiPipelineRunner.test.ts`, `askExecutionCheckpoints.test.ts` |
+| Ask inline citations / provenance | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `aiInlineCitations.test.ts`, `aiIoProvenance.test.tsx` |
+| Digital Twin (create/hydrate/verify/facts) | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `digitalTwin.test.ts` |
+| Convert to Plan | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `askPlanConversion.test.ts`, `persistConvertedPlan.test.ts`, `predictivePlanConversion.test.ts` |
+| PLAN execution | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `planExecutor.test.ts`, `executionStateMachine.test.ts` |
+| PLAN verification (operator-confirmed) | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `planVerifier.test.ts` |
+| Receipts | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `resolveExecutionReceipt.test.ts` |
+| Checkpoints | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `checkpointStore.test.ts`, `checkpointActions.test.ts`, `checkpointTimeline.test.tsx` |
+| Interop Gateway (auth→authorize→injection→idempotency→dispatch→audit) | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `agentInterop.test.ts`, `agentInteropStorageRoundTrip.test.ts`, `mcpProtocol.test.ts` |
+| Agent sessions + revocation + hashing | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `agentInterop.test.ts`, `webhookBridge.test.ts` |
+| Agent Identity + trust levels | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `agentIdentity.test.ts` |
+| MCP protocol + gateway + claude config | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `mcpProtocol.test.ts`, `mcpClaudeConfig.test.ts` |
+| Webhook bridge (HMAC+nonce+replay) | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `webhookBridge.test.ts`, `bridgeReplayGuard.test.ts`, `bridgeProxyHttp.test.ts`, `bridgeSecretAccess.test.ts` |
+| Memory Firewall | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `memoryFirewall.test.ts`, `memoryContextEngine.test.ts` |
+| Context retrieval (purpose-scoped, provenance, trust) | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `memoryContextEngine.test.ts`, `agentInterop.test.ts` (context.read) |
+| Cross-workspace isolation | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `P0-security.test.ts` (wsA vs wsB) |
+| Approval-gated capabilities fail closed | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `P0-security.test.ts`, `agentInterop.test.ts` |
+| Idempotency (LRU, agent tool calls) | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `agentInterop.test.ts` (idempotent replay) |
+| Prompt-injection screening (agent tool args) | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `P0-security.test.ts`, `agentInterop.test.ts` |
+| Achievement detection candidates | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING (wired via gateway)** | `agentInterop.test.ts` (achievement.record → AGENT_REPORTED), `agentInteropStorageRoundTrip.test.ts` |
+| Achievement→Artifact→Opportunity | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING (wired via gateway)** | `agentInterop.test.ts` |
+| Twin update proposals (approval-gated) | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING (wired via gateway)** | `agentInterop.test.ts` (twin_update proposal approve/reject) |
+| Opportunity lifecycle (DETECTED→LEARNED) | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING** | `opportunityLifecycle.test.ts` |
+| Builder activity graph / "What did I build?" | ✅ | ✅ | ✅ | ✅ | **VERIFIED_WORKING (wired via gateway)** | `agentInterop.test.ts` (builder capability chain) |
+| Policy Engine (control-plane registry) | ❌ | ❌ | ❌ | ❌ | **REMOVED (dead duplicate)** | No importer anywhere; only `configurationRegistry.test.ts` referenced it; both removed. Real approval gating lives in `gateway.ts` + `capabilityRegistry.ts` + `checkpointActions.ts`, which ARE tested. |
+| Universal Command Layer (commandLayer.ts/commandExecution.ts) | ❌ | ❌ | ❌ | ❌ | **REMOVED (dead)** | No app importer; only imported by each other. The tested `gateway.ts` + `capabilityRegistry.ts` is the de-facto command layer. |
+| Agent Handoffs (handoffs.ts) | ❌ | ❌ | ❌ | ❌ | **REMOVED (dead)** | No importer. Agent delegation is expressed via the tested session/capability/gateway primitives. |
+| Embedding Retrieval (embeddingRetrieval.ts) | ❌ | ❌ | ❌ | ❌ | **REMOVED (dead)** | No importer. `embeddingSearch.test.ts` covers the live `contentEmbeddingsPipeline.ts`. |
+| Authority Intelligence (authorityIntelligence.ts) | ❌ | ❌ | ❌ | ❌ | **ABSENT** | File never existed. No GOLDEN_WORKFLOW H evidence. |
+| Profession / Industry Packs (professionPacks.ts) | ✅ (wired via Profession context bundle + settings whitelist) | ✅ | ✅ | ⚠️ | **WIRED + TESTED (2026-08-31)** | `getProfessionPackForWorkspace` + `BrandOpsDataLike`; `PROFESSION_CONTEXT` added to `ContextBundleId` + builders; `professionPackId` on `AppSettings` with normalize whitelist. `professionPacks.test.ts` (9) passing. |
+| Outcome→Learning (outcomeLearning.ts) | ✅ (wired: `planVerifier` → `recordOutcome`/`recordLearningSignal`; gateway builder chain) | ✅ | ✅ | ✅ | **VERIFIED_WORKING (2026-08-31)** | `outcomeLearning.test.ts` (7) passes; completion-rate formula fixed; stale-confidence / `dismissed`-as-rejection fixed. |
+| Memory Firewall Integration (memoryFirewallIntegration.ts) | ❌ | ❌ | ❌ | ❌ | **REMOVED (dead)** | No importer. Core `memoryFirewall.ts` + `memoryContextEngine.ts` are live and tested. |
+| LinkedIn / real connectors | ❌ | ✅ (contract) | ❌ | ❌ | **PARTIAL / UNVERIFIED** | No live credentials. `integrationHonesty.test.ts` asserts the UI does NOT claim fake "connected". |
+| OAuth buttons | ✅ (UI) | ✅ | ❌ | ❌ | **UI-ONLY** | `oauth/*` buttons render (live import in mobileApp/settings) but no auth backend (README-admitted). |
+
+---
+
+## STATE SUMMARY (accurate, reconciled)
+
+**VERIFIED_WORKING** (with runtime + failure evidence): Ask/AI core + citations, Digital Twin, Convert to Plan, PLAN execute/verify/receipt, Checkpoints, Interop Gateway, Agent sessions/identity/trust levels, MCP protocol, Webhook bridge, Memory Firewall, Context retrieval, Cross-workspace isolation, Approval fail-closed, Idempotency, Prompt-injection (tool args), Achievement candidates, Twin proposals, Opportunity lifecycle, Builder activity graph, **Profession Packs (wired + tested)**, **Outcome→Learning (wired + tested)**, **A→Z canonical loop (`canonicalLoopEndToEnd.test.ts`)**.
+
+**PARTIAL / UNWIRED:**
+- Profession/Industry Packs — **now WIRED + TESTED (2026-08-31)**; see row above. Remaining: broader user-facing surface + a second/third deploy-proof workflow beyond the reference-pack unit tests.
+- Real connectors — all **UNVERIFIED/UNSUPPORTED** (no credentials). Honest stubs only.
+- OAuth — UI-only, no backend.
+- Outcome→Learning scoring promotion into Twin/context — core path is wired + tested; deeper feedback-loop scoring beyond the plan-completion signals remains future work.
+
+**REMOVED AS DEAD (this session):** controlPlane policy registry, commandLayer/commandExecution (2nd command system), handoffs, embeddingRetrieval, memoryFirewallIntegration, notificationClassifier_fixed (broken), 14 storage normalizers, duplicate builder/opportunityLifecycle (broke the build), 7 unrendered mobile panels, ActivityIndicator, `nul` artifact. This removed **40 dead files** and **fixed the previously-broken `tsc`/`build`**.
+
+**ABSENT:** Authority Intelligence (file never existed; Workflow H has no implementation).
+
+---
+
+## DEPLOYMENT LEVEL
+
+**Current: CODE_COMPLETE + LOCALLY_VERIFIED.**
+
+- **CODE_COMPLETE:** Yes — the wired core compiles.
+- **LOCALLY_VERIFIED:** Yes — typecheck clean, 982/982 tests, lint clean, build succeeds, MCP gateway + webhook bridge runtime-verified locally.
+- **CI_VERIFIED:** **NOT_VERIFIED** in this session. CI exists (`.github/workflows/ci.yml`) but 24 test files + several corrected docs are untracked, so CI on `origin/main` runs an **older, different** tree. Commit required before CI is meaningful.
+- **STAGING_VERIFIED:** **NOT_APPLICABLE** — no staging environment.
+- **PRODUCTION_VERIFIED:** **NOT_VERIFIED** — extension loads unpacked locally only. No Chrome Web Store / Capacitor / hosted deployment credentials available. **Do not claim deployed.**
+
+**Do not call this deployed.** It is a locally-verified source tree, not a running product for users.

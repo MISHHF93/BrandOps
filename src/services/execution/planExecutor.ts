@@ -1,6 +1,7 @@
-import type { BrandOpsData, Plan, PlanStep } from '../../types/domain';
+import type { BrandOpsData, PlanStep } from '../../types/domain';
 import { prependCheckpoint } from './checkpointStore';
 import { prependOperatorTrace } from '../dataset/operatorTraces';
+import { updatePlanStatus } from './planStore';
 
 export interface BlockedStep {
   stepId: string;
@@ -53,26 +54,6 @@ function reasonForStep(step: PlanStep): string {
     return 'Step requires approval before it can run externally. BrandOps performs no external side effects.';
   }
   return 'External action required. BrandOps performs no external side effects without a supported integration.';
-}
-
-function updatePlanStatus(
-  data: BrandOpsData,
-  planId: string,
-  status: Plan['status']
-): BrandOpsData {
-  const plans = data.planWorkspace?.plans ?? [];
-  const index = plans.findIndex((p) => p.id === planId);
-  if (index === -1) return data;
-  const next = plans.slice();
-  next[index] = { ...next[index], status };
-  return {
-    ...data,
-    planWorkspace: {
-      plans: next,
-      receipts: data.planWorkspace?.receipts ?? [],
-      updatedAt: new Date().toISOString()
-    }
-  };
 }
 
 /**

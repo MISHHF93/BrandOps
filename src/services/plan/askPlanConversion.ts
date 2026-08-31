@@ -154,10 +154,30 @@ function missingFacts(workspace: BrandOpsData, input: ConvertAskResponseToPlanIn
   );
 }
 
+const PLATFORM_KEYWORDS = [
+  'linkedin',
+  'github',
+  'google',
+  'newsletter',
+  'x',
+  'slack',
+  'notion',
+  'gmail'
+];
+
+/**
+ * Whole-word match only. A plain `.includes()` scan false-positives the
+ * single-letter `'x'` keyword (X/Twitter) against any text containing that
+ * letter sequence — "context", "expertise", "example" — which silently
+ * marked those plans' steps as targeting an unsupported platform and BLOCKED
+ * them even though the user never mentioned a platform at all.
+ */
 function platformFromText(text: string): string | undefined {
   const lower = text.toLowerCase();
-  const platforms = ['linkedin', 'github', 'google', 'newsletter', 'x', 'slack', 'notion', 'gmail'];
-  return platforms.find((platform) => lower.includes(platform));
+  return PLATFORM_KEYWORDS.find((platform) => {
+    const escaped = platform.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`).test(lower);
+  });
 }
 
 function platformSupportStatus(workspace: BrandOpsData, platform?: string) {
@@ -343,7 +363,7 @@ function presetSteps(
         'Review claims, target audience, platform support, timeline, and required approvals.',
       owner: 'User',
       platform,
-      requiredInput: 'Draft preview',
+      requiredInput: 'Draft review',
       approvalRequired: true,
       status: 'todo'
     },

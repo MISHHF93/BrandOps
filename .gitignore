@@ -15,3 +15,6 @@ dev-server.log
 # Local env (OAuth client IDs, privacy URL, etc.) — not committed
 .env.local
 .env.*.local
+
+# Windows reserved-name artifact (can't be a real file on disk)
+/nul

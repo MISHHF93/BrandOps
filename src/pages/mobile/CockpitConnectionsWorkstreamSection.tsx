@@ -12,7 +12,7 @@ const CONNECTIONS_STRIP_ITEMS = [
   { kind: 'prime' as const, label: 'Add source', phrase: 'add source: webhook pipeline' },
   {
     kind: 'prime' as const,
-    label: 'Add SSH target',
+    label: 'Add server',
     phrase: 'add ssh target: staging deploy host example.com'
   }
 ] as const;
@@ -47,9 +47,9 @@ export const CockpitConnectionsWorkstreamSection = ({
         <a
           href={hrefExtensionIntegrationsPage()}
           className={`rounded-full border border-borderStrong/50 bg-surface/70 px-2 py-0.5 text-fine font-medium text-textMuted ${btnFocus}`}
-          title="Open full Integrations page"
+          title="Open Integrations hub"
         >
-          Page
+          Integrations
         </a>
       </span>
     </div>
@@ -70,7 +70,7 @@ export const CockpitConnectionsWorkstreamSection = ({
         Artifacts: <span className="text-text">{snapshot.integrationArtifactCount}</span>
       </li>
       <li>
-        SSH targets: <span className="text-text">{snapshot.sshTargetsCount}</span>
+        Servers: <span className="text-text">{snapshot.sshTargetsCount}</span>
       </li>
     </ul>
     <p className="mt-2 text-fine font-medium uppercase tracking-wide text-textMuted">
@@ -99,7 +99,7 @@ export const CockpitConnectionsWorkstreamSection = ({
     ) : null}
     {snapshot.sshTargetsPeek.length > 0 ? (
       <div className="mt-3 border-t border-border/25 pt-3">
-        <p className="text-meta font-medium text-textSoft">SSH targets (top)</p>
+        <p className="text-meta font-medium text-textSoft">Servers (top)</p>
         <ul className="mt-2 space-y-1.5 text-meta text-textSoft">
           {snapshot.sshTargetsPeek.map((row) => (
             <li key={row.id} className="flex justify-between gap-2">
@@ -133,7 +133,7 @@ export const CockpitConnectionsWorkstreamSection = ({
                 onClick={() => primeChat(`add note: company ${row.name} — ${row.nextAction}`)}
                 className={`mt-2 ${rowChip(btnFocus)}`}
               >
-                Review in Chat
+                Add note
               </button>
             </li>
           ))}

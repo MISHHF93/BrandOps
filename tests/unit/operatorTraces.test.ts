@@ -20,14 +20,15 @@ vi.mock('../../src/shared/storage/browserStorage', () => ({
 
 import { defaultAppSettings } from '../../src/config/workspaceDefaults';
 import {
+  capOperatorTraceEntries,
   MAX_OPERATOR_TRACE_ENTRIES,
   OPERATOR_TRACE_EXPORT_SCHEMA_VERSION,
   prependOperatorTrace,
   sanitizeOperatorTraceDetails,
   serializeOperatorTracesJsonl
 } from '../../src/services/dataset/operatorTraces';
-import { storageService } from '../../src/services/storage/storage';
-import type { BrandOpsData } from '../../src/types/domain';
+import { storageService, withDefaults } from '../../src/services/storage/storage';
+import type { BrandOpsData, OperatorTraceEntry } from '../../src/types/domain';
 
 const baseWorkspace = (): BrandOpsData => ({
   brand: {
@@ -113,6 +114,74 @@ describe('operator traces', () => {
     }
     expect(data.operatorTraces?.entries.length).toBe(MAX_OPERATOR_TRACE_ENTRIES);
     expect(data.operatorTraces?.entries[0]?.verb).toBe(`b${MAX_OPERATOR_TRACE_ENTRIES + 4}`);
+  });
+
+  /**
+   * Approval resolution (`checkpointActions.ts` `findPendingTraceIdForPlan`) has no
+   * fallback once a pending trace row is gone entirely — a plain slice-to-cap could
+   * silently and permanently orphan a plan sitting in `pending-approval` once enough
+   * unrelated activity pushed its trace past the cap. Regression coverage for that.
+   */
+  it('prependOperatorTrace never evicts a pending-review entry, even past the cap', () => {
+    let data = baseWorkspace();
+    data = prependOperatorTrace(data, {
+      source: 'assistant',
+      verb: 'ask.convert_to_plan',
+      entityType: 'plan',
+      entityId: 'plan-oldest',
+      reviewStatus: 'pending',
+      outcome: 'success'
+    });
+    for (let i = 0; i < MAX_OPERATOR_TRACE_ENTRIES + 50; i += 1) {
+      data = prependOperatorTrace(data, { source: 'user', verb: `noise-${i}`, outcome: 'success' });
+    }
+    const entries = data.operatorTraces?.entries ?? [];
+    expect(entries.length).toBe(MAX_OPERATOR_TRACE_ENTRIES);
+    const pending = entries.find((e) => e.entityId === 'plan-oldest');
+    expect(pending?.reviewStatus).toBe('pending');
+  });
+
+  it('capOperatorTraceEntries preserves newest-first order and keeps all pending rows over the cap', () => {
+    const entries = Array.from({ length: 10 }, (_, i) => ({
+      id: `e${i}`,
+      at: new Date().toISOString(),
+      source: 'user' as const,
+      verb: `v${i}`,
+      outcome: 'success' as const,
+      ...(i === 3 || i === 7 ? { reviewStatus: 'pending' as const } : {})
+    }));
+    const capped = capOperatorTraceEntries(entries, 4);
+    expect(capped.map((e) => e.id)).toEqual(['e0', 'e1', 'e3', 'e7']);
+  });
+
+  /** Same eviction risk exists on the read-side normalizer (`withDefaults`), a separate code path from `prependOperatorTrace` — e.g. loading an imported workspace file with an oversized trace log. */
+  it('withDefaults normalizer also preserves pending-review entries past the cap', () => {
+    const data = baseWorkspace();
+    const oversized: OperatorTraceEntry[] = [
+      {
+        id: 'trace-oldest-pending',
+        at: new Date(0).toISOString(),
+        source: 'assistant',
+        verb: 'ask.convert_to_plan',
+        entityType: 'plan',
+        entityId: 'plan-oldest',
+        reviewStatus: 'pending',
+        outcome: 'success'
+      },
+      ...Array.from({ length: MAX_OPERATOR_TRACE_ENTRIES + 50 }, (_, i) => ({
+        id: `trace-noise-${i}`,
+        at: new Date().toISOString(),
+        source: 'user' as const,
+        verb: `noise-${i}`,
+        outcome: 'success' as const
+      }))
+    ];
+    data.operatorTraces = { entries: oversized };
+
+    const reloaded = withDefaults(data);
+    const entries = reloaded.operatorTraces?.entries ?? [];
+    expect(entries.length).toBe(MAX_OPERATOR_TRACE_ENTRIES);
+    expect(entries.find((e) => e.id === 'trace-oldest-pending')?.reviewStatus).toBe('pending');
   });
 
   it('serializeOperatorTracesJsonl starts with metadata line', () => {

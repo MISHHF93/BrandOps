@@ -101,7 +101,7 @@ export const CockpitBrandContentWorkstreamSection = ({
             onClick={() => primeChat('add note: refine brand vault positioning and headlines')}
             className={`mt-2 ${rowChip(btnFocus)}`}
           >
-            Review in Chat
+            Refine positioning
           </button>
         </div>
       );
@@ -132,7 +132,7 @@ export const CockpitBrandContentWorkstreamSection = ({
                   }
                   className={rowChip(btnFocus)}
                 >
-                  Review in Chat
+                  Refine draft
                 </button>
               </div>
             </li>
@@ -159,7 +159,7 @@ export const CockpitBrandContentWorkstreamSection = ({
                 }
                 className={`mt-2 ${rowChip(btnFocus)}`}
               >
-                Review in Chat
+                Update checklist
               </button>
             </li>
           ))}

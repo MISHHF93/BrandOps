@@ -175,7 +175,7 @@ export function buildPlatformActionCards(workspace: BrandOpsData): PlatformActio
         id: 'platform-notion-generate-plan',
         platform: 'Notion',
         title: 'Generate plan from notes',
-        description: 'Turn approved Notion/local notes into an executable PLAN preview.',
+        description: 'Turn approved Notion/local notes into an executable PLAN draft.',
         sourceContext: context,
         task: 'Generate an execution plan from connected Notion notes and approved local note summaries.'
       })

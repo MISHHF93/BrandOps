@@ -60,7 +60,8 @@ export type ContextBundleId =
   | 'WRITING_VOICE'
   | 'CURRENT_GOALS'
   | 'POSITIONING_CONTEXT'
-  | 'CONTENT_CONTEXT';
+  | 'CONTENT_CONTEXT'
+  | 'PROFESSION_CONTEXT';
 
 export const CONTEXT_BUNDLE_IDS: readonly ContextBundleId[] = [
   'PUBLIC_IDENTITY',
@@ -69,7 +70,8 @@ export const CONTEXT_BUNDLE_IDS: readonly ContextBundleId[] = [
   'WRITING_VOICE',
   'CURRENT_GOALS',
   'POSITIONING_CONTEXT',
-  'CONTENT_CONTEXT'
+  'CONTENT_CONTEXT',
+  'PROFESSION_CONTEXT'
 ];
 
 /**
@@ -86,7 +88,26 @@ export type AgentCapabilityId =
   | 'twin.propose_update'
   | 'opportunity.create'
   | 'plan.convert'
-  | 'action.request';
+  | 'action.request'
+  | 'builder.context.read'
+  | 'builder.achievements.list'
+  | 'builder.achievements.verify'
+  | 'builder.achievements.dismiss'
+  | 'builder.opportunities.list'
+  | 'builder.opportunities.convert-to-plan'
+  | 'builder.opportunities.dismiss'
+  | 'builder.twin-proposals.list'
+  | 'builder.twin-proposals.accept'
+  | 'builder.twin-proposals.reject'
+  | 'builder.projects.list'
+  | 'builder.projects.intelligence'
+  | 'builder.receipts.list'
+  | 'builder.sessions.list'
+  | 'builder.sessions.revoke'
+  | 'builder.activity.ingest'
+  | 'builder.activity.ingest-session-summary'
+  | 'builder.skill-packed-instructions'
+  | 'builder.feature-registry.read';
 
 export const AGENT_CAPABILITY_IDS: readonly AgentCapabilityId[] = [
   'context.read',
@@ -98,7 +119,26 @@ export const AGENT_CAPABILITY_IDS: readonly AgentCapabilityId[] = [
   'twin.propose_update',
   'opportunity.create',
   'plan.convert',
-  'action.request'
+  'action.request',
+  'builder.context.read',
+  'builder.achievements.list',
+  'builder.achievements.verify',
+  'builder.achievements.dismiss',
+  'builder.opportunities.list',
+  'builder.opportunities.convert-to-plan',
+  'builder.opportunities.dismiss',
+  'builder.twin-proposals.list',
+  'builder.twin-proposals.accept',
+  'builder.twin-proposals.reject',
+  'builder.projects.list',
+  'builder.projects.intelligence',
+  'builder.receipts.list',
+  'builder.sessions.list',
+  'builder.sessions.revoke',
+  'builder.activity.ingest',
+  'builder.activity.ingest-session-summary',
+  'builder.skill-packed-instructions',
+  'builder.feature-registry.read'
 ];
 
 export type AgentCapabilityAccess = 'auto' | 'approval';
@@ -114,7 +154,12 @@ export interface AgentCapabilityDefinition {
   access: AgentCapabilityAccess;
   /** Only read capabilities may be granted to read-only sessions. */
   readOnly: boolean;
+  /** Human-readable name for UI display. */
+  name?: string;
 }
+
+export type { PermissionTier } from './executionState';
+export type { PermissionBundle } from './domain';
 
 export interface ExternalAgentSession {
   id: string;
@@ -341,4 +386,37 @@ export interface AgentToolResult {
   /** Checkpoint id(s) recorded for the chain (audit receipt linkage). */
   checkpointIds: string[];
   auditEntryId: string;
+}
+
+/** Agent handoff state — explicit task delegation between agents with full context, budget, and lifecycle tracking. */
+export interface AgentHandoff {
+  id: string;
+  sourceAgent: string;
+  targetAgent: string;
+  objective: string;
+  checkpointId?: string;
+  requiredCapabilities: string[];
+  minimumContext: import('./agentInterop').ContextBundleId[];
+  sourceArtifacts: string[];
+  allowedActions: string[];
+  prohibitedActions: string[];
+  expectedOutput: string;
+  budget: {
+    tokenLimit?: number;
+    timeLimitMs?: number;
+    toolCallLimit?: number;
+    costLimit?: number;
+  };
+  expiration?: string;
+  returnDestination?: string;
+  status: 'proposed' | 'accepted' | 'in_progress' | 'completed' | 'expired' | 'cancelled' | 'rejected';
+  result?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AgentHandoffsState {
+  entries: AgentHandoff[];
+  updatedAt: string;
 }

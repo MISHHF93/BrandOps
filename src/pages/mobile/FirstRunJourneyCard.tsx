@@ -68,10 +68,10 @@ export function FirstRunJourneyCard({
         <div className="flex min-w-0 items-center gap-2.5">
           <BrandOpsMarkBadge className="bo-brand-mark--sm mt-0.5" />
           <div className="min-w-0">
-            <p className="text-label font-semibold text-text">Ask My Twin. Plan.</p>
+            <p className="text-label font-semibold text-text">Your AI-native brand operating system</p>
             <p className="mt-0.5 line-clamp-2 text-fine leading-snug text-textSoft">
-              Ask is for thinking. Plan is the flat operating surface for twin setup,
-              recommendations, approvals, sources, activity, and receipts.
+              Create a persistent Digital Twin from your professional identity, expertise, and goals.
+              Ask strategic questions — experts route, plans execute, verified results compound.
             </p>
           </div>
         </div>

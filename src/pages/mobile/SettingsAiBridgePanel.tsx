@@ -77,11 +77,11 @@ export function SettingsAiBridgePanel({
       });
       setApiKey('');
       setKeyConfigured(await hasOpenAiCompatibleApiKey());
-      setStatus({ tone: 'success', message: 'AI bridge settings saved on this device.' });
+      setStatus({ tone: 'success', message: 'Hosted AI settings saved on this device.' });
     } catch (error) {
       setStatus({
         tone: 'danger',
-        message: error instanceof Error ? error.message : 'Could not save AI bridge settings.'
+        message: error instanceof Error ? error.message : 'Could not save hosted AI settings.'
       });
     } finally {
       setBusyAction(null);
@@ -117,7 +117,7 @@ export function SettingsAiBridgePanel({
     } catch (error) {
       setStatus({
         tone: 'danger',
-        message: error instanceof Error ? error.message : 'AI bridge connection test failed.'
+        message: error instanceof Error ? error.message : 'Hosted AI connection test failed.'
       });
     } finally {
       setBusyAction(null);
@@ -127,7 +127,7 @@ export function SettingsAiBridgePanel({
   return (
     <MobileTabSection
       id="settings-ai-bridge"
-      title="Hosted AI bridge"
+      title="Hosted AI"
       description="Configure the endpoint the Assistant uses for hosted Ask. The API key is stored separately from workspace JSON and bound to the endpoint origins you approve here."
     >
       <div className="mt-3 grid gap-3 sm:grid-cols-2">

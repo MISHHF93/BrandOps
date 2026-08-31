@@ -16,7 +16,7 @@ export async function describeAiSetupState(settings: AppSettings): Promise<AiSet
       needsSetup: true,
       reason: 'adapter_disabled',
       guidance:
-        'Hosted AI is not enabled. Open Settings → AI bridge, choose Hosted API, set an OpenAI-compatible endpoint and model, then save an API key on this device.'
+        'Hosted AI is not enabled. Open Settings → Hosted AI, choose Hosted API, set an OpenAI-compatible endpoint and model, then save an API key on this device.'
     };
   }
   if (settings.aiAdapterMode === 'local-only') {
@@ -24,7 +24,7 @@ export async function describeAiSetupState(settings: AppSettings): Promise<AiSet
       needsSetup: true,
       reason: 'adapter_disabled',
       guidance:
-        'Local-only mode is active, so Ask My Twin answers run without hosted AI. Switch to Hosted API in Settings → AI bridge to enable hosted answers.'
+        'Local-only mode is active, so Ask My Twin answers run without hosted AI. Switch to Hosted API in Settings → Hosted AI to enable hosted answers.'
     };
   }
   if (!settings.aiBridge.inferenceBaseUrl.trim()) {
@@ -32,7 +32,7 @@ export async function describeAiSetupState(settings: AppSettings): Promise<AiSet
       needsSetup: true,
       reason: 'missing_endpoint',
       guidance:
-        'No OpenAI-compatible endpoint is configured. In Settings → AI bridge, set an endpoint root (for example https://api.openai.com/v1) and a chat model.'
+        'No OpenAI-compatible endpoint is configured. In Settings → Hosted AI, set an endpoint root (for example https://api.openai.com/v1) and a chat model.'
     };
   }
   const hasKey = await hasOpenAiCompatibleApiKey();
@@ -40,7 +40,7 @@ export async function describeAiSetupState(settings: AppSettings): Promise<AiSet
     return {
       needsSetup: true,
       reason: 'missing_api_key',
-      guidance: `No hosted API key is stored on this device (${describeAiSecretsStorageHint()}). Add one in Settings → AI bridge to enable hosted answers.`
+      guidance: `No hosted API key is stored on this device (${describeAiSecretsStorageHint()}). Add one in Settings → Hosted AI to enable hosted answers.`
     };
   }
   return { needsSetup: false };

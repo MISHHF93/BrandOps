@@ -115,6 +115,31 @@ function buildOperatorTraceEntry(input: OperatorTraceInput): OperatorTraceEntry 
 }
 
 /** Prepend one trace when collection is enabled. Returns `data` unchanged if disabled. */
+/**
+ * Caps a newest-first trace list to `max` entries without ever dropping a
+ * `reviewStatus: 'pending'` entry. Approval resolution (`checkpointActions.ts`
+ * `findPendingTraceIdForPlan`) has no fallback once a pending trace is gone —
+ * it isn't just marked resolved elsewhere, the row disappears — so plain
+ * `.slice(0, max)` could silently and permanently orphan a plan sitting in
+ * `pending-approval` once enough unrelated activity pushed its trace past the
+ * cap. Preserves relative (newest-first) order.
+ */
+export function capOperatorTraceEntries(
+  entries: OperatorTraceEntry[],
+  max: number
+): OperatorTraceEntry[] {
+  if (entries.length <= max) return entries;
+  const pendingCount = entries.filter((e) => e.reviewStatus === 'pending').length;
+  const nonPendingBudget = Math.max(0, max - pendingCount);
+  let nonPendingKept = 0;
+  return entries.filter((entry) => {
+    if (entry.reviewStatus === 'pending') return true;
+    if (nonPendingKept >= nonPendingBudget) return false;
+    nonPendingKept += 1;
+    return true;
+  });
+}
+
 export function prependOperatorTrace(data: BrandOpsData, input: OperatorTraceInput): BrandOpsData {
   if (!data.settings.operatorTraceCollectionEnabled) return data;
   const entry = buildOperatorTraceEntry(input);
@@ -122,7 +147,7 @@ export function prependOperatorTrace(data: BrandOpsData, input: OperatorTraceInp
   return {
     ...data,
     operatorTraces: {
-      entries: [entry, ...prior].slice(0, MAX_OPERATOR_TRACE_ENTRIES)
+      entries: capOperatorTraceEntries([entry, ...prior], MAX_OPERATOR_TRACE_ENTRIES)
     }
   };
 }

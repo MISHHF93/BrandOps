@@ -22,7 +22,7 @@ import { buildOperationalIntelligenceReadout } from '../operationalIntelligence/
 const DAILY_OPERATING_LOOP_SCHEMA_VERSION = '1.0.0';
 
 const GOVERNANCE_POLICY =
-  'Daily Operating Loop is a readout and planning layer. It can recommend priorities, ask clarifying questions, and prepare PLAN previews, but external actions still require ASK -> PLAN -> approval -> receipt.';
+  'Daily Operating Loop is a readout and planning layer. It can recommend priorities, ask clarifying questions, and prepare PLAN drafts, but external actions still require ASK -> PLAN -> approval -> receipt.';
 
 function nowIso(): string {
   return new Date().toISOString();
