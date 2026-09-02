@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1638 tests / 220 files** passing · `vite build` succeeds.
+**1645 tests / 221 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,54 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 59 — 2026-09-02 · reading a function before putting it in place
+
+The instruction was to wire the unlinked functions rather than only test them. The first candidate
+was `isSourceAuthorized` in the activity graph — an authorization predicate with no caller, which
+sounds like an obvious gap to close.
+
+**Reading it first is what stopped a regression.** Its allowlist had drifted out of the type it
+guards:
+
+```
+  valid sources it rejected   agent-reported, integration-import, dev-hook, manual
+  entries that cannot occur   user-input, manual-entry, imported,
+                              integration:authored, approved-agent
+  overlap with reality        3 of 8
+```
+
+Five of its eight entries are strings `ActivityEventSource` does not contain and no code can ever
+produce. Four legitimate sources were refused. **Wiring it as found would have rejected most
+activity ingestion** — the unwired code was not merely unused, it was wrong, and only running it
+against the real union showed that.
+
+It is now keyed on the union itself, and the tests read that union out of the source file rather than
+holding a copy, so the two cannot drift apart again without something failing. Exactly one member is
+unauthorised — `agent-reported`, a claim about something the workspace did not witness — and adding
+a source to the union now fails a test until somebody decides which side it belongs on. That decision
+is the one that quietly went unmade the first time.
+
+**And it is still not wired, deliberately.** The `builder.activity.ingest` handler already applies a
+narrower rule with a documented reason: an agent may report _where it got_ material, but may not
+claim `user-action`, because that describes something it did not witness. Substituting this predicate
+would refuse the sources that handler intentionally permits. Two different questions; only one of
+them belongs on the ingest path, and forcing the connection would have undone a considered decision
+to satisfy a metric.
+
+| Repair                                                | Dimension | Evidence                                               |
+| ----------------------------------------------------- | --------- | ------------------------------------------------------ |
+| An allowlist keyed on the type it guards              | D1, D8    | 5 of 8 entries were unreachable strings                |
+| The union and the guard cannot drift apart again      | D1        | Tests read the union from source; 7 tests, 3 mutations |
+| A new source forces a decision rather than defaulting | D8        | Was silently absent                                    |
+
+**Knip 102 → 101. Score movement: none.**
+
+The cycle's real output is a refusal. Asked to wire something, the honest answer for this one is
+that it does not belong where it looked like it belonged — and saying so beats a connection that
+would have read as progress and broken ingestion.
+
+---
 
 ### Cycle 58 — 2026-09-02 · the page was three-quarters suggestions
 

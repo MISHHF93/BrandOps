@@ -186,18 +186,40 @@ export function ingestActivityEvent(
 }
 
 /** Check if source is explicitly authorized. */
-export function isSourceAuthorized(source: string): boolean {
-  const authorizedSources = [
-    'user-action',
-    'user-input',
-    'manual-entry',
-    'imported',
-    'integration:authored',
-    'skill-pack',
-    'session-to-brand',
-    'approved-agent'
-  ];
-  return authorizedSources.includes(source);
+/**
+ * Whether an activity event's source means a human or a local process authored
+ * it, as opposed to an agent reporting something it saw.
+ *
+ * The allowlist had drifted out of the type it guards. It named
+ * `user-input`, `manual-entry`, `imported`, `integration:authored` and
+ * `approved-agent` — **five strings that are not `ActivityEventSource` values
+ * and can never occur** — while rejecting four that are: `agent-reported`,
+ * `integration-import`, `dev-hook` and `manual`. Only three of eight entries
+ * overlapped with reality.
+ *
+ * Wiring it in that state would have refused most legitimate ingestion, which is
+ * the argument for reading a function before connecting it. It is now keyed on
+ * the union itself, so the compiler fails the next time the two drift.
+ *
+ * **Deliberately not wired into `builder.activity.ingest`.** That handler
+ * already applies a narrower rule with a documented reason: an agent may report
+ * where it got material (`integration-import`, `skill-pack`, `session-to-brand`)
+ * but may not claim `user-action`, because that describes something the agent did
+ * not witness. Replacing that with this predicate would reject the sources the
+ * handler deliberately permits. Two different questions, and only one of them is
+ * the ingest path's.
+ */
+const AUTHORED_SOURCES: readonly ActivityEventSource[] = [
+  'user-action',
+  'manual',
+  'integration-import',
+  'skill-pack',
+  'session-to-brand',
+  'dev-hook'
+];
+
+export function isSourceAuthorized(source: ActivityEventSource | string): boolean {
+  return (AUTHORED_SOURCES as readonly string[]).includes(source);
 }
 
 /** Get recent activity events for a workspace. */

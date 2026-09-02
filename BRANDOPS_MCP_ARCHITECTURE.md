@@ -3,7 +3,7 @@
 **Status:** Source-derived. Written after the transports settled, so it documents what exists
 rather than what was planned.
 **Last updated:** 2026-08-31
-**Baseline:** 40 capabilities · 40 tools · 1122 tests / 220 files · `npm run typecheck` (`tsc -b`),
+**Baseline:** 40 capabilities · 40 tools · 1122 tests / 221 files · `npm run typecheck` (`tsc -b`),
 `eslint`, `vite build` clean. A bare `tsc --noEmit` checks nothing here — see the certification note.
 **Companion documents:** [`BRANDOPS_MCP_GATEWAY_DIRECTIVE.md`](BRANDOPS_MCP_GATEWAY_DIRECTIVE.md)
 (the mandate and gap ledger) · [`BRANDOPS_MCP_CAPABILITY_MATRIX.md`](BRANDOPS_MCP_CAPABILITY_MATRIX.md)
