@@ -537,6 +537,21 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     maturity: 'EXPERIMENTAL',
     wired: false,
     tests: []
+  },
+  {
+    id: 'core-agent-handoffs',
+    name: 'Agent Handoffs',
+    description:
+      'One agent session delegating scoped work to another. A handoff never grants: proposal refuses any capability or context bundle the delegating session does not hold, and what it confers is recomputed at use as the intersection with what the target holds now. Budgets are counted and refuse the spend that would cross them.',
+    owningModule: 'interop',
+    owningService: 'handoffs.ts',
+    uiExposure: 'settings',
+    backendImplementation: true,
+    requiredPermissions: ['context.read'],
+    integrationDependencies: [],
+    maturity: 'EXPERIMENTAL',
+    wired: true,
+    tests: ['agentHandoffs.test.ts', 'handoffsVisible.test.tsx']
   }
 ];
 

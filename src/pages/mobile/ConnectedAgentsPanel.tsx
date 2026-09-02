@@ -15,6 +15,9 @@ const DEFAULT_GRANTED_CAPABILITIES = agentBridge
   .filter((cap) => cap.id !== 'action.request')
   .map((cap) => cap.id);
 
+/** Statuses a person can still withdraw. The four terminal ones are history. */
+const LIVE_HANDOFF_STATUSES: string[] = ['proposed', 'accepted', 'in_progress'];
+
 const EVENT_STATUS_LABEL: Record<ExternalAgentEvent['status'], string> = {
   proposed: 'proposed',
   reviewed: 'reviewed',
@@ -104,6 +107,10 @@ export const ConnectedAgentsPanel = ({
     () => (workspace ? agentBridge.listUnclaimedAchievements(workspace) : []),
     [workspace]
   );
+  const handoffs = useMemo(
+    () => (workspace ? agentBridge.listHandoffs(workspace) : []),
+    [workspace]
+  );
   const audit = useMemo(() => (workspace ? agentBridge.listAudit(workspace) : []), [workspace]);
   const tools = useMemo(() => agentBridge.listTools(), []);
 
@@ -168,6 +175,9 @@ export const ConnectedAgentsPanel = ({
         </span>
         <span className="rounded-md border border-border/40 bg-surface/45 px-2 py-1">
           {counts.pendingProposals} proposals awaiting decision
+        </span>
+        <span className="rounded-md border border-border/40 bg-surface/45 px-2 py-1">
+          {counts.liveHandoffs} handoffs able to act
         </span>
         <span className="rounded-md border border-border/40 bg-surface/45 px-2 py-1">
           {counts.auditEntries} audit rows
@@ -379,6 +389,82 @@ export const ConnectedAgentsPanel = ({
                   </div>
                 </li>
               ))}
+            </ul>
+          )}
+        </div>
+      </details>
+
+      <details
+        className="bo-disclosure group"
+        open={handoffs.some((h) => h.status === 'proposed' || h.status === 'in_progress')}
+      >
+        <summary
+          className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+        >
+          Handoffs
+          <span className="ml-2 text-meta font-normal text-textSoft">
+            One agent delegating to another — never more access than it had itself
+          </span>
+        </summary>
+        <div className="space-y-3 border-t border-border/30 px-4 pb-4 pt-3">
+          {handoffs.length === 0 ? (
+            <p className="text-meta text-textMuted">
+              No handoffs. When one agent delegates work to another, the scope and budget it may
+              spend appear here.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {handoffs.slice(0, 20).map((handoff) => {
+                /**
+                 * Recomputed, never read from the handoff. The stored
+                 * `requiredCapabilities` is what was asked for; this is what the
+                 * target can actually do right now, which is empty once the
+                 * handoff lapses or that session is revoked.
+                 */
+                const granted = workspace
+                  ? agentBridge.handoffCapabilities(workspace, handoff.id)
+                  : [];
+                const live = LIVE_HANDOFF_STATUSES.includes(handoff.status);
+                return (
+                  <li
+                    key={handoff.id}
+                    className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-meta text-textMuted"
+                  >
+                    <p className="font-medium text-text">{handoff.objective}</p>
+                    <p className="mt-0.5 text-fine leading-snug text-textSoft">
+                      Expects: {handoff.expectedOutput}
+                    </p>
+                    <p className="mt-0.5 text-fine text-textMuted">
+                      {handoff.status} · {handoff.sourceAgent} → {handoff.targetAgent}
+                    </p>
+                    <p className="mt-0.5 text-fine text-textMuted">
+                      {granted.length > 0
+                        ? `Can currently use: ${granted.join(', ')}`
+                        : 'Grants no access right now'}
+                    </p>
+                    {handoff.budget.toolCallLimit !== undefined ? (
+                      <p className="mt-0.5 text-fine text-textMuted">
+                        Tool calls: {handoff.usage.toolCalls} of {handoff.budget.toolCallLimit}
+                      </p>
+                    ) : null}
+                    {handoff.prohibitedActions.length > 0 ? (
+                      <p className="mt-0.5 text-fine text-textMuted">
+                        Must not: {handoff.prohibitedActions.join(', ')}
+                      </p>
+                    ) : null}
+                    {live ? (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {btn(
+                          'Cancel handoff',
+                          () => void apply(agentBridge.cancelHandoff(workspace, handoff.id)),
+                          false,
+                          'danger'
+                        )}
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

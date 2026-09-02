@@ -638,6 +638,19 @@ export interface AgentHandoff {
     toolCallLimit?: number;
     costLimit?: number;
   };
+  /**
+   * What the handoff has actually spent.
+   *
+   * Without this the budget is decoration: four numbers nobody counts against.
+   * Every field here pairs with one above, and `recordHandoffUsage` refuses the
+   * call that would cross a limit rather than the one after it.
+   */
+  usage: {
+    tokens: number;
+    elapsedMs: number;
+    toolCalls: number;
+    cost: number;
+  };
   expiration?: string;
   returnDestination?: string;
   status:

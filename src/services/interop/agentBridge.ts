@@ -16,6 +16,14 @@ import { appendAuditEntry } from './audit';
 import { previewPromotion, type PromotionPreview } from '../builder/promotions';
 import type { AchievementCandidate } from '../../types/builder';
 import {
+  cancelHandoff,
+  effectiveCapabilities,
+  expireHandoffs,
+  handoffsState,
+  listHandoffs
+} from './handoffs';
+import type { AgentHandoff } from '../../types/agentInterop';
+import {
   AGENT_CAPABILITY_DEFINITIONS,
   getAgentCapability,
   isAgentCapabilityId
@@ -39,6 +47,8 @@ export interface AgentBridgeCounts {
   verifiedEvents: number;
   proposals: number;
   pendingProposals: number;
+  /** Delegations that can still confer access, so the summary says it out loud. */
+  liveHandoffs: number;
   auditEntries: number;
 }
 
@@ -47,6 +57,11 @@ function counts(workspace: BrandOpsData): AgentBridgeCounts {
   const events = workspace.externalAgentEvents?.entries ?? [];
   const proposals = workspace.agentProposals?.entries ?? [];
   const audit = workspace.externalAgentAudit?.entries ?? [];
+  /**
+   * Swept first, so a lapsed delegation is not counted as live. Reading the
+   * state rather than the array keeps this beside the other four.
+   */
+  const handoffs = handoffsState(expireHandoffs(workspace)).entries;
   return {
     sessions: sessions.length,
     activeSessions: sessions.filter((s) => s.status === 'active').length,
@@ -56,6 +71,9 @@ function counts(workspace: BrandOpsData): AgentBridgeCounts {
     verifiedEvents: events.filter((e) => e.status === 'verified' || e.status === 'promoted').length,
     proposals: proposals.length,
     pendingProposals: proposals.filter((p) => p.status === 'pending').length,
+    liveHandoffs: handoffs.filter((h: AgentHandoff) =>
+      ['proposed', 'accepted', 'in_progress'].includes(h.status)
+    ).length,
     auditEntries: audit.length
   };
 }
@@ -134,6 +152,26 @@ export const agentBridge = {
   ): BrandOpsData => decideAgentProposal(workspace, { proposalId, decision, note }),
   convertProposalToPlan: convertOpportunityProposalToPlan,
   createProposal: createProposal,
+
+  /**
+   * Delegations between agents, with lapsed ones shown as expired rather than
+   * as still live. Expiry is enforced at every point of use in `handoffs.ts`;
+   * sweeping here means a reader does not have to try a row to find out.
+   */
+  listHandoffs: (workspace: BrandOpsData): AgentHandoff[] =>
+    listHandoffs(expireHandoffs(workspace)),
+
+  /**
+   * What a handoff confers *right now* — the target's own capabilities
+   * intersected with what the handoff asked for. Never read the stored
+   * `requiredCapabilities` as an authority; that is the frozen-grant bug.
+   */
+  handoffCapabilities: (workspace: BrandOpsData, handoffId: string) =>
+    effectiveCapabilities(workspace, handoffId),
+
+  /** Withdraw a delegation. The one control over this a person needs. */
+  cancelHandoff: (workspace: BrandOpsData, handoffId: string): BrandOpsData =>
+    cancelHandoff(workspace, handoffId).workspace,
 
   listAudit: (workspace: BrandOpsData): ExternalAgentAuditEntry[] =>
     workspace.externalAgentAudit?.entries ?? [],

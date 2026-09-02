@@ -52,7 +52,7 @@ import { fileURLToPath } from 'node:url';
  * for: every drop since 118 has come from exercising unwired code rather than
  * deleting it, and each pass has found a real defect in what it covered.
  */
-const BUDGET = 96;
+const BUDGET = 94;
 
 /**
  * Knip's `exports` map blocks `require.resolve` for both `bin/knip.js` and its
