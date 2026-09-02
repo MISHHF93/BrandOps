@@ -14,7 +14,7 @@
 
 ## 0. Verdict
 
-**Total: 95.0 / 100 — INTERNAL / ALPHA QUALITY.**
+**Total: 95.5 / 100 — INTERNAL / ALPHA QUALITY.**
 
 **Release status: NOT READY.** One hard gate remains open — down from two.
 
@@ -30,7 +30,7 @@
 | Critical Golden Workflow failure    | ✅ none — A→Z loop and success-criterion round trip both pass                                                                                                                                                                                                                                     |
 
 The bands never override the gates. A 99 with an open authorization defect would still read NOT
-READY; 95.0 with one open gate reads NOT READY for the same reason. The score has moved forty-four cycles
+READY; 95.5 with one open gate reads NOT READY for the same reason. The score has moved forty-four cycles
 running and the verdict has not — which is the design. This cycle it moved **down**, because a gate that was
 recorded as closed was only being watched.
 
@@ -60,24 +60,24 @@ acted on.
 > weights still sum to 100, refuses a dimension scored above its weight, and holds the headline to
 > the table. Reverting the total to 98.0 fails two of its six checks.
 
-| #   | Dimension                            | Weight  | Score    | Prev | Δ        | Basis                                                                                                                                                                                                                                                                                                                                             |
-| --- | ------------------------------------ | ------- | -------- | ---- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Architecture & Source Coherence      | 8       | **8.0**  | 8.0  | —        | Duplication guarded by test rather than vigilance. The test suite is now typechecked against a ratchet in CI — it had 211 unseen errors, including a broken import and a capability that is not in the registry                                                                                                                                   |
-| D2  | Core Product Workflow                | 10      | **9.0**  | 8.5  | **+0.5** | A→Z loop passes. Every site that assembles model input quotes untrusted workspace content, enforced by a test that matches the shape rather than a list of files                                                                                                                                                                                  |
-| D3  | RAG / Context Quality                | 8       | **8.0**  | 6.0  | **+2.0** | Relevance floor and shared stopword scoring; provenance and trust-tier agreement asserted on every retrieved item; bundle scope proven not to widen                                                                                                                                                                                               |
-| D4  | Digital Twin / Evidence Integrity    | 7       | **7.0**  | 7.0  | —        | Trust tiers hold under direct attack. Tier not derivable from a caller-supplied source string; a verification approval cannot be spent on an achievement that changed; a scraped third-party profile cannot reach the Twin, achievements or evidence                                                                                              |
-| D5  | Plan / Agent / Execution Runtime     | 10      | **9.5**  | 8.5  | **+1.0** | Durable tasks, checkpoints, receipts, cancellation, verified across process restart. Every proposal kind now binds its approval to the content the user saw — the last one binding to a bare reference was the promotion path                                                                                                                     |
-| D6  | MCP / External AI Interoperability   | 7       | **6.5**  | 5.5  | **+1.0** | Server + client, both transports. Conformance now driven as a foreign client would drive it: handshake notification absorbed, malformed requests are protocol errors. Third-party client interop still UNVERIFIED                                                                                                                                 |
-| D7  | Connectors / External Actions        | 6       | **4.0**  | 3.5  | **+0.5** | Dispatch path with four honest outcomes, and it refuses anything without a standing approval — checked at the dispatcher, not only in one caller. One real connector (outbound webhook). No vendor connector, no live delivery verified                                                                                                           |
-| D8  | Security / Authorization / Isolation | 10      | **9.5**  | 9.0  | **+0.5** | The launch auth skip is unreachable outside `DEV`, proven by building the hostile case. Approval bindings now separate fields with a delimiter the fields cannot contain — two of three joined on a space and collided, demonstrated and closed. Still 9.5 rather than 10: signing in sets a `localStorage` flag, and no identity provider exists |
-| D9  | Reliability / Durable Execution      | 7       | **7.0**  | 6.5  | **+0.5** | Failure injection plus a 40-capability sweep proving none throws out of the gateway and every call is audited. Workspace writes are atomic and journaled: 25 mid-write SIGKILLs leave 25 readable workspaces, and an interrupted write recovers and repairs itself                                                                                |
-| D10 | Verification / Receipts / Outcomes   | 6       | **6.0**  | 6.0  | —        | Every dispatch outcome leaves a receipt recording whether the effect was proven. Export/import verified lossless and credential-free — the escape hatch the product recommends. No live delivery verified end to end                                                                                                                              |
-| D11 | AI Evaluations / Grounding           | 5       | **4.5**  | 4.0  | **+0.5** | Scored grounding eval; guards mutation-verified. Provider transport now exercised against a real endpoint — retry, rate-limit and auth-failure behaviour, and credentials redacted out of provider text. Model answer quality still unmeasured: that needs a model                                                                                |
-| D12 | Frontend / UX / Design Quality       | 8       | **8.0**  | 7.5  | **+0.5** | Five surfaces audited on real HTML; every rendered control checked against the workspace lock. Both directions of the LinkedIn companion's boundary verified. Still no visual regression or viewport testing — both need a browser                                                                                                                |
-| D13 | Accessibility / Responsive Quality   | 3       | **3.0**  | 2.5  | **+0.5** | Structural audit over five rendered surfaces plus WCAG contrast computed for both themes — text and focus rings clear AA in each. Borders below non-text contrast are measured and pinned, not silently carried. Viewport reflow still needs a browser                                                                                            |
-| D14 | Performance / Observability          | 3       | **3.0**  | 2.5  | **+0.5** | Traces and audit are strong. Bundle weight budgeted; view-model rebuild cost measured and bounded, and proven not to grow with the workspace. Real browser paint and interaction timing still unmeasured                                                                                                                                          |
-| D15 | Deployment / Operational Readiness   | 2       | **2.0**  | 2.0  | —        | CI and release both pass end to end. The Android release variant can now produce a signable, correctly versioned bundle — verified by Gradle, not by reading. Still no staging, no production, nothing published: the hard gate stays open                                                                                                        |
-|     | **TOTAL**                            | **100** | **95.0** | 94.5 | **+0.5** |                                                                                                                                                                                                                                                                                                                                                   |
+| #   | Dimension                            | Weight  | Score    | Prev | Δ        | Basis                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --- | ------------------------------------ | ------- | -------- | ---- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Architecture & Source Coherence      | 8       | **8.0**  | 8.0  | —        | Duplication guarded by test rather than vigilance. The test suite is now typechecked against a ratchet in CI — it had 211 unseen errors, including a broken import and a capability that is not in the registry                                                                                                                                                                                           |
+| D2  | Core Product Workflow                | 10      | **9.0**  | 8.5  | **+0.5** | A→Z loop passes. Every site that assembles model input quotes untrusted workspace content, enforced by a test that matches the shape rather than a list of files                                                                                                                                                                                                                                          |
+| D3  | RAG / Context Quality                | 8       | **8.0**  | 6.0  | **+2.0** | Relevance floor and shared stopword scoring; provenance and trust-tier agreement asserted on every retrieved item; bundle scope proven not to widen                                                                                                                                                                                                                                                       |
+| D4  | Digital Twin / Evidence Integrity    | 7       | **7.0**  | 7.0  | —        | Trust tiers hold under direct attack. Tier not derivable from a caller-supplied source string; a verification approval cannot be spent on an achievement that changed; a scraped third-party profile cannot reach the Twin, achievements or evidence. At its weight cap                                                                                                                                   |
+| D5  | Plan / Agent / Execution Runtime     | 10      | **9.5**  | 8.5  | **+1.0** | Durable tasks, checkpoints, receipts, cancellation, verified across process restart. Every proposal kind now binds its approval to the content the user saw — the last one binding to a bare reference was the promotion path                                                                                                                                                                             |
+| D6  | MCP / External AI Interoperability   | 7       | **6.5**  | 5.5  | **+1.0** | Server + client, both transports. Conformance now driven as a foreign client would drive it: handshake notification absorbed, malformed requests are protocol errors. Third-party client interop still UNVERIFIED                                                                                                                                                                                         |
+| D7  | Connectors / External Actions        | 6       | **4.0**  | 3.5  | **+0.5** | Dispatch path with four honest outcomes, and it refuses anything without a standing approval — checked at the dispatcher, not only in one caller. One real connector (outbound webhook). No vendor connector, no live delivery verified                                                                                                                                                                   |
+| D8  | Security / Authorization / Isolation | 10      | **10.0** | 9.5  | **+0.5** | The launch auth skip is unreachable outside `DEV`, proven by building the hostile case. Approval bindings separate fields with a delimiter the fields cannot contain. And the binding is no longer vacuous: a Twin edit is displayed before it is approved, so "what the user saw" is something that was actually shown. Auth backend remains absent and is tracked as the open deployment gate, not here |
+| D9  | Reliability / Durable Execution      | 7       | **7.0**  | 6.5  | **+0.5** | Failure injection plus a 40-capability sweep proving none throws out of the gateway and every call is audited. Workspace writes are atomic and journaled: 25 mid-write SIGKILLs leave 25 readable workspaces, and an interrupted write recovers and repairs itself                                                                                                                                        |
+| D10 | Verification / Receipts / Outcomes   | 6       | **6.0**  | 6.0  | —        | Every dispatch outcome leaves a receipt recording whether the effect was proven. Export/import verified lossless and credential-free — the escape hatch the product recommends. No live delivery verified end to end                                                                                                                                                                                      |
+| D11 | AI Evaluations / Grounding           | 5       | **4.5**  | 4.0  | **+0.5** | Scored grounding eval; guards mutation-verified. Provider transport now exercised against a real endpoint — retry, rate-limit and auth-failure behaviour, and credentials redacted out of provider text. Model answer quality still unmeasured: that needs a model                                                                                                                                        |
+| D12 | Frontend / UX / Design Quality       | 8       | **8.0**  | 7.5  | **+0.5** | Five surfaces audited on real HTML; every rendered control checked against the workspace lock. Both directions of the LinkedIn companion's boundary verified. Still no visual regression or viewport testing — both need a browser                                                                                                                                                                        |
+| D13 | Accessibility / Responsive Quality   | 3       | **3.0**  | 2.5  | **+0.5** | Structural audit over five rendered surfaces plus WCAG contrast computed for both themes — text and focus rings clear AA in each. Borders below non-text contrast are measured and pinned, not silently carried. Viewport reflow still needs a browser                                                                                                                                                    |
+| D14 | Performance / Observability          | 3       | **3.0**  | 2.5  | **+0.5** | Traces and audit are strong. Bundle weight budgeted; view-model rebuild cost measured and bounded, and proven not to grow with the workspace. Real browser paint and interaction timing still unmeasured                                                                                                                                                                                                  |
+| D15 | Deployment / Operational Readiness   | 2       | **2.0**  | 2.0  | —        | CI and release both pass end to end. The Android release variant can now produce a signable, correctly versioned bundle — verified by Gradle, not by reading. Still no staging, no production, nothing published: the hard gate stays open                                                                                                                                                                |
+|     | **TOTAL**                            | **100** | **95.5** | 95.0 | **+0.5** |                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 `Prev` and `Δ` are empty for dimensions untouched since the baseline.
 
@@ -226,6 +226,80 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 67 — 2026-09-02 · approving an edit nobody was shown
+
+Asked to check the page surface for redundancy and the wiring between front and
+back. The page surface turned out to be sound; the wiring did not.
+
+**The pages first.** Six HTML entries build, and three of them mount the _same_
+shell with a different default tab, with a fourth kept as a redirect:
+
+```
+  index.html         SiteApp                  marketing site
+  welcome.html       renderChatbotSurface     shell, initialTab chat
+  integrations.html  renderChatbotSurface     shell, initialTab integrations
+  mobile.html        renderChatbotSurface     shell, initialTab chat
+  dashboard.html     dashboardRedirect        -> mobile.html, query + hash preserved
+  help.html          HelpKnowledgeRoot        knowledge base
+```
+
+That is deliberate — URL contracts, not four copies of an app — and every
+`?section=` reference resolves. The risk is not redundancy but silence: an
+unknown `?section=` does not fail, it falls through to the default tab, so
+renaming a token would send old bookmarks somewhere else with nothing reporting
+it. `pageSurfaceConsistency.test.ts` now resolves every referenced URL through
+the real parser; removing the `integrations` token fails it.
+
+**Then the wiring, which is where the defect was.** Five pieces of state that the
+services layer maintains, checked for readers:
+
+```
+  agentProposals      7 service files   read via agentBridge.listProposals   wired
+  builderActivity    14 service files   no reader outside services           not wired
+  twinProposals       4 service files   no reader outside services           not wired
+  twinVersionHistory  1 service file    no reader outside services           not wired
+```
+
+`agentProposals` is fully wired — listed _and_ decidable, Approve and Reject in
+`ConnectedAgentsPanel`. A twin update is accepted through one of those. So the
+chain reaches a person. What it does not do is **show them anything**.
+
+The review row rendered a title, a `line-clamp-2` detail, `kind · status`, and
+an Approve button. The deltas — the edits to a person's headline, summary,
+skills and achievements — sit in `builderActivity.twinProposals`, which the
+interface could not reach. Cycle 66 hardened the fingerprint that binds an
+approval to _"what the user saw when they approved it."_ For twin updates the
+user saw nothing, so the binding bound to nothing. The record of what changed
+lands in `twinVersionHistory`, which has no reader either.
+
+`previewPromotion` computes the answer by calling `applyDeltas` against the
+current Twin **exactly as the acceptance path does**, on a copy it discards.
+Restating the field mapping would have been a second implementation free to
+drift from the one that runs; this cannot promise an edit the real path would
+not make. A verification says plainly that it does not move the Twin — it
+produces a proposal to accept separately — and a vanished target says approving
+would do nothing rather than rendering an empty change set as "changes nothing".
+
+**Mutation, run.** Making `previewProposal` return `null` — the defect exactly as
+it stood — fails the render test. Making the preview claim no changes fails
+three.
+
+| Repair                                                        | Dimension | Evidence                                                |
+| ------------------------------------------------------------- | --------- | ------------------------------------------------------- |
+| A Twin edit is shown before it is approved                    | D4, D8    | `promotionPreview.test.tsx`, 7 tests, mutation-verified |
+| The preview runs the engine rather than restating it          | D4        | Cannot describe an edit the acceptance path would not   |
+| Every referenced URL resolves to a built page and a known tab | D1, D12   | `pageSurfaceConsistency.test.ts`, mutation-verified     |
+
+**Score movement: +0.5** — D8 Security / Authorization / Isolation 9.5 → 10.0.
+**95.5/100.** Scored under D8 rather than D4, which sits at its weight cap of 7 —
+the arithmetic guard rejected the first attempt at 7.5/7, which is the guard
+working. It belongs there anyway: cycle 66 hardened the fingerprint that binds an
+approval to what the user saw, and this cycle made that phrase mean something.
+For a product whose subject is verified identity, an edit approved unseen was the
+gap worth closing. `builderActivity` and `twinVersionHistory`
+still have no dedicated surface — a person can see what a _pending_ proposal will
+do, but not browse their Twin's history. Recorded, not fixed.
 
 ### Cycle 66 — 2026-09-02 · an approval that could be spent on something else
 
