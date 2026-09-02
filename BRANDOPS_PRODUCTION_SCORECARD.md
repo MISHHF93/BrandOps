@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1579 tests / 214 files** passing · `vite build` succeeds.
+**1584 tests / 215 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,46 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 51 — 2026-09-02 · what is behind the disclosure
+
+Cycle 50 read the collapsed page. **Nothing had ever read what happens when you open a row** — every
+budget in this repository measures the page as it first paints, which is exactly the state where a
+disclosure is closed.
+
+Opening one showed a section headed **Receipts** containing:
+
+```
+  type    outreachDrafts    followUps    activeOpportunities
+```
+
+Property names of an internal object, listed to a reader as records of things that happened. A sweep
+of the rendered page found **thirteen such tokens**, all from one line:
+`Object.keys(plan.exportPayload)`.
+
+**Two things were wrong at once, which is why it survived.** The content was developer internals, and
+the heading claimed they were receipts — for a template nobody has run, where the honest answer is
+the _"None recorded."_ the empty case already prints. Either mistake alone might have been noticed;
+together they looked like a populated section.
+
+The guard is written against the rendered page rather than that line, because the defect is a
+category: **anything reaching a user as `camelCase` or `snake_case` was not written for them.** It
+carries its own counter-case — a fixture containing two identifiers it must find — because a regex
+that never matches is the easiest possible way to write a check that certifies nothing.
+
+| Repair                                            | Dimension | Evidence                                              |
+| ------------------------------------------------- | --------- | ----------------------------------------------------- |
+| No identifier rendered as prose, on any row state | P7, P11   | 13 tokens → 0, collapsed and expanded, empty and full |
+| A section with nothing to show says so            | P11       | "None recorded." where keys had been listed           |
+| A row that does have receipts still carries them  | P5        | The counter-case for emptying the field               |
+
+**PLAN score: 83.5 → 84.0** (P5 9.0 → 9.5).
+
+Two cycles, two defects, both found by looking at the product rather than at the code — and the
+second only because the first raised the obvious next question: _if nobody has read the collapsed
+page, has anybody read the opened one?_
+
+---
 
 ### Cycle 50 — 2026-09-02 · reading the page instead of the code
 

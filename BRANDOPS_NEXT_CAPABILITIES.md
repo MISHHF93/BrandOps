@@ -2,7 +2,7 @@
 
 # Part 3: Evaluations 21–30
 
-> **SOURCE-NOTE (2026-08-31):** This is a capability *evaluation* doc (decision planning), not a completion record. Two file citations are corrected here: (1) `src/services/builder/opportunityEngine.ts` (evals #21/#25/#28) actually lives at **`src/services/plan/opportunityEngine.ts`** (the `builder/` path does not exist); (2) `src/services/builder/weeklyProfessionalReview.ts` (evals #22/#23/#24/#28, cited as producing reviews) is **ABSENT — never built** (verified; see `BUILDER_INTELLIGENCE_STATUS.md`). The impact/decisions in this doc stand as *proposals*, not implemented features, unless explicitly tested in the current baseline (1122/1122, 214 files).
+> **SOURCE-NOTE (2026-08-31):** This is a capability *evaluation* doc (decision planning), not a completion record. Two file citations are corrected here: (1) `src/services/builder/opportunityEngine.ts` (evals #21/#25/#28) actually lives at **`src/services/plan/opportunityEngine.ts`** (the `builder/` path does not exist); (2) `src/services/builder/weeklyProfessionalReview.ts` (evals #22/#23/#24/#28, cited as producing reviews) is **ABSENT — never built** (verified; see `BUILDER_INTELLIGENCE_STATUS.md`). The impact/decisions in this doc stand as *proposals*, not implemented features, unless explicitly tested in the current baseline (1122/1122, 215 files).
 
 ## 21. Opportunity Lifecycle
 

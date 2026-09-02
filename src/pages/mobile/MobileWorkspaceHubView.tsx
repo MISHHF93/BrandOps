@@ -459,7 +459,21 @@ function operationalCardToFeedItem(
     ],
     timeline: plan.timeline,
     approvals: ['Review and approve before execution.'],
-    receipts: Object.keys(plan.exportPayload ?? {}).slice(0, 4),
+    /**
+     * A template has produced no receipts, and says so.
+     *
+     * This was `Object.keys(plan.exportPayload)`, so the section headed
+     * "Receipts" listed **`type`, `outreachDrafts`, `followUps`,
+     * `activeOpportunities`** — the property names of an internal object,
+     * rendered to a reader as though they were records of something that
+     * happened. Thirteen such identifiers reached the page across the five
+     * cards.
+     *
+     * The empty case already reads "None recorded.", which is the truth for a
+     * plan nobody has run yet, and the figures those keys named are on the row
+     * itself in words.
+     */
+    receipts: [],
     secondaryActions: [
       {
         label: 'Approve',

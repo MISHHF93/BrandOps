@@ -320,7 +320,7 @@ special-case tool names in the protocol adapter, `createsTask` became a registry
 that _mints_ durable work returns a task result; reading or cancelling one creates nothing. The
 adapter stayed dumb, which is the architecture's one rule.
 
-Baseline after: 1122 tests / 214 files, typecheck, lint and build clean.
+Baseline after: 1122 tests / 215 files, typecheck, lint and build clean.
 
 **Phase 4d — Defect sweep. ✅ DONE (2026-08-31).**
 
@@ -368,7 +368,7 @@ Also recorded, not closed: **test files are not type-checked at all** (`tsconfig
 outside the release gate, because wiring it in today would either block every commit or invite a
 blanket suppression. It should only ever go down.
 
-Baseline after: 1122 tests / 214 files, `npm run typecheck`, lint and build clean.
+Baseline after: 1122 tests / 215 files, `npm run typecheck`, lint and build clean.
 
 **Phase 4e — Portable identity reads. ✅ DONE (2026-08-31).**
 
@@ -396,7 +396,7 @@ disagree about what an artifact is or how it is summarized.
 Verified live over stdio: scoped discovery returns exactly the three granted tools, both new reads
 emit conforming `structuredContent`, and the contact's private notes do not appear in the payload.
 
-Baseline after: 40 capabilities · 1122 tests / 214 files · `npm run typecheck`, lint and build clean.
+Baseline after: 40 capabilities · 1122 tests / 215 files · `npm run typecheck`, lint and build clean.
 
 **Phase 4f — The gateway reads live state. ✅ DONE (2026-08-31).**
 
@@ -425,7 +425,7 @@ This does not close G1 — there is still no TLS and no authorization server. It
 G1 that was a correctness bug rather than a deployment gap: the file is now a live store, not an
 exported snapshot the gateway reads once and then talks over.
 
-Baseline after: 40 capabilities · 1122 tests / 214 files · `npm run typecheck`, lint and build clean.
+Baseline after: 40 capabilities · 1122 tests / 215 files · `npm run typecheck`, lint and build clean.
 
 **Phase 5a — Resources. ✅ G14 DONE (2026-08-31).**
 
@@ -460,7 +460,7 @@ predecessor's write**. Mutations are now serialized within the process, leaving 
 it should — someone _outside_ this process changed the file. Unit tests had missed it because they
 awaited each call; the fix has a test that fires three at once.
 
-Baseline after: 40 capabilities · 5 resource templates · 1122 tests / 214 files · `npm run
+Baseline after: 40 capabilities · 5 resource templates · 1122 tests / 215 files · `npm run
 typecheck`, lint and build clean.
 
 **Phase 5b — Contract and provenance scans. DONE (2026-08-31).**
@@ -493,7 +493,7 @@ advertised a `verificationStatus` nothing read; the note is now wired and declar
 requires must be enforced, what it documents must be sufficient, and what a handler reads must be
 documented.
 
-Baseline after: 40 capabilities, 5 resource templates, 1579 tests / 214 files, typecheck, lint and
+Baseline after: 40 capabilities, 5 resource templates, 1584 tests / 215 files, typecheck, lint and
 build clean.
 
 **Phase 5c — Verifying the verifiers. DONE (2026-08-31).**
@@ -521,7 +521,7 @@ _That sweep immediately earned itself._ With real data in the workspace,
 `builderActivity.projects` at all. Any record from a partial write, an older schema or an import
 crashed the read. The same lying-type shape as the registry maps in Phase 4d, and now guarded.
 
-Baseline after: 40 capabilities, 5 resource templates, 1579 tests / 214 files, typecheck, lint and
+Baseline after: 40 capabilities, 5 resource templates, 1584 tests / 215 files, typecheck, lint and
 build clean.
 
 **Phase 5d — BrandOps as an MCP client. G17 DONE (2026-08-31).**
@@ -555,7 +555,7 @@ being sent.
 _What this does not claim._ No connector is wired to a real third-party server, so live third-party
 consumption is **UNVERIFIED** in exactly the sense the directive requires the label to be used.
 
-Baseline after: 40 capabilities, 5 resource templates, 1579 tests / 214 files, typecheck, lint and
+Baseline after: 40 capabilities, 5 resource templates, 1584 tests / 215 files, typecheck, lint and
 build clean.
 
 **Phase 6a — Capability families, and the defect they exposed. DONE (2026-08-31).**
@@ -609,7 +609,7 @@ a governed write inside the proposal module would be a second implementation of 
 went wrong. Tests assert all three states: the request promotes nothing, an approval promotes, and a
 rejection promotes nothing.
 
-Baseline after: 40 capabilities in 10 populated families, 1579 tests / 214 files, typecheck, lint and
+Baseline after: 40 capabilities in 10 populated families, 1584 tests / 215 files, typecheck, lint and
 build clean.
 
 **Phase 5 — Remaining optional surfaces.**

@@ -2,7 +2,7 @@
 
 **Status:** Source-derived. Regenerate from `capabilityRegistry.ts` + `mcp/server.ts` after any change.
 **Last updated:** 2026-08-31
-**Baseline:** 40 capabilities, 40 MCP tools, 1:1 mapping. 1122 tests / 214 files passing.
+**Baseline:** 40 capabilities, 40 MCP tools, 1:1 mapping. 1122 tests / 215 files passing.
 
 Governed by `BRANDOPS_MCP_GATEWAY_DIRECTIVE.md`.
 
