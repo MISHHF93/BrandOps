@@ -108,6 +108,10 @@ export type AgentCapabilityId =
   | 'builder.activity.ingest-session-summary'
   | 'builder.skill-packed-instructions'
   | 'builder.feature-registry.read'
+  | 'builder.handoffs.list'
+  | 'builder.handoffs.propose'
+  | 'builder.handoffs.decide'
+  | 'builder.handoffs.complete'
   | 'evidence.read'
   | 'authority.read'
   | 'next-best-actions.read'
@@ -160,7 +164,11 @@ export const AGENT_CAPABILITY_IDS: readonly AgentCapabilityId[] = [
   'builder.activity.ingest',
   'builder.activity.ingest-session-summary',
   'builder.skill-packed-instructions',
-  'builder.feature-registry.read'
+  'builder.feature-registry.read',
+  'builder.handoffs.list',
+  'builder.handoffs.propose',
+  'builder.handoffs.decide',
+  'builder.handoffs.complete'
 ];
 
 export type AgentCapabilityAccess = 'auto' | 'approval';

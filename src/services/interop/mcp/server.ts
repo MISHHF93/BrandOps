@@ -547,6 +547,68 @@ const TOOL_ARG_SCHEMAS: Record<
   brandops_get_feature_registry: {
     properties: {},
     required: []
+  },
+  brandops_list_handoffs: {
+    properties: {},
+    required: []
+  },
+  brandops_propose_handoff: {
+    properties: {
+      targetSessionId: {
+        type: 'string',
+        description: 'Session id to delegate to. The delegating session is always the caller.'
+      },
+      objective: { type: 'string', description: 'What the target agent is being asked to do.' },
+      expectedOutput: {
+        type: 'string',
+        description: 'What a finished handoff should produce, so completion can be judged.'
+      },
+      requiredCapabilities: {
+        type: 'array',
+        description:
+          'Capabilities the work needs. Refused unless the calling session holds every one of them: a handoff can never confer more than its source has.'
+      },
+      minimumContext: {
+        type: 'array',
+        description:
+          'Context bundles the target needs. Refused unless the calling session can read them.'
+      },
+      allowedActions: {
+        type: 'array',
+        description: 'Actions the target may take. Must not overlap prohibitedActions.'
+      },
+      prohibitedActions: {
+        type: 'array',
+        description: 'Actions the target must not take. Must not overlap allowedActions.'
+      },
+      budget: {
+        type: 'object',
+        description:
+          'Optional caps: tokenLimit, timeLimitMs, toolCallLimit, costLimit. A spend that would cross one is refused rather than recorded after the fact.'
+      },
+      expiration: {
+        type: 'string',
+        description: 'ISO timestamp after which the handoff confers nothing. Must be in the future.'
+      }
+    },
+    required: ['targetSessionId', 'objective', 'expectedOutput']
+  },
+  brandops_decide_handoff: {
+    properties: {
+      handoffId: { type: 'string', description: 'The handoff to answer.' },
+      decision: {
+        type: 'string',
+        description: "'accepted' or 'rejected'. Only the session it was delegated to may answer."
+      }
+    },
+    required: ['handoffId', 'decision']
+  },
+  brandops_complete_handoff: {
+    properties: {
+      handoffId: { type: 'string', description: 'The handoff being reported on.' },
+      result: { type: 'string', description: 'What the work produced.' }
+    },
+    required: ['handoffId', 'result']
   }
 };
 

@@ -12,7 +12,11 @@
 
 import type { BrandOpsData, PlanDraft } from '../../../types/domain';
 import type { AgentCapabilityId } from '../../../types/agentInterop';
-import type { ExternalAgentSession } from '../../../types/agentInterop';
+import type {
+  AgentHandoff,
+  ContextBundleId,
+  ExternalAgentSession
+} from '../../../types/agentInterop';
 import type {
   Achievement,
   AchievementCandidate,
@@ -51,6 +55,14 @@ import { isBuilderCapabilityId } from '../../builder/mcpBuilderCapabilities';
 import { savePlanDraftToWorkspace } from '../../plan/askPlanConversion';
 import { resolveWorkspaceId } from '../../workspaceIdentity';
 import { createAgentProposal } from '../proposals';
+import {
+  completeHandoff,
+  decideHandoff,
+  effectiveCapabilities,
+  expireHandoffs,
+  listHandoffs,
+  proposeHandoff
+} from '../handoffs';
 
 // ---------------------------------------------------------------------------
 // Builder state adapter — reads from workspace, writes back to workspace
@@ -402,6 +414,132 @@ export function runBuilderHandler(
     case 'builder.feature-registry.read': {
       const registry = getFeatureRegistryState(workspace);
       return { workspace, ok: true, data: { registry: registry.entries } };
+    }
+
+    case 'builder.handoffs.list': {
+      const swept = expireHandoffs(workspace);
+      return {
+        workspace: swept,
+        ok: true,
+        data: {
+          handoffs: listHandoffs(swept).map((handoff) => ({
+            id: handoff.id,
+            objective: handoff.objective,
+            status: handoff.status,
+            sourceAgent: handoff.sourceAgent,
+            targetAgent: handoff.targetAgent,
+            expectedOutput: handoff.expectedOutput,
+            prohibitedActions: handoff.prohibitedActions,
+            budget: handoff.budget,
+            usage: handoff.usage,
+            expiration: handoff.expiration,
+            /**
+             * Recomputed, never the stored `requiredCapabilities`. Reporting
+             * what was asked for as though it were what is held is the
+             * frozen-grant bug, and an agent reading this would act on it.
+             */
+            currentlyConfers: effectiveCapabilities(swept, handoff.id)
+          }))
+        }
+      };
+    }
+
+    case 'builder.handoffs.propose': {
+      /**
+       * The delegating session is **the caller**, taken from the authenticated
+       * session and never from `args`. Accepting a `sourceSessionId` argument
+       * would let any agent delegate as any other session — impersonation that
+       * hands the whole narrowing rule to whoever writes the arguments.
+       */
+      const result = proposeHandoff(workspace, {
+        sourceSessionId: session.id,
+        targetSessionId: String(args.targetSessionId ?? '').trim(),
+        objective: String(args.objective ?? ''),
+        requiredCapabilities: Array.isArray(args.requiredCapabilities)
+          ? (args.requiredCapabilities as unknown[]).map(String)
+          : [],
+        minimumContext: Array.isArray(args.minimumContext)
+          ? (args.minimumContext as ContextBundleId[])
+          : [],
+        allowedActions: Array.isArray(args.allowedActions)
+          ? (args.allowedActions as unknown[]).map(String)
+          : [],
+        prohibitedActions: Array.isArray(args.prohibitedActions)
+          ? (args.prohibitedActions as unknown[]).map(String)
+          : [],
+        expectedOutput: String(args.expectedOutput ?? ''),
+        budget: (args.budget as AgentHandoff['budget']) ?? {},
+        expiration: args.expiration ? String(args.expiration) : undefined
+      });
+      return result.ok
+        ? { workspace: result.workspace, ok: true, data: { handoffId: result.handoff?.id } }
+        : {
+            workspace: result.workspace,
+            ok: false,
+            errorCode: result.errorCode ?? 'handoff_refused',
+            error: result.error ?? 'The handoff was refused.',
+            data: {}
+          };
+    }
+
+    case 'builder.handoffs.decide': {
+      const handoffId = String(args.handoffId ?? '').trim();
+      const decision = args.decision === 'rejected' ? 'rejected' : 'accepted';
+      const target = listHandoffs(workspace).find((entry) => entry.id === handoffId);
+      /**
+       * Only the session a handoff was addressed to may answer it. Without this
+       * a third agent could accept work delegated to someone else, and the
+       * capability intersection would then be computed against the wrong
+       * session entirely.
+       */
+      if (target && target.targetAgent !== session.id) {
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'not_addressed_to_you',
+          error: 'This handoff was delegated to a different session.',
+          data: {}
+        };
+      }
+      const result = decideHandoff(workspace, handoffId, decision, new Date().toISOString());
+      return result.ok
+        ? { workspace: result.workspace, ok: true, data: { status: result.handoff?.status } }
+        : {
+            workspace: result.workspace,
+            ok: false,
+            errorCode: result.errorCode ?? 'handoff_refused',
+            error: result.error ?? 'The decision was refused.',
+            data: {}
+          };
+    }
+
+    case 'builder.handoffs.complete': {
+      const handoffId = String(args.handoffId ?? '').trim();
+      const target = listHandoffs(workspace).find((entry) => entry.id === handoffId);
+      if (target && target.targetAgent !== session.id) {
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'not_addressed_to_you',
+          error: 'This handoff was delegated to a different session.',
+          data: {}
+        };
+      }
+      const result = completeHandoff(
+        workspace,
+        handoffId,
+        String(args.result ?? ''),
+        new Date().toISOString()
+      );
+      return result.ok
+        ? { workspace: result.workspace, ok: true, data: { status: result.handoff?.status } }
+        : {
+            workspace: result.workspace,
+            ok: false,
+            errorCode: result.errorCode ?? 'handoff_refused',
+            error: result.error ?? 'Completion was refused.',
+            data: {}
+          };
     }
 
     case 'builder.skill-packed-instructions': {

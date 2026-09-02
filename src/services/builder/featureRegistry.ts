@@ -547,11 +547,16 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     owningService: 'handoffs.ts',
     uiExposure: 'settings',
     backendImplementation: true,
-    requiredPermissions: ['context.read'],
+    requiredPermissions: [
+      'builder.handoffs.list',
+      'builder.handoffs.propose',
+      'builder.handoffs.decide',
+      'builder.handoffs.complete'
+    ],
     integrationDependencies: [],
     maturity: 'EXPERIMENTAL',
     wired: true,
-    tests: ['agentHandoffs.test.ts', 'handoffsVisible.test.tsx']
+    tests: ['agentHandoffs.test.ts', 'handoffsVisible.test.tsx', 'handoffToolSecurity.test.ts']
   }
 ];
 

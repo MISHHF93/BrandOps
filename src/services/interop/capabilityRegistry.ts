@@ -458,6 +458,47 @@ export const AGENT_CAPABILITY_REGISTRY: Readonly<
     family: 'KNOW',
     access: 'auto',
     readOnly: true
+  },
+  'builder.handoffs.list': {
+    id: 'builder.handoffs.list',
+    toolName: 'brandops_list_handoffs',
+    label: 'List handoffs',
+    description: 'List delegations between agent sessions, with the access each currently confers.',
+    tier: 'READ',
+    family: 'KNOW',
+    access: 'auto',
+    readOnly: true
+  },
+  'builder.handoffs.propose': {
+    id: 'builder.handoffs.propose',
+    toolName: 'brandops_propose_handoff',
+    label: 'Propose a handoff',
+    description:
+      'Delegate scoped work to another agent session. The delegation is always made from the calling session and can never name a capability or context bundle that session does not itself hold.',
+    tier: 'PREPARE',
+    family: 'DELEGATE',
+    access: 'auto',
+    readOnly: false
+  },
+  'builder.handoffs.decide': {
+    id: 'builder.handoffs.decide',
+    toolName: 'brandops_decide_handoff',
+    label: 'Accept or reject a handoff',
+    description: 'Accept or reject a delegation addressed to the calling session.',
+    tier: 'PREPARE',
+    family: 'DELEGATE',
+    access: 'auto',
+    readOnly: false
+  },
+  'builder.handoffs.complete': {
+    id: 'builder.handoffs.complete',
+    toolName: 'brandops_complete_handoff',
+    label: 'Complete a handoff',
+    description: 'Report the result of a delegation the calling session accepted.',
+    tier: 'PREPARE',
+    family: 'DELEGATE',
+    access: 'auto',
+    readOnly: false
   }
 };
 
