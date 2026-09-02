@@ -109,7 +109,10 @@ beforeAll(async () => {
       'context.read',
       'plans.read',
       'plan.convert',
-      'evidence.search',
+      // `evidence.search` was granted here for months and silently dropped:
+      // `clampSessionScopes` filters ids that are not in the registry, so the
+      // session never held it. Nothing exercised evidence, so nothing failed.
+      'evidence.read',
       'execution.request',
       'execution.read',
       'builder.receipts.list'

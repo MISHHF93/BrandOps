@@ -17,10 +17,20 @@ import {
   computeClaimEvidenceStrength
 } from '../../src/services/evidence/evidenceLedger';
 import type { EvidenceSource } from '../../src/services/evidence/evidenceLedger';
+import type { EvidenceEntry, EvidenceKind } from '../../src/types/builder';
 
 const WS_ID = 'ws-evidence-test';
 
-function makeEvidenceEntry(ref: string, kind: string, label: string) {
+/**
+ * Typed, so the compiler checks the kinds this suite claims to use.
+ *
+ * `kind` was `string`, which let every call pass an arbitrary value into an
+ * `EvidenceKind` slot. The suite was never typechecked by any pipeline, so it
+ * also carried three `{ type: 'repository' }` entity refs — and `repository` is
+ * not an `EntityRefType`. The assertions still passed, because a test that
+ * builds an invalid value and reads it straight back agrees with itself.
+ */
+function makeEvidenceEntry(ref: string, kind: EvidenceKind, label: string): EvidenceEntry {
   return { ref, kind, label };
 }
 
@@ -35,7 +45,7 @@ describe('Evidence Ledger — Creation', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'github',
       supportsClaims: ['claim-1'],
-      attachedEntities: [{ type: 'repository', id: 'owner/repo' }],
+      attachedEntities: [{ type: 'project', id: 'owner/repo' }],
       workspaceId: WS_ID
     });
 
@@ -157,7 +167,7 @@ describe('Evidence Ledger — Query', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'github',
       supportsClaims: [],
-      attachedEntities: [{ type: 'repository', id: 'owner/repo' }],
+      attachedEntities: [{ type: 'project', id: 'owner/repo' }],
       workspaceId: WS_ID
     });
     createLedgerEvidence({
@@ -165,11 +175,11 @@ describe('Evidence Ledger — Query', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'github',
       supportsClaims: [],
-      attachedEntities: [{ type: 'repository', id: 'other/repo' }],
+      attachedEntities: [{ type: 'project', id: 'other/repo' }],
       workspaceId: WS_ID
     });
 
-    const forRepo = getEvidenceForEntity(WS_ID, 'repository', 'owner/repo');
+    const forRepo = getEvidenceForEntity(WS_ID, 'project', 'owner/repo');
     expect(forRepo.length).toBe(1);
     expect(forRepo[0].label).toBe('Evidence for repo');
   });

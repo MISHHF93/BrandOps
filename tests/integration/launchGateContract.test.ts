@@ -33,7 +33,7 @@ import {
 } from '../../src/shared/account/launchLifecycleGate';
 import { getAgentCommandLock } from '../../src/pages/mobile/agentCommandAccess';
 import type { LaunchAccessState, MembershipStatus } from '../../src/shared/account/launchAccess';
-import type { MobileShellTabId } from '../../src/pages/mobile/mobileShellTabs';
+import type { MobileShellTabId } from '../../src/pages/mobile/mobileShellQuery';
 
 const MEMBERSHIPS: MembershipStatus[] = ['none', 'trialing', 'active', 'past_due', 'canceled'];
 const TABS: MobileShellTabId[] = ['chat', 'workspace', 'daily', 'integrations', 'settings'];

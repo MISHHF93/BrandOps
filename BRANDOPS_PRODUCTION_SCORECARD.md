@@ -60,7 +60,7 @@ acted on.
 
 | #   | Dimension                            | Weight  | Score    | Prev | Δ        | Basis                                                                                                                                                                                                                                                                                       |
 | --- | ------------------------------------ | ------- | -------- | ---- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Architecture & Source Coherence      | 8       | **8.0**  | 7.5  | **+0.5** | Duplication guarded by test rather than vigilance. Cross-layer invariants enumerate the registry, the status union and the model-input surface, so new code is in scope without anyone remembering to add it                                                                                |
+| D1  | Architecture & Source Coherence      | 8       | **8.0**  | 8.0  | —        | Duplication guarded by test rather than vigilance. The test suite is now typechecked against a ratchet in CI — it had 211 unseen errors, including a broken import and a capability that is not in the registry                                                                             |
 | D2  | Core Product Workflow                | 10      | **9.0**  | 8.5  | **+0.5** | A→Z loop passes. Every site that assembles model input quotes untrusted workspace content, enforced by a test that matches the shape rather than a list of files                                                                                                                            |
 | D3  | RAG / Context Quality                | 8       | **8.0**  | 6.0  | **+2.0** | Relevance floor and shared stopword scoring; provenance and trust-tier agreement asserted on every retrieved item; bundle scope proven not to widen                                                                                                                                         |
 | D4  | Digital Twin / Evidence Integrity    | 7       | **7.0**  | —    | —        | Trust tiers hold under direct attack. Tier not derivable from a caller-supplied source string; a verification approval cannot be spent on an achievement that changed; a scraped third-party profile cannot reach the Twin, achievements or evidence                                        |
@@ -224,6 +224,71 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 52 — 2026-09-02 · the checks nobody was running
+
+Asked to work on source health. The audit from cycle 47 had found real debt and I never acted on it,
+so this cycle did — and the first thing it found was worse than the debt.
+
+**`tsconfig.tests.json` and a `typecheck:tests` script both existed, and nothing ran either.** Not
+`check`, not `verify`, not `release`, not CI. `vitest` transpiles without checking types, so the
+suite went green over **211 unseen type errors**, two of which were not debt at all:
+
+- an import of `src/pages/mobile/mobileShellTabs` — **a module that does not exist**;
+- a session granted `evidence.search` — **a capability that is not in the registry**, silently
+  dropped by `clampSessionScopes`, so the test's session never held what it claimed to grant.
+
+Neither could fail, because nothing was looking.
+
+**211 → 157**, and the reductions came from fixing sources rather than quieting tests:
+
+| what changed                                                   | errors |
+| -------------------------------------------------------------- | -----: |
+| repaired the broken import                                     |     −1 |
+| corrected the phantom capability                               |     −1 |
+| gave `evaluateGoalHealth` the overloads its implementation had |    −32 |
+| typed the evidence-ledger fixture                              |    −19 |
+
+The third is the one worth naming. `evaluateGoalHealth` returned
+`GoalHealth | Map<string, GoalHealth>` — a union decided entirely by whether `goal` was passed, so
+every caller narrowed a thing it already knew. Overloads say what the implementation always did.
+**Lint blocked that fix**: ESLint's base `no-redeclare` cannot see a TypeScript overload and rejects
+the construct outright. The TypeScript-aware rule replaces it, and still catches a real
+redeclaration — checked with a probe rather than assumed.
+
+The fourth turned up three `{ type: 'repository' }` entity refs. `repository` is not an
+`EntityRefType`. The assertions passed anyway, because a test that builds an invalid value and reads
+it straight back agrees with itself.
+
+**The remaining 157 are held by a ratchet**, not a promise: `check:tests` fails if the count rises,
+**and fails if it falls without the budget being lowered in the same commit**. Two error codes are
+held at zero rather than budgeted — an unresolved module and a compiler-named typo — because neither
+is debt. It runs in `verify`, in `release`, and in CI.
+
+**And the suite had a flake that was not a flake.** Two determinism tests failed about one run in
+four with _"Test timed out in 5000ms"_, which reads like nondeterminism and was nothing of the sort:
+thirty snapshot builds cost **3.1 seconds on an idle machine** against vitest's 5-second default, so
+they were marginal before any load and over the line when files run in parallel. The clock was
+measuring the machine, not the assertion. Six consecutive clean full-suite runs since.
+
+Chasing that also caught a **real** ordering defect the guard was built for:
+`crossPlatformOperationalTimeline` called `new Date()` **per item inside two loops**, so items sorted
+by which millisecond they were constructed in and the `id` tie-break was never reached. **Third
+occurrence** of the same pattern — the unified inbox in cycle 39, receipts in cycle 45, this now.
+
+| Repair                                            | Dimension | Evidence                                                |
+| ------------------------------------------------- | --------- | ------------------------------------------------------- |
+| Tests are typechecked, against a ratchet, in CI   | D1, D15   | 211 unseen errors; broken import and phantom capability |
+| `evaluateGoalHealth` states what it returns       | D1        | −32 errors, and callers stop narrowing what they know   |
+| Lint no longer forbids TypeScript overloads       | D1        | Base rule off, TS-aware rule on, probe-verified         |
+| One stamp per derivation in the platform timeline | P11       | Third instance of a pattern that keeps recurring        |
+| Slow determinism tests carry honest timeouts      | D9        | ~25% failure under load → 6 clean runs                  |
+
+**Score movement: none.** D1 is at its cap and this is repair beneath it. The honest note is that
+D15 Deployment says "CI and release both pass end to end" — that was true, and this cycle shows CI
+was passing while a whole category of check sat unwired.
+
+---
 
 ### Cycle 51 — 2026-09-02 · what is behind the disclosure
 

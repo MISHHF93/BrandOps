@@ -35,6 +35,17 @@ export default [
       ...tsPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       '@typescript-eslint/no-explicit-any': 'off',
+      /**
+       * The base rule cannot see a TypeScript overload.
+       *
+       * It reads the signatures preceding an implementation as redeclarations
+       * and errors on every one, so it rejects the construct outright — giving
+       * `evaluateGoalHealth` the overloads its implementation always had was
+       * blocked by lint, not by the compiler. The TypeScript-aware version
+       * understands them and still catches genuine redeclarations.
+       */
+      'no-redeclare': 'off',
+      '@typescript-eslint/no-redeclare': 'error',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',

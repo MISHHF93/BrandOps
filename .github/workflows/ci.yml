@@ -26,6 +26,18 @@ jobs:
       - name: Run static checks
         run: npm run check
 
+      # The test suite has its own tsconfig, and for a long time nothing ran it:
+      # not `check`, not `verify`, not `release`, not CI. It had accumulated 211
+      # type errors unseen, including an import of a module that does not exist
+      # and a granted capability that is not in the registry. `vitest`
+      # transpiles without checking types, so the suite stayed green over both.
+      #
+      # This is a ratchet, not a gate: the count may fall and may never rise,
+      # and the budget has to be lowered in the same commit that lowers the
+      # count.
+      - name: Typecheck tests against their budget
+        run: npm run check:tests
+
       - name: Verify formatting (Prettier)
         run: npm run format
 

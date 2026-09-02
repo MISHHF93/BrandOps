@@ -51,6 +51,22 @@ function buildMany(workspace: BrandOpsData, times: number) {
 }
 
 /**
+ * Thirty builds are genuinely slow, so the two tests that do them say so.
+ *
+ * A snapshot costs ~105ms on an idle machine, which puts thirty of them at
+ * **3.1 seconds against vitest's 5-second default** — marginal before any load,
+ * and over the line when the suite runs its files in parallel. Both tests failed
+ * roughly one run in four with "Test timed out in 5000ms", which reads exactly
+ * like a flaky determinism check and was nothing of the kind.
+ *
+ * A guard that fails a quarter of the time teaches people to re-run the suite,
+ * which quietly costs every other guard in it its authority. The build count
+ * stays at thirty because sampling is what catches a rare race; the timeout
+ * moves because the clock was measuring the machine, not the assertion.
+ */
+const SLOW_BUILD_LOOP = 60_000;
+
+/**
  * A workspace whose receipts genuinely tie.
  *
  * The expert routing readouts used to supply the ties, and they are gone — they
@@ -85,34 +101,42 @@ function withTiedReceipts(): BrandOpsData {
 }
 
 describe('building the same workspace twice', () => {
-  it('orders receipts identically every time', () => {
-    const workspace = withTiedReceipts();
-    const orders = new Set(
-      buildMany(workspace, 30).map((snapshot) =>
-        snapshot.planExecutionReceipts.map((receipt) => receipt.id).join(',')
-      )
-    );
+  it(
+    'orders receipts identically every time',
+    () => {
+      const workspace = withTiedReceipts();
+      const orders = new Set(
+        buildMany(workspace, 30).map((snapshot) =>
+          snapshot.planExecutionReceipts.map((receipt) => receipt.id).join(',')
+        )
+      );
 
-    // Was 3 across 40 builds. The reader sees this as the top of "Recently
-    // done" changing between one glance and the next.
-    expect(orders.size, `${orders.size} distinct orderings:\n${[...orders].join('\n')}`).toBe(1);
-  });
+      // Was 3 across 40 builds. The reader sees this as the top of "Recently
+      // done" changing between one glance and the next.
+      expect(orders.size, `${orders.size} distinct orderings:\n${[...orders].join('\n')}`).toBe(1);
+    },
+    SLOW_BUILD_LOOP
+  );
 
-  it('shows the same three items in the collapsed group', () => {
-    const workspace = withTiedReceipts();
-    const tops = new Set(
-      buildMany(workspace, 30).map((snapshot) =>
-        snapshot.planExecutionReceipts
-          .slice(0, 3)
-          .map((receipt) => receipt.id)
-          .join(',')
-      )
-    );
+  it(
+    'shows the same three items in the collapsed group',
+    () => {
+      const workspace = withTiedReceipts();
+      const tops = new Set(
+        buildMany(workspace, 30).map((snapshot) =>
+          snapshot.planExecutionReceipts
+            .slice(0, 3)
+            .map((receipt) => receipt.id)
+            .join(',')
+        )
+      );
 
-    // The group renders three rows before "Show N more", so this is the slice
-    // that actually reaches a reader.
-    expect(tops.size, [...tops].join(' | ')).toBe(1);
-  });
+      // The group renders three rows before "Show N more", so this is the slice
+      // that actually reaches a reader.
+      expect(tops.size, [...tops].join(' | ')).toBe(1);
+    },
+    SLOW_BUILD_LOOP
+  );
 
   it('stamps a readout derived in one pass with one timestamp', () => {
     const snapshot = buildWorkspaceSnapshot(cloneDemoSampleData());

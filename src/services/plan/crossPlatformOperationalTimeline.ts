@@ -42,6 +42,21 @@ const KIND_ORDER: Record<CrossPlatformTimelineKind, number> = {
   'completed-operation': 7
 };
 
+/**
+ * One stamp for one derivation.
+ *
+ * Two of the loops below give each item `new Date()` for itself, and the sort
+ * orders by that field before it reaches the `id` tie-break. Items built in the
+ * same pass therefore ordered by *which millisecond they were constructed in* —
+ * stable on a fast machine, and not stable at all under load, where the
+ * whole-snapshot determinism net caught it reordering between two builds of an
+ * unchanged workspace.
+ *
+ * This is the third time: the unified inbox in cycle 39, execution receipts in
+ * cycle 45, and now this timeline. The rule that keeps not sticking is that
+ * **anything derived in one pass should be stamped in one pass**, and the fix is
+ * always to hoist the clock read out of the loop.
+ */
 function nowIso(): string {
   return new Date().toISOString();
 }
@@ -98,6 +113,9 @@ function uniqItems(items: CrossPlatformTimelineItem[]): CrossPlatformTimelineIte
 export function buildCrossPlatformOperationalTimeline(
   workspace: BrandOpsData
 ): CrossPlatformOperationalTimelineReadout {
+  // Read once, so items built in this pass share a stamp instead of racing the
+  // clock for their sort position.
+  const derivedAt = nowIso();
   const items: CrossPlatformTimelineItem[] = [];
 
   for (const draft of workspace.outreachDrafts.filter((entry) => entry.status !== 'archived')) {
@@ -208,7 +226,7 @@ export function buildCrossPlatformOperationalTimeline(
         whereItHappened: card.platform,
         whatAiDid:
           'Prepared a connected-platform action draft. External execution still requires approval.',
-        at: nowIso(),
+        at: derivedAt,
         status: 'draft ready',
         command: card.command
       })
@@ -223,7 +241,7 @@ export function buildCrossPlatformOperationalTimeline(
         whatHappened: recommendation.title,
         whereItHappened: recommendation.platformContext.join(', ') || 'BrandOps workspace',
         whatAiDid: `Recommended an opportunity with ${recommendation.confidence}% confidence: ${recommendation.expectedImpact}`,
-        at: nowIso(),
+        at: derivedAt,
         status: `${recommendation.confidence}% confidence`,
         command: recommendation.previewCommand
       })

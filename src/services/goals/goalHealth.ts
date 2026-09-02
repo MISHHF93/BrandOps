@@ -86,6 +86,28 @@ export interface GoalHealth {
  * When `goal` is provided, returns a GoalHealth for that goal.
  * When `goal` is omitted, returns a Map of goalId → GoalHealth for all goals in data.
  */
+/**
+ * One goal in, one health out. All goals in, a map out.
+ *
+ * The single signature returned `GoalHealth | Map<string, GoalHealth>`, a union
+ * decided entirely by whether `goal` was passed — so every caller had to narrow
+ * a thing it already knew. Thirty-two type errors in `goalHealth.test.ts` were
+ * that union, and the test suite was never typechecked by any pipeline, so they
+ * sat unread while the tests themselves passed.
+ *
+ * Overloads say what the implementation always did. Nothing about the behaviour
+ * changes; the callers simply stop being asked to prove what they told it.
+ */
+export function evaluateGoalHealth(params: {
+  goal: Goal;
+  data: BrandOpsData;
+  recentActivityWindowDays?: number;
+}): GoalHealth;
+export function evaluateGoalHealth(params: {
+  goal?: undefined;
+  data: BrandOpsData;
+  recentActivityWindowDays?: number;
+}): Map<string, GoalHealth>;
 export function evaluateGoalHealth(params: {
   goal?: Goal;
   data: BrandOpsData;
