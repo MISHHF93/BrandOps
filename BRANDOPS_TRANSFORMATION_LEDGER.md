@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-31 (forensic re-audit)
 **Method:** Forensic source inspection + runtime verification + test evidence
-**Baseline (current tree, updated 2026-08-31 with outcome-learning / profession-pack / adversarial / loop-test workstream):** `tsc -b` clean, eslint clean, **1122/1122 tests (216 files)**, vite build succeeds, knip 1 unused file.
+**Baseline (current tree, updated 2026-08-31 with outcome-learning / profession-pack / adversarial / loop-test workstream):** `tsc -b` clean, eslint clean, **1122/1122 tests (217 files)**, vite build succeeds, knip 1 unused file.
 
 > Prior versions of this ledger (2026-08-30) claimed "1042/1042 passing" and listed several P1 gaps as ABSENT
 > while a same-day FEATURE_TRUTH claimed them VERIFIED_WORKING. This revision reconciles both against actual source.

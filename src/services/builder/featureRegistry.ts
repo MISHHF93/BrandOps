@@ -4,13 +4,36 @@
  * duplicated capabilities, and unsupported product claims.
  */
 
-import type { FeatureRegistryEntry } from '../../types/builder';
+import type { FeatureRegistryEntry, FeatureMaturity } from '../../types/builder';
 import type { BrandOpsData } from '../../types/domain';
 
+/**
+ * Unwired is not unwanted.
+ *
+ * Nine of this module's exports have no caller: `updateFeatureRegistry`,
+ * `getFeatureById`, `getFeaturesByMaturity`, `getWiredFeatures`,
+ * `getUnwiredFeatures`, `getBackendOnlyFeatures`, `getDeadUiFeatures`,
+ * `detectDuplicates`, and the storage key they share. A previous cycle deleted
+ * them for that reason, and that was the wrong call: they are a coherent query
+ * API over the feature registry, and an unlinked function is work that has not
+ * been connected yet rather than work nobody wanted.
+ *
+ * They are kept, and — more usefully — they are covered by
+ * `featureRegistryQueries.test.ts`. Unwired code that nothing exercises is the
+ * real hazard: it rots silently and then fails on the day somebody finally calls
+ * it. Tested unwired code is a capability waiting for a caller.
+ *
+ * `updateFeatureRegistry` is the one that unlocks the rest. Nothing writes
+ * `workspace.featureRegistry`, so every read falls through to the built-in
+ * catalogue; wiring that write is what would make these queries answer about a
+ * real workspace instead of a constant.
+ */
 export interface FeatureRegistryState {
   entries: FeatureRegistryEntry[];
   updatedAt: string;
 }
+
+export const FEATURE_REGISTRY_KEY = 'featureRegistry' as const;
 
 export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
   // Core capabilities
@@ -520,12 +543,10 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
 /**
  * The workspace's registry, or the catalogue this build ships with.
  *
- * The fallback used to stamp `updatedAt: new Date().toISOString()` — a
- * freshness claim on a hardcoded constant. **Nothing writes
- * `workspace.featureRegistry`**: the only function that could,
- * `updateFeatureRegistry`, was itself unreferenced and has been removed. So that
- * branch ran every time, and every call reported the built-in list as though it
- * had just been recomputed.
+ * The fallback used to stamp `updatedAt: new Date().toISOString()` — a freshness
+ * claim on a hardcoded constant. Nothing writes `workspace.featureRegistry` yet,
+ * so that branch runs on every call, and every call reported the built-in list
+ * as though it had just been recomputed.
  *
  * A caller cannot tell a stored registry from the default by looking at the
  * entries, so the timestamp is the only thing that could carry the distinction —
@@ -543,4 +564,84 @@ export function getFeatureRegistryState(workspace: BrandOpsData): FeatureRegistr
     entries: DEFAULT_FEATURE_REGISTRY,
     updatedAt: BUILT_IN_AT
   };
+}
+
+export function updateFeatureRegistry(
+  workspace: BrandOpsData,
+  entries: FeatureRegistryEntry[],
+  updatedAt?: string
+): BrandOpsData {
+  const now = updatedAt ?? new Date().toISOString();
+  return {
+    ...workspace,
+    featureRegistry: {
+      entries,
+      updatedAt: now
+    }
+  };
+}
+
+export function getFeatureById(
+  registry: FeatureRegistryState,
+  id: string
+): FeatureRegistryEntry | null {
+  return registry.entries.find((e) => e.id === id) ?? null;
+}
+
+export function getFeaturesByMaturity(
+  registry: FeatureRegistryState,
+  maturity: FeatureMaturity
+): FeatureRegistryEntry[] {
+  return registry.entries.filter((e) => e.maturity === maturity);
+}
+
+export function getWiredFeatures(registry: FeatureRegistryState): FeatureRegistryEntry[] {
+  return registry.entries.filter((e) => e.wired);
+}
+
+export function getUnwiredFeatures(registry: FeatureRegistryState): FeatureRegistryEntry[] {
+  return registry.entries.filter((e) => !e.wired);
+}
+
+/**
+ * Implemented and wired, with no surface a user can reach.
+ *
+ * This tested `uiExposure === 'hidden'` only, and the field's type also allows
+ * `'none'` — both of which mean the same thing here: nothing user-facing. The
+ * shipped catalogue happens to use only `hidden`, so the gap returned the right
+ * answer today and would have silently under-reported the first time an entry
+ * used the other value. Found by exercising the function rather than by reading
+ * it, which is the argument for testing code that has no caller yet.
+ */
+export function getBackendOnlyFeatures(registry: FeatureRegistryState): FeatureRegistryEntry[] {
+  return registry.entries.filter((e) => e.backendImplementation && !hasUserSurface(e) && e.wired);
+}
+
+/** `hidden` and `none` both mean the user cannot get to it. */
+function hasUserSurface(entry: FeatureRegistryEntry): boolean {
+  return entry.uiExposure !== 'hidden' && entry.uiExposure !== 'none';
+}
+
+/** A surface the user can reach that is not wired end to end. */
+export function getDeadUiFeatures(registry: FeatureRegistryState): FeatureRegistryEntry[] {
+  return registry.entries.filter((e) => hasUserSurface(e) && !e.wired);
+}
+
+export function detectDuplicates(registry: FeatureRegistryState): FeatureRegistryEntry[] {
+  const seen = new Map<string, FeatureRegistryEntry[]>();
+  for (const entry of registry.entries) {
+    const key = [entry.owningModule, entry.name.toLowerCase()].join(':');
+    if (seen.has(key)) {
+      seen.get(key)!.push(entry);
+    } else {
+      seen.set(key, [entry]);
+    }
+  }
+  const duplicates: FeatureRegistryEntry[] = [];
+  for (const [, entries] of seen) {
+    if (entries.length > 1) {
+      duplicates.push(...entries);
+    }
+  }
+  return duplicates;
 }

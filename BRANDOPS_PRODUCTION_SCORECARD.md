@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1588 tests / 216 files** passing · `vite build` succeeds.
+**1599 tests / 217 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,55 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 55 — 2026-09-02 · unwired is not unwanted
+
+**A correction first.** Cycle 54 deleted nine `featureRegistry.ts` functions because Knip reported
+them unreferenced. The operator's instruction is that an unlinked function is work that has not been
+connected _yet_ — keep it, and make sure it works. That is the better default and the deletion was
+the wrong call, so the nine are restored.
+
+The truthfulness fix from that cycle stays: the built-in catalogue still reads `built-in` rather than
+dating itself to now.
+
+**Then the part that mattered.** Unwired code that nothing exercises is the real hazard — it rots in
+silence and fails on the day someone finally calls it, which is the worst possible moment to find
+out. So the query API now has tests that do what wiring would eventually do.
+
+Run against the shipped catalogue, they answer:
+
+```
+  33 entries · 3 backend-only · 3 dead UI · 6 unwired · 0 duplicates
+```
+
+**Exercising them found a latent bug.** `getBackendOnlyFeatures` tested `uiExposure === 'hidden'` and
+the field's type also allows `'none'` — both meaning nothing user-facing. The shipped catalogue
+happens to use only `hidden`, so it returned the right answer today and would have under-reported
+the first time an entry used the other value. Found by running it, not by reading it.
+
+**And a fixture of mine was incoherent.** My first `dead-ui` entry said `wired: true,
+backendImplementation: false` — a state that cannot exist. The test failed for that reason rather
+than finding anything, which is the fourth time this session a fixture has been the thing at fault.
+
+**The metric changed meaning, and that is worth stating rather than celebrating.** Restoring nine
+exports should have taken Knip from 119 back to 128. It went to **118**, because the new test imports
+them and Knip counts an import as a use. So the number is no longer a count of dead exports. It is a
+count of exports that are **neither wired nor exercised** — which is the more useful question, but it
+is a different question, and reporting the drop as cleanup would have been false.
+
+| Repair                                            | Dimension | Evidence                                     |
+| ------------------------------------------------- | --------- | -------------------------------------------- |
+| Nine deleted functions restored                   | D1        | Deleting unlinked work was the wrong default |
+| The query API is exercised before it has a caller | D1, D9    | 11 tests, 4 mutations, all caught            |
+| `getBackendOnlyFeatures` covers its own type      | D1        | `'none'` was missed; found by running it     |
+
+**Score movement: none.**
+
+The generalisable point: **Knip answers "does anything import this", which is not the same question
+as "is this dead".** Reading its output as the latter is what produced a deletion that had to be
+undone.
+
+---
 
 ### Cycle 54 — 2026-09-02 · a registry nothing writes
 

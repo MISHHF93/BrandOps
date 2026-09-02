@@ -30,13 +30,24 @@ import { fileURLToPath } from 'node:url';
  * Counts unused exports **and** unused exported types together, since both are
  * surface nothing reaches.
  *
- * 133 when first gated (120 exports + 13 types). 128 after removing four
- * functions from `candidateMemory.ts` that `memoryFirewall.ts` re-declares under
- * the same names, and un-exporting one used only inside its own file. 119 after
- * removing nine from `featureRegistry.ts` — a query API over a registry that
- * nothing writes, of which exactly one function was ever wired.
+ * 133 when first gated (120 exports + 13 types). 128 after consolidating four
+ * functions in `candidateMemory.ts` that `memoryFirewall.ts` re-declares under
+ * the same names, and un-exporting one used only inside its own file.
+ *
+ * **What this number means changed at 118, and it is worth being precise about.**
+ * Nine `featureRegistry.ts` functions were deleted for being unreferenced and
+ * then restored, because an unlinked function is work that has not been
+ * connected yet rather than work nobody wanted. Restoring them should have put
+ * the count back to 128. It did not — it went to 118, because the test file that
+ * now exercises them imports them, and Knip counts an import as a use.
+ *
+ * So this is no longer a count of *dead* exports. It is a count of exports that
+ * are **neither wired nor exercised** — which is the more useful question
+ * anyway. Unwired code with tests is a capability waiting for a caller. Unwired
+ * code with nothing exercising it is code that will fail on the day someone
+ * finally calls it.
  */
-const BUDGET = 119;
+const BUDGET = 118;
 
 /**
  * Knip's `exports` map blocks `require.resolve` for both `bin/knip.js` and its
