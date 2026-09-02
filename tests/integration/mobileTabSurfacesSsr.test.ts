@@ -151,7 +151,16 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     // above the group that already lists it. Both are gone, and what they were
     // standing in for — that the feed renders, grouped, with a count — is
     // asserted directly.
-    expect(html).toMatch(/\d+ items\./);
+    /**
+     * The unfiltered total is gone.
+     *
+     * It read "16 items." above five group headings that each carry their own
+     * count, broken down usefully — a number the page had already given better.
+     * It survives only while a filter is on, where it is the one thing
+     * explaining why the feed is short. What this line was standing in for —
+     * that the feed renders with counts — is asserted through the groups above.
+     */
+    expect(html).toMatch(/Waiting on you/);
     /**
      * The group headings, not the per-row kind labels.
      *

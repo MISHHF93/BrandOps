@@ -341,12 +341,52 @@ function savedPlanToFeedItem(
   };
 }
 
+/**
+ * The real figures behind an operational card, as plain lines.
+ *
+ * `exportPayload` already carries them per card kind — outreach drafts, open
+ * follow-ups, queued publishing. Rendering those beats a synthetic percentage
+ * because each one is a fact the reader can act on.
+ *
+ * Zeros are dropped for the same reason cycle 47 stopped counting them as
+ * evidence: "missed tasks: 0" is a statement that nothing is there, and it
+ * crowds out the figures that are.
+ */
+/**
+ * A count and its noun, pluralised correctly.
+ *
+ * Three places appended a bare `s`, which is right for "expert" and "content
+ * idea" and wrong for "opportunity" — the twin readout said **"9 opportunitys
+ * predicted"**. Rather than fix the one that showed, the shape is shared, so a
+ * noun added later gets the same treatment.
+ *
+ * Deliberately small: English pluralisation has many rules and this needs the
+ * two that these nouns use.
+ */
+export function pluralise(count: number, noun: string): string {
+  if (count === 1) return `${count} ${noun}`;
+  const plural = /(?:s|x|z|ch|sh)$/.test(noun)
+    ? `${noun}es`
+    : /[^aeiou]y$/.test(noun)
+      ? `${noun.slice(0, -1)}ies`
+      : `${noun}s`;
+  return `${count} ${plural}`;
+}
+
+function planEvidenceLines(plan: OperationalPlanCard): string[] {
+  return Object.entries(plan.exportPayload ?? {})
+    .filter(([key, value]) => key !== 'type' && typeof value === 'number' && value > 0)
+    .map(([key, value]) => `${key.replace(/([A-Z])/g, ' $1').toLowerCase()}: ${String(value)}`)
+    .slice(0, 4);
+}
+
 function operationalCardToFeedItem(
   plan: OperationalPlanCard,
   runCommand: MobileWorkspaceHubViewProps['runCommand'],
   disabled: boolean,
   onExportOperationalPlan?: (plan: OperationalPlanCard) => void
 ): FeedItem {
+  const underway = plan.status === 'in-progress' || plan.status === 'blocked';
   const nextStep =
     plan.status === 'blocked'
       ? 'Resolve the blocker, then approve or reject.'
@@ -370,9 +410,28 @@ function operationalCardToFeedItem(
      * tile reading "Active Plans: 4"**, for someone who had done nothing. A card
      * only reports progress once its own status says so.
      */
-    kind: plan.status === 'in-progress' || plan.status === 'blocked' ? 'active-plan' : 'ready-plan',
+    kind: underway ? 'active-plan' : 'ready-plan',
     title: plan.title,
-    summary: plan.promise,
+    /**
+     * What to do next, once the reader already knows what this is.
+     *
+     * Every row led with `promise` — a paragraph describing what the feature
+     * does: *"Convert positioning and proof into draft outreach, follow-ups,
+     * and approvals — with execution receipts that strengthen the twin."* That
+     * is the right thing to say about an offer and the wrong thing to say about
+     * work already moving, where the reader wants to know where it stands.
+     *
+     * So the split follows the group it lands in. "Ready to start" keeps the
+     * explanation, because a reader deciding whether to begin needs it.
+     * "In progress" leads with where the work actually stands.
+     *
+     * The first attempt used `nextStep` here, and that was worse: it is keyed
+     * only on status, so all three underway rows read *"Check progress, then run
+     * the next approved step."* — the same sentence three times, which is the
+     * redundant-kind-label defect in a different place. The figures differ per
+     * card and are the thing a reader is actually looking for.
+     */
+    summary: (underway && planEvidenceLines(plan).join(' · ')) || plan.promise,
     status: plan.status.replace(/-/g, ' '),
     tone: planTone(plan),
     priority: plan.status === 'blocked' ? 18 : plan.status === 'needs-input' ? 45 : 65,
@@ -380,9 +439,23 @@ function operationalCardToFeedItem(
     primaryDisabled: disabled,
     onPrimary: () => runCommand(plan.previewCommand),
     details: [
-      nextStep,
+      // The promise moves here for underway rows, so nothing is lost by leading
+      // with the next move above.
+      ...(underway ? [plan.promise] : [nextStep]),
       `Source: ${plan.sourceLabel ?? 'Workspace'}`,
-      `Progress: ${plan.progress}%`
+      /**
+       * The counts, not a percentage of nothing.
+       *
+       * This read `Progress: ${plan.progress}%`, and that number is an activity
+       * tally scaled by an arbitrary multiplier and capped at 100 — there is no
+       * defined endpoint for it to be a percentage of. The Outreach Plan's
+       * formula is `outreachDrafts * 20 + incompleteFollowUps * 10`, so **ten
+       * unfinished follow-ups reported 100% progress**. Debt read as completion.
+       *
+       * The underlying figures are real and already carried in `exportPayload`,
+       * so the row states them and lets the reader judge.
+       */
+      ...planEvidenceLines(plan)
     ],
     timeline: plan.timeline,
     approvals: ['Review and approve before execution.'],
@@ -1273,8 +1346,7 @@ export const MobileWorkspaceHubView = ({
             {snapshot.expertOperator.ask.expertNames.length > 0 ? (
               <span>
                 <strong className="font-medium text-text">
-                  {snapshot.expertOperator.ask.expertNames.length} expert
-                  {snapshot.expertOperator.ask.expertNames.length > 1 ? 's' : ''}
+                  {pluralise(snapshot.expertOperator.ask.expertNames.length, 'expert')}
                 </strong>{' '}
                 active: {snapshot.expertOperator.ask.expertNames.slice(0, 3).join(', ')}
                 {snapshot.expertOperator.ask.expertNames.length > 3 ? '…' : ''}
@@ -1283,8 +1355,7 @@ export const MobileWorkspaceHubView = ({
             {snapshot.predictiveOpportunityLayer.suggestions.length > 0 ? (
               <span>
                 <strong className="font-medium text-text">
-                  {snapshot.predictiveOpportunityLayer.suggestions.length} opportunity
-                  {snapshot.predictiveOpportunityLayer.suggestions.length > 1 ? 's' : ''}
+                  {pluralise(snapshot.predictiveOpportunityLayer.suggestions.length, 'opportunity')}
                 </strong>{' '}
                 predicted
               </span>
@@ -1292,8 +1363,10 @@ export const MobileWorkspaceHubView = ({
             {snapshot.predictiveContentIdeationEngine.allIdeas.length > 0 ? (
               <span>
                 <strong className="font-medium text-text">
-                  {snapshot.predictiveContentIdeationEngine.allIdeas.length} content idea
-                  {snapshot.predictiveContentIdeationEngine.allIdeas.length > 1 ? 's' : ''}
+                  {pluralise(
+                    snapshot.predictiveContentIdeationEngine.allIdeas.length,
+                    'content idea'
+                  )}
                 </strong>{' '}
                 ready
               </span>
@@ -1321,8 +1394,15 @@ export const MobileWorkspaceHubView = ({
             "Showing 18 of 18 feed items" is a line that only ever tells the
             reader something when the two numbers differ.
           */}
+          {/*
+            Only shown while a filter is on.
+            
+            Unfiltered, this said "16 items." — a total the five group headings
+            already give, each broken down usefully. Filtered, it is the only
+            thing on the page explaining why the feed is short.
+          */}
           {visibleFeedItems.length === feedItems.length
-            ? `${feedItems.length} items.`
+            ? null
             : `Showing ${visibleFeedItems.length} of ${feedItems.length}. Tap the active tile to clear the filter.`}
         </p>
         {visibleFeedItems.length ? (

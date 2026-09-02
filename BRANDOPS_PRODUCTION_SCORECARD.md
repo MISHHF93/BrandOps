@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1571 tests / 213 files** passing · `vite build` succeeds.
+**1579 tests / 214 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,59 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 50 — 2026-09-02 · reading the page instead of the code
+
+The request was to keep working on the interface, with Plan named as the surface still needing it. So
+this cycle rendered the whole page and read it top to bottom, which no budget or structural test
+does. Four things, none of which any existing guard was looking at.
+
+**Every row led with a feature description.** `promise` is copy about what a template _does_ —
+_"Convert positioning and proof into draft outreach, follow-ups, and approvals — with execution
+receipts that strengthen the twin."_ That is the right thing to say about something on offer and the
+wrong thing to say about work already moving, where the reader wants to know where it stands.
+
+Rows now split by the group they land in. "Ready to start" keeps the explanation. "In progress"
+leads with its figures:
+
+```
+  before   Convert positioning and proof into draft outreach, follow-ups, and approvals — with…
+  after    outreach drafts: 2 · follow ups: 2 · active opportunities: 2
+```
+
+**The first attempt at that was worse, and the counter-case caught it.** Using the card's `nextStep`
+made all three underway rows read _"Check progress, then run the next approved step."_ — the same
+sentence three times, because that field is keyed only on status. It is the redundant-kind-label
+defect from cycle 44 wearing a different hat, and I reintroduced it while fixing something else.
+
+**A percentage of nothing.** The expanded detail read `Progress: 40%`. That number is an activity
+tally times an arbitrary multiplier, capped at 100, with no endpoint for it to be a percentage of.
+The Outreach Plan's formula is `outreachDrafts * 20 + incompleteFollowUps * 10` — so **ten unfinished
+follow-ups reported 100% progress.** Debt read as completion. Replaced with the counts it was made
+from, which `exportPayload` already carried.
+
+**A total the page already gave.** "16 items." sat above five group headings that each carry their
+own count. Kept only while a filter is on, where it is the one thing explaining a short feed.
+
+**"9 opportunitys predicted."** Three sites appended a bare `s`. Shared a small pluralise helper
+rather than fixing the one that showed.
+
+| Repair                                     | Dimension | Evidence                                               |
+| ------------------------------------------ | --------- | ------------------------------------------------------ |
+| Underway rows lead with their figures      | P2, P5    | Three distinct lines where there had been three blurbs |
+| Offered rows keep their explanation        | P2        | The counter-case for the same change reversed          |
+| A fabricated progress percentage is gone   | P11       | 10 open follow-ups had read as 100% complete           |
+| Zero-valued figures dropped from the row   | P2        | "missed tasks: 0" crowded out the figures that existed |
+| One pluralisation, correct for these nouns | P7        | "9 opportunitys" → "9 opportunities"                   |
+
+**PLAN score: 83.0 → 83.5** (P2 12.0 → 12.5). Product total unchanged at 95.5.
+
+**The method is the finding.** Forty-nine cycles of budgets, structural assertions and mutation tests
+had not caught a single one of these, because all four are about _what the words say_ and none of
+them changes a count, a control, or a heading. Rendering the surface and reading it is a different
+instrument, and it was overdue.
+
+---
 
 ### Cycle 49 — 2026-09-02 · the other end of the data range
 
