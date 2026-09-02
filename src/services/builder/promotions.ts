@@ -18,7 +18,13 @@
  */
 import type { BrandOpsData, DigitalTwin } from '../../types/domain';
 import { verifyAchievement } from './achievementService';
-import { applyDeltas, type CurrentTwinState } from './twinDeltaEngine';
+import type { TwinUpdateProposal } from '../../types/builder';
+import {
+  applyDeltas,
+  calculateDeltas,
+  createTwinUpdateProposal,
+  type CurrentTwinState
+} from './twinDeltaEngine';
 
 /** Projects a stored Twin into the shape `applyDeltas` expects. */
 function twinState(twin: DigitalTwin): CurrentTwinState {
@@ -59,10 +65,32 @@ export function applyAchievementVerification(
 
   const result = verifyAchievement(candidate, event);
   const nowIso = new Date().toISOString();
+
+  /**
+   * A verified achievement now reaches the Twin, as a proposal.
+   *
+   * Verification marked the event `USER_VERIFIED` and stopped there, so the
+   * Twin never learned anything from it. The delta engine was built for exactly
+   * this hand-off — `calculateDeltas` and `createTwinUpdateProposal` — and
+   * neither had a caller, while `applyTwinProposalAcceptance` waited for
+   * proposals **nothing could create**. Three quarters of a vertical, connected
+   * at one end.
+   *
+   * What is created is a proposal, not a change. The Twin is untouched until the
+   * operator accepts it through the existing approval path, which binds the
+   * approval to the content they saw. That boundary is the reason this is safe
+   * to wire automatically: the directive forbids promoting a claim into verified
+   * Twin state without a person, and proposing is not promoting.
+   */
+  const proposal = proposeTwinUpdateFromAchievement(workspace, result.achievement.title, event.id);
+
   return {
     ...workspace,
     builderActivity: {
       ...activity,
+      twinProposals: proposal
+        ? [proposal, ...(activity.twinProposals ?? [])]
+        : (activity.twinProposals ?? []),
       events: (activity.events ?? []).map((entry) =>
         entry.id === event.id
           ? {
@@ -78,6 +106,53 @@ export function applyAchievementVerification(
       updatedAt: nowIso
     }
   };
+}
+
+/**
+ * Turn one newly verified achievement into a Twin update proposal, or nothing.
+ *
+ * Returns `undefined` rather than proposing when there is no active Twin, when
+ * the achievement is already recorded on it, or when the engine finds no delta
+ * worth proposing. A proposal that changes nothing is noise in an approval
+ * queue, and the queue is the scarcest surface in the product.
+ */
+function proposeTwinUpdateFromAchievement(
+  workspace: BrandOpsData,
+  achievementTitle: string,
+  eventId: string
+): TwinUpdateProposal | undefined {
+  const twinId = workspace.digitalTwins?.activeTwinId ?? workspace.digitalTwins?.twins[0]?.id;
+  const twin = workspace.digitalTwins?.twins.find((entry) => entry.id === twinId);
+  const title = achievementTitle.trim();
+  if (!twin || !title) return undefined;
+
+  /**
+   * Two guards were here and both were unreachable, which mutation testing is
+   * what proved: removing either left every test green.
+   *
+   * An "already recorded" check is redundant because `calculateDeltas` returns
+   * no deltas when nothing changed — the engine's own job. And an "already
+   * proposed for this event" check cannot fire, because verification removes the
+   * achievement candidate, so a second call returns before reaching here.
+   *
+   * Defensive code that cannot run is worse than none: it reads as a considered
+   * safeguard and is one more thing to keep true.
+   */
+  const current = twinState(twin);
+  const { deltas } = calculateDeltas({
+    currentTwin: current,
+    newVerifiedInfo: { achievements: [...current.achievements, title] },
+    source: 'achievement-verification',
+    sourceId: eventId
+  });
+  if (!deltas.length) return undefined;
+
+  return createTwinUpdateProposal({
+    deltas,
+    reason: `Verified achievement: ${title.slice(0, 200)}`,
+    source: 'achievement-verification',
+    sourceId: eventId
+  }).proposal;
 }
 
 /** Applies an accepted Twin proposal's deltas to the active Twin and retires it. */

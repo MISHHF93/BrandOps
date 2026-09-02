@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1645 tests / 221 files** passing · `vite build` succeeds.
+**1653 tests / 222 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -63,7 +63,7 @@ acted on.
 | D1  | Architecture & Source Coherence      | 8       | **8.0**  | 8.0  | —        | Duplication guarded by test rather than vigilance. The test suite is now typechecked against a ratchet in CI — it had 211 unseen errors, including a broken import and a capability that is not in the registry                                                                             |
 | D2  | Core Product Workflow                | 10      | **9.0**  | 8.5  | **+0.5** | A→Z loop passes. Every site that assembles model input quotes untrusted workspace content, enforced by a test that matches the shape rather than a list of files                                                                                                                            |
 | D3  | RAG / Context Quality                | 8       | **8.0**  | 6.0  | **+2.0** | Relevance floor and shared stopword scoring; provenance and trust-tier agreement asserted on every retrieved item; bundle scope proven not to widen                                                                                                                                         |
-| D4  | Digital Twin / Evidence Integrity    | 7       | **7.0**  | —    | —        | Trust tiers hold under direct attack. Tier not derivable from a caller-supplied source string; a verification approval cannot be spent on an achievement that changed; a scraped third-party profile cannot reach the Twin, achievements or evidence                                        |
+| D4  | Digital Twin / Evidence Integrity    | 7       | **7.0**  | 7.0  | —        | Trust tiers hold under direct attack. Tier not derivable from a caller-supplied source string; a verification approval cannot be spent on an achievement that changed; a scraped third-party profile cannot reach the Twin, achievements or evidence                                        |
 | D5  | Plan / Agent / Execution Runtime     | 10      | **9.5**  | 8.5  | **+1.0** | Durable tasks, checkpoints, receipts, cancellation, verified across process restart. Every proposal kind now binds its approval to the content the user saw — the last one binding to a bare reference was the promotion path                                                               |
 | D6  | MCP / External AI Interoperability   | 7       | **6.5**  | 5.5  | **+1.0** | Server + client, both transports. Conformance now driven as a foreign client would drive it: handshake notification absorbed, malformed requests are protocol errors. Third-party client interop still UNVERIFIED                                                                           |
 | D7  | Connectors / External Actions        | 6       | **4.0**  | 3.5  | **+0.5** | Dispatch path with four honest outcomes, and it refuses anything without a standing approval — checked at the dispatcher, not only in one caller. One real connector (outbound webhook). No vendor connector, no live delivery verified                                                     |
@@ -224,6 +224,54 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 60 — 2026-09-02 · three quarters of a vertical, connected at one end
+
+The delta engine turned out to be a pipeline missing its middle. `applyTwinProposalAcceptance` took a
+Twin update proposal, applied its deltas, and was wired into the approval path.
+`calculateDeltas` and `createTwinUpdateProposal` — the two functions that _produce_ a proposal — had
+no caller at all.
+
+**So the acceptance handler waited for proposals nothing in the product could create.** Verifying an
+achievement marked the event `USER_VERIFIED`, removed the candidate, and taught the Twin nothing. The
+end of the pipeline was wired, the start of it was not, and neither half failed on its own.
+
+Verification is now the trigger, and the boundary is the whole point: what it creates is a
+**proposal**. The Twin is untouched until the operator accepts it through the existing approval path,
+which binds the approval to the content they saw. The directive forbids promoting a claim into
+verified Twin state without a person — proposing is not promoting, and a test holds that line by
+asserting the Twin is byte-identical after verification.
+
+**Mutation testing then caught two guards I had written that could never run.** An "already
+recorded" check was redundant, because `calculateDeltas` returns nothing when nothing changed — the
+engine's own job. An "already proposed for this event" check was unreachable, because verification
+removes the candidate, so a second call returns before reaching it. Both were removed. Defensive code
+that cannot execute is worse than none: it reads as a considered safeguard and is one more thing to
+keep true.
+
+**And the test fixture was wrong six times over.** It targeted the demo workspace, which has **no
+Twin at all**, so the first run showed the code correctly declining while the test read it as a
+failure. Typing the fixture instead of casting it then surfaced, one at a time: `'milestone'` is not
+an `ActivityEventKind`, `'milestone'` is not an `AchievementKind` either, `ActivityEvent` requires
+`timestamp` and `updatedAt`, `AchievementCandidate` has `reason` and `detectedAt` rather than
+`createdAt`, and `BuilderActivityState.workspaceId` is required. **Six invented or missing fields, all
+hidden behind one `as BrandOpsData`.**
+
+| Repair                                                    | Dimension | Evidence                                               |
+| --------------------------------------------------------- | --------- | ------------------------------------------------------ |
+| A verified achievement now reaches the Twin as a proposal | D4        | Was zero proposals; acceptance handler was unreachable |
+| The Twin is unchanged until a person accepts              | D4, D8    | Asserted directly, not argued                          |
+| Two unreachable guards removed                            | D1        | Mutation testing; both left every test green           |
+| A fixture typed rather than cast                          | D1        | Six invented or missing fields                         |
+
+**Knip 101 → 99. Score movement: none** — D4 is at its cap, and this connects capability rather than
+adding it.
+
+The shape worth remembering: **a half-wired vertical fails silently at both ends.** The producer
+looks unused and the consumer looks defensive, and nothing in between reports that the road does not
+meet.
+
+---
 
 ### Cycle 59 — 2026-09-02 · reading a function before putting it in place
 
