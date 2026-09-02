@@ -37,6 +37,43 @@ import type { WorkspaceIntelligenceState } from '../../types/workspaceIntelligen
 import { countPendingOperatorReviews } from '../../services/plan/reviewQueue';
 import { getOperatorTwinResumeArtifact } from '../../services/operatorTwin/readResumeArtifact';
 import { getActiveDigitalTwin } from '../../services/digitalTwin/digitalTwin';
+
+/** One recorded edit to the Twin, in the form a person can read. */
+export interface TwinChangeEntry {
+  version: number;
+  appliedAt: string;
+  appliedBy: string;
+  changes: Array<{ field: string; from: string; to: string }>;
+}
+
+/**
+ * The Twin's recorded change history, newest first.
+ *
+ * `twinVersionHistory` has been written on every accepted proposal since the
+ * acceptance path stopped discarding the version the engine returns — and
+ * nothing read it. A record of how someone's professional identity changed,
+ * kept where they cannot see it, answers no question anyone has.
+ *
+ * The seeded entry (`appliedBy: 'initial'`) is deliberately dropped: it carries
+ * no changes because it exists to hold the state *before* the first edit.
+ * Listing it as a change would claim an edit that never happened.
+ */
+function buildTwinChangeHistory(workspace: BrandOpsData): TwinChangeEntry[] {
+  const versions = workspace.twinVersionHistory?.versions ?? [];
+  return versions
+    .filter((version) => version.changes.length > 0)
+    .map((version, index) => ({
+      version: index + 1,
+      appliedAt: version.appliedAt,
+      appliedBy: version.appliedBy,
+      changes: version.changes.map((change) => ({
+        field: change.field,
+        from: change.from,
+        to: change.to
+      }))
+    }))
+    .reverse();
+}
 import { buildDailyOperatingLoopReadout } from '../../services/dailyOperatingLoop/dailyOperatingLoop';
 import { buildOperationalIntelligenceReadout } from '../../services/operationalIntelligence/operationalIntelligence';
 import { buildWorkspaceIntelligenceState } from '../../services/workspaceIntelligence/workspaceIntelligence';
@@ -410,6 +447,8 @@ export interface MobileWorkspaceSnapshot {
   resumeNeuralPhaseArtifactPreview: string;
   /** Active digital twin, if the user has created one from résumé/profile data. */
   activeDigitalTwin: DigitalTwin | null;
+  /** Every recorded edit to the Twin, newest first. Empty until a proposal is accepted. */
+  twinChangeHistory: TwinChangeEntry[];
   /** Consent-gated identity signals from connected platform metadata and approved summaries. */
   connectedIdentityEngine: ConnectedIdentityEngineReadout;
   /** Recent focus-metric self check-ins (operator twin KPI loop). */
@@ -836,6 +875,7 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     aiAdapterMode: workspace.settings.aiAdapterMode,
     resumeNeuralPhaseArtifactPreview: truncatePeek(getOperatorTwinResumeArtifact(workspace), 200),
     activeDigitalTwin: getActiveDigitalTwin(workspace),
+    twinChangeHistory: buildTwinChangeHistory(workspace),
     connectedIdentityEngine: buildConnectedIdentityEngineReadout(workspace),
     kpiSelfChecksPreview: (workspace.settings.operatorTwin.kpiSelfChecks ?? []).slice(0, 5),
     copilotWorkerRegistry: workspace.settings.copilotWorkers,

@@ -897,6 +897,44 @@ export function SettingsTwinDashboard({
           </div>
         </section>
 
+        <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
+          <p className="text-label font-semibold text-text">Change history</p>
+          <p className="mt-1 text-fine leading-snug text-textMuted">
+            Every edit accepted into this twin, newest first. Nothing reaches here without your
+            approval.
+          </p>
+          {snapshot.twinChangeHistory.length === 0 ? (
+            <p className="mt-2 text-fine text-textSoft">
+              No changes recorded yet. Accepting a twin proposal adds an entry here.
+            </p>
+          ) : (
+            <ol className="mt-2 space-y-2">
+              {snapshot.twinChangeHistory.map((entry) => (
+                <li
+                  key={`${entry.version}-${entry.appliedAt}`}
+                  className="rounded-lg border border-border/40 bg-bgSubtle/55 px-2.5 py-2"
+                >
+                  <p className="text-fine font-semibold text-text">
+                    Version {entry.version}
+                    <span className="ml-1.5 font-normal text-textMuted">
+                      {new Date(entry.appliedAt).toLocaleString()} · {entry.appliedBy}
+                    </span>
+                  </p>
+                  <ul className="mt-1 space-y-0.5">
+                    {entry.changes.map((change) => (
+                      <li key={change.field} className="text-fine leading-snug text-textMuted">
+                        <span className="font-medium text-text">{change.field}</span>{' '}
+                        {change.from ? `“${change.from}” → ` : ''}
+                        <span className="text-text">{`“${change.to}”`}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+
         {onUpdateTwinFactStatus ? (
           <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
             <p className="text-label font-semibold text-text">Improve Twin — verify facts</p>
