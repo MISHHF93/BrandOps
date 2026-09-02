@@ -16,6 +16,12 @@
 > (handoffs.test.ts, commandLayer.test.ts, authorityIntelligence.test.ts, twinDeltaEngine.test.ts, professionPacks.test.ts,
 > outcomeLearning.test.ts, etc.). Those claims were false at the time and are superseded by this revision.
 > Several of those source files were also **dead code** (no importer anywhere) and have been removed.
+>
+> **Second correction (2026-09-02, cycle 68).** The same class of claim was still live in
+> `DEFAULT_FEATURE_REGISTRY`, which `builder.features.list` **serves to external agents**: 9 `owningService`
+> values and 6 `tests[]` entries named files that were never written, and 3 features were marked `wired: true`
+> with no implementing service. Correcting this document while leaving the served registry untouched is how the
+> claim survived. Every citation is now verified against disk by `featureRegistryCitations.test.ts`.
 
 ---
 
@@ -81,6 +87,7 @@ A feature may only be marked **VERIFIED_WORKING** when it reaches `FAILURE_VERIF
 - Profession/Industry Packs — **now WIRED + TESTED (2026-08-31)**; see row above. Remaining: broader user-facing surface + a second/third deploy-proof workflow beyond the reference-pack unit tests.
 - Real connectors — all **UNVERIFIED/UNSUPPORTED** (no credentials). Honest stubs only.
 - OAuth — UI-only, no backend.
+- `agentHandoffs` — a fully specified handoff protocol type (budgets, capability limits, status lifecycle) on `BrandOpsData` with **no implementation and no reader anywhere**. It survives storage, so nothing is lost; it is a promise in the schema, recorded rather than removed.
 - `builderActivity` and `twinVersionHistory` — maintained by services with no dedicated surface. A pending proposal now previews its effect, but a person cannot browse their Twin's change history.
 - Launch auth gate — enforced and unbypassable at build time, but it guards a local `localStorage` flag; a real identity provider does not exist.
 - Outcome→Learning scoring promotion into Twin/context — core path is wired + tested; deeper feedback-loop scoring beyond the plan-completion signals remains future work.
