@@ -23,7 +23,7 @@ import type { FocusKpiSelfCheck } from '../../types/domain';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 import { KpiSelfCheckStrip } from './KpiSelfCheckStrip';
 import type { CockpitDailySnapshot } from './buildWorkspaceSnapshot';
-import { buildTodayFocusBoard } from './todayFocusModel';
+import { buildTodayFocusBoard, focusWorkCount } from './todayFocusModel';
 import type { TodayFocusLine } from './todayFocusModel';
 
 type FocusId = 'do' | 'urgent' | 'grow';
@@ -137,7 +137,7 @@ export const CockpitFocusEngine = ({
     {
       id: 'do',
       label: 'Do today',
-      count: focus.doToday.length,
+      count: focusWorkCount(focus.doToday),
       icon: Crosshair,
       tone: 'info',
       items: focus.doToday
@@ -145,7 +145,7 @@ export const CockpitFocusEngine = ({
     {
       id: 'urgent',
       label: 'Urgent',
-      count: focus.urgent.length,
+      count: focusWorkCount(focus.urgent),
       icon: Flame,
       tone: 'warning',
       items: focus.urgent
@@ -153,7 +153,7 @@ export const CockpitFocusEngine = ({
     {
       id: 'grow',
       label: 'Momentum',
-      count: focus.momentum.length,
+      count: focusWorkCount(focus.momentum),
       icon: TrendingUp,
       tone: 'success',
       items: focus.momentum

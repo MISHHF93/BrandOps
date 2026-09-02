@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1557 tests / 211 files** passing · `vite build` succeeds.
+**1564 tests / 212 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,51 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 48 — 2026-09-02 · a badge that argued with the line beneath it
+
+Today's focus board falls back to a message when a lane is empty — _"Build momentum: log outcomes in
+Chat, schedule posts, and connect sources."_ Honest, and worth keeping. It is also an item in the
+list, so the tab counted it: **"Momentum 1"** above a single line saying there was no momentum yet.
+
+Placeholders are now marked at the point they are created, and the badge counts only lines that are
+work. The mark is explicit rather than inferred from the id, so a lane that grows a different empty
+state later cannot quietly start counting again.
+
+**The more useful part of this cycle is what I got wrong.**
+
+I opened it believing all three lanes were inflated — the render showed "Do today 1 · Urgent 1 ·
+Momentum 1" on an empty workspace, and I wrote the test to assert all three should read zero. It
+failed, and dumping the lanes showed why:
+
+```
+  doToday   Daily schedule  ·  BrandOps daily cadence, 2 deep work blocks
+  urgent    Sync gaps       ·  Providers not connected: google, github, linkedin
+  momentum  Build momentum  ·  (placeholder)
+```
+
+**Two of the three were real.** A default cadence and three unconnected providers are both genuine
+things to tell someone who has just arrived. Had the assertion I wrote first been made to pass, the
+fix would have suppressed both and left a new user with a blanker, less useful board — a repair that
+would have looked like an improvement and read as one in this ledger.
+
+So the invariant is not _"an empty workspace counts zero"_. It is **a lane never counts its own
+empty-state message**, which holds whichever lane falls back, and there is now a test asserting the
+other two lanes keep their counts — the counter-case that would have caught the over-correction.
+
+| Repair                                                | Dimension | Evidence                                       |
+| ----------------------------------------------------- | --------- | ---------------------------------------------- |
+| Empty-state lines are marked, and not counted as work | P11       | "Momentum 1" → 0, with the message still shown |
+| Lanes that do have content keep their counts          | P11       | The counter-case for my own first assumption   |
+
+**Score movement: none.** P11 is already at full marks, and this is smaller than what earned it.
+
+**Three cycles running, the same question keeps paying**: _what does this claim for a user who has
+done nothing?_ It found fabricated receipts, then four plans that did not exist, then a badge
+arguing with its own contents. The variation this time is that it also found two things that were
+fine — which is the answer that keeps the practice honest.
+
+---
 
 ### Cycle 47 — 2026-09-02 · the same question, asked of everything else
 

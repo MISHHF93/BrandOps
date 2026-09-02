@@ -1,7 +1,7 @@
 # Builder Intelligence — Implementation Summary
 
 **Date:** 2026-02-19 (original) — **CORRECTED 2026-08-31**
-**Status:** Core services implemented. Baseline is **1122/1122 tests across 211 files** passing (not 744/136 — those figures were stale even after the builder batch).
+**Status:** Core services implemented. Baseline is **1122/1122 tests across 212 files** passing (not 744/136 — those figures were stale even after the builder batch).
 
 > **CORRECTION BANNER (2026-08-31):** Several "IMPLEMENTED + VERIFIED" claims in the original table are **phantom** — verified against the current source tree, the following files **DO NOT EXIST** and their rows are corrected below to `ABSENT (never built)`: `policyEngine.ts` (#25), `planDependencyEngine.ts` (#21), `dailyBuilderBrief.ts` (#18), `weeklyProfessionalReview.ts` (#19), `sourceHealthHooks.ts` (#12/#28), `selfVerificationGate.ts` (#27/#30). `opportunityEngine.ts` exists but under `src/services/plan/` (not `src/services/builder/`). The 744/136 test figures are superseded. See `BRANDOPS_FEATURE_TRUTH.md` and `BRANDOPS_GOLDEN_WORKFLOWS.md` for the reconciled truth.
 

@@ -10,7 +10,25 @@ export type TodayFocusLine = {
   id: string;
   line: string;
   detail?: string;
+  /**
+   * A line that exists because the lane is empty, not because there is work.
+   *
+   * Each lane falls back to a message when nothing qualifies — "No red flags in
+   * tracked signals", "Set today's move". Those messages are honest, but they
+   * are items in the list, so the tab beside them counted them: a brand-new
+   * workspace showed **"Urgent 1"** above a single line saying nothing was
+   * urgent. The badge contradicted the only thing under it.
+   *
+   * Marked here rather than inferred from the id, so a lane that later grows a
+   * different empty state cannot quietly start counting again.
+   */
+  placeholder?: true;
 };
+
+/** How many lines in a lane are actual work. */
+export function focusWorkCount(lines: TodayFocusLine[]): number {
+  return lines.filter((line) => !line.placeholder).length;
+}
 
 export type TodayFocusAction = {
   id: string;
@@ -76,6 +94,7 @@ export function buildTodayFocusBoard(snapshot: CockpitDailySnapshot): TodayFocus
   if (doToday.length === 0) {
     doToday.push({
       id: 'empty-do',
+      placeholder: true,
       line: 'Set today’s move',
       detail: 'Add a scheduler block, a publish time, or a follow-up so Today has a spine.'
     });
@@ -139,6 +158,7 @@ export function buildTodayFocusBoard(snapshot: CockpitDailySnapshot): TodayFocus
   if (urgent.length === 0) {
     urgent.push({
       id: 'no-fire',
+      placeholder: true,
       line: 'No red flags in tracked signals',
       detail: 'Keep pipeline health in your back pocket; urgency will surface as dates slip.'
     });
@@ -190,6 +210,7 @@ export function buildTodayFocusBoard(snapshot: CockpitDailySnapshot): TodayFocus
   if (momentum.length === 0) {
     momentum.push({
       id: 'start',
+      placeholder: true,
       line: 'Build momentum',
       detail:
         'Log outcomes in Chat, schedule posts, and connect sources — signals fill in as you work.'
