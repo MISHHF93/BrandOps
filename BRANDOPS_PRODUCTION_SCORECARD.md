@@ -14,7 +14,7 @@
 
 ## 0. Verdict
 
-**Total: 96.0 / 100 — INTERNAL / ALPHA QUALITY.**
+**Total: 96.5 / 100 — INTERNAL / ALPHA QUALITY.**
 
 **Release status: NOT READY.** One hard gate remains open — down from two.
 
@@ -30,7 +30,7 @@
 | Critical Golden Workflow failure    | ✅ none — A→Z loop and success-criterion round trip both pass                                                                                                                                                                                                                                                                                          |
 
 The bands never override the gates. A 99 with an open authorization defect would still read NOT
-READY; 96.0 with one open gate reads NOT READY for the same reason. The score has moved forty-four cycles
+READY; 96.5 with one open gate reads NOT READY for the same reason. The score has moved forty-four cycles
 running and the verdict has not — which is the design. This cycle it moved **down**, because a gate that was
 recorded as closed was only being watched.
 
@@ -66,7 +66,7 @@ acted on.
 | D2  | Core Product Workflow                | 10      | **9.0**  | 8.5  | **+0.5** | A→Z loop passes. Every site that assembles model input quotes untrusted workspace content, enforced by a test that matches the shape rather than a list of files                                                                                                                                                                                                                                          |
 | D3  | RAG / Context Quality                | 8       | **8.0**  | 6.0  | **+2.0** | Relevance floor and shared stopword scoring; provenance and trust-tier agreement asserted on every retrieved item; bundle scope proven not to widen                                                                                                                                                                                                                                                       |
 | D4  | Digital Twin / Evidence Integrity    | 7       | **7.0**  | 7.0  | —        | Trust tiers hold under direct attack. Tier not derivable from a caller-supplied source string; a verification approval cannot be spent on an achievement that changed; a scraped third-party profile cannot reach the Twin, achievements or evidence. At its weight cap                                                                                                                                   |
-| D5  | Plan / Agent / Execution Runtime     | 10      | **9.5**  | 8.5  | **+1.0** | Durable tasks, checkpoints, receipts, cancellation, verified across process restart. Every proposal kind now binds its approval to the content the user saw — the last one binding to a bare reference was the promotion path                                                                                                                                                                             |
+| D5  | Plan / Agent / Execution Runtime     | 10      | **10.0** | 9.5  | **+0.5** | Durable tasks, checkpoints, receipts, cancellation, verified across process restart; every proposal kind binds its approval to the content the user saw. Agents can now delegate to one another under a rule that only ever narrows — a handoff cannot name scope its source lacks, and what it confers is recomputed at use against the target, so revocation takes effect immediately                   |
 | D6  | MCP / External AI Interoperability   | 7       | **7.0**  | 6.5  | **+0.5** | Server + client, both transports; conformance driven as a foreign client would drive it. And what the tools return is now checked: `builder.features.list` served 9 source and 6 test citations to files that were never written, plus 3 features marked wired with no implementation. Third-party client interop still UNVERIFIED                                                                        |
 | D7  | Connectors / External Actions        | 6       | **4.0**  | 3.5  | **+0.5** | Dispatch path with four honest outcomes, and it refuses anything without a standing approval — checked at the dispatcher, not only in one caller. One real connector (outbound webhook). No vendor connector, no live delivery verified                                                                                                                                                                   |
 | D8  | Security / Authorization / Isolation | 10      | **10.0** | 9.5  | **+0.5** | The launch auth skip is unreachable outside `DEV`, proven by building the hostile case. Approval bindings separate fields with a delimiter the fields cannot contain. And the binding is no longer vacuous: a Twin edit is displayed before it is approved, so "what the user saw" is something that was actually shown. Auth backend remains absent and is tracked as the open deployment gate, not here |
@@ -77,7 +77,7 @@ acted on.
 | D13 | Accessibility / Responsive Quality   | 3       | **3.0**  | 2.5  | **+0.5** | Structural audit over five rendered surfaces plus WCAG contrast computed for both themes — text and focus rings clear AA in each. Borders below non-text contrast are measured and pinned, not silently carried. Viewport reflow still needs a browser                                                                                                                                                    |
 | D14 | Performance / Observability          | 3       | **3.0**  | 2.5  | **+0.5** | Traces and audit are strong. Bundle weight budgeted; view-model rebuild cost measured and bounded, and proven not to grow with the workspace. Real browser paint and interaction timing still unmeasured                                                                                                                                                                                                  |
 | D15 | Deployment / Operational Readiness   | 2       | **2.0**  | 2.0  | —        | CI and release both pass end to end. The Android release variant can now produce a signable, correctly versioned bundle — verified by Gradle, not by reading. Still no staging, no production, nothing published: the hard gate stays open                                                                                                                                                                |
-|     | **TOTAL**                            | **100** | **96.0** | 95.5 | **+0.5** |                                                                                                                                                                                                                                                                                                                                                                                                           |
+|     | **TOTAL**                            | **100** | **96.5** | 96.0 | **+0.5** |                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 `Prev` and `Δ` are empty for dimensions untouched since the baseline.
 
@@ -226,6 +226,73 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 69 — 2026-09-02 · the promise in the schema, kept
+
+`agentHandoffs` was the one workspace field referenced nowhere at all: a fully
+specified delegation protocol — required capabilities, minimum context, allowed
+and prohibited actions, budgets, expiry, a seven-state lifecycle — with no
+implementation. Cycle 68 recorded it rather than building it, on the grounds
+that speculative building is how half-finished verticals are made. Asked to
+build it, so it is built.
+
+**The design rule, because delegation is where authority grows by accident:**
+
+> A handoff can only ever narrow. It never grants.
+
+Enforced in three places, and each has a test saying what fails without it:
+
+```
+  proposeHandoff        refuses to name a capability or bundle the SOURCE lacks
+  effectiveCapabilities intersects with what the TARGET holds, recomputed at use
+  the MCP handler       takes the source from the authenticated session, never args
+```
+
+Any one alone leaves a hole. Without the first, a low-trust agent mints a
+handoff naming scope it never had and passes it to a privileged one — laundering
+through the document. Without the second, a handoff is a grant frozen at write
+time that outlives the revocation it should respect. Without the third, the
+first two validate the wrong session entirely, because an agent that can send
+`sourceSessionId` can delegate _as_ anyone.
+
+Budgets are counted rather than recorded: the spend that would cross a limit is
+refused, not the one after it. Contradictory allowed/prohibited actions are
+refused rather than resolved — picking a winner decides a scope question nobody
+answered.
+
+**Wired end to end, deliberately**, since building a fifth service with no reader
+would have been perverse after four cycles of fixing exactly that: four MCP
+tools in the `DELEGATE` family, `agentBridge` accessors, and a Handoffs section
+in `ConnectedAgentsPanel` showing objective, _current_ access, budget spent
+against limit, prohibitions, and a Cancel control.
+
+**Two things the repository caught that review did not.**
+
+The four capability ids reached the type union but not `AGENT_CAPABILITY_IDS`,
+because that array's last entry has no trailing comma and the edit matched only
+the union. The result: 44 tools advertised, 40 grantable, every new tool visible
+and none invocable. Found by the structured-output guard.
+
+And three existing contract guards refused the addition as incomplete —
+undocumented handler arguments, output-schema conformance, and the capability
+matrix. That is what they are for.
+
+**Mutation, eight ways.** Service: dropping the source check fails one test;
+union instead of intersection fails four; an uncounted budget fails two;
+ignoring expiry fails one. Agent-facing: honouring a `sourceSessionId` argument
+fails the impersonation test; dropping the addressee check fails two; reporting
+asked-for scope as held fails one. UI: rendering the stored capabilities instead
+of the live ones fails the revocation test.
+
+| Repair                                               | Dimension | Evidence                               |
+| ---------------------------------------------------- | --------- | -------------------------------------- |
+| Delegation that cannot widen scope                   | D5, D8    | `agentHandoffs.test.ts`, 28 tests      |
+| An agent cannot delegate as another session          | D8        | `handoffToolSecurity.test.ts`, 8 tests |
+| The row shows current access, not what was asked for | D5        | `handoffsVisible.test.tsx`, 7 tests    |
+
+**Score movement: +0.5** — D5 Plan / Agent / Execution Runtime 9.5 → 10.0.
+**96.5/100.** Verdict unchanged: the deployment gate is still open, and no
+amount of runtime capability closes it.
 
 ### Cycle 68 — 2026-09-02 · the registry that reported health was lying about its own
 
