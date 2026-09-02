@@ -95,6 +95,15 @@ export const ConnectedAgentsPanel = ({
     () => (workspace ? agentBridge.listProposals(workspace) : []),
     [workspace]
   );
+  /**
+   * Reported work that no proposal has picked up. Storing a candidate and
+   * raising the proposal a person decides on are two different agent tools, so
+   * a candidate can sit indefinitely with nothing to surface it.
+   */
+  const unclaimed = useMemo(
+    () => (workspace ? agentBridge.listUnclaimedAchievements(workspace) : []),
+    [workspace]
+  );
   const audit = useMemo(() => (workspace ? agentBridge.listAudit(workspace) : []), [workspace]);
   const tools = useMemo(() => agentBridge.listTools(), []);
 
@@ -368,6 +377,45 @@ export const ConnectedAgentsPanel = ({
                       <span className="text-fine text-textMuted">closed</span>
                     ) : null}
                   </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </details>
+
+      <details className="bo-disclosure group" open={unclaimed.length > 0}>
+        <summary
+          className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+        >
+          Reported work
+          <span className="ml-2 text-meta font-normal text-textSoft">
+            Detected by an agent — unverified, and not in your twin
+          </span>
+        </summary>
+        <div className="space-y-3 border-t border-border/30 px-4 pb-4 pt-3">
+          {unclaimed.length === 0 ? (
+            <p className="text-meta text-textMuted">
+              Nothing waiting. Work an agent reports appears here until it is raised for
+              verification.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {unclaimed.slice(0, 20).map((candidate) => (
+                <li
+                  key={candidate.id}
+                  className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2 text-meta text-textMuted"
+                >
+                  <p className="font-medium text-text">{candidate.title}</p>
+                  {candidate.description ? (
+                    <p className="mt-0.5 text-fine leading-snug text-textSoft">
+                      {candidate.description}
+                    </p>
+                  ) : null}
+                  <p className="mt-0.5 text-fine text-textMuted">
+                    {candidate.kind} · reported{' '}
+                    {new Date(candidate.detectedAt).toLocaleDateString()} · awaiting verification
+                  </p>
                 </li>
               ))}
             </ul>

@@ -14,6 +14,7 @@ import type {
 import type { BrandOpsData } from '../../types/domain';
 import { appendAuditEntry } from './audit';
 import { previewPromotion, type PromotionPreview } from '../builder/promotions';
+import type { AchievementCandidate } from '../../types/builder';
 import {
   AGENT_CAPABILITY_DEFINITIONS,
   getAgentCapability,
@@ -73,6 +74,31 @@ export const agentBridge = {
 
   listEvents: (workspace: BrandOpsData): ExternalAgentEvent[] =>
     workspace.externalAgentEvents?.entries ?? [],
+
+  /**
+   * Achievement candidates an agent has reported and nobody has verified.
+   *
+   * These could strand. `builder.activity.ingest-session-summary` stores a
+   * candidate; a *different* tool turns one into the proposal a person decides
+   * on. An agent that summarises a session and never calls the second leaves
+   * work sitting in `builderActivity.achievements` — state that, until now, had
+   * no reader outside the services layer at all. Nothing was wrong with the
+   * data; there was simply nowhere it could be seen.
+   *
+   * Candidates whose proposal already exists are left out: the review queue
+   * above is where those belong, and listing them twice would read as two
+   * pieces of work.
+   */
+  listUnclaimedAchievements: (workspace: BrandOpsData): AchievementCandidate[] => {
+    const claimed = new Set(
+      (workspace.agentProposals?.entries ?? [])
+        .filter((entry) => entry.promotion?.action === 'verify-achievement')
+        .map((entry) => entry.promotion?.targetId)
+    );
+    return (workspace.builderActivity?.achievements ?? []).filter(
+      (candidate) => !claimed.has(candidate.eventId) && !claimed.has(candidate.id)
+    );
+  },
   ingestEvent: ingestAgentEvent,
   reviewEvent: (
     workspace: BrandOpsData,
