@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-31 (re-audited)
 **Method:** Failure-injection + concurrency/idempotency tests re-run against the real tree.
-**Baseline:** `tsc -b` clean, `eslint` clean, `vite build` OK, **982 tests / 152 files passing**.
+**Baseline:** `tsc -b` clean, `eslint` clean, `vite build` OK, **1122 tests / 211 files passing**.
 
 > Honesty note: the prior report (2026-08-30) cited tests that do not exist
 > (`gateway.test.ts`, `commandExecution.test.ts`, `idempotency.test.ts`,
@@ -10,40 +10,40 @@
 > `contextDelivery.test.ts`) and overclaimed a "provider-unavailable → falls back to
 > local model" behavior. Real coverage is re-pointed below. There is NO in-process
 > auto fallback to a local model when the hosted provider fails — the pipeline returns
-> `ok:false` on provider failure; model *routing* between configured hosts lives in
+> `ok:false` on provider failure; model _routing_ between configured hosts lives in
 > `aiAskRouting.ts` and is separate.
 
 ---
 
 ## FAILURE-INJECTION / CONCURRENCY MATRIX (real)
 
-| Failure Mode | Status | Real Evidence |
-|-------------|--------|---------------|
-| Gateway prompt-injection variants | **TESTED** | `adversarialSecurity.test.ts` — 6 injection-family variants blocked (instruction-override, persona, markup, exfiltration incl. `hidden system prompt`, override, disregard) |
-| Control-char / over-length input sanitization | **TESTED** | `adversarialSecurity.test.ts` — control chars stripped, length capped |
-| Oversized evidence arrays | **TESTED** | `adversarialSecurity.test.ts` — capped at 12 refs, never unbounded |
-| Approval fail-closed (approval-access capability) | **TESTED** | `canonicalLoopEndToEnd.test.ts`, `adversarialSecurity.test.ts` — `action.request` only yields a pending approval-gated request; a capability that fails to produce one is blocked |
-| Capability-not-granted (read session / no grants) | **TESTED** | `canonicalLoopEndToEnd.test.ts`, `concurrencyAndFailure.test.ts` |
-| Unknown/revoked token | **TESTED** | `agentInterop.test.ts`, `adversarialSecurity.test.ts` — throws E_UNAUTHORIZED |
-| Session revocation blocks in-flight calls | **TESTED** | `adversarialSecurity.test.ts` |
-| Gateway idempotency (replay same key) | **TESTED** | `adversarialSecurity.test.ts` — cached result, no double creation |
-| Event dedupe (re-ingest same key) | **TESTED** | `concurrencyAndFailure.test.ts` — ledger does not grow |
-| Plan double-execution | **TESTED** | `P0-security.test.ts` — second execution rejected; one execution_started checkpoint |
-| Approval bypass (draft/rejected cannot execute) | **TESTED** | `P0-security.test.ts` |
-| Learning state bounds | **TESTED** | `concurrencyAndFailure.test.ts` — signals ≤ 500, outcomes ≤ 200, pref-hints ≤ 200 |
-| Empty-step verification (No NaN score) | **TESTED** | `concurrencyAndFailure.test.ts` |
-| Storage round-trip stability | **TESTED** | `concurrencyAndFailure.test.ts`, `agentInteropStorageRoundTrip.test.ts` — sessions/events/proposals/trust levels preserved |
-| Preference-confidence regression (stale-count bug) | **TESTED** | `outcomeLearning.test.ts` — confirmations raise confidence; contradictions lower it |
-| Provider network retry/backoff (fetch) | **TESTED** | `retryWithBackoff.test.ts` — 500/429/network/permanent(401/403)/maxRetries |
-| Provider unavailable at pipeline level | NOT auto-fallback | `aiPipelineRunner.ts` returns `ok:false`; NO silent local-model fallback. Local model is chosen at routing time, not as a crash fallback |
-| Tool timeout | NOT_APPLICABLE | Tool calls are synchronous; no async tool timeout model |
-| Webhook (duplicate/replayed) | UNSUPPORTED | Webhook ingestion not implemented |
-| Async queue delay | NOT_APPLICABLE | No async queue in-process |
-| Database/storage write failure | PARTIAL | Throws; no dedicated graceful-handling test |
-| Multiple-tabs concurrent write | GAP (medium) | `storage.local` shared across tabs; single-actor serialization expected, but no real multi-tab race test |
-| Recursive automation / agent loop | NOT_IMPLEMENTED | No automation execution engine; no loop detection |
-| Budget exhaustion | NOT_IMPLEMENTED | No token/model budget enforcement |
-| Connector outage / OAuth refresh | UNVERIFIED | LinkedIn is overlay/OAuth UI only; no live credentials; no refresh-flow test |
+| Failure Mode                                       | Status            | Real Evidence                                                                                                                                                                     |
+| -------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gateway prompt-injection variants                  | **TESTED**        | `adversarialSecurity.test.ts` — 6 injection-family variants blocked (instruction-override, persona, markup, exfiltration incl. `hidden system prompt`, override, disregard)       |
+| Control-char / over-length input sanitization      | **TESTED**        | `adversarialSecurity.test.ts` — control chars stripped, length capped                                                                                                             |
+| Oversized evidence arrays                          | **TESTED**        | `adversarialSecurity.test.ts` — capped at 12 refs, never unbounded                                                                                                                |
+| Approval fail-closed (approval-access capability)  | **TESTED**        | `canonicalLoopEndToEnd.test.ts`, `adversarialSecurity.test.ts` — `action.request` only yields a pending approval-gated request; a capability that fails to produce one is blocked |
+| Capability-not-granted (read session / no grants)  | **TESTED**        | `canonicalLoopEndToEnd.test.ts`, `concurrencyAndFailure.test.ts`                                                                                                                  |
+| Unknown/revoked token                              | **TESTED**        | `agentInterop.test.ts`, `adversarialSecurity.test.ts` — throws E_UNAUTHORIZED                                                                                                     |
+| Session revocation blocks in-flight calls          | **TESTED**        | `adversarialSecurity.test.ts`                                                                                                                                                     |
+| Gateway idempotency (replay same key)              | **TESTED**        | `adversarialSecurity.test.ts` — cached result, no double creation                                                                                                                 |
+| Event dedupe (re-ingest same key)                  | **TESTED**        | `concurrencyAndFailure.test.ts` — ledger does not grow                                                                                                                            |
+| Plan double-execution                              | **TESTED**        | `P0-security.test.ts` — second execution rejected; one execution_started checkpoint                                                                                               |
+| Approval bypass (draft/rejected cannot execute)    | **TESTED**        | `P0-security.test.ts`                                                                                                                                                             |
+| Learning state bounds                              | **TESTED**        | `concurrencyAndFailure.test.ts` — signals ≤ 500, outcomes ≤ 200, pref-hints ≤ 200                                                                                                 |
+| Empty-step verification (No NaN score)             | **TESTED**        | `concurrencyAndFailure.test.ts`                                                                                                                                                   |
+| Storage round-trip stability                       | **TESTED**        | `concurrencyAndFailure.test.ts`, `agentInteropStorageRoundTrip.test.ts` — sessions/events/proposals/trust levels preserved                                                        |
+| Preference-confidence regression (stale-count bug) | **TESTED**        | `outcomeLearning.test.ts` — confirmations raise confidence; contradictions lower it                                                                                               |
+| Provider network retry/backoff (fetch)             | **TESTED**        | `retryWithBackoff.test.ts` — 500/429/network/permanent(401/403)/maxRetries                                                                                                        |
+| Provider unavailable at pipeline level             | NOT auto-fallback | `aiPipelineRunner.ts` returns `ok:false`; NO silent local-model fallback. Local model is chosen at routing time, not as a crash fallback                                          |
+| Tool timeout                                       | NOT_APPLICABLE    | Tool calls are synchronous; no async tool timeout model                                                                                                                           |
+| Webhook (duplicate/replayed)                       | UNSUPPORTED       | Webhook ingestion not implemented                                                                                                                                                 |
+| Async queue delay                                  | NOT_APPLICABLE    | No async queue in-process                                                                                                                                                         |
+| Database/storage write failure                     | PARTIAL           | Throws; no dedicated graceful-handling test                                                                                                                                       |
+| Multiple-tabs concurrent write                     | GAP (medium)      | `storage.local` shared across tabs; single-actor serialization expected, but no real multi-tab race test                                                                          |
+| Recursive automation / agent loop                  | NOT_IMPLEMENTED   | No automation execution engine; no loop detection                                                                                                                                 |
+| Budget exhaustion                                  | NOT_IMPLEMENTED   | No token/model budget enforcement                                                                                                                                                 |
+| Connector outage / OAuth refresh                   | UNVERIFIED        | LinkedIn is overlay/OAuth UI only; no live credentials; no refresh-flow test                                                                                                      |
 
 ---
 
@@ -59,15 +59,15 @@
 
 ## NOT TESTED / GAP ANALYSIS
 
-| Gap | Severity | Remediation |
-|-----|----------|-------------|
-| Multi-tab concurrent `storage.local` write race | Medium | Add a tab-concurrency contract test + last-writer-wins/patch-merge strategy |
-| Storage read/write failure graceful handling | Medium | Wrap storage IO; surface a recoverable error to UI |
-| Provider-level timeout injection | Low | Simulate hosted-completion timeout → assert pipeline `ok:false` (not silent fallback) |
-| Token/model budget enforcement | Low/Not-in-scope | Add token counting + budget gate |
-| Recursive-automation / agent-loop detection | Low | On automation execution engine (not yet present) |
-| Webhook ingestion (duplicate/replay) | N/A | Not in scope; label UNSUPPORTED |
-| Live connector outage / OAuth expiry+refresh | Unverified | Requires a real connector backend + credentials (currently absent) |
+| Gap                                             | Severity         | Remediation                                                                           |
+| ----------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------- |
+| Multi-tab concurrent `storage.local` write race | Medium           | Add a tab-concurrency contract test + last-writer-wins/patch-merge strategy           |
+| Storage read/write failure graceful handling    | Medium           | Wrap storage IO; surface a recoverable error to UI                                    |
+| Provider-level timeout injection                | Low              | Simulate hosted-completion timeout → assert pipeline `ok:false` (not silent fallback) |
+| Token/model budget enforcement                  | Low/Not-in-scope | Add token counting + budget gate                                                      |
+| Recursive-automation / agent-loop detection     | Low              | On automation execution engine (not yet present)                                      |
+| Webhook ingestion (duplicate/replay)            | N/A              | Not in scope; label UNSUPPORTED                                                       |
+| Live connector outage / OAuth expiry+refresh    | Unverified       | Requires a real connector backend + credentials (currently absent)                    |
 
 ---
 

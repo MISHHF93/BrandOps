@@ -228,6 +228,15 @@ export type PlanPendingOperatorReviewPeek = {
   labels: string[];
   preview: string;
   annotatorNote?: string;
+  /**
+   * The capability this trace was recorded against.
+   *
+   * Carried so an approval row can say what approving does. `OperatorTraceEntry`
+   * has always had it; this builder copied eleven fields and dropped the one
+   * that knows the consequence, which is why the row could only ever say who was
+   * asking and what for.
+   */
+  capabilityId?: string;
 };
 
 export type PlanExecutionReceipt = {
@@ -560,7 +569,8 @@ function buildPendingReviewPeek(workspace: BrandOpsData): PlanPendingOperatorRev
         outcome: e.outcome,
         labels: e.labels ?? [],
         preview: truncatePeek(details || e.annotatorNote || e.route || e.entityId || e.verb, 220),
-        annotatorNote: e.annotatorNote
+        annotatorNote: e.annotatorNote,
+        capabilityId: e.capabilityId
       };
     });
 }
@@ -584,28 +594,6 @@ function detailFacts(
     .map(([key, value]) => `${key}: ${String(value)}`)
     .filter(Boolean)
     .slice(0, 6);
-}
-
-function buildExpertPlanReceipts(
-  expertReceipts: ExpertOperatorIntegrationReadout['receipts']
-): PlanExecutionReceipt[] {
-  return expertReceipts.map((receipt) => ({
-    id: `receipt-${receipt.id}`,
-    action: `${receipt.mode} expert execution`,
-    reasoningSummary: receipt.summary,
-    sourceFactsUsed: [
-      `experts: ${receipt.activatedExperts.join(', ') || 'none'}`,
-      receipt.confidenceLabel,
-      receipt.qualityLabel,
-      receipt.fallbackNotice ?? ''
-    ].filter(Boolean),
-    generatedOutputs: [receipt.title, receipt.latencyLabel],
-    approvals: [receipt.approvalStatus],
-    startedAt: receipt.generatedAt,
-    executionStatus: receipt.failureNotice ? 'needs_review' : 'recorded',
-    warningsErrors: [receipt.failureNotice ?? ''].filter(Boolean),
-    sourceLabel: 'Expert operator'
-  }));
 }
 
 /**
@@ -640,11 +628,26 @@ export function buildPlanReceiptDetail(
   };
 }
 
-function buildPlanExecutionReceipts(
-  workspace: BrandOpsData,
-  expertReceipts: ExpertOperatorIntegrationReadout['receipts']
-): PlanExecutionReceipt[] {
-  const receipts: PlanExecutionReceipt[] = [...buildExpertPlanReceipts(expertReceipts)];
+function buildPlanExecutionReceipts(workspace: BrandOpsData): PlanExecutionReceipt[] {
+  /**
+   * Expert routing readouts are not execution receipts.
+   *
+   * They used to lead this list, and they are computed *during this build* —
+   * `observedComposition` runs the composition engine with a synthetic intent
+   * and measures how long the render took. So a brand-new workspace with zero
+   * plans, zero receipts, zero traces and zero audit entries showed the user
+   * **three completed actions marked `recorded`**: "ASK expert execution",
+   * "PLAN expert execution", "OPERATE expert execution", each with an output
+   * reading "2ms expert execution".
+   *
+   * Nothing had happened. The page was reporting the cost of drawing itself as
+   * work done on the reader's behalf, in a group headed "Recently done".
+   *
+   * The routing readout is real and worth showing — and it already is, as
+   * `snapshot.expertOperator`, framed as what it is ("N experts active"). What
+   * it is not is a record of something that happened.
+   */
+  const receipts: PlanExecutionReceipt[] = [];
 
   for (const receipt of workspace.planWorkspace?.receipts ?? []) {
     receipts.push(buildPlanReceiptDetail(workspace, receipt));
@@ -676,15 +679,28 @@ function buildPlanExecutionReceipts(
   }
 
   for (const trace of (workspace.operatorTraces?.entries ?? []).slice(0, 12)) {
+    /**
+     * A request awaiting review is not a completed action.
+     *
+     * Every trace became a receipt, pending ones included, and receipts render
+     * under "Recently done". So a single pending approval appeared **twice**:
+     * once in "Waiting on you", correctly, and once in "Recently done", which
+     * says it happened. It had not happened — that is what the reader was being
+     * asked to decide.
+     *
+     * It reappears here the moment it is approved or rejected, carrying the
+     * outcome, which is when it becomes something that occurred.
+     */
+    if (trace.reviewStatus === 'pending') continue;
     const facts = detailFacts(trace.details);
+    // Pending traces never reach here, so this only distinguishes the two
+    // outcomes a reviewed trace can have.
     const approval =
-      trace.reviewStatus === 'pending'
-        ? 'Pending human approval'
-        : trace.reviewStatus === 'approved'
-          ? 'Approved by human reviewer'
-          : trace.reviewStatus === 'rejected'
-            ? 'Rejected by human reviewer'
-            : 'No explicit approval recorded';
+      trace.reviewStatus === 'approved'
+        ? 'Approved by human reviewer'
+        : trace.reviewStatus === 'rejected'
+          ? 'Rejected by human reviewer'
+          : 'No approval recorded';
     receipts.push({
       id: `receipt-trace-${trace.id}`,
       action: trace.verb,
@@ -733,7 +749,22 @@ function buildPlanExecutionReceipts(
   }
 
   return receipts
-    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+    .sort((a, b) => {
+      const byTime = new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
+      /**
+       * A tie-break, because receipts derived in one pass share a timestamp.
+       *
+       * Sorting on time alone left the order of equal-stamped receipts to
+       * insertion order, and insertion order to whichever millisecond each
+       * `new Date()` happened to land on. Forty builds of an unchanged
+       * workspace produced three different orderings of "Recently done".
+       *
+       * Stamping them together (see `expertOperatorIntegration`) removes the
+       * race; this makes the result deterministic rather than merely usually
+       * stable, so a future producer that ties cannot reintroduce the flicker.
+       */
+      return byTime !== 0 ? byTime : a.id.localeCompare(b.id);
+    })
     .slice(0, 12);
 }
 
@@ -958,7 +989,7 @@ export function buildWorkspaceSnapshot(workspace: BrandOpsData): MobileWorkspace
     memoryTraceSummary: buildMemoryTraceSummary(workspace),
     planPendingReviewCount: countPendingOperatorReviews(workspace.operatorTraces?.entries),
     planPendingReviewPeek: buildPendingReviewPeek(workspace),
-    planExecutionReceipts: buildPlanExecutionReceipts(workspace, expertOperator.receipts),
+    planExecutionReceipts: buildPlanExecutionReceipts(workspace),
     convertedAskPlans: [...(workspace.planWorkspace?.plans ?? [])].sort(
       (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
     ),

@@ -110,7 +110,7 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
       services: ['Strategy', 'Execution'],
       audience: ['Startups', 'Enterprises'],
       tone: 'Professional',
-      palette: ['#FF6B6B', '#4ECDC4'],
+      palette: ['#FF6B6B', '#4ECDC4']
     };
 
     // Simulated migration
@@ -123,8 +123,8 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
       artifacts: [],
       twin: {
         approvedClaims: [],
-        rejectedClaims: [],
-      },
+        rejectedClaims: []
+      }
     };
 
     // Verify data integrity
@@ -143,12 +143,20 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
   it('migrates legacy twin content v0.10 to current shape', () => {
     const legacy: LegacyTwinContentV010 = {
       approvedClaims: [
-        { claim: 'I am a senior engineer', source: 'user-input', timestamp: '2026-01-15T10:00:00Z' },
-        { claim: 'I have 10 years experience', source: 'user-input', timestamp: '2026-01-15T10:00:00Z' },
+        {
+          claim: 'I am a senior engineer',
+          source: 'user-input',
+          timestamp: '2026-01-15T10:00:00Z'
+        },
+        {
+          claim: 'I have 10 years experience',
+          source: 'user-input',
+          timestamp: '2026-01-15T10:00:00Z'
+        }
       ],
       rejectedClaims: [
-        { claim: 'I am a junior dev', source: 'user-input', timestamp: '2026-01-15T10:00:00Z' },
-      ],
+        { claim: 'I am a junior dev', source: 'user-input', timestamp: '2026-01-15T10:00:00Z' }
+      ]
     };
 
     // Simulated migration — the claim text must be preserved
@@ -164,7 +172,7 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
     // Verify that missing optional fields don't cause errors
     const legacyWithMissingFields: LegacyTwinContentV010 = {
       approvedClaims: [{ claim: 'Test claim' }],
-      rejectedClaims: [],
+      rejectedClaims: []
     };
     expect(legacyWithMissingFields.approvedClaims[0].source).toBeUndefined();
     expect(legacyWithMissingFields.approvedClaims[0].timestamp).toBeUndefined();
@@ -181,13 +189,18 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
   it('migrates legacy bot-memory decisions v0.0.9 to current shape without crashing', () => {
     const legacy: LegacyBotMemoryDecisionsV009 = {
       decisions: [
-        { type: 'strategy', polarity: 'approved', title: 'Focus on B2B', description: 'B2B has higher LTV' },
+        {
+          type: 'strategy',
+          polarity: 'approved',
+          title: 'Focus on B2B',
+          description: 'B2B has higher LTV'
+        },
         { type: 'content-direction', polarity: 'rejected', title: 'Weekly newsletter' },
         // Decision missing most fields
         { title: 'Partial decision' },
         // Empty decision
-        {},
-      ],
+        {}
+      ]
     };
 
     // Simulated migration — should not crash on missing fields
@@ -195,7 +208,7 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
       type: d.type ?? 'unknown',
       polarity: d.polarity ?? 'unknown',
       title: d.title ?? 'Untitled',
-      description: d.description ?? '',
+      description: d.description ?? ''
     }));
 
     // Verify migration didn't crash
@@ -212,7 +225,7 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
       type: d.type ?? 'unknown',
       polarity: d.polarity ?? 'unknown',
       title: d.title ?? 'Untitled',
-      description: d.description ?? '',
+      description: d.description ?? ''
     }));
     expect(emptyMigrated[0].polarity).toBe('unknown');
   });
@@ -230,23 +243,38 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
       approvedDecisions: ['Decision A', 'Decision B'],
       rejectedDecisions: ['Decision C'],
       decisions: [
-        { title: 'Adopt new positioning', type: 'positioning', accepted: true, reason: 'More specific' },
-        { title: 'Target enterprise only', type: 'target-audience', accepted: false, reason: 'Too narrow' },
+        {
+          title: 'Adopt new positioning',
+          type: 'positioning',
+          accepted: true,
+          reason: 'More specific'
+        },
+        {
+          title: 'Target enterprise only',
+          type: 'target-audience',
+          accepted: false,
+          reason: 'Too narrow'
+        },
         { title: 'Hire a consultant', type: 'strategy', accepted: true },
         // Decision with missing reason
-        { title: 'Expand to EU', type: 'strategy', accepted: false },
-      ],
+        { title: 'Expand to EU', type: 'strategy', accepted: false }
+      ]
     };
 
     // Simulated migration
-    const migratedDecisions: Array<{ type: string; polarity: string; title: string; description: string }> = [];
+    const migratedDecisions: Array<{
+      type: string;
+      polarity: string;
+      title: string;
+      description: string;
+    }> = [];
 
     for (const d of legacy.decisions) {
       migratedDecisions.push({
         type: d.type,
         polarity: d.accepted ? 'approved' : 'rejected',
         title: d.title,
-        description: d.reason ?? '',
+        description: d.reason ?? ''
       });
     }
 
@@ -278,7 +306,7 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
       headline: 'Migration Test',
       bio: 'Bio for testing',
       services: ['Service A', 'Service B'],
-      audience: ['Audience 1'],
+      audience: ['Audience 1']
     };
 
     // Step 1: Migrate to current shape
@@ -289,7 +317,7 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
       activities: [],
       plans: [],
       artifacts: [],
-      twin: { approvedClaims: [], rejectedClaims: [] },
+      twin: { approvedClaims: [], rejectedClaims: [] }
     };
 
     // Step 2: Serialize back to a flat representation
@@ -299,7 +327,7 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
       headline: undefined,
       bio: undefined,
       services: [],
-      audience: [],
+      audience: []
     };
 
     // Step 3: Verify core field survives
@@ -321,18 +349,18 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
     // Current field: 'polarity' (string: 'approved' | 'rejected')
     const legacyPolarityMap: Record<string, string> = {
       accepted: 'approved',
-      rejected: 'rejected',
+      rejected: 'rejected'
     };
 
     const legacyDecisions = [
       { title: 'Decision 1', decision_polarity: 'accepted' },
       { title: 'Decision 2', decision_polarity: 'rejected' },
-      { title: 'Decision 3' }, // Missing field — should default
+      { title: 'Decision 3' } // Missing field — should default
     ];
 
     const migrated = legacyDecisions.map((d) => ({
       title: d.title,
-      polarity: legacyPolarityMap[d.decision_polarity ?? 'unknown'] ?? 'unknown',
+      polarity: legacyPolarityMap[d.decision_polarity ?? 'unknown'] ?? 'unknown'
     }));
 
     expect(migrated[0].polarity).toBe('approved');
@@ -352,13 +380,13 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
       { type: 'goal', id: 'g1', title: 'Goal 1', status: 'active' },
       { type: 'goal', id: 'g2', title: 'Goal 2', status: 'completed' },
       { type: 'achievement', id: 'a1', kind: 'promotion', title: 'Got promoted' },
-      { type: 'achievement', id: 'a2', kind: 'project', title: 'Shipped v2' },
+      { type: 'achievement', id: 'a2', kind: 'project', title: 'Shipped v2' }
     ];
 
     // Current: grouped by type
     const currentGrouped: Record<string, Array<{ id: string; title: string }>> = {
       goals: [],
-      achievements: [],
+      achievements: []
     };
 
     for (const item of legacyFlat) {
@@ -390,14 +418,14 @@ describe('Schema Evolution — Migration from Legacy Schemas', () => {
     const legacySnapshot = {
       schemaVersion: '0.1.0',
       migratedAt: undefined,
-      data: { brandName: 'Test' },
+      data: { brandName: 'Test' }
     };
 
     // During migration, we record the new version
     const migratedSnapshot = {
       schemaVersion: '0.2.0',
       migratedAt: new Date().toISOString(),
-      data: legacySnapshot.data,
+      data: legacySnapshot.data
     };
 
     // Verify version stamp updated
@@ -419,17 +447,15 @@ export function migrateLegacyBrandContext(
 ): Pick<CurrentDataShape['brandContext'], 'identity'> {
   return {
     identity: {
-      name: legacy.brandName ?? undefined,
-    },
+      name: legacy.brandName ?? undefined
+    }
   };
 }
 
 /**
  * Migrate legacy twin content to current shape.
  */
-export function migrateLegacyTwinContent(
-  legacy: LegacyTwinContentV010
-): {
+export function migrateLegacyTwinContent(legacy: LegacyTwinContentV010): {
   approvedClaims: Array<{ claim: string; source: string; timestamp: string }>;
   rejectedClaims: Array<{ claim: string; source: string; timestamp: string }>;
 } {
@@ -437,13 +463,13 @@ export function migrateLegacyTwinContent(
     approvedClaims: (legacy.approvedClaims ?? []).map((c) => ({
       claim: c.claim,
       source: c.source ?? 'unknown',
-      timestamp: c.timestamp ?? new Date().toISOString(),
+      timestamp: c.timestamp ?? new Date().toISOString()
     })),
     rejectedClaims: (legacy.rejectedClaims ?? []).map((c) => ({
       claim: c.claim,
       source: c.source ?? 'unknown',
-      timestamp: c.timestamp ?? new Date().toISOString(),
-    })),
+      timestamp: c.timestamp ?? new Date().toISOString()
+    }))
   };
 }
 
@@ -457,7 +483,8 @@ export function migrateLegacyBotMemoryDecisions(
   return (legacy.decisions ?? []).map((d, index) => ({
     id: `migrated-dec-${index}-${Date.now().toString(36)}`,
     type: (d.type as Decision['type']) ?? 'strategy',
-    polarity: d.polarity === 'approved' ? 'approved' : d.polarity === 'rejected' ? 'rejected' : 'deferred',
+    polarity:
+      d.polarity === 'approved' ? 'approved' : d.polarity === 'rejected' ? 'rejected' : 'deferred',
     title: d.title ?? 'Untitled',
     description: d.description ?? '',
     reason: '',
@@ -467,7 +494,7 @@ export function migrateLegacyBotMemoryDecisions(
     supersedes: [],
     supersededBy: [],
     confidence: 0.5,
-    workspaceId,
+    workspaceId
   }));
 }
 
@@ -494,7 +521,7 @@ export function migrateLegacyWorkspaceContributions(
       supersedes: [],
       supersededBy: [],
       confidence: 0.6,
-      workspaceId,
+      workspaceId
     });
   }
 

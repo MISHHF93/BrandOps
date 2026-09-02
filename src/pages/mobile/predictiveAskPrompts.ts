@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { PlatformAwareAskReadout } from '../../services/ai/platformAwareAskContext';
 import type { BehavioralIntelligenceEngineReadout } from '../../services/intelligence/behavioralIntelligenceEngine';
 import type {
@@ -177,7 +178,7 @@ function commandFor(input: {
   context: string;
   memory?: MemoryContextEngineReadout;
 }): string {
-  return `ask: ${input.prompt}\n\nUse profession context: ${input.context}. Use persistent memory context when relevant: ${memoryContext(input.memory)}. Use the Predictive Opportunity Layer suggestion "${input.suggestion.title}" with confidence ${input.suggestion.confidence}%. Explain why this is timely, cite supporting signals, estimate expected impact, and propose next steps. Do not execute externally or mutate workspace records; keep outputs approval-ready for PLAN.`;
+  return `ask: ${quoteContextValue(input.prompt)}\n\nUse profession context: ${quoteContextValue(input.context)}. Use persistent memory context when relevant: ${quoteContextValue(memoryContext(input.memory))}. Use the Predictive Opportunity Layer suggestion ${quoteContextValue(input.suggestion.title)} with confidence ${input.suggestion.confidence}%. Explain why this is timely, cite supporting signals, estimate expected impact, and propose next steps. Do not execute externally or mutate workspace records; keep outputs approval-ready for PLAN.`;
 }
 
 function toPrompt(input: {
@@ -241,7 +242,7 @@ function fallbackPrompt(input: BuildPredictiveAskPromptGroupsInput): PredictiveA
     prompt,
     why: 'Generated from current twin/profile and connected platform visibility.',
     confidence: input.activeDigitalTwin ? 64 : 52,
-    command: `ask: ${prompt}\n\nUse connected platform context, recent activity, workflow state, profession context, and persistent memory context when relevant: ${memoryContext(input.memoryContextEngine)}. Explain why each suggestion is timely, include confidence and supporting signals, and keep every next action approval-ready. Do not execute externally.`
+    command: `ask: ${quoteContextValue(prompt)}\n\nUse connected platform context, recent activity, workflow state, profession context, and persistent memory context when relevant: ${quoteContextValue(memoryContext(input.memoryContextEngine))}. Explain why each suggestion is timely, include confidence and supporting signals, and keep every next action approval-ready. Do not execute externally.`
   };
 }
 

@@ -6,11 +6,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  buildWhyNow,
-} from '../../src/services/whyNow/whyNow';
+import { buildWhyNow } from '../../src/services/whyNow/whyNow';
 import type { BrandOpsData } from '../../src/types/domain';
-import type { OpportunityRecommendation, AchievementCandidate, ProfessionalSignal } from '../../src/types/builder';
+import type {
+  OpportunityRecommendation,
+  AchievementCandidate,
+  ProfessionalSignal
+} from '../../src/types/builder';
 
 function makeData(overrides: any = {}): BrandOpsData {
   return {
@@ -19,14 +21,14 @@ function makeData(overrides: any = {}): BrandOpsData {
       events: overrides.activities ?? [],
       achievements: overrides.achievements ?? [],
       goals: overrides.goals ?? [],
-      artifacts: overrides.artifacts ?? [],
+      artifacts: overrides.artifacts ?? []
     },
     planWorkspace: {
       plans: overrides.plans ?? [],
       receipts: [],
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -45,7 +47,7 @@ function makeOpportunityRecommendation(overrides: any = {}): OpportunityRecommen
     primaryAction: 'Evaluate',
     actions: [],
     createdAt: new Date().toISOString(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -60,7 +62,7 @@ function makeAchievementCandidate(overrides: any = {}): AchievementCandidate {
     trustTier: 'T2_VERIFIED',
     timestamp: new Date().toISOString(),
     evidence: [],
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -73,7 +75,7 @@ function makeProfessionalSignal(overrides: any = {}): ProfessionalSignal {
     trustTier: 'T2_VERIFIED',
     timestamp: new Date().toISOString(),
     confidence: 0.85,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -83,14 +85,12 @@ describe('Explain Why Now — Basic Generation', () => {
       id: 'opp-1',
       title: 'Hiring opportunity at Acme',
       goalAlignment: ['growth'],
-      category: 'hiring',
+      category: 'hiring'
     });
     // Activities within last 48 hours
     const activityTime = new Date(Date.now() - 2 * 86400000).toISOString();
     const data = makeData({
-      activities: [
-        { timestamp: activityTime, type: 'session' },
-      ],
+      activities: [{ timestamp: activityTime, type: 'session' }]
     });
 
     const explanation = buildWhyNow({ recommendation, data });
@@ -110,7 +110,7 @@ describe('Explain Why Now — Basic Generation', () => {
     const candidate = makeAchievementCandidate({
       id: 'ach-1',
       title: 'Shipped auth system',
-      kind: 'achievement',
+      kind: 'achievement'
     });
     const data = makeData();
 
@@ -123,12 +123,18 @@ describe('Explain Why Now — Basic Generation', () => {
   it('generates whyNow for professional signal', () => {
     const signal = makeProfessionalSignal({
       id: 'sig-1',
-      claim: 'User has security expertise',
+      claim: 'User has security expertise'
     });
     const data = makeData({
       goals: [
-        { id: 'goal-1', title: 'Build security positioning', status: 'active', priority: 0.9, type: 'goal' },
-      ],
+        {
+          id: 'goal-1',
+          title: 'Build security positioning',
+          status: 'active',
+          priority: 0.9,
+          type: 'goal'
+        }
+      ]
     });
 
     const explanation = buildWhyNow({ recommendation: signal, data, relatedGoals: ['goal-1'] });
@@ -143,9 +149,7 @@ describe('Explain Why Now — Evidence Collection', () => {
     const recommendation = makeOpportunityRecommendation({ id: 'opp-1' });
     const activityTime = new Date(Date.now() - 1 * 86400000).toISOString();
     const data = makeData({
-      activities: [
-        { timestamp: activityTime, type: 'session' },
-      ],
+      activities: [{ timestamp: activityTime, type: 'session' }]
     });
 
     const explanation = buildWhyNow({ recommendation, data });
@@ -158,12 +162,18 @@ describe('Explain Why Now — Evidence Collection', () => {
     const recommendation = makeOpportunityRecommendation({
       id: 'opp-1',
       goalAlignment: ['security-positioning'],
-      category: 'hiring',
+      category: 'hiring'
     });
     const data = makeData({
       goals: [
-        { id: 'goal-1', title: 'Build security positioning', status: 'active', priority: 0.9, type: 'goal' },
-      ],
+        {
+          id: 'goal-1',
+          title: 'Build security positioning',
+          status: 'active',
+          priority: 0.9,
+          type: 'goal'
+        }
+      ]
     });
 
     const explanation = buildWhyNow({ recommendation, data, relatedGoals: ['goal-1'] });
@@ -176,12 +186,10 @@ describe('Explain Why Now — Evidence Collection', () => {
     const recommendation = makeOpportunityRecommendation({
       id: 'opp-1',
       category: 'content-piece-opportunity',
-      title: 'Write blog post',
+      title: 'Write blog post'
     });
     const data = makeData({
-      artifacts: [
-        { id: 'art-1', title: 'Draft post', status: 'draft', type: 'artifact' },
-      ],
+      artifacts: [{ id: 'art-1', title: 'Draft post', status: 'draft', type: 'artifact' }]
     });
 
     const explanation = buildWhyNow({ recommendation, data });
@@ -195,8 +203,17 @@ describe('Explain Why Now — Evidence Collection', () => {
     const achTime = new Date(Date.now() - 3 * 86400000).toISOString();
     const data = makeData({
       achievements: [
-        { id: 'ach-1', type: 'achievement', title: 'Shipped auth system', kind: 'achievement', timestamp: achTime, source: 'user-input', trustTier: 'T2_VERIFIED', claim: 'Shipped auth system' },
-      ],
+        {
+          id: 'ach-1',
+          type: 'achievement',
+          title: 'Shipped auth system',
+          kind: 'achievement',
+          timestamp: achTime,
+          source: 'user-input',
+          trustTier: 'T2_VERIFIED',
+          claim: 'Shipped auth system'
+        }
+      ]
     });
 
     const explanation = buildWhyNow({ recommendation, data });
@@ -210,8 +227,14 @@ describe('Explain Why Now — Evidence Collection', () => {
     const planTime = new Date(Date.now() - 1 * 86400000).toISOString();
     const data = makeData({
       plans: [
-        { id: 'plan-1', title: 'Completed plan', status: 'completed', type: 'plan', updatedAt: planTime },
-      ],
+        {
+          id: 'plan-1',
+          title: 'Completed plan',
+          status: 'completed',
+          type: 'plan',
+          updatedAt: planTime
+        }
+      ]
     });
 
     const explanation = buildWhyNow({ recommendation, data });
@@ -226,9 +249,7 @@ describe('Explain Why Now — Interrupt Decision', () => {
     const recommendation = makeOpportunityRecommendation({ id: 'opp-1' });
     const activityTime = new Date(Date.now() - 1 * 86400000).toISOString();
     const data = makeData({
-      activities: [
-        { timestamp: activityTime, type: 'session' },
-      ],
+      activities: [{ timestamp: activityTime, type: 'session' }]
     });
 
     const explanation = buildWhyNow({ recommendation, data });
@@ -243,7 +264,7 @@ describe('Explain Why Now — Interrupt Decision', () => {
       goals: [],
       achievements: [],
       artifacts: [],
-      plans: [],
+      plans: []
     });
 
     const explanation = buildWhyNow({ recommendation, data });
@@ -258,15 +279,22 @@ describe('Explain Why Now — Confidence and Fragility', () => {
     const recommendation = makeOpportunityRecommendation({ id: 'opp-1', category: 'hiring' });
     const activityTime = new Date(Date.now() - 1 * 86400000).toISOString();
     const data = makeData({
-      activities: [
-        { timestamp: activityTime, type: 'session' },
-      ],
+      activities: [{ timestamp: activityTime, type: 'session' }],
       goals: [
-        { id: 'goal-1', title: 'Relevant goal', status: 'active', priority: 0.9, type: 'goal' },
+        { id: 'goal-1', title: 'Relevant goal', status: 'active', priority: 0.9, type: 'goal' }
       ],
       achievements: [
-        { id: 'ach-1', type: 'achievement', title: 'Recent achievement', kind: 'achievement', timestamp: new Date(Date.now() - 2 * 86400000).toISOString(), source: 'user-input', trustTier: 'T2_VERIFIED', claim: 'Recent achievement' },
-      ],
+        {
+          id: 'ach-1',
+          type: 'achievement',
+          title: 'Recent achievement',
+          kind: 'achievement',
+          timestamp: new Date(Date.now() - 2 * 86400000).toISOString(),
+          source: 'user-input',
+          trustTier: 'T2_VERIFIED',
+          claim: 'Recent achievement'
+        }
+      ]
     });
 
     const explanation = buildWhyNow({ recommendation, data, relatedGoals: ['goal-1'] });
@@ -287,9 +315,12 @@ describe('Explain Why Now — Confidence and Fragility', () => {
   });
 
   it('includes criticalAssumption when fragile', () => {
-    const recommendation = makeOpportunityRecommendation({ id: 'opp-1', goalAlignment: ['nonexistent-goal'] });
+    const recommendation = makeOpportunityRecommendation({
+      id: 'opp-1',
+      goalAlignment: ['nonexistent-goal']
+    });
     const data = makeData({
-      goals: [],
+      goals: []
     });
 
     const explanation = buildWhyNow({ recommendation, data, relatedGoals: ['nonexistent-goal'] });
@@ -306,9 +337,7 @@ describe('Explain Why Now — Evidence Item Structure', () => {
     const recommendation = makeOpportunityRecommendation({ id: 'opp-1' });
     const activityTime = new Date(Date.now() - 1 * 86400000).toISOString();
     const data = makeData({
-      activities: [
-        { timestamp: activityTime, type: 'session' },
-      ],
+      activities: [{ timestamp: activityTime, type: 'session' }]
     });
 
     const explanation = buildWhyNow({ recommendation, data });
@@ -342,7 +371,7 @@ describe('Explain Why Now — Empty Context', () => {
     const recommendation = makeOpportunityRecommendation({
       id: 'opp-1',
       goalAlignment: [],
-      category: 'hiring',
+      category: 'hiring'
     });
     const data = makeData();
 
@@ -359,16 +388,12 @@ describe('Explain Why Now — Narrative Quality', () => {
       id: 'opp-1',
       title: 'Hiring opportunity',
       goalAlignment: ['growth'],
-      category: 'hiring',
+      category: 'hiring'
     });
     const activityTime = new Date(Date.now() - 1 * 86400000).toISOString();
     const data = makeData({
-      activities: [
-        { timestamp: activityTime, type: 'session' },
-      ],
-      goals: [
-        { id: 'goal-1', title: 'Grow team', status: 'active', priority: 0.9, type: 'goal' },
-      ],
+      activities: [{ timestamp: activityTime, type: 'session' }],
+      goals: [{ id: 'goal-1', title: 'Grow team', status: 'active', priority: 0.9, type: 'goal' }]
     });
 
     const explanation = buildWhyNow({ recommendation, data, relatedGoals: ['goal-1'] });
@@ -382,15 +407,30 @@ describe('Explain Why Now — Narrative Quality', () => {
       id: 'opp-1',
       title: 'Security hiring opportunity',
       goalAlignment: ['security-positioning'],
-      category: 'hiring',
+      category: 'hiring'
     });
     const data = makeData({
       goals: [
-        { id: 'goal-1', title: 'Build security positioning', status: 'active', priority: 0.9, type: 'goal' },
+        {
+          id: 'goal-1',
+          title: 'Build security positioning',
+          status: 'active',
+          priority: 0.9,
+          type: 'goal'
+        }
       ],
       achievements: [
-        { id: 'ach-1', type: 'achievement', title: 'Shipped auth system', kind: 'achievement', timestamp: new Date(Date.now() - 5 * 86400000).toISOString(), source: 'user-input', trustTier: 'T2_VERIFIED', claim: 'Shipped auth system' },
-      ],
+        {
+          id: 'ach-1',
+          type: 'achievement',
+          title: 'Shipped auth system',
+          kind: 'achievement',
+          timestamp: new Date(Date.now() - 5 * 86400000).toISOString(),
+          source: 'user-input',
+          trustTier: 'T2_VERIFIED',
+          claim: 'Shipped auth system'
+        }
+      ]
     });
 
     const explanation = buildWhyNow({ recommendation, data, relatedGoals: ['goal-1'] });

@@ -1,0 +1,13 @@
+{
+  // Type-checks the test suite, which `tsconfig.app.json` does not: it includes
+  // `src` only, and Vitest transpiles without checking, so a type error in a test
+  // surfaces at runtime or not at all.
+  //
+  // Deliberately NOT part of `npm run check`. The suite carries 161 pre-existing
+  // errors, and wiring them into the release gate would either block every commit
+  // or invite a blanket suppression. Run `npm run typecheck:tests` to see the
+  // number; it should only ever go down. New test files should add zero.
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": { "types": ["chrome", "node"] },
+  "include": ["src", "tests"]
+}

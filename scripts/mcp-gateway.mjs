@@ -35,11 +35,26 @@
  * Node-only transport. Never imported by the browser SPA.
  */
 import process from 'node:process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createInMemorySeededWorkspace, withDefaults } from '../src/services/storage/storage';
-import { diagnoseAgentToken, listAgentSessions } from '../src/services/interop/sessions';
+import {
+  diagnoseAgentToken,
+  listAgentSessions,
+  resolveAgentSession
+} from '../src/services/interop/sessions';
 import { executeAgentToolCall } from '../src/services/interop/gateway';
-import { startMcpStdioServer } from '../src/services/interop/mcp/server';
+import { listMcpTools, startMcpStdioServer } from '../src/services/interop/mcp/server';
+import { createInMemoryWorkspaceStore, createWorkspaceFileStore } from './lib/workspaceStore.mjs';
+import {
+  listResourceTemplates,
+  listResources,
+  resolveResourceUri
+} from '../src/services/interop/mcp/resources';
+import {
+  applyTaskInputResponses,
+  cancelTask,
+  resolveTask
+} from '../src/services/interop/mcp/tasks';
 
 const isBrandOpsWorkspaceShape = (value) =>
   Boolean(
@@ -92,36 +107,121 @@ if (workspacePath) {
   workspace = createInMemorySeededWorkspace();
 }
 
-const persist = () => {
-  if (!workspacePath) return;
-  try {
-    writeFileSync(workspacePath, JSON.stringify(workspace, null, 2));
-  } catch (error) {
-    process.stderr.write(`E_PERSIST: ${error instanceof Error ? error.message : String(error)}\n`);
-  }
-};
+/**
+ * Every call reads the workspace fresh and writes it back under a
+ * compare-and-swap. The gateway used to hold one snapshot for the life of the
+ * process: it never saw the app's later writes, and its own writes silently
+ * clobbered anyone else's. See `lib/workspaceStore.mjs`.
+ */
+const store = workspacePath
+  ? createWorkspaceFileStore(workspacePath, withDefaults)
+  : createInMemoryWorkspaceStore(workspace);
 
 const startGateway = () =>
   startMcpStdioServer({
     getToken: () => token,
-    callTool: async (toolName, args, extra) => {
-      const {
-        workspace: next,
-        session,
-        result
-      } = await executeAgentToolCall({
-        workspace,
-        token,
-        call: {
-          toolName,
-          args: args ?? {},
-          idempotencyKey: extra?.idempotencyKey,
-          purpose: extra?.purpose
-        }
+    callTool: async (toolName, args, extra) =>
+      store.mutate(async (current) => {
+        const {
+          workspace: next,
+          session,
+          result
+        } = await executeAgentToolCall({
+          workspace: current,
+          token,
+          call: {
+            toolName,
+            args: args ?? {},
+            idempotencyKey: extra?.idempotencyKey,
+            purpose: extra?.purpose
+          }
+        });
+        return {
+          workspace: next,
+          value: { ...result, data: { ...result.data, sessionId: session.id } }
+        };
+      }),
+    // Discovery is scoped to what this session may actually invoke — advertising
+    // a tool the caller cannot use leaks workspace shape and invites refusals.
+    listTools: async () => {
+      const current = store.read();
+      const session = await resolveAgentSession(current, token);
+      return listMcpTools({
+        grantedCapabilities: session?.grantedCapabilities,
+        professionPackId: current.settings?.professionPackId
       });
-      workspace = next;
-      persist();
-      return { ...result, data: { ...result.data, sessionId: session.id } };
+    },
+    resources: {
+      list: async () => {
+        const current = store.read();
+        const session = await resolveAgentSession(current, token);
+        return listResources(current, { grantedCapabilities: session?.grantedCapabilities });
+      },
+      templates: async () => {
+        const session = await resolveAgentSession(store.read(), token);
+        return listResourceTemplates({ grantedCapabilities: session?.grantedCapabilities });
+      },
+      /**
+       * A resource read is a capability call. It goes through the same
+       * gateway a tool call goes through, so identity, policy, rate limit
+       * and audit all apply — resources are an address, not a side door.
+       */
+      read: async (uri) => {
+        const resolved = resolveResourceUri(uri);
+        if (!resolved) return { ok: false, error: `Unknown resource URI: ${uri}` };
+        return store.mutate(async (current) => {
+          const { workspace: next, result } = await executeAgentToolCall({
+            workspace: current,
+            token: token,
+            call: { toolName: resolved.call.toolName, args: resolved.call.args }
+          });
+          return {
+            workspace: next,
+            value: {
+              ok: result.ok,
+              mimeType: resolved.mimeType,
+              data: result.data,
+              errorCode: result.errorCode,
+              error: result.error,
+              capabilityId: resolved.capabilityId
+            }
+          };
+        });
+      }
+    },
+    // Tasks extension: every handler resolves the caller's session from the same
+    // token, so a task can only ever be read or cancelled by the session that
+    // requested it.
+    tasks: {
+      get: async (taskId) => {
+        const current = store.read();
+        const session = await resolveAgentSession(current, token);
+        if (!session) return { ok: false, errorCode: 'unauthorized', error: 'Unknown session.' };
+        return resolveTask(current, taskId, session.id);
+      },
+      cancel: async (taskId) =>
+        store.mutate(async (current) => {
+          const session = await resolveAgentSession(current, token);
+          if (!session)
+            return {
+              workspace: current,
+              value: { ok: false, errorCode: 'unauthorized', error: 'Unknown session.' }
+            };
+          const outcome = cancelTask(current, taskId, session.id);
+          // A refused cancel returns the workspace untouched, so nothing is written.
+          return { workspace: outcome.ok ? outcome.workspace : current, value: outcome };
+        }),
+      update: async (taskId, inputResponses) =>
+        store.mutate(async (current) => {
+          const session = await resolveAgentSession(current, token);
+          if (!session)
+            return {
+              workspace: current,
+              value: { ok: false, errorCode: 'unauthorized', error: 'Unknown session.' }
+            };
+          const outcome = applyTaskInputResponses(current, taskId, session.id, inputResponses);
+          return { workspace: outcome.ok ? outcome.workspace : current, value: outcome };
+        })
     }
   });
 

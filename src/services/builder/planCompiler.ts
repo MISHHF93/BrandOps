@@ -3,10 +3,7 @@
  * Opportunity inputs into typed PlanDrafts with 10 plan templates.
  */
 
-import type {
-  Achievement,
-  OpportunityRecommendation
-} from '../../types/builder';
+import type { Achievement, OpportunityRecommendation } from '../../types/builder';
 import type { BrandOpsData, PlanPreset, PlanDraft } from '../../types/domain';
 import {
   convertAskResponseToPlan,
@@ -69,9 +66,17 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     requiredInputs: ['Source achievement or opportunity title', 'Content angle or topic'],
     optionalInputs: ['Target platform(s)', 'Preferred tone', 'Suggested headline'],
     estimatedSteps: 5,
-    expectedArtifacts: ['Content brief', 'Draft post(s)', 'Publishing timeline', 'Platform suggestions'],
+    expectedArtifacts: [
+      'Content brief',
+      'Draft post(s)',
+      'Publishing timeline',
+      'Platform suggestions'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT'],
-    successCriteria: ['Draft content is grounded in verified achievement', 'Platform support confirmed'],
+    successCriteria: [
+      'Draft content is grounded in verified achievement',
+      'Platform support confirmed'
+    ],
     verificationStrategy: 'User reviews drafts before publishing.'
   },
   'content-plan-extended': {
@@ -81,7 +86,12 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     requiredInputs: ['Source achievement or opportunity title', 'Primary content angle'],
     optionalInputs: ['All target platforms', 'Content series scope', 'Repurposing targets'],
     estimatedSteps: 7,
-    expectedArtifacts: ['Master content brief', 'Platform-specific drafts', 'Repurposing map', 'Publishing calendar'],
+    expectedArtifacts: [
+      'Master content brief',
+      'Platform-specific drafts',
+      'Repurposing map',
+      'Publishing calendar'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT'],
     successCriteria: ['Multi-platform coverage confirmed', 'Repurposing strategy clear'],
     verificationStrategy: 'User reviews each platform draft before scheduling.'
@@ -105,7 +115,12 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     requiredInputs: ['Source achievement or opportunity', 'Target audience segments'],
     optionalInputs: ['Channel mix', 'Sequence length', 'Relationship goals'],
     estimatedSteps: 7,
-    expectedArtifacts: ['Segmented target list', 'Channel-specific drafts', 'Sequence map', 'Response handling plan'],
+    expectedArtifacts: [
+      'Segmented target list',
+      'Channel-specific drafts',
+      'Sequence map',
+      'Response handling plan'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT'],
     successCriteria: ['Multi-channel coverage confirmed', 'Sequence is trackable'],
     verificationStrategy: 'User approves each channel draft and sequence before activation.'
@@ -117,9 +132,17 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     requiredInputs: ['Current positioning statement', 'Recent verified achievements'],
     optionalInputs: ['Target audience', 'Competitive context', 'Desired positioning shift'],
     estimatedSteps: 5,
-    expectedArtifacts: ['Current positioning assessment', 'Suggested positioning', 'Differentiation map', 'Proof points list'],
+    expectedArtifacts: [
+      'Current positioning assessment',
+      'Suggested positioning',
+      'Differentiation map',
+      'Proof points list'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT', 'CAN_PROPOSE_TWIN_CHANGE'],
-    successCriteria: ['Positioning is grounded in verified evidence', 'Proof points are specific and verifiable'],
+    successCriteria: [
+      'Positioning is grounded in verified evidence',
+      'Proof points are specific and verifiable'
+    ],
     verificationStrategy: 'User approves every positioning claim before it is used externally.'
   },
   'positioning-plan-extended': {
@@ -129,41 +152,82 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     requiredInputs: ['Current positioning', 'Verified achievements', 'Target audience definition'],
     optionalInputs: ['Competitive landscape', 'Brand voice guidelines', 'Messaging pillars'],
     estimatedSteps: 8,
-    expectedArtifacts: ['Positioning audit', 'Audience alignment map', 'Messaging architecture', 'Proof point matrix', 'Gap analysis'],
+    expectedArtifacts: [
+      'Positioning audit',
+      'Audience alignment map',
+      'Messaging architecture',
+      'Proof point matrix',
+      'Gap analysis'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT', 'CAN_PROPOSE_TWIN_CHANGE'],
-    successCriteria: ['Positioning is evidence-based and audience-aligned', 'Every claim has a verification path'],
-    verificationStrategy: 'User reviews the full positioning architecture and approves each element.'
+    successCriteria: [
+      'Positioning is evidence-based and audience-aligned',
+      'Every claim has a verification path'
+    ],
+    verificationStrategy:
+      'User reviews the full positioning architecture and approves each element.'
   },
   'launch-plan': {
     preset: 'launch-plan',
     name: 'Launch Plan',
     description: 'Plan a product or project launch with milestones, content, and outreach.',
     requiredInputs: ['Product/project name', 'Launch date or window', 'Launch goal'],
-    optionalInputs: ['Target audience', 'Key features to highlight', 'Content assets to create', 'Outreach targets'],
+    optionalInputs: [
+      'Target audience',
+      'Key features to highlight',
+      'Content assets to create',
+      'Outreach targets'
+    ],
     estimatedSteps: 8,
-    expectedArtifacts: ['Launch timeline', 'Milestone checklist', 'Content calendar', 'Outreach sequence', 'Launch-day checklist'],
+    expectedArtifacts: [
+      'Launch timeline',
+      'Milestone checklist',
+      'Content calendar',
+      'Outreach sequence',
+      'Launch-day checklist'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT', 'CAN_CREATE_PLAN'],
-    successCriteria: ['Launch date is realistic', 'All milestone owners are identified', 'Content and outreach are coordinated'],
-    verificationStrategy: 'User approves the launch timeline, milestone owners, and content before execution.'
+    successCriteria: [
+      'Launch date is realistic',
+      'All milestone owners are identified',
+      'Content and outreach are coordinated'
+    ],
+    verificationStrategy:
+      'User approves the launch timeline, milestone owners, and content before execution.'
   },
   'portfolio-plan': {
     preset: 'portfolio-plan',
     name: 'Portfolio Plan',
     description: 'Plan a portfolio entry or update based on verified achievements.',
     requiredInputs: ['Achievement or project to feature', 'Desired portfolio impact'],
-    optionalInputs: ['Supporting artifacts', 'Visual assets', 'Metrics or outcomes', 'Related work'],
+    optionalInputs: [
+      'Supporting artifacts',
+      'Visual assets',
+      'Metrics or outcomes',
+      'Related work'
+    ],
     estimatedSteps: 5,
-    expectedArtifacts: ['Portfolio entry draft', 'Evidence links', 'Impact summary', 'Visual asset list'],
+    expectedArtifacts: [
+      'Portfolio entry draft',
+      'Evidence links',
+      'Impact summary',
+      'Visual asset list'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT'],
     successCriteria: ['Entry is grounded in verified achievement', 'External links are valid'],
-    verificationStrategy: 'User reviews the portfolio entry and approves all claims before publishing.'
+    verificationStrategy:
+      'User reviews the portfolio entry and approves all claims before publishing.'
   },
   'project-documentation-plan': {
     preset: 'project-documentation-plan',
     name: 'Project Documentation Plan',
     description: 'Plan documentation for a project based on its achievements and gaps.',
     requiredInputs: ['Project name', 'Known documentation gaps'],
-    optionalInputs: ['Target documentation types', 'Audience for documentation', 'Existing source material'],
+    optionalInputs: [
+      'Target documentation types',
+      'Audience for documentation',
+      'Existing source material'
+    ],
     estimatedSteps: 6,
     expectedArtifacts: ['Documentation outline', 'Gap analysis', 'Writing plan', 'Review schedule'],
     permissionRequirements: ['CAN_CREATE_DRAFT'],
@@ -175,9 +239,19 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     name: 'Networking Plan',
     description: 'Plan strategic networking based on recent work and opportunities.',
     requiredInputs: ['Networking goal', 'Recent relevant work or achievement'],
-    optionalInputs: ['Target communities', 'Event attendance', 'Outreach targets', 'Follow-up cadence'],
+    optionalInputs: [
+      'Target communities',
+      'Event attendance',
+      'Outreach targets',
+      'Follow-up cadence'
+    ],
     estimatedSteps: 5,
-    expectedArtifacts: ['Target community list', 'Outreach templates', 'Event calendar', 'Follow-up plan'],
+    expectedArtifacts: [
+      'Target community list',
+      'Outreach templates',
+      'Event calendar',
+      'Follow-up plan'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT'],
     successCriteria: ['Networking goals are specific', 'Targets are relevant to recent work'],
     verificationStrategy: 'User approves outreach templates and target list before activation.'
@@ -189,21 +263,41 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     requiredInputs: ['Target platform', 'Integration goal'],
     optionalInputs: ['Permission scope', 'Existing connection state', 'Required approvals'],
     estimatedSteps: 5,
-    expectedArtifacts: ['Setup steps', 'Permission scope document', 'Unsupported states list', 'Review checklist'],
+    expectedArtifacts: [
+      'Setup steps',
+      'Permission scope document',
+      'Unsupported states list',
+      'Review checklist'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT'],
     successCriteria: ['Platform support confirmed', 'Permission scope is explicit'],
-    verificationStrategy: 'User approves permission scope before connecting or syncing any platform.'
+    verificationStrategy:
+      'User approves permission scope before connecting or syncing any platform.'
   },
   'integration-setup-plan-extended': {
     preset: 'integration-setup-plan-extended',
     name: 'Extended Integration Setup Plan',
     description: 'Full integration plan with multi-platform setup, rollback, and monitoring.',
     requiredInputs: ['Target platforms', 'Integration goals', 'Current connection state'],
-    optionalInputs: ['Rollback plan', 'Monitoring setup', 'Team members involved', 'SLA or uptime requirements'],
+    optionalInputs: [
+      'Rollback plan',
+      'Monitoring setup',
+      'Team members involved',
+      'SLA or uptime requirements'
+    ],
     estimatedSteps: 8,
-    expectedArtifacts: ['Multi-platform setup plan', 'Permission matrix', 'Rollback procedure', 'Monitoring plan', 'Team assignments'],
+    expectedArtifacts: [
+      'Multi-platform setup plan',
+      'Permission matrix',
+      'Rollback procedure',
+      'Monitoring plan',
+      'Team assignments'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT'],
-    successCriteria: ['All platforms confirmed supported or flagged unsupported', 'Rollback plan is explicit'],
+    successCriteria: [
+      'All platforms confirmed supported or flagged unsupported',
+      'Rollback plan is explicit'
+    ],
     verificationStrategy: 'User approves permission scope and rollback plan before execution.'
   },
   'professional-growth-plan': {
@@ -211,12 +305,27 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     name: 'Professional Growth Plan',
     description: 'Plan professional growth based on verified achievements and positioning.',
     requiredInputs: ['Current professional profile', 'Verified achievements and signals'],
-    optionalInputs: ['Target growth areas', 'Desired positioning', 'Time commitment', 'Learning resources'],
+    optionalInputs: [
+      'Target growth areas',
+      'Desired positioning',
+      'Time commitment',
+      'Learning resources'
+    ],
     estimatedSteps: 6,
-    expectedArtifacts: ['Growth areas analysis', 'Skill development plan', 'Milestone targets', 'Resource list', 'Timeline'],
+    expectedArtifacts: [
+      'Growth areas analysis',
+      'Skill development plan',
+      'Milestone targets',
+      'Resource list',
+      'Timeline'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT', 'CAN_PROPOSE_TWIN_CHANGE'],
-    successCriteria: ['Growth areas are grounded in verified evidence', 'Milestones are achievable'],
-    verificationStrategy: 'User reviews growth areas and approves the development plan before execution.'
+    successCriteria: [
+      'Growth areas are grounded in verified evidence',
+      'Milestones are achievable'
+    ],
+    verificationStrategy:
+      'User reviews growth areas and approves the development plan before execution.'
   },
   'custom-plan': {
     preset: 'custom-plan',
@@ -225,7 +334,12 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     requiredInputs: ['Objective', 'Source context'],
     optionalInputs: ['Steps', 'Required approvals', 'Success criteria', 'Timeline'],
     estimatedSteps: 5,
-    expectedArtifacts: ['Structured plan draft', 'Approval gates', 'Missing inputs', 'Expected output'],
+    expectedArtifacts: [
+      'Structured plan draft',
+      'Approval gates',
+      'Missing inputs',
+      'Expected output'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT'],
     successCriteria: ['Objective is clear and achievable', 'Steps are actionable'],
     verificationStrategy: 'User reviews the structured plan and approves before execution.'
@@ -235,11 +349,25 @@ export const PLAN_TEMPLATES: Record<ExtendedPlanPreset, PlanTemplate> = {
     name: 'Extended Custom Plan',
     description: 'Full-featured custom plan with dependencies, risks, and detailed outputs.',
     requiredInputs: ['Objective', 'Source context', 'Key constraints'],
-    optionalInputs: ['Detailed steps with dependencies', 'Risk register', 'Resource requirements', 'Success metrics'],
+    optionalInputs: [
+      'Detailed steps with dependencies',
+      'Risk register',
+      'Resource requirements',
+      'Success metrics'
+    ],
     estimatedSteps: 8,
-    expectedArtifacts: ['Detailed plan with dependencies', 'Risk register', 'Resource plan', 'Success metrics', 'Timeline'],
+    expectedArtifacts: [
+      'Detailed plan with dependencies',
+      'Risk register',
+      'Resource plan',
+      'Success metrics',
+      'Timeline'
+    ],
     permissionRequirements: ['CAN_CREATE_DRAFT', 'CAN_CREATE_PLAN'],
-    successCriteria: ['All steps have clear owners and inputs', 'Risks are identified and mitigated'],
+    successCriteria: [
+      'All steps have clear owners and inputs',
+      'Risks are identified and mitigated'
+    ],
     verificationStrategy: 'User reviews the full plan, dependencies, and risks before execution.'
   },
   'buyer-persona-plan': {
@@ -321,11 +449,14 @@ export interface CompilePlanFromAchievementResult {
   template: PlanTemplate;
 }
 
-export function compilePlanFromAchievement(input: CompilePlanFromAchievementInput): CompilePlanFromAchievementResult {
+export function compilePlanFromAchievement(
+  input: CompilePlanFromAchievementInput
+): CompilePlanFromAchievementResult {
   const template = PLAN_TEMPLATES[input.preset];
   if (!template) throw new Error(`Unknown plan preset: ${input.preset}`);
 
-  const intent = input.userIntent ?? `Create a ${template.name} from achievement "${input.achievement.title}".`;
+  const intent =
+    input.userIntent ?? `Create a ${template.name} from achievement "${input.achievement.title}".`;
   const conversationId = input.conversationId ?? input.achievement.id;
 
   const askInput: ConvertAskResponseToPlanInput = {
@@ -376,11 +507,14 @@ export interface CompilePlanFromOpportunityInput {
   conversationId?: string;
 }
 
-export function compilePlanFromOpportunity(input: CompilePlanFromOpportunityInput): CompilePlanFromAchievementResult {
+export function compilePlanFromOpportunity(
+  input: CompilePlanFromOpportunityInput
+): CompilePlanFromAchievementResult {
   const template = PLAN_TEMPLATES[input.preset];
   if (!template) throw new Error(`Unknown plan preset: ${input.preset}`);
 
-  const intent = input.userIntent ?? `Create a ${template.name} from opportunity "${input.opportunity.title}".`;
+  const intent =
+    input.userIntent ?? `Create a ${template.name} from opportunity "${input.opportunity.title}".`;
   const conversationId = input.conversationId ?? input.opportunity.id;
 
   const askInput: ConvertAskResponseToPlanInput = {
@@ -440,7 +574,10 @@ export function validatePlanInputs(input: ValidatePlanInputsInput): ValidatePlan
     }
   }
 
-  if (input.template.requiredInputs.length > 0 && missingRequired.length === input.template.requiredInputs.length) {
+  if (
+    input.template.requiredInputs.length > 0 &&
+    missingRequired.length === input.template.requiredInputs.length
+  ) {
     warnings.push('No required inputs detected — plan will need significant user input.');
   }
 

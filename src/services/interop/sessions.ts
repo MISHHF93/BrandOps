@@ -10,7 +10,8 @@ import type {
   ContextBundleId,
   ExternalAgentClientKind,
   ExternalAgentSession,
-  ExternalAgentSessionsState
+  ExternalAgentSessionsState,
+  ExternalAgentTrustCeiling
 } from '../../types/agentInterop';
 import {
   AGENT_CAPABILITY_IDS,
@@ -51,6 +52,8 @@ export interface CreateAgentSessionInput {
   readOnly?: boolean;
   expiresInMs?: number;
   token?: string;
+  /** Operator cap on effective trust. Can only restrict what the grants imply. */
+  trustCeiling?: ExternalAgentTrustCeiling;
 }
 
 export interface CreateAgentSessionResult {
@@ -100,6 +103,7 @@ export async function createAgentSession(
     grantedCapabilities: capabilities,
     createdAt: nowIso,
     lastActivityAt: nowIso,
+    ...(input.trustCeiling ? { trustCeiling: input.trustCeiling } : {}),
     ...(input.expiresInMs
       ? { expiresAt: new Date(now.getTime() + input.expiresInMs).toISOString() }
       : {})

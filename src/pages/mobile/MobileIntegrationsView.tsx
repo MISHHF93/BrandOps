@@ -264,8 +264,8 @@ export const MobileIntegrationsView = ({
                 descriptionVisibility="sr-only"
               >
                 <p className="mt-2 text-meta leading-relaxed text-textMuted">
-                  Three sync slots only (Google, GitHub, LinkedIn). Status reflects local
-                  preference rows — server sign-in is not available yet.
+                  Three sync slots only (Google, GitHub, LinkedIn). Status reflects local preference
+                  rows — server sign-in is not available yet.
                 </p>
                 <ul className="mt-2 space-y-1.5 text-textMuted">
                   {snapshot.providerStatuses.map((provider) => (
@@ -492,7 +492,8 @@ export const MobileIntegrationsView = ({
               >
                 Connected Agents & integrations
                 <span className="ml-2 text-meta font-normal text-textSoft">
-                  9 tools · external agents read context, propose achievements, and request approvals
+                  9 tools · external agents read context, propose achievements, and request
+                  approvals
                 </span>
               </summary>
               <div className="border-t border-border/30 px-2 py-3 sm:px-3">

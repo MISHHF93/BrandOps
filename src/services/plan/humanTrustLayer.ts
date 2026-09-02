@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData } from '../../types/domain';
 import { buildBehavioralIntelligenceEngineReadout } from '../intelligence/behavioralIntelligenceEngine';
 import { buildCrossPlatformOperationalPlans } from './crossPlatformPlanner';
@@ -72,7 +73,7 @@ function trustCommand(action: {
   sourceCommand?: string;
 }) {
   const label = action.control.replace('-', ' ');
-  return `ask: Human Trust Layer ${label} for this cross-platform action. Keep the user in control. Do not execute externally. Show approval requirements, receipt expectations, audit history needs, and any missing context.\n\nAction: ${action.title}\nWhere: ${action.location}\nControl: ${label}\nSource command: ${action.sourceCommand ?? 'none'}`;
+  return `ask: Human Trust Layer ${quoteContextValue(label)} for this cross-platform action. Keep the user in control. Do not execute externally. Show approval requirements, receipt expectations, audit history needs, and any missing context.\n\nAction: ${quoteContextValue(action.title)}\nWhere: ${quoteContextValue(action.location)}\nControl: ${quoteContextValue(label)}\nSource command: ${quoteContextValue(action.sourceCommand ?? 'none')}`;
 }
 
 function controlsFor(input: {

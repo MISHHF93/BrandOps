@@ -40,6 +40,24 @@ function sortTime(iso: string): number {
 }
 
 /**
+ * A due date a person can read.
+ *
+ * These subtitles were interpolating the stored value directly, so the plan page
+ * showed `due 2026-09-02T06:35:12.511Z` to the reader — a machine timestamp,
+ * precise to the millisecond, in the one line meant to say when something is
+ * due. The view had a formatter for exactly this and it was never reached from
+ * here.
+ *
+ * Unparseable input is returned untouched: a stored value that is not a date is
+ * a data problem, and hiding it behind "Recent" would make it harder to see.
+ */
+export function dueLabel(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/**
  * Mixed chronological queue (Plan hub + Today context): open follow-ups,
  * attention publishing, active scheduler tasks, and draft/ready outreach — capped for mobile performance.
  */
@@ -52,7 +70,7 @@ export function buildPulseTimeline(workspace: BrandOpsData): PulseTimelineRow[] 
       id: `fu-${f.id}`,
       kind: 'follow-up',
       title: f.reason.trim() || 'Follow-up',
-      subtitle: `Due ${f.dueAt}`,
+      subtitle: `Due ${dueLabel(f.dueAt)}`,
       sortKey: f.dueAt,
       badge: 'Follow-up'
     });
@@ -77,7 +95,7 @@ export function buildPulseTimeline(workspace: BrandOpsData): PulseTimelineRow[] 
       id: `sch-${t.id}`,
       kind: 'scheduler',
       title: t.title,
-      subtitle: `${t.status} · due ${t.dueAt}`,
+      subtitle: `${t.status} · due ${dueLabel(t.dueAt)}`,
       sortKey: t.dueAt,
       badge: 'Scheduler'
     });

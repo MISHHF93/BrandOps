@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircle2, HelpCircle, ShieldCheck, XCircle } from 'lucide-react';
 import type { Plan } from '../../types/domain';
 import type { VerifyStepOutcome } from '../../services/execution/planVerifier';
+import { toneClass } from '../../shared/ui/tone';
 
 type StepDecision = 'achieved' | 'not-achieved';
 
@@ -118,10 +119,12 @@ export function VerifyPlanOutcomesDrawer({
                   <span
                     className={clsx(
                       'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
+                      // Was `successSoft/15` here and `/20` on the hub for the same
+                      // meaning — the drift the shared tone module resolved.
                       decision === 'achieved'
-                        ? 'border-success/45 bg-successSoft/15 text-success'
+                        ? toneClass('success')
                         : decision === 'not-achieved'
-                          ? 'border-danger/45 bg-dangerSoft/15 text-danger'
+                          ? toneClass('danger')
                           : 'border-border/40 text-textMuted'
                     )}
                   >

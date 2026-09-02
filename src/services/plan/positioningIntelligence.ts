@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData, DigitalTwin } from '../../types/domain';
 import { buildPlatformAwareAskReadout } from '../ai/platformAwareAskContext';
 import { buildConnectedIdentityEngineReadout } from '../connectedIdentity/connectedIdentityEngine';
@@ -211,7 +212,7 @@ function actionCommand(
     gaps: string[];
   }
 ): string {
-  return `ask: Positioning Intelligence ${action}. Do not save, publish, sync, send, or mutate workspace records automatically. Keep the result reviewable in PLAN and include confidence, evidence used, strengths, gaps, and approval requirements.\n\n${readout.headline}\nStatements: ${readout.statements.map((item) => `${item.label}: ${item.statement}`).join(' | ')}\nStrengths: ${readout.strengths.join(' | ')}\nGaps: ${readout.gaps.join(' | ')}`;
+  return `ask: Positioning Intelligence ${quoteContextValue(action)}. Do not save, publish, sync, send, or mutate workspace records automatically. Keep the result reviewable in PLAN and include confidence, evidence used, strengths, gaps, and approval requirements.\n\n${quoteContextValue(readout.headline)}\nStatements: ${readout.statements.map((item) => `${item.label}: ${item.statement}`).join(' | ')}\nStrengths: ${readout.strengths.join(' | ')}\nGaps: ${readout.gaps.join(' | ')}`;
 }
 
 export function buildPositioningIntelligenceReadout(

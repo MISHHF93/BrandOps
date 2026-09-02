@@ -95,7 +95,7 @@ function generateDecisionId(partial: Pick<Decision, 'type' | 'title' | 'workspac
   let hash = 0;
   for (let i = 0; i < hashInput.length; i++) {
     const char = hashInput.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
   return `dec-${Math.abs(hash).toString(36)}-${Date.now().toString(36)}`;
@@ -120,7 +120,11 @@ export function createDecision(params: {
 }): Decision {
   const now = new Date().toISOString();
   const decision: Decision = {
-    id: generateDecisionId({ type: params.type, title: params.title, workspaceId: params.workspaceId }),
+    id: generateDecisionId({
+      type: params.type,
+      title: params.title,
+      workspaceId: params.workspaceId
+    }),
     type: params.type,
     polarity: params.polarity,
     title: params.title,
@@ -134,7 +138,7 @@ export function createDecision(params: {
     supersededBy: [],
     confidence: params.confidence ?? 0.85,
     workspaceId: params.workspaceId,
-    traceId: params.traceId,
+    traceId: params.traceId
   };
 
   // Add to store
@@ -142,7 +146,7 @@ export function createDecision(params: {
   decisionStores.set(params.workspaceId, {
     decisions: [decision, ...store.decisions].slice(0, MAX_DECISIONS),
     maxDecisions: MAX_DECISIONS,
-    updatedAt: now,
+    updatedAt: now
   });
 
   return decision;
@@ -161,10 +165,14 @@ export function createDecisionFromTwinProposal(params: {
   workspaceId: string;
   traceId?: string;
 }): Decision {
-  const decisionType = params.proposalKind === 'twin_update' ? 'twin-update' :
-    params.proposalKind === 'artifact' ? 'artifact-approval' :
-    params.proposalKind === 'content_opportunity' ? 'content-direction' :
-    'strategy';
+  const decisionType =
+    params.proposalKind === 'twin_update'
+      ? 'twin-update'
+      : params.proposalKind === 'artifact'
+        ? 'artifact-approval'
+        : params.proposalKind === 'content_opportunity'
+          ? 'content-direction'
+          : 'strategy';
 
   return createDecision({
     type: decisionType,
@@ -176,7 +184,7 @@ export function createDecisionFromTwinProposal(params: {
     sourceDetail: params.proposalId,
     goal: params.goal,
     workspaceId: params.workspaceId,
-    traceId: params.traceId,
+    traceId: params.traceId
   });
 }
 
@@ -202,7 +210,7 @@ export function createDecisionFromSignal(params: {
     sourceDetail: params.signalId,
     goal: params.goal,
     workspaceId: params.workspaceId,
-    traceId: params.traceId,
+    traceId: params.traceId
   });
 }
 
@@ -227,7 +235,7 @@ export function createDecisionFromPlanRejection(params: {
     sourceDetail: params.planId,
     goal: params.goal,
     workspaceId: params.workspaceId,
-    traceId: params.traceId,
+    traceId: params.traceId
   });
 }
 
@@ -248,7 +256,7 @@ function getOrCreateStore(workspaceId: string): DecisionStore {
   const store: DecisionStore = {
     decisions: [],
     maxDecisions: MAX_DECISIONS,
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
   decisionStores.set(workspaceId, store);
   return store;
@@ -311,15 +319,19 @@ export function hasUserRejected(
     if (decision.type === 'rejected-strategy' || decision.type === topic) {
       if (options?.exactMatch && options.strategy) {
         // Exact match on strategy
-        if (decision.description.toLowerCase().includes(options.strategy.toLowerCase()) ||
-            decision.title.toLowerCase().includes(options.strategy.toLowerCase())) {
+        if (
+          decision.description.toLowerCase().includes(options.strategy.toLowerCase()) ||
+          decision.title.toLowerCase().includes(options.strategy.toLowerCase())
+        ) {
           return true;
         }
       } else {
         // Topic match — check if the decision title or description relates to this topic
         const topicLower = topic.toLowerCase();
-        if (decision.title.toLowerCase().includes(topicLower) ||
-            decision.description.toLowerCase().includes(topicLower)) {
+        if (
+          decision.title.toLowerCase().includes(topicLower) ||
+          decision.description.toLowerCase().includes(topicLower)
+        ) {
           return true;
         }
       }
@@ -332,18 +344,18 @@ export function hasUserRejected(
 /**
  * Get decision history for a topic (both approved and rejected).
  */
-export function getDecisionHistory(
-  workspaceId: string,
-  topic: string
-): Decision[] {
+export function getDecisionHistory(workspaceId: string, topic: string): Decision[] {
   const all = getAllDecisions(workspaceId);
   const topicLower = topic.toLowerCase();
 
-  return all.filter((d) =>
-    d.title.toLowerCase().includes(topicLower) ||
-    d.description.toLowerCase().includes(topicLower) ||
-    d.goal?.toLowerCase().includes(topicLower)
-  ).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return all
+    .filter(
+      (d) =>
+        d.title.toLowerCase().includes(topicLower) ||
+        d.description.toLowerCase().includes(topicLower) ||
+        d.goal?.toLowerCase().includes(topicLower)
+    )
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
 // ---------------------------------------------------------------------------
@@ -391,7 +403,7 @@ export function importDecisions(workspaceId: string, store: DecisionStore): void
   decisionStores.set(workspaceId, {
     decisions: store.decisions,
     maxDecisions: store.maxDecisions,
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   });
 }
 

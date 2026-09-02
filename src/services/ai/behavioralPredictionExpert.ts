@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData, SchedulerTask } from '../../types/domain';
 import { buildBehavioralIntelligenceEngineReadout } from '../intelligence/behavioralIntelligenceEngine';
 import { localIntelligence } from '../intelligence/localIntelligence';
@@ -124,7 +125,7 @@ function commandFor(input: {
   confidence: number;
   evidence: string[];
 }): string {
-  return `ask: Review this Behavioral Prediction Expert suggestion and turn it into a PLAN preview only. Do not execute externally, send, publish, schedule, sync, save, automate, or mutate workspace records without explicit approval.\n\nCategory: ${input.category}\nTitle: ${input.title}\nSuggestion: ${input.suggestion}\nConfidence: ${input.confidence}%\nEvidence: ${input.evidence.join(' | ')}\nApproval policy: ${APPROVAL_POLICY}`;
+  return `ask: Review this Behavioral Prediction Expert suggestion and turn it into a PLAN preview only. Do not execute externally, send, publish, schedule, sync, save, automate, or mutate workspace records without explicit approval.\n\nCategory: ${input.category}\nTitle: ${quoteContextValue(input.title)}\nSuggestion: ${quoteContextValue(input.suggestion)}\nConfidence: ${input.confidence}%\nEvidence: ${quoteContextValue(input.evidence.join(' | '))}\nApproval policy: ${APPROVAL_POLICY}`;
 }
 
 function prediction(

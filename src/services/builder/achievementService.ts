@@ -4,7 +4,12 @@
  * professional history.
  */
 
-import type { ActivityEvent, Achievement, AchievementCandidate, AchievementKind } from '../../types/builder';
+import type {
+  ActivityEvent,
+  Achievement,
+  AchievementCandidate,
+  AchievementKind
+} from '../../types/builder';
 import { editCandidate } from './achievementDetector';
 
 /** Factory for creating verified Achievement artifacts. */
@@ -42,17 +47,28 @@ const factory: VerifiedAchievementFactory = {
 /** Map achievement kind to artifact type. */
 function _getArtifactTypeForAchievement(kind: AchievementKind): string {
   switch (kind) {
-    case 'feature-shipped': return 'achievement';
-    case 'repository-released': return 'release';
-    case 'product-launched': return 'product-launch';
-    case 'documentation-published': return 'documentation';
-    case 'benchmark-improved': return 'benchmark';
-    case 'open-source-contribution': return 'open-source';
-    case 'hackathon-submission': return 'hackathon';
-    case 'project-milestone-reached': return 'milestone';
-    case 'integration-completed': return 'integration';
-    case 'significant-refactor-completed': return 'refactor';
-    default: return 'achievement';
+    case 'feature-shipped':
+      return 'achievement';
+    case 'repository-released':
+      return 'release';
+    case 'product-launched':
+      return 'product-launch';
+    case 'documentation-published':
+      return 'documentation';
+    case 'benchmark-improved':
+      return 'benchmark';
+    case 'open-source-contribution':
+      return 'open-source';
+    case 'hackathon-submission':
+      return 'hackathon';
+    case 'project-milestone-reached':
+      return 'milestone';
+    case 'integration-completed':
+      return 'integration';
+    case 'significant-refactor-completed':
+      return 'refactor';
+    default:
+      return 'achievement';
   }
 }
 
@@ -117,13 +133,13 @@ export interface TwinUpdateOperations {
   professionalSignals: Array<{ type: 'update-signal'; signal: string; confidence: number }>;
 }
 
-export function updateTwinFromVerifiedAchievement(
-  achievement: Achievement
-): TwinUpdateOperations {
-  const professionalHistoryUpdates: TwinUpdateOperations['professionalHistoryUpdates'] = [{
-    type: 'add-achievement',
-    achievement
-  }];
+export function updateTwinFromVerifiedAchievement(achievement: Achievement): TwinUpdateOperations {
+  const professionalHistoryUpdates: TwinUpdateOperations['professionalHistoryUpdates'] = [
+    {
+      type: 'add-achievement',
+      achievement
+    }
+  ];
 
   // Derive professional signals from the achievement
   const signals: TwinUpdateOperations['professionalSignals'] = [];

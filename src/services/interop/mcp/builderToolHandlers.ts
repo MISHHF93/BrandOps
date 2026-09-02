@@ -24,24 +24,33 @@ import type {
   TwinUpdateProposal
 } from '../../../types/builder';
 import { ingestActivityEvent } from '../../builder/activityGraph';
-import { verifyAchievement, dismissAchievement } from '../../builder/achievementService';
+import { promotionApprovalBinding } from '../approvalBinding';
+import { dismissAchievement } from '../../builder/achievementService';
 import {
   deriveSignals,
   DEFAULT_SIGNAL_ENGINE_CONFIG
 } from '../../builder/professionalSignalEngine';
-import {
-  applyDeltas,
-  type CurrentTwinState
-} from '../../builder/twinDeltaEngine';
 import { computeOpportunityRadar } from '../../builder/opportunityRadar';
 import { computeProjectIntelligence } from '../../builder/projectIntelligence';
-import { compilePlanFromAchievement, compilePlanFromOpportunity, validatePlanInputs, PLAN_TEMPLATES, type ExtendedPlanPreset } from '../../builder/planCompiler';
+import {
+  compilePlanFromAchievement,
+  compilePlanFromOpportunity,
+  validatePlanInputs,
+  PLAN_TEMPLATES,
+  type ExtendedPlanPreset
+} from '../../builder/planCompiler';
 import { getSkillPack } from '../../builder/skillPack';
 import { createReceipt } from '../../builder/executionReceiptService';
-import { summarizeWorkForBrandOps, type DevelopmentSessionEvidence, type SessionEvidenceItem } from '../../builder/sessionToBrand';
+import {
+  summarizeWorkForBrandOps,
+  type DevelopmentSessionEvidence,
+  type SessionEvidenceItem
+} from '../../builder/sessionToBrand';
 import { getFeatureRegistryState } from '../../builder/featureRegistry';
 import { isBuilderCapabilityId } from '../../builder/mcpBuilderCapabilities';
 import { savePlanDraftToWorkspace } from '../../plan/askPlanConversion';
+import { resolveWorkspaceId } from '../../workspaceIdentity';
+import { createAgentProposal } from '../proposals';
 
 // ---------------------------------------------------------------------------
 // Builder state adapter — reads from workspace, writes back to workspace
@@ -61,8 +70,19 @@ function isActivityEventSource(value: string): value is ActivityEventSource {
   return ACTIVITY_EVENT_SOURCES.includes(value as ActivityEventSource);
 }
 
+/**
+ * The workspace's identity — resolved, never invented.
+ *
+ * This used to fall back to `'default-workspace'`, a *third* value alongside
+ * `'local-workspace'` and `'default'`. It is not cosmetic: `ingestActivityEvent`
+ * writes this straight into `builderActivity.workspaceId`, which the policy
+ * engine binds sessions to. On a workspace that had not named itself yet, one
+ * `brandops_ingest_activity` call therefore named it `'default-workspace'` and
+ * locked out every session issued against `'local-workspace'` — the same defect
+ * the outcome-reporting path had, through a door an agent can open directly.
+ */
 function builderWorkspaceId(workspace: BrandOpsData): string {
-  return workspace.builderActivity?.workspaceId ?? 'default-workspace';
+  return resolveWorkspaceId(workspace);
 }
 
 function builderEvents(workspace: BrandOpsData): ActivityEvent[] {
@@ -120,24 +140,6 @@ function builderVerifiedAchievements(workspace: BrandOpsData): Achievement[] {
     });
 }
 
-function currentTwinFromDigitalTwin(twin: import('../../../types/domain').DigitalTwin): CurrentTwinState {
-  return {
-    id: twin.id,
-    workspaceId: twin.workspaceId,
-    headline: twin.identity.headline,
-    summary: twin.identity.summary,
-    professionalPositioning: twin.identity.professionalPositioning,
-    targetAudience: twin.identity.targetAudience,
-    toneOfVoice: twin.identity.toneOfVoice,
-    expertiseAreas: twin.identity.strengths,
-    skills: twin.resumeProfile.skills,
-    achievements: twin.resumeProfile.achievements,
-    goals: twin.identity.goals,
-    createdAt: twin.createdAt,
-    updatedAt: twin.updatedAt
-  };
-}
-
 // ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
@@ -176,18 +178,16 @@ export function runBuilderHandler(
       const achievements = builderAchievements(workspace);
       const projects = builderProjects(workspace);
 
-      const recentActivity = events
-        .slice(0, 12)
-        .map((e) => ({
-          id: e.id,
-          kind: e.kind,
-          title: e.title,
-          detail: e.detail.slice(0, 200),
-          timestamp: e.timestamp,
-          source: e.source,
-          trustTier: e.trustTier,
-          verificationStatus: e.verificationStatus
-        }));
+      const recentActivity = events.slice(0, 12).map((e) => ({
+        id: e.id,
+        kind: e.kind,
+        title: e.title,
+        detail: e.detail.slice(0, 200),
+        timestamp: e.timestamp,
+        source: e.source,
+        trustTier: e.trustTier,
+        verificationStatus: e.verificationStatus
+      }));
 
       const verifiedAchievements = events
         .filter((e) => e.verificationStatus === 'USER_VERIFIED')
@@ -231,7 +231,13 @@ export function runBuilderHandler(
         workspaceId: builderWorkspaceId(workspace)
       });
 
-      const twinProposals2: Array<{ id: string; summary: string; confidence: number; deltas: Array<{ field: string; previousValue: string; proposedValue: string }>; createdAt: string }> = signalsOut.slice(0, 5).map((p) => ({
+      const twinProposals2: Array<{
+        id: string;
+        summary: string;
+        confidence: number;
+        deltas: Array<{ field: string; previousValue: string; proposedValue: string }>;
+        createdAt: string;
+      }> = signalsOut.slice(0, 5).map((p) => ({
         id: p.signal.id,
         summary: p.signal.claim,
         confidence: p.confidence,
@@ -287,53 +293,72 @@ export function runBuilderHandler(
     }
 
     case 'builder.opportunities.list': {
-      const radar = computeOpportunityRadar(builderActivityState(workspace), builderVerifiedAchievements(workspace), { maxDisplayCount: 10 });
+      const radar = computeOpportunityRadar(
+        builderActivityState(workspace),
+        builderVerifiedAchievements(workspace),
+        { maxDisplayCount: 10 }
+      );
       return { workspace, ok: true, data: { radar } };
     }
 
     case 'builder.projects.list': {
-      const projects = builderProjects(workspace).slice(0, 20).map((p) => ({
-        id: p.id,
-        name: p.name,
-        summary: p.summary,
-        projectStatus: p.projectStatus,
-        tags: p.tags,
-        achievementIds: p.achievementIds,
-        artifactIds: p.artifactIds,
-        planIds: p.planIds,
-        goalIds: p.goalIds,
-        outcomeIds: p.outcomeIds
-      }));
+      const projects = builderProjects(workspace)
+        .slice(0, 20)
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          summary: p.summary,
+          projectStatus: p.projectStatus,
+          tags: p.tags,
+          achievementIds: p.achievementIds,
+          artifactIds: p.artifactIds,
+          planIds: p.planIds,
+          goalIds: p.goalIds,
+          outcomeIds: p.outcomeIds
+        }));
       return { workspace, ok: true, data: { projects } };
     }
 
     case 'builder.projects.intelligence': {
       const projectId = String(args.projectId ?? '').trim();
       if (!projectId) {
-        return { workspace, ok: false, errorCode: 'missing_project_id', error: 'projectId is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'missing_project_id',
+          error: 'projectId is required.',
+          data: {}
+        };
       }
       const project = builderProjects(workspace).find((p) => p.id === projectId);
       if (!project) {
-        return { workspace, ok: false, errorCode: 'project_not_found', error: `Project not found: ${projectId}`, data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'project_not_found',
+          error: `Project not found: ${projectId}`,
+          data: {}
+        };
       }
-      const intelligence = computeProjectIntelligence({ state: builderActivityState(workspace), projectId });
+      const intelligence = computeProjectIntelligence({
+        state: builderActivityState(workspace),
+        projectId
+      });
       return { workspace, ok: true, data: { projectId, intelligence } };
     }
 
     case 'builder.receipts.list': {
-      const receipts = (workspace.planWorkspace?.receipts ?? [])
-        .slice(0, 20)
-        .map((r) => ({
-          id: r.id,
-          planId: r.planId,
-          convertedFrom: r.convertedFrom,
-          planType: r.planType,
-          sourceMessageId: r.sourceMessageId,
-          generatedSteps: r.generatedSteps,
-          userAction: r.userAction,
-          timestamp: r.timestamp,
-          summary: r.summary
-        }));
+      const receipts = (workspace.planWorkspace?.receipts ?? []).slice(0, 20).map((r) => ({
+        id: r.id,
+        planId: r.planId,
+        convertedFrom: r.convertedFrom,
+        planType: r.planType,
+        sourceMessageId: r.sourceMessageId,
+        generatedSteps: r.generatedSteps,
+        userAction: r.userAction,
+        timestamp: r.timestamp,
+        summary: r.summary
+      }));
       return { workspace, ok: true, data: { receipts } };
     }
 
@@ -355,20 +380,22 @@ export function runBuilderHandler(
     }
 
     case 'builder.twin-proposals.list': {
-      const proposals = builderTwinProposals(workspace).slice(0, 10).map((p) => ({
-        id: p.id,
-        summary: p.summary,
-        confidence: p.confidence,
-        reason: p.reason,
-        deltas: p.deltas.map((d) => ({
-          field: d.field,
-          previousValue: typeof d.previousValue === 'string' ? d.previousValue.slice(0, 200) : '',
-          proposedValue: typeof d.proposedValue === 'string' ? d.proposedValue.slice(0, 200) : '',
-          confidence: d.confidence,
-          reason: d.reason
-        })),
-        createdAt: p.createdAt
-      }));
+      const proposals = builderTwinProposals(workspace)
+        .slice(0, 10)
+        .map((p) => ({
+          id: p.id,
+          summary: p.summary,
+          confidence: p.confidence,
+          reason: p.reason,
+          deltas: p.deltas.map((d) => ({
+            field: d.field,
+            previousValue: typeof d.previousValue === 'string' ? d.previousValue.slice(0, 200) : '',
+            proposedValue: typeof d.proposedValue === 'string' ? d.proposedValue.slice(0, 200) : '',
+            confidence: d.confidence,
+            reason: d.reason
+          })),
+          createdAt: p.createdAt
+        }));
       return { workspace, ok: true, data: { proposals } };
     }
 
@@ -380,11 +407,23 @@ export function runBuilderHandler(
     case 'builder.skill-packed-instructions': {
       const skillId = String(args.skillId ?? '').trim();
       if (!skillId) {
-        return { workspace, ok: false, errorCode: 'missing_skill_id', error: 'skillId is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'missing_skill_id',
+          error: 'skillId is required.',
+          data: {}
+        };
       }
       const pack = getSkillPack(skillId as any);
       if (!pack) {
-        return { workspace, ok: false, errorCode: 'skill_not_found', error: `Unknown skill pack: ${skillId}`, data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'skill_not_found',
+          error: `Unknown skill pack: ${skillId}`,
+          data: {}
+        };
       }
       return {
         workspace,
@@ -411,54 +450,97 @@ export function runBuilderHandler(
 
     // MUTATING capabilities
     case 'builder.achievements.verify': {
-      const eventId = String(args.eventId ?? '').trim();
+      /**
+       * The published schema requires `achievementId`; this used to read only
+       * `args.eventId`, so a client following the schema exactly got
+       * `missing_event_id` and the tool was uncallable as documented. The lookup
+       * below has always matched either id, so `achievementId` is the honest
+       * name and `eventId` stays as a declared alias.
+       */
+      const eventId = String(args.achievementId ?? args.eventId ?? '').trim();
       if (!eventId) {
-        return { workspace, ok: false, errorCode: 'missing_event_id', error: 'eventId is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'invalid_args',
+          error: 'achievementId is required.',
+          data: {}
+        };
       }
-      const candidate = builderAchievements(workspace).find((a) => a.eventId === eventId || a.id === eventId);
+      const candidate = builderAchievements(workspace).find(
+        (a) => a.eventId === eventId || a.id === eventId
+      );
       const event = builderEvents(workspace).find((e) => e.id === candidate?.eventId);
       if (!candidate || !event) {
-        return { workspace, ok: false, errorCode: 'achievement_not_found', error: `Achievement candidate or event not found: ${eventId}`, data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'achievement_not_found',
+          error: `Achievement candidate or event not found: ${eventId}`,
+          data: {}
+        };
       }
-      const result = verifyAchievement(candidate, event);
-      const nowIso = new Date().toISOString();
-      const updatedWorkspace: BrandOpsData = {
-        ...workspace,
-        builderActivity: {
-          ...workspace.builderActivity,
-          events: builderEvents(workspace).map((e) =>
-            e.id === event.id
-              ? { ...e, verificationStatus: 'USER_VERIFIED' as const, verifiedAt: result.achievement.verifiedAt, trustTier: 'USER_VERIFIED' as const }
-              : e
-          ),
-          achievements: builderAchievements(workspace).filter((a) => a.id !== candidate.id),
-          workspaceId: builderWorkspaceId(workspace),
-          updatedAt: nowIso,
-          achievementsVerifiedAt: [...(workspace.builderActivity?.achievementsVerifiedAt ?? []), event.id]
+      // `verifyAchievement` has always accepted a note; nothing passed one, and
+      // the schema advertised a `verificationStatus` the handler never read.
+      /**
+       * An agent may *request* verification; it may not perform one. Verifying
+       * turns an `AGENT_REPORTED` signal into professional evidence, which is a
+       * promotion, and promotion belongs to a person. This used to mutate
+       * directly under `access: 'auto'`.
+       */
+      const next = createAgentProposal(workspace, {
+        kind: 'promotion',
+        title: `Verify achievement: ${candidate.title}`,
+        detail: candidate.description,
+        rationale:
+          `Requested by an external agent. Verification promotes an agent-reported signal into ` +
+          `professional evidence, so it waits for you.`,
+        sessionId: session.id,
+        agentId: clientKind,
+        proposedState: {
+          promotion: { action: 'verify-achievement', targetId: event.id },
+          // What the user is about to read. Checked again before anything is
+          // promoted, so an approval cannot be spent on content that changed.
+          approvalBinding: promotionApprovalBinding(workspace, {
+            action: 'verify-achievement',
+            targetId: event.id
+          })
+        }
+      });
+      return {
+        workspace: next,
+        ok: true,
+        data: {
+          proposalId: (next.agentProposals?.entries ?? [])[0]?.id,
+          status: 'pending',
+          note: 'Approval-gated. The achievement stays unverified until you approve.'
         }
       };
-      const receipt = createReceipt({
-        workspace: updatedWorkspace,
-        requestedBy: sessionLabel,
-        approvedBy: 'user',
-        source: 'bridge',
-        command: 'builder.achievements.verify',
-        result: { status: 'success', message: `Achievement verified: ${result.achievement.title}` },
-        affectedObjects: [{ type: 'achievement', id: result.achievement.id }],
-        nextAction: 'Review achievement in PLAN.',
-        summary: `Verified achievement: ${result.achievement.title}`
-      });
-      return { workspace: receipt.workspace, ok: true, data: { eventId: result.achievement.id, status: 'verified', receiptId: receipt.receipt.id } };
     }
 
     case 'builder.achievements.dismiss': {
-      const eventId = String(args.eventId ?? '').trim();
+      // Same defect as verify: schema said `achievementId`, handler read `eventId`.
+      const eventId = String(args.achievementId ?? args.eventId ?? '').trim();
       if (!eventId) {
-        return { workspace, ok: false, errorCode: 'missing_event_id', error: 'eventId is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'invalid_args',
+          error: 'achievementId is required.',
+          data: {}
+        };
       }
-      const candidate = builderAchievements(workspace).find((a) => a.eventId === eventId || a.id === eventId);
+      const candidate = builderAchievements(workspace).find(
+        (a) => a.eventId === eventId || a.id === eventId
+      );
       if (!candidate) {
-        return { workspace, ok: false, errorCode: 'achievement_not_found', error: `Achievement candidate not found: ${eventId}`, data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'achievement_not_found',
+          error: `Achievement candidate not found: ${eventId}`,
+          data: {}
+        };
       }
       const result = dismissAchievement(candidate, String(args.reason ?? '').trim() || undefined);
       const nowIso = new Date().toISOString();
@@ -467,7 +549,9 @@ export function runBuilderHandler(
         builderActivity: {
           ...workspace.builderActivity,
           events: builderEvents(workspace),
-          achievements: builderAchievements(workspace).map((a) => (a.id === candidate.id ? result.dismissed : a)),
+          achievements: builderAchievements(workspace).map((a) =>
+            a.id === candidate.id ? result.dismissed : a
+          ),
           workspaceId: builderWorkspaceId(workspace),
           updatedAt: nowIso
         }
@@ -482,7 +566,11 @@ export function runBuilderHandler(
         affectedObjects: [{ type: 'achievement', id: result.dismissed.id }],
         summary: `Dismissed achievement: ${result.dismissed.title}`
       });
-      return { workspace: receipt.workspace, ok: true, data: { eventId: result.dismissed.id, status: 'dismissed', receiptId: receipt.receipt.id } };
+      return {
+        workspace: receipt.workspace,
+        ok: true,
+        data: { eventId: result.dismissed.id, status: 'dismissed', receiptId: receipt.receipt.id }
+      };
     }
 
     case 'builder.opportunities.convert-to-plan': {
@@ -491,14 +579,26 @@ export function runBuilderHandler(
       const preset = String(args.preset ?? 'content-plan').trim() || 'content-plan';
 
       if (!opportunityId && !achievementId) {
-        return { workspace, ok: false, errorCode: 'missing_target', error: 'opportunityId or achievementId is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'missing_target',
+          error: 'opportunityId or achievementId is required.',
+          data: {}
+        };
       }
 
       // Validate plan inputs
       const templateName = preset as ExtendedPlanPreset;
       const template = PLAN_TEMPLATES[templateName];
       if (!template) {
-        return { workspace, ok: false, errorCode: 'invalid_preset', error: `Unknown plan preset: ${preset}`, data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'invalid_preset',
+          error: `Unknown plan preset: ${preset}`,
+          data: {}
+        };
       }
 
       try {
@@ -506,7 +606,13 @@ export function runBuilderHandler(
         if (opportunityId) {
           const opportunity = builderOpportunities(workspace).find((o) => o.id === opportunityId);
           if (!opportunity) {
-            return { workspace, ok: false, errorCode: 'opportunity_not_found', error: `Opportunity not found: ${opportunityId}`, data: {} };
+            return {
+              workspace,
+              ok: false,
+              errorCode: 'opportunity_not_found',
+              error: `Opportunity not found: ${opportunityId}`,
+              data: {}
+            };
           }
           const compiled = compilePlanFromOpportunity({
             workspace,
@@ -521,7 +627,13 @@ export function runBuilderHandler(
             (a) => a.id === achievementId || a.eventId === achievementId
           );
           if (!achievement) {
-            return { workspace, ok: false, errorCode: 'achievement_not_found', error: `Verified achievement not found: ${achievementId}`, data: {} };
+            return {
+              workspace,
+              ok: false,
+              errorCode: 'achievement_not_found',
+              error: `Verified achievement not found: ${achievementId}`,
+              data: {}
+            };
           }
           const compiled = compilePlanFromAchievement({
             workspace,
@@ -534,7 +646,10 @@ export function runBuilderHandler(
         }
 
         // Validate inputs
-        const validation = validatePlanInputs({ template, providedInputs: { source: achievementId || opportunityId } });
+        const validation = validatePlanInputs({
+          template,
+          providedInputs: { source: achievementId || opportunityId }
+        });
         if (!validation.valid) {
           return {
             workspace,
@@ -558,7 +673,15 @@ export function runBuilderHandler(
           affectedObjects: [{ type: 'plan', id: saved.plan.id }],
           summary: `Plan draft created from opportunity/achievement: ${saved.plan.title}`
         });
-        return { workspace: receipt.workspace, ok: true, data: { planId: saved.plan.id, planStatus: saved.plan.status, receiptId: receipt.receipt.id } };
+        return {
+          workspace: receipt.workspace,
+          ok: true,
+          data: {
+            planId: saved.plan.id,
+            planStatus: saved.plan.status,
+            receiptId: receipt.receipt.id
+          }
+        };
       } catch (err) {
         return {
           workspace,
@@ -573,11 +696,23 @@ export function runBuilderHandler(
     case 'builder.opportunities.dismiss': {
       const opportunityId = String(args.opportunityId ?? '').trim();
       if (!opportunityId) {
-        return { workspace, ok: false, errorCode: 'missing_opportunity_id', error: 'opportunityId is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'missing_opportunity_id',
+          error: 'opportunityId is required.',
+          data: {}
+        };
       }
       const existing = builderOpportunities(workspace).find((o) => o.id === opportunityId);
       if (!existing) {
-        return { workspace, ok: false, errorCode: 'opportunity_not_found', error: `Opportunity not found: ${opportunityId}`, data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'opportunity_not_found',
+          error: `Opportunity not found: ${opportunityId}`,
+          data: {}
+        };
       }
       return { workspace, ok: true, data: { opportunityId, status: 'dismissed' } };
     }
@@ -585,90 +720,81 @@ export function runBuilderHandler(
     case 'builder.twin-proposals.accept': {
       const proposalId = String(args.proposalId ?? '').trim();
       if (!proposalId) {
-        return { workspace, ok: false, errorCode: 'missing_proposal_id', error: 'proposalId is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'missing_proposal_id',
+          error: 'proposalId is required.',
+          data: {}
+        };
       }
       const proposals = builderTwinProposals(workspace);
       const proposal = proposals.find((p) => p.id === proposalId);
       if (!proposal) {
-        return { workspace, ok: false, errorCode: 'proposal_not_found', error: `Proposal not found: ${proposalId}`, data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'proposal_not_found',
+          error: `Proposal not found: ${proposalId}`,
+          data: {}
+        };
       }
 
-      const twinId = workspace.digitalTwins?.activeTwinId ?? workspace.digitalTwins?.twins[0]?.id ?? '';
-      if (!twinId) {
-        return { workspace, ok: false, errorCode: 'no_twin', error: 'No active Twin found.', data: {} };
-      }
-      const twin = workspace.digitalTwins?.twins.find((t) => t.id === twinId);
-      if (!twin) {
-        return { workspace, ok: false, errorCode: 'twin_not_found', error: `Twin not found: ${twinId}`, data: {} };
-      }
-
-      const result = applyDeltas({
-        currentTwin: currentTwinFromDigitalTwin(twin),
-        deltas: proposal.deltas,
-        acceptedDeltaIds: proposal.deltas.map((d) => d.id),
-        rejectedDeltaIds: [],
-        editedDeltas: new Map()
+      /**
+       * An agent may *request* that a Twin proposal be accepted; it may not
+       * accept one. This is the promote path — the step that writes the Digital
+       * Twin — and it ran as `access: 'auto'`, so an agent could accept the very
+       * proposal it had created moments earlier.
+       */
+      const next = createAgentProposal(workspace, {
+        kind: 'promotion',
+        title: `Accept Twin update: ${proposal.summary}`,
+        detail: proposal.reason,
+        rationale:
+          `Requested by an external agent. Accepting writes the Digital Twin, so it waits for you. ` +
+          `${proposal.deltas.length} change(s) proposed.`,
+        sessionId: session.id,
+        agentId: clientKind,
+        proposedState: {
+          promotion: { action: 'accept-twin-proposal', targetId: proposal.id },
+          // What the user is about to read. Checked again before anything is
+          // promoted, so an approval cannot be spent on content that changed.
+          approvalBinding: promotionApprovalBinding(workspace, {
+            action: 'accept-twin-proposal',
+            targetId: proposal.id
+          })
+        }
       });
-
-      const nowIso = new Date().toISOString();
-      const updatedWorkspace: BrandOpsData = {
-        ...workspace,
-        digitalTwins: {
-          activeTwinId: workspace.digitalTwins?.activeTwinId ?? null,
-          twins: (workspace.digitalTwins?.twins ?? []).map((t) =>
-            t.id === twin.id
-              ? {
-                  ...t,
-                  identity: {
-                    ...t.identity,
-                    headline: result.updatedTwin.headline,
-                    summary: result.updatedTwin.summary,
-                    professionalPositioning: result.updatedTwin.professionalPositioning,
-                    targetAudience: result.updatedTwin.targetAudience,
-                    toneOfVoice: result.updatedTwin.toneOfVoice,
-                    strengths: result.updatedTwin.expertiseAreas,
-                    goals: result.updatedTwin.goals
-                  },
-                  resumeProfile: {
-                    ...t.resumeProfile,
-                    skills: result.updatedTwin.skills,
-                    achievements: result.updatedTwin.achievements
-                  },
-                  updatedAt: result.updatedTwin.updatedAt
-                }
-              : t
-          )
-        },
-        builderActivity: {
-          ...workspace.builderActivity,
-          events: builderEvents(workspace),
-          twinProposals: proposals.filter((p) => p.id !== proposal.id),
-          workspaceId: builderWorkspaceId(workspace),
-          updatedAt: nowIso
+      return {
+        workspace: next,
+        ok: true,
+        data: {
+          proposalId: (next.agentProposals?.entries ?? [])[0]?.id,
+          status: 'pending',
+          note: 'Approval-gated. The Twin is unchanged until you approve.'
         }
       };
-
-      const receipt = createReceipt({
-        workspace: updatedWorkspace,
-        requestedBy: sessionLabel,
-        approvedBy: 'user',
-        source: 'bridge',
-        command: 'builder.twin-proposals.accept',
-        result: { status: 'applied', deltaCount: result.appliedDeltas.length },
-        affectedObjects: result.appliedDeltas.map((d) => ({ type: 'twin-delta', id: d.id })),
-        summary: `Accepted Twin proposal: ${proposal.summary}`
-      });
-      return { workspace: receipt.workspace, ok: true, data: { proposalId, appliedDeltas: result.appliedDeltas.length, receiptId: receipt.receipt.id } };
     }
-
     case 'builder.twin-proposals.reject': {
       const proposalId = String(args.proposalId ?? '').trim();
       if (!proposalId) {
-        return { workspace, ok: false, errorCode: 'missing_proposal_id', error: 'proposalId is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'missing_proposal_id',
+          error: 'proposalId is required.',
+          data: {}
+        };
       }
       const proposal = builderTwinProposals(workspace).find((p) => p.id === proposalId);
       if (!proposal) {
-        return { workspace, ok: false, errorCode: 'proposal_not_found', error: `Proposal not found: ${proposalId}`, data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'proposal_not_found',
+          error: `Proposal not found: ${proposalId}`,
+          data: {}
+        };
       }
       return { workspace, ok: true, data: { proposalId, status: 'rejected' } };
     }
@@ -676,16 +802,30 @@ export function runBuilderHandler(
     case 'builder.sessions.revoke': {
       const sessionId = String(args.sessionId ?? '').trim();
       if (!sessionId) {
-        return { workspace, ok: false, errorCode: 'missing_session_id', error: 'sessionId is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'missing_session_id',
+          error: 'sessionId is required.',
+          data: {}
+        };
       }
-      const sessions = (workspace.externalAgentSessions?.entries ?? []);
+      const sessions = workspace.externalAgentSessions?.entries ?? [];
       const target = sessions.find((s) => s.id === sessionId);
       if (!target || target.status === 'revoked') {
-        return { workspace, ok: false, errorCode: 'session_not_found', error: `Session not found or already revoked: ${sessionId}`, data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'session_not_found',
+          error: `Session not found or already revoked: ${sessionId}`,
+          data: {}
+        };
       }
 
       const revoked = sessions.map((s) =>
-        s.id === sessionId ? { ...s, status: 'revoked' as const, revokedAt: new Date().toISOString() } : s
+        s.id === sessionId
+          ? { ...s, status: 'revoked' as const, revokedAt: new Date().toISOString() }
+          : s
       );
       const updated = {
         ...workspace,
@@ -702,7 +842,11 @@ export function runBuilderHandler(
         affectedObjects: [{ type: 'session', id: sessionId }],
         summary: `Revoked session: ${sessionId}`
       });
-      return { workspace: receipt.workspace, ok: true, data: { sessionId, status: 'revoked', receiptId: receipt.receipt.id } };
+      return {
+        workspace: receipt.workspace,
+        ok: true,
+        data: { sessionId, status: 'revoked', receiptId: receipt.receipt.id }
+      };
     }
 
     case 'builder.activity.ingest': {
@@ -710,18 +854,37 @@ export function runBuilderHandler(
       const title = String(args.title ?? '').trim();
       const detail = String(args.detail ?? '').trim();
       if (!kind || !title || !detail) {
-        return { workspace, ok: false, errorCode: 'invalid_args', error: 'kind, title, and detail are required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'invalid_args',
+          error: 'kind, title, and detail are required.',
+          data: {}
+        };
       }
       const rawSource = String(args.source ?? '').trim();
 
       const result = ingestActivityEvent(workspace, {
         workspaceId: builderWorkspaceId(workspace),
-        source: isActivityEventSource(rawSource) ? rawSource : 'agent-reported',
+        /**
+         * Every caller of this tool is an external agent, so `user-action` is a
+         * claim it is not in a position to make — it describes something the
+         * agent did not witness. The other sources describe where the agent got
+         * the material, which it can legitimately report. Recording the claim
+         * verbatim put a false provenance string in the record even though the
+         * trust tier was pinned; provenance that is wrong is worse than
+         * provenance that is coarse.
+         */
+        source:
+          isActivityEventSource(rawSource) && rawSource !== 'user-action'
+            ? rawSource
+            : 'agent-reported',
         sourceId: String(args.sourceId ?? '') || `ingest-${Date.now().toString(36)}`,
         kind: kind as ActivityEvent['kind'],
         title: title.slice(0, 300),
         detail: detail.slice(0, 4000),
-        confidence: typeof args.confidence === 'number' ? Math.max(0, Math.min(1, args.confidence)) : 0.7,
+        confidence:
+          typeof args.confidence === 'number' ? Math.max(0, Math.min(1, args.confidence)) : 0.7,
         trustTier: 'AGENT_REPORTED',
         entityRefs: [],
         evidence: [],
@@ -735,11 +898,23 @@ export function runBuilderHandler(
         approvedBy: 'user',
         source: 'bridge',
         command: 'builder.activity.ingest',
-        result: { status: 'ingested', eventId: result.event.id, deduplicated: result.dedupResult.deduplicated },
+        result: {
+          status: 'ingested',
+          eventId: result.event.id,
+          deduplicated: result.dedupResult.deduplicated
+        },
         affectedObjects: [{ type: 'activity-event', id: result.event.id }],
         summary: `Ingested activity: ${result.event.title}`
       });
-      return { workspace: receipt.workspace, ok: true, data: { eventId: result.event.id, deduplicated: result.dedupResult.deduplicated, receiptId: receipt.receipt.id } };
+      return {
+        workspace: receipt.workspace,
+        ok: true,
+        data: {
+          eventId: result.event.id,
+          deduplicated: result.dedupResult.deduplicated,
+          receiptId: receipt.receipt.id
+        }
+      };
     }
 
     case 'builder.activity.ingest-session-summary': {
@@ -753,26 +928,38 @@ export function runBuilderHandler(
       };
 
       if (args.problemsSolved && Array.isArray(args.problemsSolved)) {
-        sessionEvidence.problemsSolved = args.problemsSolved.filter((p): p is string => typeof p === 'string').slice(0, 10);
+        sessionEvidence.problemsSolved = args.problemsSolved
+          .filter((p): p is string => typeof p === 'string')
+          .slice(0, 10);
       }
       if (args.technologiesUsed && Array.isArray(args.technologiesUsed)) {
-        sessionEvidence.technologiesUsed = args.technologiesUsed.filter((t): t is string => typeof t === 'string').slice(0, 10);
+        sessionEvidence.technologiesUsed = args.technologiesUsed
+          .filter((t): t is string => typeof t === 'string')
+          .slice(0, 10);
       }
       if (args.evidence && Array.isArray(args.evidence)) {
         sessionEvidence.evidence = (args.evidence as Array<Record<string, unknown>>)
           .filter((e) => typeof e === 'object' && e !== null)
-          .map((e): SessionEvidenceItem => ({
-            type: 'file',
-            ref: String(e.ref ?? ''),
-            label: String(e.label ?? ''),
-            ...(typeof e.content === 'string' ? { content: e.content } : {})
-          }))
+          .map(
+            (e): SessionEvidenceItem => ({
+              type: 'file',
+              ref: String(e.ref ?? ''),
+              label: String(e.label ?? ''),
+              ...(typeof e.content === 'string' ? { content: e.content } : {})
+            })
+          )
           .filter((e) => e.ref || e.label)
           .slice(0, 5);
       }
 
       if (!sessionEvidence.workDescription) {
-        return { workspace, ok: false, errorCode: 'invalid_args', error: 'workDescription is required.', data: {} };
+        return {
+          workspace,
+          ok: false,
+          errorCode: 'invalid_args',
+          error: 'workDescription is required.',
+          data: {}
+        };
       }
 
       const result = summarizeWorkForBrandOps({
@@ -802,7 +989,11 @@ export function runBuilderHandler(
         affectedObjects: [],
         summary: `Session summary prepared for review: ${result.workCompleted.slice(0, 120)}`
       });
-      return { workspace: receipt.workspace, ok: true, data: { summary: result, receiptId: receipt.receipt.id } };
+      return {
+        workspace: receipt.workspace,
+        ok: true,
+        data: { summary: result, receiptId: receipt.receipt.id }
+      };
     }
 
     default: {

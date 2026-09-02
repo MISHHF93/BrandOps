@@ -59,11 +59,7 @@ export function HelpKnowledgeRoot() {
             <a href={settingsHref} className={navLinkClass}>
               Settings
             </a>
-            <a
-              href={integrationsHubHref}
-              className={navLinkClass}
-              title="Integrations hub"
-            >
+            <a href={integrationsHubHref} className={navLinkClass} title="Integrations hub">
               Integrations hub
             </a>
           </nav>

@@ -24,7 +24,7 @@ import {
   exportDecisions,
   importDecisions,
   clearDecisions,
-  type DecisionType,
+  type DecisionType
 } from '../../src/services/decisions/decisionLedger';
 
 const WS_ID = 'ws-test-1';
@@ -45,7 +45,7 @@ describe('Decision Ledger — Creation', () => {
       workspaceId: WS_ID,
       confidence: 0.9,
       goal: 'goal-1',
-      traceId: 'trace-1',
+      traceId: 'trace-1'
     });
 
     expect(decision.id).toMatch(/^dec-/);
@@ -71,7 +71,7 @@ describe('Decision Ledger — Creation', () => {
       description: 'Test',
       reason: 'Test',
       source: 'user-via-proposal',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     expect(decision.confidence).toBe(0.85);
   });
@@ -83,7 +83,7 @@ describe('Decision Ledger — Creation', () => {
       proposalKind: 'twin_update',
       polarity: 'approved',
       reason: 'Confirmed by user',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(decision.type).toBe('twin-update');
@@ -99,7 +99,7 @@ describe('Decision Ledger — Creation', () => {
       proposalKind: 'artifact',
       polarity: 'approved',
       reason: 'Looks good',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(decision.type).toBe('artifact-approval');
@@ -112,7 +112,7 @@ describe('Decision Ledger — Creation', () => {
       proposalKind: 'content_opportunity',
       polarity: 'approved',
       reason: 'Relevant',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(decision.type).toBe('content-direction');
@@ -125,7 +125,7 @@ describe('Decision Ledger — Creation', () => {
       proposalKind: 'external_action',
       polarity: 'approved',
       reason: 'Approved',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(decision.type).toBe('strategy');
@@ -138,7 +138,7 @@ describe('Decision Ledger — Creation', () => {
       polarity: 'approved',
       reason: 'Verified by achievements',
       workspaceId: WS_ID,
-      goal: 'goal-1',
+      goal: 'goal-1'
     });
 
     expect(decision.type).toBe('signal-acceptance');
@@ -153,7 +153,7 @@ describe('Decision Ledger — Creation', () => {
       planTitle: 'Content plan',
       reason: 'Not aligned with current strategy',
       workspaceId: WS_ID,
-      goal: 'goal-1',
+      goal: 'goal-1'
     });
 
     expect(decision.type).toBe('rejected-strategy');
@@ -176,7 +176,7 @@ describe('Decision Ledger — Query', () => {
       description: 'Desc',
       reason: 'Reason',
       source: 'user-via-proposal',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     const retrieved = getDecision(WS_ID, decision.id);
     expect(retrieved).toBeDefined();
@@ -188,8 +188,24 @@ describe('Decision Ledger — Query', () => {
   });
 
   it('getAllDecisions returns all decisions for workspace', () => {
-    createDecision({ type: 'positioning', polarity: 'approved', title: 'D1', description: 'D1', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
-    createDecision({ type: 'strategy', polarity: 'rejected', title: 'D2', description: 'D2', reason: 'R', source: 'user-via-plan', workspaceId: WS_ID });
+    createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'D1',
+      description: 'D1',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
+    createDecision({
+      type: 'strategy',
+      polarity: 'rejected',
+      title: 'D2',
+      description: 'D2',
+      reason: 'R',
+      source: 'user-via-plan',
+      workspaceId: WS_ID
+    });
     const all = getAllDecisions(WS_ID);
     expect(all.length).toBe(2);
   });
@@ -199,9 +215,33 @@ describe('Decision Ledger — Query', () => {
   });
 
   it('getDecisionsByType filters by type', () => {
-    createDecision({ type: 'positioning', polarity: 'approved', title: 'P1', description: 'P1', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
-    createDecision({ type: 'strategy', polarity: 'approved', title: 'S1', description: 'S1', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
-    createDecision({ type: 'positioning', polarity: 'rejected', title: 'P2', description: 'P2', reason: 'R', source: 'user-via-signal', workspaceId: WS_ID });
+    createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'P1',
+      description: 'P1',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
+    createDecision({
+      type: 'strategy',
+      polarity: 'approved',
+      title: 'S1',
+      description: 'S1',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
+    createDecision({
+      type: 'positioning',
+      polarity: 'rejected',
+      title: 'P2',
+      description: 'P2',
+      reason: 'R',
+      source: 'user-via-signal',
+      workspaceId: WS_ID
+    });
 
     const positioning = getDecisionsByType(WS_ID, 'positioning');
     expect(positioning.length).toBe(2);
@@ -209,9 +249,33 @@ describe('Decision Ledger — Query', () => {
   });
 
   it('getRejectedDecisions returns only rejected', () => {
-    createDecision({ type: 'strategy', polarity: 'approved', title: 'A1', description: 'A1', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
-    createDecision({ type: 'strategy', polarity: 'rejected', title: 'R1', description: 'R1', reason: 'R', source: 'user-via-plan', workspaceId: WS_ID });
-    createDecision({ type: 'strategy', polarity: 'rejected', title: 'R2', description: 'R2', reason: 'R', source: 'user-via-plan', workspaceId: WS_ID });
+    createDecision({
+      type: 'strategy',
+      polarity: 'approved',
+      title: 'A1',
+      description: 'A1',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
+    createDecision({
+      type: 'strategy',
+      polarity: 'rejected',
+      title: 'R1',
+      description: 'R1',
+      reason: 'R',
+      source: 'user-via-plan',
+      workspaceId: WS_ID
+    });
+    createDecision({
+      type: 'strategy',
+      polarity: 'rejected',
+      title: 'R2',
+      description: 'R2',
+      reason: 'R',
+      source: 'user-via-plan',
+      workspaceId: WS_ID
+    });
 
     const rejected = getRejectedDecisions(WS_ID);
     expect(rejected.length).toBe(2);
@@ -219,9 +283,33 @@ describe('Decision Ledger — Query', () => {
   });
 
   it('getApprovedDecisions returns only approved', () => {
-    createDecision({ type: 'strategy', polarity: 'approved', title: 'A1', description: 'A1', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
-    createDecision({ type: 'strategy', polarity: 'approved', title: 'A2', description: 'A2', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
-    createDecision({ type: 'strategy', polarity: 'rejected', title: 'R1', description: 'R1', reason: 'R', source: 'user-via-plan', workspaceId: WS_ID });
+    createDecision({
+      type: 'strategy',
+      polarity: 'approved',
+      title: 'A1',
+      description: 'A1',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
+    createDecision({
+      type: 'strategy',
+      polarity: 'approved',
+      title: 'A2',
+      description: 'A2',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
+    createDecision({
+      type: 'strategy',
+      polarity: 'rejected',
+      title: 'R1',
+      description: 'R1',
+      reason: 'R',
+      source: 'user-via-plan',
+      workspaceId: WS_ID
+    });
 
     const approved = getApprovedDecisions(WS_ID);
     expect(approved.length).toBe(2);
@@ -242,7 +330,7 @@ describe('Decision Ledger — Rejection Prevention', () => {
       description: 'Rejected because not aligned',
       reason: 'Not aligned',
       source: 'user-via-plan',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(hasUserRejected(WS_ID, 'content strategy')).toBe(true);
@@ -256,7 +344,7 @@ describe('Decision Ledger — Rejection Prevention', () => {
       description: 'Rejected',
       reason: 'Not aligned',
       source: 'user-via-plan',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(hasUserRejected(WS_ID, 'marketing')).toBe(false);
@@ -270,11 +358,15 @@ describe('Decision Ledger — Rejection Prevention', () => {
       description: 'Rejected: content-strategy-X',
       reason: 'Not aligned',
       source: 'user-via-plan',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
-    expect(hasUserRejected(WS_ID, 'strategy', { strategy: 'content-strategy-X', exactMatch: true })).toBe(true);
-    expect(hasUserRejected(WS_ID, 'strategy', { strategy: 'other-strategy', exactMatch: true })).toBe(false);
+    expect(
+      hasUserRejected(WS_ID, 'strategy', { strategy: 'content-strategy-X', exactMatch: true })
+    ).toBe(true);
+    expect(
+      hasUserRejected(WS_ID, 'strategy', { strategy: 'other-strategy', exactMatch: true })
+    ).toBe(false);
   });
 
   it('hasUserRejected returns false when no rejected decisions', () => {
@@ -289,7 +381,7 @@ describe('Decision Ledger — Rejection Prevention', () => {
       description: 'Rejected: video-content approach is too expensive',
       reason: 'Too expensive',
       source: 'user-via-plan',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(hasUserRejected(WS_ID, 'video-content')).toBe(true);
@@ -302,16 +394,51 @@ describe('Decision Ledger — History', () => {
   });
 
   it('getDecisionHistory returns decisions matching topic', () => {
-    createDecision({ type: 'positioning', polarity: 'approved', title: 'Security positioning', description: 'Desc', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID, goal: 'goal-1' });
-    createDecision({ type: 'strategy', polarity: 'rejected', title: 'Security strategy B', description: 'Desc', reason: 'R', source: 'user-via-plan', workspaceId: WS_ID });
+    createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'Security positioning',
+      description: 'Desc',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID,
+      goal: 'goal-1'
+    });
+    createDecision({
+      type: 'strategy',
+      polarity: 'rejected',
+      title: 'Security strategy B',
+      description: 'Desc',
+      reason: 'R',
+      source: 'user-via-plan',
+      workspaceId: WS_ID
+    });
 
     const history = getDecisionHistory(WS_ID, 'security');
     expect(history.length).toBe(2);
   });
 
   it('getDecisionHistory returns decisions matching goal', () => {
-    createDecision({ type: 'positioning', polarity: 'approved', title: 'Positioning', description: 'Desc', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID, goal: 'goal-1' });
-    createDecision({ type: 'strategy', polarity: 'approved', title: 'Strategy', description: 'Desc', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID, goal: 'goal-2' });
+    createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'Positioning',
+      description: 'Desc',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID,
+      goal: 'goal-1'
+    });
+    createDecision({
+      type: 'strategy',
+      polarity: 'approved',
+      title: 'Strategy',
+      description: 'Desc',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID,
+      goal: 'goal-2'
+    });
 
     const history = getDecisionHistory(WS_ID, 'goal-1');
     expect(history.length).toBe(1);
@@ -319,15 +446,39 @@ describe('Decision Ledger — History', () => {
   });
 
   it('getDecisionHistory returns empty for no matches', () => {
-    createDecision({ type: 'positioning', polarity: 'approved', title: 'Positioning', description: 'Desc', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
+    createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'Positioning',
+      description: 'Desc',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
     expect(getDecisionHistory(WS_ID, 'nonexistent-topic')).toHaveLength(0);
   });
 
   it('getDecisionHistory sorts by timestamp descending', async () => {
-    const d1 = createDecision({ type: 'positioning', polarity: 'approved', title: 'Positioning First', description: 'First positioning', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
+    const d1 = createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'Positioning First',
+      description: 'First positioning',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
     // Small delay to ensure different timestamps
     await new Promise((r) => setTimeout(r, 10));
-    const d2 = createDecision({ type: 'positioning', polarity: 'approved', title: 'Positioning Second', description: 'Second positioning', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
+    const d2 = createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'Positioning Second',
+      description: 'Second positioning',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
 
     const history = getDecisionHistory(WS_ID, 'positioning');
     expect(history[0].id).toBe(d2.id);
@@ -341,8 +492,24 @@ describe('Decision Ledger — Supersession', () => {
   });
 
   it('supersedeDecision links decisions', () => {
-    const d1 = createDecision({ type: 'positioning', polarity: 'approved', title: 'Old positioning', description: 'Old', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
-    const d2 = createDecision({ type: 'positioning', polarity: 'approved', title: 'New positioning', description: 'New', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
+    const d1 = createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'Old positioning',
+      description: 'Old',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
+    const d2 = createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'New positioning',
+      description: 'New',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
 
     const result = supersedeDecision(WS_ID, d1.id, d2.id);
     expect(result).toBe(true);
@@ -354,12 +521,28 @@ describe('Decision Ledger — Supersession', () => {
   });
 
   it('supersedeDecision returns false if decision not found', () => {
-    const d1 = createDecision({ type: 'positioning', polarity: 'approved', title: 'P1', description: 'P1', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
+    const d1 = createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'P1',
+      description: 'P1',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
     expect(supersedeDecision(WS_ID, 'nonexistent', d1.id)).toBe(false);
   });
 
   it('supersedeDecision returns false if superseding decision not found', () => {
-    const d1 = createDecision({ type: 'positioning', polarity: 'approved', title: 'P1', description: 'P1', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
+    const d1 = createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'P1',
+      description: 'P1',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
     expect(supersedeDecision(WS_ID, d1.id, 'nonexistent')).toBe(false);
   });
 });
@@ -370,21 +553,50 @@ describe('Decision Ledger — Export/Import', () => {
   });
 
   it('exportDecisions returns the store', () => {
-    createDecision({ type: 'positioning', polarity: 'approved', title: 'P1', description: 'P1', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
+    createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'P1',
+      description: 'P1',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
     const store = exportDecisions(WS_ID);
     expect(store.decisions.length).toBe(1);
     expect(store.maxDecisions).toBe(200);
   });
 
   it('importDecisions replaces store contents', () => {
-    createDecision({ type: 'positioning', polarity: 'approved', title: 'Original', description: 'Orig', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
+    createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'Original',
+      description: 'Orig',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
 
     const externalStore = {
       decisions: [
-        { id: 'imported-1', type: 'strategy' as DecisionType, polarity: 'approved', title: 'Imported', description: 'Imp', reason: 'R', source: 'user-via-proposal', timestamp: new Date().toISOString(), confidence: 0.9, workspaceId: WS_ID, supersedes: [], supersededBy: [] },
+        {
+          id: 'imported-1',
+          type: 'strategy' as DecisionType,
+          polarity: 'approved',
+          title: 'Imported',
+          description: 'Imp',
+          reason: 'R',
+          source: 'user-via-proposal',
+          timestamp: new Date().toISOString(),
+          confidence: 0.9,
+          workspaceId: WS_ID,
+          supersedes: [],
+          supersededBy: []
+        }
       ],
       maxDecisions: 100,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     importDecisions(WS_ID, externalStore);
@@ -394,7 +606,15 @@ describe('Decision Ledger — Export/Import', () => {
   });
 
   it('clearDecisions removes all decisions', () => {
-    createDecision({ type: 'positioning', polarity: 'approved', title: 'P1', description: 'P1', reason: 'R', source: 'user-via-proposal', workspaceId: WS_ID });
+    createDecision({
+      type: 'positioning',
+      polarity: 'approved',
+      title: 'P1',
+      description: 'P1',
+      reason: 'R',
+      source: 'user-via-proposal',
+      workspaceId: WS_ID
+    });
     clearDecisions(WS_ID);
     expect(getAllDecisions(WS_ID)).toHaveLength(0);
   });

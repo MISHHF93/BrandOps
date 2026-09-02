@@ -136,6 +136,20 @@ function observedComposition(args: {
   userIntent: string;
   mode: 'ask' | 'plan' | 'operate';
   receiptMode: ExpertExecutionMode;
+  /**
+   * One timestamp for one derivation.
+   *
+   * ASK, PLAN and OPERATE receipts are produced in a single pass and each took
+   * `new Date()` for itself. They land microseconds apart, so whether two of
+   * them share a millisecond is a race with the clock — and the plan page sorts
+   * receipts by exactly that field. Forty builds of an unchanged workspace
+   * produced **three different orderings**, which the reader sees as "Recently
+   * done" reshuffling for no reason.
+   *
+   * They are derived together, so they are stamped together. Same fix as the
+   * unified inbox in cycle 39, for the same reason.
+   */
+  generatedAt: string;
 }): { composition: ExpertCompositionResult; receipt: ExpertExecutionReceipt } {
   const startedAtMs = Date.now();
   const failures: ExpertExecutionFailure[] = [];
@@ -167,6 +181,7 @@ function observedComposition(args: {
     composition,
     startedAtMs,
     endedAtMs: Date.now(),
+    generatedAt: args.generatedAt,
     approvals: approvalsFromWorkspace(args.workspace),
     failures,
     fallbackReasons
@@ -252,24 +267,29 @@ export function buildExpertOperatorIntegrationReadout(
   workspace: BrandOpsData,
   askIntent = 'Help me operate my BrandOps workspace using my profession, workflows, memory, and connected context.'
 ): ExpertOperatorIntegrationReadout {
+  // Stamped once for the whole readout, not once per receipt.
+  const generatedAt = new Date().toISOString();
   const askObservation = observedComposition({
     workspace,
     userIntent: askIntent,
     mode: 'ask',
-    receiptMode: 'ASK'
+    receiptMode: 'ASK',
+    generatedAt
   });
   const planObservation = observedComposition({
     workspace,
     userIntent: 'Turn the active operator context into a profession-aware PLAN workflow sequence.',
     mode: 'plan',
-    receiptMode: 'PLAN'
+    receiptMode: 'PLAN',
+    generatedAt
   });
   const operateObservation = observedComposition({
     workspace,
     userIntent:
       'Guide approved OPERATE execution with expert recommendations, approval gates, receipts, and audit expectations.',
     mode: 'operate',
-    receiptMode: 'OPERATE'
+    receiptMode: 'OPERATE',
+    generatedAt
   });
   const ask = modeReadout('ASK', askObservation.composition, askObservation.receipt);
   const plan = modeReadout('PLAN', planObservation.composition, planObservation.receipt);

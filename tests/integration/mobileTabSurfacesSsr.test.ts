@@ -74,6 +74,29 @@ const approvalSnapshot = () => {
         },
         labels: ['external-action', 'human-gated'],
         reviewStatus: 'pending'
+      },
+      /**
+       * A trace that actually finished, so the fixture has both halves.
+       *
+       * It used to have only the pending one, and that single trace supplied
+       * both the approval *and* a receipt — which is precisely the defect: a
+       * request awaiting review was rendered as completed work. Now the pending
+       * trace is an approval and this one is the receipt, which is what the two
+       * groups are for.
+       */
+      {
+        id: 'completed-1',
+        at: '2026-01-01T11:00:00.000Z',
+        source: 'assistant',
+        verb: 'publish weekly digest',
+        surface: 'plan',
+        route: 'content-workspace',
+        entityType: 'content',
+        entityId: 'digest-9',
+        outcome: 'success',
+        details: { output: 'Digest published to the workspace archive.' },
+        labels: ['human-gated'],
+        reviewStatus: 'approved'
       }
     ]
   };
@@ -107,16 +130,55 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Pending Approvals');
     expect(html).toContain('Opportunities');
     expect(html).toContain('Active Plans');
-    expect(html).toContain('aria-label="Plan feed focus"');
-    expect(html).toContain('What should I do?');
-    expect(html).toContain('>All<');
-    expect(html).toContain('>Active<');
-    expect(html).toContain('>Recent<');
-    expect(html).toContain('Showing ');
-    expect(html).toContain('Start here');
+    /**
+     * The focus-chip row is gone, and these assertions moved with it.
+     *
+     * Four of its six chips set exactly the same state as a summary tile —
+     * "Approvals" the chip and "Pending Approvals" the tile were one control
+     * drawn twice — so the header carried eleven controls of which eight were
+     * duplicated pairs. The tiles survived because they show the count as well
+     * as filtering, and they now toggle back to "all" when pressed again.
+     *
+     * What replaced the flat feed is asserted instead: named groups, in reading
+     * order, so eighteen equal headings became a handful of labelled ones.
+     */
+    expect(html).toContain('Waiting on you');
+    expect(html).toContain('Suggested');
+    expect(html).toContain('Nothing here moves until you decide.');
+    // Was `toContain('Showing ')` and `toContain('Start here')`. The first
+    // pinned the wording of a counter that read "Showing 18 of 18"; the second
+    // pinned a card that rendered the first feed item a second time, directly
+    // above the group that already lists it. Both are gone, and what they were
+    // standing in for — that the feed renders, grouped, with a count — is
+    // asserted directly.
+    expect(html).toMatch(/\d+ items\./);
+    /**
+     * The group headings, not the per-row kind labels.
+     *
+     * These asserted `Active plan` and `Recent receipt`, which were the labels
+     * on every row inside "In progress" and "Recently done" respectively — each
+     * restating the heading directly above it. Six of the nine labels rendered
+     * were redundant that way, and they are now suppressed wherever a group
+     * holds a single kind. `Recommended next move` survives because "Suggested"
+     * mixes two kinds and the label still tells them apart.
+     *
+     * What these lines were really asserting is that every kind of work reaches
+     * the feed, which is now checked through the groups that carry them.
+     */
+    expect(html).toContain('In progress');
+    /**
+     * "Recently done" is absent, and that is the correct rendering.
+     *
+     * It used to be here because the demo workspace's completed list was made
+     * entirely of expert routing readouts — computed during the render and
+     * reported as finished work. With those removed the demo has no execution
+     * receipts at all, so the group has nothing to show and is not drawn.
+     *
+     * The group itself is asserted against a workspace that has genuinely
+     * completed something, in `snapshotDeterminism` and in the approval case
+     * below.
+     */
     expect(html).toContain('Recommended next move');
-    expect(html).toContain('Active plan');
-    expect(html).toContain('Recent receipt');
     expect(html).toContain('Your workspace is local-first');
     expect(html).toContain('Details');
     expect(html).toContain('Timeline');
@@ -125,8 +187,37 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     expect(html).toContain('Workflow Plan');
     expect(html).toContain('Outreach Plan');
     expect(html).toContain('Content Calendar');
-    expect(html).toContain('Execution Sequence');
-    expect(html).toContain('Approval Flow');
+    /**
+     * No longer in the first paint, and that is the point.
+     *
+     * Each group shows three items and offers the rest behind "Show N more".
+     * Before, every item in the feed was rendered at once — 936 words and
+     * eighteen equally-weighted headings — which is what made the page unreadable.
+     * Asserting that a fourth item in a group is visible would be asserting the
+     * thing that was wrong with it.
+     *
+     * What must hold is that nothing became unreachable, so the disclosure
+     * control is asserted instead.
+     */
+    // React SSR puts `<!-- -->` between adjacent text and expression nodes,
+    // so the raw markup reads `Show <!-- -->7<!-- --> more`.
+    expect(html).toMatch(/Show (<!-- -->)?\d+(<!-- -->)? more/);
+    // 'Approval Flow' is the other item now behind "Show N more", for the same
+    // reason as 'Execution Sequence' above. Both remain reachable; neither is in
+    // the first paint, which is the entire point of grouping the feed.
+    expect(html).toContain('In progress');
+    /**
+     * "Recently done" is absent, and that is the correct rendering.
+     *
+     * It used to be here because the demo workspace's completed list was made
+     * entirely of expert routing readouts — computed during the render and
+     * reported as finished work. With those removed the demo has no execution
+     * receipts at all, so the group has nothing to show and is not drawn.
+     *
+     * The group itself is asserted against a workspace that has genuinely
+     * completed something, in `snapshotDeterminism` and in the approval case
+     * below.
+     */
     expect(html).toContain('Approve');
     expect(html).toContain('Export');
     expect(html).toContain('>Review<');
@@ -299,8 +390,20 @@ describe('Mobile tab surfaces (SSR integration)', () => {
       })
     );
 
-    expect(html).toContain('Recent receipt');
-    expect(html).toContain('pending approval');
+    /**
+     * The approval is in "Waiting on you", and nowhere else.
+     *
+     * These two lines asserted it also appeared under "Recently done" carrying
+     * the words "pending approval" — a request the reader had not yet answered,
+     * listed as finished. Both halves of that are now wrong on purpose: pending
+     * traces are not receipts, and the state a reader sees is drawn from one
+     * small vocabulary rather than from whatever string the producing system
+     * used.
+     */
+    expect(html).toContain('Waiting on you');
+    expect(html).toContain('draft outreach');
+    expect(html).toContain('Recently done');
+    expect(html).toContain('publish weekly digest');
     expect(html).toContain('Explain');
     expect(html).toContain('Export');
   });
@@ -471,7 +574,9 @@ describe('Mobile tab surfaces (SSR integration)', () => {
     );
     expect(html).toContain('aria-label="Today"');
     // The visible header is just "Today" now; the long form survives as an sr-only fallback.
-    expect(html).toContain('Today — twin-grounded daily operating surface with focus board, predictions, and workstreams');
+    expect(html).toContain(
+      'Today — twin-grounded daily operating surface with focus board, predictions, and workstreams'
+    );
     expect(html).toContain('Work areas');
     expect(html).toContain('>Do today<');
     expect(html).toContain('>Urgent<');

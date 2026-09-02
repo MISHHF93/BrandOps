@@ -1,4 +1,5 @@
 ﻿import { type ChangeEvent, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { quoteContextValue } from '../../services/interop/validation';
 import clsx from 'clsx';
 import {
   executeAgentWorkspaceCommand,
@@ -184,6 +185,8 @@ import {
   updateTwinIdentityGoals
 } from '../../services/digitalTwin/digitalTwin';
 import { evolveActiveTwinFromConnectedIdentity } from '../../services/connectedIdentity/connectedIdentityEngine';
+import { buildOutgoingCommand } from '../../services/ai/attachedContent';
+import { watchPersistenceFailures } from '../../shared/storage/persistenceFailure';
 
 const uid = () => `msg-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -457,22 +460,17 @@ type ChatComposerAttachment = {
   text?: string;
 };
 
-function buildOutgoingCommandLine(
-  inputTrimmed: string,
-  attachment: ChatComposerAttachment | null
-): string | null {
-  if (!attachment) {
-    return inputTrimmed.length > 0 ? inputTrimmed : null;
-  }
-  if (attachment.kind === 'text' && attachment.text) {
-    const block = `--- ${attachment.name} ---\n${attachment.text}`;
-    if (inputTrimmed) return `${inputTrimmed}\n\n${block}`;
-    return `add note:\n\n${block}`;
-  }
-  const bin = `(Attached: ${attachment.name}, ${attachment.size} bytes — not text; add what the agent should do.)`;
-  if (inputTrimmed) return `${inputTrimmed}\n\n${bin}`;
-  return `add note: ${bin}`;
-}
+/*
+ * `buildOutgoingCommandLine` used to live here and concatenated an attachment's
+ * raw text straight into the command line. A file saying "ignore all previous
+ * instructions" reached the model indistinguishable from the user's own words —
+ * the one open P0 on the production scorecard.
+ *
+ * The decision moved to `services/ai/attachedContent.ts`, because a trust
+ * boundary implemented inside a 3,000-line view component is one nobody can
+ * test. Attached text is now screened and delimited as data; a refusal is
+ * surfaced to the user rather than silently dropped.
+ */
 
 function LaunchAuthGate({
   btnFocus,
@@ -485,8 +483,8 @@ function LaunchAuthGate({
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Unlock this local workspace</h2>
       <p className="mt-1 text-meta text-textMuted">
-        Choose a provider to unlock this device. This version does not
-        contact the provider, verify an email address, or create a server sign-in session.
+        Choose a provider to unlock this device. This version does not contact the provider, verify
+        an email address, or create a server sign-in session.
       </p>
       <div className="bo-auth-actions mt-3">
         <GoogleSignInButton
@@ -532,8 +530,8 @@ function MembershipGate({
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
       <h2 className="text-h2 text-text">Local membership</h2>
       <p className="mt-1 text-meta text-textMuted">
-        Manage your local workspace membership. Checkout and portal controls are
-        navigation links; membership is verified locally on this device.
+        Manage your local workspace membership. Checkout and portal controls are navigation links;
+        membership is verified locally on this device.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button
@@ -949,6 +947,18 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     return () => window.clearTimeout(t);
   }, [dataOpsHint]);
 
+  /**
+   * A save that fails should reach the user, not just the console.
+   *
+   * Several workspace writes are awaited without a `try` — here and inside
+   * `persistChatGatewayTrace` — so a storage failure became an unhandled
+   * rejection and the person whose change was not saved carried on believing it
+   * was. One listener catches every such write, including ones not yet written;
+   * wrapping each call site individually is the guard-in-the-caller pattern this
+   * codebase has had to repair twice already.
+   */
+  useEffect(() => watchPersistenceFailures(setDataOpsHint), []);
+
   useEffect(() => {
     if (activeTab !== 'chat') setChatAttachment(null);
   }, [activeTab]);
@@ -985,7 +995,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       const isAskSurface = sourceSurface === 'Chat';
       const askQuestion = askMatch ? askMatch[1].trim() : isAskSurface ? trimmed : null;
       if (askQuestion !== null) {
-        pushCommandChip(askMatch ? trimmed : `ask: ${askQuestion}`);
+        pushCommandChip(askMatch ? trimmed : `ask: ${quoteContextValue(askQuestion)}`);
         const question = askQuestion;
         if (!question) {
           setMessages((prev) => [
@@ -1441,7 +1451,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         const data = await storageService.getData();
         const activeTwin = getActiveDigitalTwin(data);
         if (!activeTwin || !data.digitalTwins) {
-          setDataOpsHint('Create a Digital Twin in Settings first — then save Ask outputs into twin memory.');
+          setDataOpsHint(
+            'Create a Digital Twin in Settings first — then save Ask outputs into twin memory.'
+          );
           return;
         }
         const nowIso = new Date().toISOString();
@@ -2133,7 +2145,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         ? messages.find((m) => m.id === root.sourceMessageId)
         : undefined;
       const questionText = sourceMessage?.text || root.summary;
-      await executeCommandFlow(`ask: ${questionText}`, 'Chat');
+      await executeCommandFlow(`ask: ${quoteContextValue(questionText)}`, 'Chat');
     } catch (e) {
       console.error('BrandOps: retry ask checkpoint failed', e);
       setDataOpsHint(e instanceof Error ? e.message : 'Could not retry.');
@@ -2635,7 +2647,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   );
 
   const submitMessage = async () => {
-    const line = buildOutgoingCommandLine(input.trim(), chatAttachment);
+    const outgoing = buildOutgoingCommand(input.trim(), chatAttachment);
+    if (outgoing.warning) setDataOpsHint(outgoing.warning);
+    const line = outgoing.line;
     if (!line?.trim() || commandLoading) return;
     setInput('');
     setChatAttachment(null);

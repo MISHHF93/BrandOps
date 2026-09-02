@@ -22,7 +22,7 @@ vi.mock('../../src/shared/storage/browserStorage', () => ({
 }));
 
 import { browserLocalStorage } from '../../src/shared/storage/browserStorage';
-import { storageService } from '../../src/services/storage/storage';
+import { StorageWriteError, storageService } from '../../src/services/storage/storage';
 
 const DATA_KEY = 'brandops:data';
 
@@ -508,5 +508,70 @@ describe('storageService', () => {
     } finally {
       getSpy.mockImplementation(async (key: string) => memoryStorage.get(key));
     }
+  });
+
+  it('surfaces a typed StorageWriteError when setData cannot persist (fail-closed, no silent success)', async () => {
+    await storageService.getData();
+    const setSpy = browserLocalStorage.set as unknown as {
+      mockImplementation: (fn: (key: string, value: unknown) => Promise<void>) => void;
+    };
+    setSpy.mockImplementation(async () => {
+      throw new Error('QUOTA_BYTES_PER_ITEM exceeded');
+    });
+
+    try {
+      await expect(
+        storageService.withWorkspaceMutation((data) => ({
+          ...data,
+          brand: { ...data.brand, operatorName: 'Must-not-be-lied-about' }
+        }))
+      ).rejects.toBeInstanceOf(StorageWriteError);
+
+      // The mutation must never be reported as a successful write: no partial
+      // blob and no phantom success state were persisted.
+      await expect(storageService.getData()).resolves.toBeDefined();
+      const persisted = memoryStorage.get(DATA_KEY) as BrandOpsData | undefined;
+      expect(persisted?.brand?.operatorName).not.toBe('Must-not-be-lied-about');
+    } finally {
+      setSpy.mockImplementation(async (key: string, value: unknown) => {
+        memoryStorage.set(key, value);
+      });
+    }
+  });
+
+  it('lets a read still boot a valid workspace when the seed write fails (fail-soft reads)', async () => {
+    memoryStorage.set(DATA_KEY, 'not-an-object');
+    const setSpy = browserLocalStorage.set as unknown as {
+      mockImplementation: (fn: (key: string, value: unknown) => Promise<void>) => void;
+    };
+    setSpy.mockImplementation(async () => {
+      throw new Error('storage write denied');
+    });
+
+    try {
+      const data = await storageService.getData();
+      expect(data.modules.length).toBeGreaterThan(0);
+    } finally {
+      setSpy.mockImplementation(async (key: string, value: unknown) => {
+        memoryStorage.set(key, value);
+      });
+    }
+  });
+
+  it('does not clobber an unrelated realm write when a mutation is persisted (no lost update)', async () => {
+    await storageService.getData();
+    const realmB = cloneSeedData();
+    realmB.brand = { ...realmB.brand, operatorName: 'Realm-B author' };
+    memoryStorage.set(DATA_KEY, realmB);
+
+    const result = await storageService.withWorkspaceMutation((data) => ({
+      ...data,
+      brand: { ...data.brand, positioning: 'Realm-A positioning' }
+    }));
+
+    expect(result.forced).toBe(false);
+    const final = memoryStorage.get(DATA_KEY) as BrandOpsData;
+    expect(final.brand.operatorName).toBe('Realm-B author');
+    expect(final.brand.positioning).toBe('Realm-A positioning');
   });
 });

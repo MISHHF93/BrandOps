@@ -44,3 +44,59 @@ export function storeIdempotentResult(input: IdempotencyKey, result: AgentToolRe
     if (oldest) cache.delete(oldest);
   }
 }
+
+/**
+ * The same record, in the workspace, so it survives the crash it exists for.
+ *
+ * The cache above is a process-local `Map`. It is correct while the process
+ * lives, and a client retrying *within* a session gets the stored result. But an
+ * idempotency key is most needed after a crash — that is the case it is for —
+ * and a restart emptied the map. Driving the real gateway proved it: the same
+ * key, replayed after a restart, ingested a second event.
+ *
+ * Persisting the record makes the guarantee survive a restart, because the
+ * gateway re-reads the workspace on every call. The cache stays as the fast
+ * path; this is the durable one.
+ */
+export interface DurableIdempotencyEntry {
+  hash: string;
+  sessionId: string;
+  capabilityId: string;
+  at: string;
+  result: AgentToolResult;
+}
+
+/** Bounded like the audit and receipt logs: a workspace is not a journal. */
+const MAX_DURABLE_ENTRIES = 200;
+
+export function findDurableIdempotentResult(
+  workspace: { agentIdempotency?: { entries?: DurableIdempotencyEntry[] } },
+  input: IdempotencyKey
+): AgentToolResult | null {
+  const hash = hashIdempotencyKey(input);
+  return (
+    (workspace.agentIdempotency?.entries ?? []).find((entry) => entry.hash === hash)?.result ?? null
+  );
+}
+
+export function recordDurableIdempotentResult<
+  T extends { agentIdempotency?: { entries?: DurableIdempotencyEntry[]; updatedAt?: string } }
+>(workspace: T, input: IdempotencyKey, result: AgentToolResult): T {
+  const hash = hashIdempotencyKey(input);
+  const existing = workspace.agentIdempotency?.entries ?? [];
+  // First write wins, matching the in-memory cache: a replay must return what
+  // the original call returned, not what a later one would have.
+  if (existing.some((entry) => entry.hash === hash)) return workspace;
+
+  const now = new Date().toISOString();
+  return {
+    ...workspace,
+    agentIdempotency: {
+      entries: [
+        { hash, sessionId: input.sessionId, capabilityId: input.capabilityId, at: now, result },
+        ...existing
+      ].slice(0, MAX_DURABLE_ENTRIES),
+      updatedAt: now
+    }
+  };
+}

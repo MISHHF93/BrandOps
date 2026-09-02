@@ -1,3 +1,4 @@
+import { markPersistenceFailure } from './persistenceFailure';
 export type StorageArea = 'local' | 'sync' | 'session';
 
 export interface StorageAdapter {
@@ -79,8 +80,27 @@ class WebStorageAdapter implements StorageAdapter {
     try {
       this.storage.setItem(scopedKey, JSON.stringify(value));
     } catch (error) {
-      throw new Error(
-        `Failed to persist workspace data in ${this.area} storage for key "${key}": ${(error as Error).message}`
+      /**
+       * The mobile app runs on this adapter, and `localStorage` has a hard quota
+       * that `chrome.storage.local` does not. A full store is the one failure
+       * here a person can actually act on, so it says so in those terms rather
+       * than passing the platform's wording through.
+       */
+      const quotaExceeded =
+        (error as Error).name === 'QuotaExceededError' ||
+        /quota/i.test((error as Error).message ?? '');
+
+      // Marked so the shell can recognise this after it has travelled through
+      // an unhandled rejection and tell the user their change was not saved.
+      throw markPersistenceFailure(
+        new Error(
+          quotaExceeded
+            ? `Storage for this workspace is full, so the last change was not saved. ` +
+                `Export the workspace and remove older records to free space. ` +
+                `(${this.area} storage, key "${key}")`
+            : `Failed to persist workspace data in ${this.area} storage for key "${key}": ` +
+                `${(error as Error).message}`
+        )
       );
     }
   }

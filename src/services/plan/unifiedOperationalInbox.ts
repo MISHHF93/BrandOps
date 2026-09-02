@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import { localIntelligence } from '../intelligence/localIntelligence';
 import type { BrandOpsData } from '../../types/domain';
 import { buildCrossPlatformOperationalPlans } from './crossPlatformPlanner';
@@ -99,12 +100,28 @@ function itemCommand(item: {
   kind: UnifiedInboxKind;
   sourceLabel: string;
 }): string {
-  return `ask: Triage this Unified Operational Inbox item. Explain the next best action, approval needs, risks, and receipt expectations. Do not execute externally.\n\nKind: ${item.kind}\nSource: ${item.sourceLabel}\nTitle: ${item.title}\nDetail: ${item.detail}`;
+  return `ask: Triage this Unified Operational Inbox item. Explain the next best action, approval needs, risks, and receipt expectations. Do not execute externally.\n\nKind: ${item.kind}\nSource: ${quoteContextValue(item.sourceLabel)}\nTitle: ${quoteContextValue(item.title)}\nDetail: ${quoteContextValue(item.detail)}`;
 }
 
 export function buildUnifiedOperationalInbox(
   workspace: BrandOpsData
 ): UnifiedOperationalInboxReadout {
+  /**
+   * One timestamp for every item this function derives, not one per item.
+   *
+   * These entries are computed from the workspace rather than recorded from an
+   * event, so they have no time of their own. Stamping each with `new Date()`
+   * as it was built gave them times a few milliseconds apart, and the list is
+   * sorted by recency — so which derived item came first depended on how long
+   * the code took to reach it. Two rebuilds of an unchanged workspace returned
+   * the inbox in different orders, and the list that tells someone what needs
+   * their attention reshuffled itself while they were looking at it.
+   *
+   * A single instant for the whole derivation removes the race: derived items
+   * tie with each other by construction and fall through to the stable
+   * tie-break below, while real events keep the times they actually happened.
+   */
+  const derivedAt = new Date().toISOString();
   const items: UnifiedOperationalInboxItem[] = [];
 
   for (const trace of (workspace.operatorTraces?.entries ?? []).filter(
@@ -189,7 +206,7 @@ export function buildUnifiedOperationalInbox(
       sourceLabel: 'Follow-up risk',
       priority: risk.score >= 80 ? 'critical' : 'high',
       status: `${risk.score} risk`,
-      at: new Date().toISOString(),
+      at: derivedAt,
       command: itemCommand({
         title: risk.label,
         detail: risk.reason,
@@ -208,7 +225,7 @@ export function buildUnifiedOperationalInbox(
       sourceLabel: 'AI opportunity',
       priority: signal.score >= 80 ? 'high' : 'medium',
       status: `${signal.score} fit`,
-      at: new Date().toISOString(),
+      at: derivedAt,
       command: itemCommand({
         title: signal.label,
         detail: signal.reason,
@@ -230,7 +247,7 @@ export function buildUnifiedOperationalInbox(
       sourceLabel: 'Behavioral Intelligence Engine',
       priority: prediction.confidence >= 80 ? 'high' : 'medium',
       status: `${prediction.confidence}% prediction`,
-      at: new Date().toISOString(),
+      at: derivedAt,
       command: prediction.suggestedCommand
     });
   }
@@ -247,7 +264,7 @@ export function buildUnifiedOperationalInbox(
       sourceLabel: 'Predictive Opportunity Layer',
       priority: suggestion.confidence >= 80 ? 'high' : 'medium',
       status: `${suggestion.confidence}% confidence`,
-      at: new Date().toISOString(),
+      at: derivedAt,
       command: suggestion.previewCommand
     });
   }
@@ -261,7 +278,7 @@ export function buildUnifiedOperationalInbox(
     sourceLabel: 'Buyer Persona Intelligence',
     priority: buyerPersona.averageConfidence >= 80 ? 'high' : 'medium',
     status: `${buyerPersona.averageConfidence}% confidence`,
-    at: new Date().toISOString(),
+    at: derivedAt,
     command: buyerPersona.compareVersionsCommand
   });
 
@@ -274,7 +291,7 @@ export function buildUnifiedOperationalInbox(
     sourceLabel: 'Positioning Intelligence',
     priority: positioning.averageConfidence >= 80 ? 'high' : 'medium',
     status: `${positioning.averageConfidence}% confidence`,
-    at: new Date().toISOString(),
+    at: derivedAt,
     command: positioning.reviewCommand
   });
 
@@ -287,7 +304,7 @@ export function buildUnifiedOperationalInbox(
     sourceLabel: 'Memory & Context Engine',
     priority: memory.enabled ? 'medium' : 'low',
     status: memory.enabled ? `${memory.averageConfidence}% memory confidence` : 'memory disabled',
-    at: new Date().toISOString(),
+    at: derivedAt,
     command: memory.controls.viewCommand
   });
 
@@ -300,7 +317,7 @@ export function buildUnifiedOperationalInbox(
       sourceLabel: 'Predictive Content Ideation',
       priority: idea.confidence >= 80 ? 'high' : 'medium',
       status: `${idea.confidence}% confidence`,
-      at: new Date().toISOString(),
+      at: derivedAt,
       command: idea.askToPlanCommand
     });
   }
@@ -314,7 +331,7 @@ export function buildUnifiedOperationalInbox(
       sourceLabel: 'Workflow Prediction Layer',
       priority: workflow.confidence >= 80 ? 'high' : 'medium',
       status: `${workflow.confidence}% confidence`,
-      at: new Date().toISOString(),
+      at: derivedAt,
       command: workflow.controls.reuseCommand
     });
   }
@@ -373,7 +390,7 @@ export function buildUnifiedOperationalInbox(
       sourceLabel: 'Cross-platform planner',
       priority: plan.executionStatus === 'needs-context' ? 'low' : 'medium',
       status: plan.executionStatus,
-      at: new Date().toISOString(),
+      at: derivedAt,
       command: plan.previewCommand
     });
   }
@@ -383,7 +400,22 @@ export function buildUnifiedOperationalInbox(
       (a, b) =>
         PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] ||
         KIND_ORDER[a.kind] - KIND_ORDER[b.kind] ||
-        sortTime(b.at) - sortTime(a.at)
+        sortTime(b.at) - sortTime(a.at) ||
+        /**
+         * A stable last resort, because `at` ties.
+         *
+         * Several of these items are stamped `new Date()` while this list is
+         * being assembled, so two of them routinely land in the same instant —
+         * and then their order depended on which comparison the sort happened to
+         * make. Two rebuilds of an unchanged workspace returned the inbox in
+         * different orders, which means the list telling someone what needs
+         * their attention reshuffles itself while they are reading it.
+         *
+         * Cycle 6 fixed exactly this for checkpoints and used list position as
+         * the tie-break. Here the items come from several sources, so position
+         * carries no meaning; `id` does, and it is stable across rebuilds.
+         */
+        a.id.localeCompare(b.id)
     )
     .slice(0, 24)
     .map((item) => ({ ...item, at: nowish(item.at) }));

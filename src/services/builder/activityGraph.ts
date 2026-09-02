@@ -4,7 +4,15 @@
  * sources; deduplicates by source identifiers and content fingerprints.
  */
 
-import type { ActivityEvent, ActivityEventSource, AchievementKind, VerificationStatus, TrustTier, EntityRef, EvidenceEntry } from '../../types/builder';
+import type {
+  ActivityEvent,
+  ActivityEventSource,
+  AchievementKind,
+  VerificationStatus,
+  TrustTier,
+  EntityRef,
+  EvidenceEntry
+} from '../../types/builder';
 import type { BrandOpsData } from '../../types/domain';
 
 export interface ActivityEventInput {
@@ -103,7 +111,19 @@ export function createActivityEvent(
     timestamp: ts,
     confidence,
     verificationStatus: input.verificationStatus ?? 'UNVERIFIED',
-    trustTier: input.trustTier ?? (input.source === 'user-action' ? 'USER_VERIFIED' : 'AGENT_REPORTED'),
+    /**
+     * An unspecified trust tier is `AGENT_REPORTED`, never `USER_VERIFIED`.
+     *
+     * This used to derive the tier from `input.source`, so a caller that said
+     * `source: 'user-action'` and omitted `trustTier` got the highest tier in
+     * the system for free. Nothing exploited it — the one caller pins the tier —
+     * but the only thing standing between an external agent and verified state
+     * was a handler remembering to. A guard that lives in the caller is not a
+     * guard. Promotion to a verified tier is now something a caller has to say
+     * outright, which is what the fourth invariant requires: external AI may
+     * propose, never promote.
+     */
+    trustTier: input.trustTier ?? 'AGENT_REPORTED',
     entityRefs: input.entityRefs ?? [],
     evidence: input.evidence ?? [],
     fingerprint: fingerprint(input, ts),
@@ -182,7 +202,9 @@ export function isSourceAuthorized(source: string): boolean {
 
 /** Get recent activity events for a workspace. */
 export function getRecentActivity(
-  workspace: { builderActivity?: { events: ActivityEvent[]; workspaceId: string; updatedAt?: string } },
+  workspace: {
+    builderActivity?: { events: ActivityEvent[]; workspaceId: string; updatedAt?: string };
+  },
   options: { limit?: number; since?: string; kinds?: ActivityEvent['kind'][] } = {}
 ): ActivityEvent[] {
   const events = workspace.builderActivity?.events ?? [];
@@ -202,22 +224,34 @@ export function getRecentActivity(
 
 /** Get verified achievements from activity events. */
 export function getVerifiedAchievements(
-  workspace: { builderActivity?: { events: ActivityEvent[]; workspaceId: string; updatedAt?: string } },
+  workspace: {
+    builderActivity?: { events: ActivityEvent[]; workspaceId: string; updatedAt?: string };
+  },
   options: { limit?: number; projectId?: string } = {}
 ): ActivityEvent[] {
   const events = workspace.builderActivity?.events ?? [];
   const limit = options.limit ?? 100;
 
   return events
-    .filter((e) => e.verificationStatus === 'USER_VERIFIED' || e.verificationStatus === 'INDEPENDENTLY_SUPPORTED')
-    .filter((e) => !options.projectId || e.entityRefs.some((r) => r.type === 'project' && r.id === options.projectId))
+    .filter(
+      (e) =>
+        e.verificationStatus === 'USER_VERIFIED' ||
+        e.verificationStatus === 'INDEPENDENTLY_SUPPORTED'
+    )
+    .filter(
+      (e) =>
+        !options.projectId ||
+        e.entityRefs.some((r) => r.type === 'project' && r.id === options.projectId)
+    )
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, limit);
 }
 
 /** Get project timeline from activity events. */
 export function getProjectTimeline(
-  workspace: { builderActivity?: { events: ActivityEvent[]; workspaceId: string; updatedAt?: string } },
+  workspace: {
+    builderActivity?: { events: ActivityEvent[]; workspaceId: string; updatedAt?: string };
+  },
   projectId: string,
   options: { limit?: number; since?: string } = {}
 ): Array<{ event: ActivityEvent; before: ActivityEvent | null; after: ActivityEvent | null }> {
@@ -230,7 +264,11 @@ export function getProjectTimeline(
     .filter((e) => !since || new Date(e.timestamp).getTime() >= since)
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-  const timeline: Array<{ event: ActivityEvent; before: ActivityEvent | null; after: ActivityEvent | null }> = [];
+  const timeline: Array<{
+    event: ActivityEvent;
+    before: ActivityEvent | null;
+    after: ActivityEvent | null;
+  }> = [];
 
   for (let i = 0; i < Math.min(projectEvents.length, limit); i++) {
     const event = projectEvents[i];

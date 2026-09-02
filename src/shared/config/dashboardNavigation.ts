@@ -50,7 +50,8 @@ export const cockpitNavigationGroups: Array<{
 }> = [
   {
     title: 'Work areas',
-    description: 'Today (this tab), Pipeline, Brand & content, Connections — twin-grounded daily operating surface.',
+    description:
+      'Today (this tab), Pipeline, Brand & content, Connections — twin-grounded daily operating surface.',
     items: [
       {
         id: 'nav-overview',
@@ -90,8 +91,7 @@ export const cockpitNavigationGroups: Array<{
       {
         id: 'nav-integrations',
         label: 'Integrations hub',
-        description:
-          'Sources, providers, and Settings in the same BrandOps shell.',
+        description: 'Sources, providers, and Settings in the same BrandOps shell.',
         type: 'surface',
         target: 'integrations'
       },

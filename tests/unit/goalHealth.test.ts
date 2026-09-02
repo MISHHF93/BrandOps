@@ -6,9 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  evaluateGoalHealth,
-} from '../../src/services/goals/goalHealth';
+import { evaluateGoalHealth } from '../../src/services/goals/goalHealth';
 
 const THIRTY_DAYS_AGO = () => new Date(Date.now() - 30 * 86400000).toISOString();
 const SIXTY_DAYS_AGO = () => new Date(Date.now() - 60 * 86400000).toISOString();
@@ -22,7 +20,7 @@ function makeGoal(overrides: any = {}): any {
     status: 'active',
     priority: 'high',
     targetDate: new Date(Date.now() + 90 * 86400000).toISOString(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -33,14 +31,14 @@ function makeData(overrides: any = {}): any {
       goals: overrides.goals || [makeGoal()],
       achievements: overrides.achievements || [],
       events: overrides.activities || [],
-      artifacts: overrides.artifacts || [],
+      artifacts: overrides.artifacts || []
     },
     planWorkspace: {
       plans: overrides.plans || [],
       receipts: [],
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -75,15 +73,31 @@ describe('Goal Health — Evaluation', () => {
     const goal = makeGoal({ status: 'active' });
     const data = makeData({
       achievements: [
-        { id: 'ach-1', type: 'achievement', title: 'Shipped auth system', timestamp: THIRTY_DAYS_AGO(), source: 'user-input' as any, trustTier: 'T2_VERIFIED' as any, claim: 'Shipped auth system', outcome: { observed: true } },
-        { id: 'ach-2', type: 'achievement', title: 'Shipped onboarding flow', timestamp: THIRTY_DAYS_AGO(), source: 'user-input' as any, trustTier: 'T2_VERIFIED' as any, claim: 'Shipped onboarding flow', outcome: { observed: true } },
+        {
+          id: 'ach-1',
+          type: 'achievement',
+          title: 'Shipped auth system',
+          timestamp: THIRTY_DAYS_AGO(),
+          source: 'user-input' as any,
+          trustTier: 'T2_VERIFIED' as any,
+          claim: 'Shipped auth system',
+          outcome: { observed: true }
+        },
+        {
+          id: 'ach-2',
+          type: 'achievement',
+          title: 'Shipped onboarding flow',
+          timestamp: THIRTY_DAYS_AGO(),
+          source: 'user-input' as any,
+          trustTier: 'T2_VERIFIED' as any,
+          claim: 'Shipped onboarding flow',
+          outcome: { observed: true }
+        }
       ],
-      plans: [
-        { id: 'plan-1', status: 'completed', title: 'Auth plan', ...{} },
-      ],
+      plans: [{ id: 'plan-1', status: 'completed', title: 'Auth plan', ...{} }],
       activities: [
-        { id: 'act-1', timestamp: THIRTY_DAYS_AGO(), type: 'activity', summary: 'Worked on goal' },
-      ],
+        { id: 'act-1', timestamp: THIRTY_DAYS_AGO(), type: 'activity', summary: 'Worked on goal' }
+      ]
     });
 
     const health = evaluateGoalHealth({ goal, data });
@@ -97,8 +111,8 @@ describe('Goal Health — Evaluation', () => {
       achievements: [],
       plans: [],
       activities: [
-        { id: 'act-1', timestamp: SIXTY_DAYS_AGO(), type: 'activity', summary: 'Old activity' },
-      ],
+        { id: 'act-1', timestamp: SIXTY_DAYS_AGO(), type: 'activity', summary: 'Old activity' }
+      ]
     });
 
     const health = evaluateGoalHealth({ goal, data });
@@ -111,10 +125,10 @@ describe('Goal Health — Evaluation', () => {
       achievements: [],
       plans: [
         { id: 'plan-1', status: 'blocked', title: 'Blocked plan', ...{} },
-        { id: 'plan-2', status: 'blocked', title: 'Another blocked plan', ...{} },
+        { id: 'plan-2', status: 'blocked', title: 'Another blocked plan', ...{} }
       ],
       activities: [],
-      artifacts: [],
+      artifacts: []
     });
 
     const health = evaluateGoalHealth({ goal, data });
@@ -126,14 +140,20 @@ describe('Goal Health — Evaluation', () => {
     const goal = makeGoal({ status: 'active' });
     const data = makeData({
       achievements: [
-        { id: 'ach-1', type: 'achievement', title: 'Minor milestone', timestamp: THIRTY_DAYS_AGO(), source: 'user-input' as any, trustTier: 'T3_ASSERTED' as any, claim: 'Minor milestone' },
+        {
+          id: 'ach-1',
+          type: 'achievement',
+          title: 'Minor milestone',
+          timestamp: THIRTY_DAYS_AGO(),
+          source: 'user-input' as any,
+          trustTier: 'T3_ASSERTED' as any,
+          claim: 'Minor milestone'
+        }
       ],
-      plans: [
-        { id: 'plan-1', status: 'blocked', title: 'Blocked plan', ...{} },
-      ],
+      plans: [{ id: 'plan-1', status: 'blocked', title: 'Blocked plan', ...{} }],
       activities: [
-        { id: 'act-1', timestamp: THIRTY_DAYS_AGO(), type: 'activity', summary: 'Some work' },
-      ],
+        { id: 'act-1', timestamp: THIRTY_DAYS_AGO(), type: 'activity', summary: 'Some work' }
+      ]
     });
 
     const health = evaluateGoalHealth({ goal, data });
@@ -147,26 +167,42 @@ describe('Goal Health — Evidence', () => {
     const goal = makeGoal({ status: 'active' });
     const data = makeData({
       achievements: [
-        { id: 'ach-1', type: 'achievement', title: 'Shipped feature X', timestamp: THIRTY_DAYS_AGO(), source: 'user-input' as any, trustTier: 'T2_VERIFIED' as any, claim: 'Shipped feature X' },
-        { id: 'ach-2', type: 'achievement', title: 'Shipped feature Y', timestamp: THIRTY_DAYS_AGO(), source: 'agent-event' as any, trustTier: 'T3_ASSERTED' as any, claim: 'Shipped feature Y' },
+        {
+          id: 'ach-1',
+          type: 'achievement',
+          title: 'Shipped feature X',
+          timestamp: THIRTY_DAYS_AGO(),
+          source: 'user-input' as any,
+          trustTier: 'T2_VERIFIED' as any,
+          claim: 'Shipped feature X'
+        },
+        {
+          id: 'ach-2',
+          type: 'achievement',
+          title: 'Shipped feature Y',
+          timestamp: THIRTY_DAYS_AGO(),
+          source: 'agent-event' as any,
+          trustTier: 'T3_ASSERTED' as any,
+          claim: 'Shipped feature Y'
+        }
       ],
       plans: [],
-      activities: [],
+      activities: []
     });
 
     const health = evaluateGoalHealth({ goal, data });
     expect(health.evidence.progressEvidence.length).toBeGreaterThanOrEqual(2);
-    expect(health.evidence.progressEvidence.some((e) => e.includes('Shipped feature X'))).toBe(true);
+    expect(health.evidence.progressEvidence.some((e) => e.includes('Shipped feature X'))).toBe(
+      true
+    );
   });
 
   it('includes blocked plans in evidence', () => {
     const goal = makeGoal({ status: 'active' });
     const data = makeData({
       achievements: [],
-      plans: [
-        { id: 'plan-1', status: 'blocked', title: 'Integration plan', ...{} },
-      ],
-      activities: [],
+      plans: [{ id: 'plan-1', status: 'blocked', title: 'Integration plan', ...{} }],
+      activities: []
     });
 
     const health = evaluateGoalHealth({ goal, data });
@@ -181,8 +217,8 @@ describe('Goal Health — Evidence', () => {
       activities: [
         { id: 'act-1', timestamp: THIRTY_DAYS_AGO(), type: 'activity', summary: 'Recent' },
         { id: 'act-2', timestamp: THIRTY_DAYS_AGO(), type: 'activity', summary: 'Recent 2' },
-        { id: 'act-3', timestamp: SIXTY_DAYS_AGO, type: 'activity', summary: 'Old' },
-      ],
+        { id: 'act-3', timestamp: SIXTY_DAYS_AGO, type: 'activity', summary: 'Old' }
+      ]
     });
 
     const health = evaluateGoalHealth({ goal, data });
@@ -194,12 +230,18 @@ describe('Goal Health — Evidence', () => {
     const goal = makeGoal({ status: 'active' });
     const data = makeData({
       achievements: [
-        { id: 'ach-1', type: 'achievement', title: 'Achieved outcome', timestamp: THIRTY_DAYS_AGO(), source: 'user-input' as any, trustTier: 'T2_VERIFIED' as any, claim: 'Achieved outcome' },
+        {
+          id: 'ach-1',
+          type: 'achievement',
+          title: 'Achieved outcome',
+          timestamp: THIRTY_DAYS_AGO(),
+          source: 'user-input' as any,
+          trustTier: 'T2_VERIFIED' as any,
+          claim: 'Achieved outcome'
+        }
       ],
-      plans: [
-        { id: 'plan-1', status: 'completed', title: 'Outcome plan', ...{} },
-      ],
-      activities: [],
+      plans: [{ id: 'plan-1', status: 'completed', title: 'Outcome plan', ...{} }],
+      activities: []
     });
 
     const health = evaluateGoalHealth({ goal, data });
@@ -210,10 +252,18 @@ describe('Goal Health — Evidence', () => {
     const goal = makeGoal({ status: 'active' });
     const data = makeData({
       achievements: [
-        { id: 'ach-1', type: 'achievement', title: 'Milestone', timestamp: THIRTY_DAYS_AGO(), source: 'user-input' as any, trustTier: 'T2_VERIFIED' as any, claim: 'Milestone' },
+        {
+          id: 'ach-1',
+          type: 'achievement',
+          title: 'Milestone',
+          timestamp: THIRTY_DAYS_AGO(),
+          source: 'user-input' as any,
+          trustTier: 'T2_VERIFIED' as any,
+          claim: 'Milestone'
+        }
       ],
       plans: [],
-      activities: [],
+      activities: []
     });
 
     const health = evaluateGoalHealth({ goal, data });
@@ -231,8 +281,13 @@ describe('Goal Health — Custom Lookback Window', () => {
       achievements: [],
       plans: [],
       activities: [
-        { id: 'act-1', timestamp: THIRTY_DAYS_AGO(), type: 'activity', summary: 'Just outside default window' },
-      ],
+        {
+          id: 'act-1',
+          timestamp: THIRTY_DAYS_AGO(),
+          type: 'activity',
+          summary: 'Just outside default window'
+        }
+      ]
     });
 
     // Default 30-day window: this activity is right at the boundary
@@ -241,7 +296,9 @@ describe('Goal Health — Custom Lookback Window', () => {
     const healthCustom = evaluateGoalHealth({ goal, data, recentActivityWindowDays: 15 });
 
     // Custom window should see fewer (or zero) recent activities
-    expect(healthCustom.evidence.recentActivityCount).toBeLessThanOrEqual(healthDefault.evidence.recentActivityCount);
+    expect(healthCustom.evidence.recentActivityCount).toBeLessThanOrEqual(
+      healthDefault.evidence.recentActivityCount
+    );
   });
 });
 
@@ -270,7 +327,7 @@ describe('Goal Health — Multiple Goals', () => {
     const goals = [
       makeGoal({ id: 'goal-1', status: 'active', title: 'Active goal' }),
       makeGoal({ id: 'goal-2', status: 'completed', title: 'Completed goal' }),
-      makeGoal({ id: 'goal-3', status: 'paused', title: 'Paused goal' }),
+      makeGoal({ id: 'goal-3', status: 'paused', title: 'Paused goal' })
     ];
 
     const data = makeData({ goals });

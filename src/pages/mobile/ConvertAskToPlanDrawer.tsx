@@ -1,6 +1,19 @@
 import clsx from 'clsx';
 import { useState } from 'react';
-import { CheckCircle2, GitBranch, RefreshCw, ShieldCheck, XCircle, ArrowRight, Clock, Lightbulb, BookOpen, PenLine, Calendar, Workflow } from 'lucide-react';
+import {
+  CheckCircle2,
+  GitBranch,
+  RefreshCw,
+  ShieldCheck,
+  XCircle,
+  ArrowRight,
+  Clock,
+  Lightbulb,
+  BookOpen,
+  PenLine,
+  Calendar,
+  Workflow
+} from 'lucide-react';
 import type { PlanDraft, PlanPreset } from '../../types/domain';
 import { PLAN_PRESET_LABELS, PLAN_PRESETS } from '../../services/plan/askPlanConversion';
 import { ExecutionTree } from '../../shared/ui/execution/ExecutionTree';
@@ -15,7 +28,7 @@ const PRESET_ICONS: Record<PlanPreset, typeof GitBranch> = {
   'resume-profile-improvement-plan': PenLine,
   'integration-setup-plan': GitBranch,
   'weekly-execution-plan': Clock,
-  'custom-plan': GitBranch,
+  'custom-plan': GitBranch
 };
 
 function presetDescription(preset: PlanPreset): string {
@@ -158,10 +171,14 @@ export function ConvertAskToPlanDrawer({
                     )}
                   >
                     <div className="flex items-start gap-2.5">
-                      <span className={clsx(
-                        'mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border',
-                        selectedPreset === preset ? 'border-primary/40 bg-primarySoft/20 text-primary' : 'border-border/40 bg-bgElevated text-textMuted'
-                      )}>
+                      <span
+                        className={clsx(
+                          'mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border',
+                          selectedPreset === preset
+                            ? 'border-primary/40 bg-primarySoft/20 text-primary'
+                            : 'border-border/40 bg-bgElevated text-textMuted'
+                        )}
+                      >
                         <Icon className="h-3.5 w-3.5" aria-hidden />
                       </span>
                       <div className="min-w-0">

@@ -283,11 +283,22 @@ export function SettingsDataSafetyBlock({
           description="Backup and restore your workspace JSON. Reset replaces all workspace data with the built-in seed. Clear chat only removes this page’s message history."
           descriptionVisibility="sr-only"
         >
+          {/*
+            Hidden from assistive technology and the tab order, matching the
+            pattern in `ChatCommandBar`: the visible button carries the name and
+            opens this. Without `aria-hidden` and `tabIndex={-1}` it is only
+            `display:none` keeping it out of the accessibility tree, so changing
+            the hiding technique to `sr-only` would leave an unnamed focusable
+            control behind. An audit of the rendered output found these two
+            diverging from the correct version already in the codebase.
+          */}
           <input
             ref={importRef}
             type="file"
             accept="application/json,.json"
             className="hidden"
+            tabIndex={-1}
+            aria-hidden
             onChange={(e) => void onImportPick(e)}
           />
           {importMessage ? (
@@ -536,9 +547,9 @@ export function SettingsResumeNeuralPhasePanel({
       descriptionVisibility="sr-only"
     >
       <p className="mt-2 text-meta leading-relaxed text-textSoft">
-        Paste your résumé, LinkedIn profile, or professional bio — then review the extracted facts and
-        generate your local AI twin. The twin learns from verified facts over time, improving Ask
-        quality, Plan recommendations, and Execute routing. PDF/DOCX: convert to text first.
+        Paste your résumé, LinkedIn profile, or professional bio — then review the extracted facts
+        and generate your local AI twin. The twin learns from verified facts over time, improving
+        Ask quality, Plan recommendations, and Execute routing. PDF/DOCX: convert to text first.
       </p>
       <div className="mt-2 rounded-lg border border-primary/35 bg-primarySoft/15 px-2.5 py-2 text-meta leading-relaxed text-textMuted">
         <span className="font-semibold text-text">Consent:</span> uploaded or pasted profile data
@@ -577,6 +588,8 @@ export function SettingsResumeNeuralPhasePanel({
         type="file"
         accept=".txt,.text,.md,text/plain,text/markdown"
         className="hidden"
+        tabIndex={-1}
+        aria-hidden
         onChange={onResumeFilePicked}
       />
       <div className="mt-2 flex flex-wrap gap-2">
@@ -888,9 +901,9 @@ export function SettingsTwinDashboard({
           <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
             <p className="text-label font-semibold text-text">Improve Twin — verify facts</p>
             <p className="mt-1 text-fine leading-snug text-textMuted">
-              Approved facts strengthen your twin's positioning accuracy, improve expert routing, and
-              increase the precision of predictions and recommendations across Ask, Plan, and Execute.
-              Unverified facts stay unverified — nothing is auto-confirmed.
+              Approved facts strengthen your twin's positioning accuracy, improve expert routing,
+              and increase the precision of predictions and recommendations across Ask, Plan, and
+              Execute. Unverified facts stay unverified — nothing is auto-confirmed.
             </p>
             {factReviewRows(twin).length === 0 ? (
               <p className="mt-2 text-meta text-textMuted">No extracted facts to review yet.</p>
@@ -1101,9 +1114,8 @@ export function SettingsTwinDashboard({
         <section className="rounded-xl border border-border/45 bg-surface/45 p-3">
           <p className="text-label font-semibold text-text">Twin Action Studio</p>
           <p className="mt-1 text-fine text-textMuted">
-            Input and review happens in Chat via hosted Ask.
-            Confirm before external outreach or publishing. Results can be copied or saved from the
-            transcript/workspace.
+            Input and review happens in Chat via hosted Ask. Confirm before external outreach or
+            publishing. Results can be copied or saved from the transcript/workspace.
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {actionCards.map(([actionType, label]) => (

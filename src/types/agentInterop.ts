@@ -107,13 +107,35 @@ export type AgentCapabilityId =
   | 'builder.activity.ingest'
   | 'builder.activity.ingest-session-summary'
   | 'builder.skill-packed-instructions'
-  | 'builder.feature-registry.read';
+  | 'builder.feature-registry.read'
+  | 'evidence.read'
+  | 'authority.read'
+  | 'next-best-actions.read'
+  | 'receipts.read'
+  | 'outcome.report'
+  | 'execution.request'
+  | 'execution.read'
+  | 'execution.cancel'
+  | 'voice.read'
+  | 'relationship.read'
+  | 'artifact.read';
 
 export const AGENT_CAPABILITY_IDS: readonly AgentCapabilityId[] = [
   'context.read',
   'goals.read',
   'artifacts.read',
   'plans.read',
+  'evidence.read',
+  'authority.read',
+  'next-best-actions.read',
+  'receipts.read',
+  'outcome.report',
+  'execution.request',
+  'execution.read',
+  'execution.cancel',
+  'voice.read',
+  'relationship.read',
+  'artifact.read',
   'achievement.record',
   'artifact.create',
   'twin.propose_update',
@@ -143,6 +165,88 @@ export const AGENT_CAPABILITY_IDS: readonly AgentCapabilityId[] = [
 
 export type AgentCapabilityAccess = 'auto' | 'approval';
 
+/**
+ * Canonical work-capability families.
+ *
+ * The surface is organized around *what kind of work* a capability performs,
+ * not around which application screen it came from. That is the difference
+ * between an MCP server exposing "a collection of random application endpoints"
+ * and one exposing work capabilities an external AI can reason about.
+ *
+ * Families with no capabilities yet are deliberately kept in this list. An AI
+ * asking what BrandOps can do deserves to know the difference between "BrandOps
+ * does not do this" and "BrandOps has no capability in this family yet", and a
+ * taxonomy that silently omits its empty branches cannot express that.
+ */
+export type CapabilityFamily =
+  | 'KNOW'
+  | 'REMEMBER'
+  | 'SEARCH'
+  | 'RESEARCH'
+  | 'UNDERSTAND'
+  | 'REASON'
+  | 'ANALYZE'
+  | 'COMPARE'
+  | 'SIMULATE'
+  | 'CREATE'
+  | 'PLAN'
+  | 'DELEGATE'
+  | 'ACT'
+  | 'COMMUNICATE'
+  | 'MONITOR'
+  | 'VERIFY'
+  | 'MEASURE'
+  | 'LEARN'
+  | 'ADVISE'
+  | 'AUTOMATE';
+
+export const CAPABILITY_FAMILIES: readonly CapabilityFamily[] = [
+  'KNOW',
+  'REMEMBER',
+  'SEARCH',
+  'RESEARCH',
+  'UNDERSTAND',
+  'REASON',
+  'ANALYZE',
+  'COMPARE',
+  'SIMULATE',
+  'CREATE',
+  'PLAN',
+  'DELEGATE',
+  'ACT',
+  'COMMUNICATE',
+  'MONITOR',
+  'VERIFY',
+  'MEASURE',
+  'LEARN',
+  'ADVISE',
+  'AUTOMATE'
+];
+
+/** One line on what each family is for, shown in discovery. */
+export const CAPABILITY_FAMILY_PURPOSE: Record<CapabilityFamily, string> = {
+  KNOW: 'Retrieve governed professional context, identity, goals and project state.',
+  REMEMBER: 'Record signals and proposals into BrandOps state — never as verified fact.',
+  SEARCH: 'Find existing records: artifacts, evidence, receipts, sessions.',
+  RESEARCH: 'Gather new external information with sources and coverage.',
+  UNDERSTAND: 'Interpret a document, dataset or situation into structured meaning.',
+  REASON: 'Draw evidence-grounded conclusions with stated assumptions.',
+  ANALYZE: 'Score, classify and find patterns, gaps and risks in existing state.',
+  COMPARE: 'Set two or more things side by side against explicit criteria.',
+  SIMULATE: 'Explore hypothetical outcomes, always labelled hypothetical.',
+  CREATE: 'Produce artifacts and proposals for the user to accept or reject.',
+  PLAN: 'Compile intent into a governed Plan with steps and approvals.',
+  DELEGATE: 'Select and assign a worker for a required capability.',
+  ACT: 'Request consequential work; execution stays behind approval.',
+  COMMUNICATE: 'Prepare and, under approval, send outbound messages.',
+  MONITOR: 'Watch a subject and emit canonical events on change.',
+  VERIFY: 'Establish that what was requested actually happened.',
+  MEASURE: 'Record and read outcomes, distinguishing reported from verified.',
+  LEARN: 'Turn validated outcomes into governed improvement.',
+  ADVISE: 'Recommend the next best action from current state.',
+  AUTOMATE: 'Create standing rules that act without a fresh request.'
+};
+
 export interface AgentCapabilityDefinition {
   id: AgentCapabilityId;
   /** MCP tool name when exposed over the protocol (null for capabilities that are not tools). */
@@ -150,19 +254,97 @@ export interface AgentCapabilityDefinition {
   label: string;
   description: string;
   tier: PermissionTier;
+  /** What kind of work this capability performs. Organizes the whole surface. */
+  family: CapabilityFamily;
   /** `auto` runs when the capability is granted; `approval` requires BrandOps-side approval first. */
   access: AgentCapabilityAccess;
   /** Only read capabilities may be granted to read-only sessions. */
   readOnly: boolean;
+  /**
+   * True when invoking this capability *mints* a durable task handle, so a
+   * task-aware client should receive a `CreateTaskResult` instead of an ordinary
+   * tool result. Reading or cancelling an existing task does not create one, and
+   * must return the ordinary envelope its `outputSchema` describes.
+   */
+  createsTask?: boolean;
   /** Human-readable name for UI display. */
   name?: string;
+}
+
+/**
+ * User Intent Contract — the declared purpose an external agent must carry on a
+ * consequential request. BrandOps evaluates whether the request actually belongs
+ * to the work the user authorized, so a confused or compromised client cannot
+ * launder an unrelated action through a granted capability.
+ *
+ * Required on `EXTERNAL_ACTION` and `SENSITIVE_ACTION` capabilities; synthesized
+ * and audited for every other mutation so no write is ever unattributed.
+ */
+export interface AgentIntentContract {
+  /** What the agent is trying to accomplish for the user. */
+  objective: string;
+  /** Why this capability is the right way to accomplish it. */
+  reason: string;
+  /** The capability the contract authorizes. */
+  requestedCapability: AgentCapabilityId;
+  /** Optional concrete target (account, recipient, repository, plan id). */
+  target?: string;
+  /** Actions the agent claims it needs; anything outside this is out of contract. */
+  allowedActions: string[];
+  /** Limits the agent commits to (budget, tone, scope, do-not-touch). */
+  constraints: string[];
+  /** ISO timestamp after which the contract is void. */
+  expiresAt?: string;
+  /** Explicit confirmation, required for `SENSITIVE_ACTION` capabilities. */
+  confirmed: boolean;
+  /** `declared` when the client supplied it; `synthesized` when BrandOps derived it. */
+  origin: 'declared' | 'synthesized';
 }
 
 export type { PermissionTier } from './executionState';
 export type { PermissionBundle } from './domain';
 
+/**
+ * How much an external agent is trusted, as one ordered ladder.
+ *
+ * This lives here rather than in a service because two of them need it and they
+ * must not drift: `policyEngine` derives a level from the capability registry to
+ * *enforce*, and `agentIdentity` shows the same level to a person. When the two
+ * had separate definitions and separate derivations, they disagreed — a session
+ * holding `builder.sessions.revoke` was displayed as READ_ONLY.
+ */
+export type ExternalAgentTrustLevel =
+  | 'NONE' // no active session, or revoked
+  | 'READ_ONLY' // may read; may not write anything
+  | 'CONTEXT_CONSUMER' // may read and consume builder context; still no write
+  | 'PROPOSER' // may create proposals — none of which apply without approval
+  | 'ACTION_REQUESTER'; // may request external actions; still requires approval
+
+/** Ordered weakest to strongest. Used to build total maps over the ladder. */
+export const EXTERNAL_AGENT_TRUST_LEVELS: readonly ExternalAgentTrustLevel[] = [
+  'NONE',
+  'READ_ONLY',
+  'CONTEXT_CONSUMER',
+  'PROPOSER',
+  'ACTION_REQUESTER'
+];
+
+/**
+ * Operator-assigned ceiling on what a session may do, independent of the
+ * capabilities it was granted. It can only lower effective trust, never raise
+ * it, so an operator can neuter a session without editing its grant list.
+ *
+ * A ceiling is expressed in the same vocabulary as a level because it *is* one,
+ * used as a cap. `CONTEXT_CONSUMER` is currently reachable only this way: no
+ * capability in the registry derives it, but an operator can pin a session there
+ * to hold it between reading and proposing.
+ */
+export type ExternalAgentTrustCeiling = ExternalAgentTrustLevel;
+
 export interface ExternalAgentSession {
   id: string;
+  /** Optional cap on effective trust. Absent means "whatever the grants imply". */
+  trustCeiling?: ExternalAgentTrustCeiling;
   ownerUserId: string;
   workspaceId: string;
   clientKind: ExternalAgentClientKind;
@@ -263,7 +445,15 @@ export type AgentProposalKind =
   | 'twin_update'
   | 'artifact'
   | 'content_opportunity'
-  | 'external_action';
+  | 'external_action'
+  /**
+   * A request to *promote* existing agent-reported content into verified state —
+   * verifying an achievement, accepting a Twin proposal. Distinct from
+   * `external_action` because nothing leaves BrandOps: the consequence is
+   * internal and it is exactly the one the fourth invariant reserves for a
+   * person. Recording it as an external action would put a lie in the ledger.
+   */
+  | 'promotion';
 
 export type AgentProposalStatus = 'pending' | 'approved' | 'rejected' | 'superseded';
 
@@ -300,6 +490,14 @@ export interface AgentProposal {
   twinMemoryType?: 'approvedClaims' | 'rejectedClaims' | 'none';
   approvedClaimText?: string;
   externalAction?: { action: string; target: string; summary: string };
+  /** What a `promotion` proposal will promote, once a person approves it. */
+  promotion?: { action: 'verify-achievement' | 'accept-twin-proposal'; targetId: string };
+  /**
+   * Fingerprint of the executable content at the moment this was described to
+   * the user. Recomputed at decision time: an approval binds to what the person
+   * saw, not to the id of something that can change underneath it.
+   */
+  approvalBinding?: { fingerprint: string; stepCount: number };
   artifact?: MaterializedArtifactPayload;
   contentOpportunity?: {
     format?: string;
@@ -307,10 +505,43 @@ export interface AgentProposal {
     whyNow?: string;
     audience?: string;
   };
+  /**
+   * Opaque MCP task handle when this proposal is an execution request. The
+   * protocol task is a *view* over this proposal plus the Plan/Checkpoint state
+   * it points at — BrandOps runs no second task engine.
+   */
+  taskId?: string;
   createdAt: string;
   updatedAt: string;
   decidedAt?: string;
   decisionNote?: string;
+}
+
+/** MCP Tasks extension status values (`io.modelcontextprotocol/tasks`). */
+export type McpTaskStatus = 'working' | 'input_required' | 'completed' | 'failed' | 'cancelled';
+
+/** One pending input the protocol task is waiting on (approval, recovery decision). */
+export interface McpTaskInputRequest {
+  method: string;
+  params: Record<string, unknown>;
+}
+
+/**
+ * Protocol-shaped task, projected from canonical BrandOps state. Field names
+ * follow the MCP Tasks extension so this object can be returned verbatim.
+ */
+export interface McpTask {
+  taskId: string;
+  status: McpTaskStatus;
+  statusMessage?: string;
+  createdAt: string;
+  lastUpdatedAt: string;
+  /** Null = no expiry. BrandOps tasks are durable workspace state. */
+  ttlMs: number | null;
+  pollIntervalMs?: number;
+  result?: Record<string, unknown>;
+  error?: { code: string; message: string };
+  inputRequests?: Record<string, McpTaskInputRequest>;
 }
 
 export interface AgentProposalsState {
@@ -409,7 +640,14 @@ export interface AgentHandoff {
   };
   expiration?: string;
   returnDestination?: string;
-  status: 'proposed' | 'accepted' | 'in_progress' | 'completed' | 'expired' | 'cancelled' | 'rejected';
+  status:
+    | 'proposed'
+    | 'accepted'
+    | 'in_progress'
+    | 'completed'
+    | 'expired'
+    | 'cancelled'
+    | 'rejected';
   result?: string;
   notes?: string;
   createdAt: string;

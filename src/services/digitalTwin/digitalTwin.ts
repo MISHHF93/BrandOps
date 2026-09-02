@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type {
   BrandProfile,
   BrandOpsData,
@@ -866,5 +867,5 @@ export function twinActionPrompt(actionType: TwinSupportedActionType, twin: Digi
     find_strongest_opportunities: 'Find the strongest opportunities',
     improve_profile_gaps: 'Suggest profile gaps to improve'
   };
-  return `ask: In active twin context for ${twin.displayName}, ${labels[actionType]}. Use only verified or clearly marked unverified facts from the twin. If a required fact is missing, ask a follow-up instead of inventing it.`;
+  return `ask: In active twin context for ${quoteContextValue(twin.displayName)}, ${labels[actionType]}. Use only verified or clearly marked unverified facts from the twin. If a required fact is missing, ask a follow-up instead of inventing it.`;
 }

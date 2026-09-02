@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData } from '../../types/domain';
 import { buildPlatformAwareAskReadout } from '../ai/platformAwareAskContext';
 import { buildBehavioralIntelligenceEngineReadout } from '../intelligence/behavioralIntelligenceEngine';
@@ -30,6 +31,12 @@ export interface PredictiveOperationsItem {
   sourceLabel: string;
   signals: string[];
   command: string;
+  /**
+   * When the underlying signal was observed. Feeds recency decay in ranking, so
+   * a stale recommendation stops outranking a live one on a confidence tie.
+   * Optional: an undated item scores as middling, never as fresh.
+   */
+  observedAt?: string;
 }
 
 export interface PredictiveOperationsDashboardReadout {
@@ -103,10 +110,43 @@ function commandFor(input: {
   detail: string;
   signals: string[];
 }) {
-  return `ask: Review this Predictive Operations Dashboard item and turn it into a PLAN-ready next action. Do not execute externally or mutate workspace records. Include why now, evidence, risks, approval gate, owner handoff, expected impact, and receipt expectations.\n\nType: ${input.kind}\nTitle: ${input.title}\nDetail: ${input.detail}\nSignals: ${input.signals.join(' | ')}`;
+  return `ask: Review this Predictive Operations Dashboard item and turn it into a PLAN-ready next action. Do not execute externally or mutate workspace records. Include why now, evidence, risks, approval gate, owner handoff, expected impact, and receipt expectations.\n\nType: ${input.kind}\nTitle: ${quoteContextValue(input.title)}\nDetail: ${quoteContextValue(input.detail)}\nSignals: ${quoteContextValue(input.signals.join(' | '))}`;
 }
 
-function sortItems(items: PredictiveOperationsItem[]): PredictiveOperationsItem[] {
+/**
+ * Recency decay, so a stale recommendation stops competing with a live one.
+ *
+ * Ranking used to be urgency → confidence → **alphabetical by title**. A signal
+ * from six months ago outranked one from this morning whenever confidence tied,
+ * and the tiebreak was the first letter of the title. For a surface that answers
+ * "what should I do today?", that is the wrong answer arriving with confidence.
+ *
+ * Same half-life as context retrieval (60 days) and the same shape, because two
+ * different decay curves in one product is how they drift apart.
+ */
+const FRESHNESS_HALF_LIFE_DAYS = 60;
+
+function freshness(observedAt: string | undefined, now: Date): number {
+  if (!observedAt) return 0.4; // Undated is treated as middling, never as fresh.
+  const ts = new Date(observedAt).getTime();
+  if (!Number.isFinite(ts)) return 0.4;
+  const ageDays = Math.max(0, (now.getTime() - ts) / 86_400_000);
+  return Math.max(0.05, Math.exp(-ageDays / FRESHNESS_HALF_LIFE_DAYS));
+}
+
+/**
+ * Effective score: confidence weighted by how recent the underlying signal is.
+ * Urgency still dominates — a critical item does not fall behind a fresher
+ * medium one, because urgency is a statement about consequence, not about age.
+ */
+function effectiveScore(item: PredictiveOperationsItem, now: Date): number {
+  return 0.7 * item.confidence + 0.3 * freshness(item.observedAt, now);
+}
+
+function sortItems(
+  items: PredictiveOperationsItem[],
+  now: Date = new Date()
+): PredictiveOperationsItem[] {
   const priority: Record<PredictiveOperationsUrgency, number> = {
     critical: 0,
     high: 1,
@@ -116,9 +156,21 @@ function sortItems(items: PredictiveOperationsItem[]): PredictiveOperationsItem[
   return [...items].sort(
     (a, b) =>
       priority[a.urgency] - priority[b.urgency] ||
-      b.confidence - a.confidence ||
+      effectiveScore(b, now) - effectiveScore(a, now) ||
       a.title.localeCompare(b.title)
   );
+}
+
+/**
+ * Test seam for the ranking itself. Exported so ordering can be asserted with
+ * controlled timestamps rather than inferred from a whole readout, where a
+ * fixture change could silently stop exercising the decay path.
+ */
+export function sortPredictiveItemsForTest(
+  items: PredictiveOperationsItem[],
+  now: Date
+): PredictiveOperationsItem[] {
+  return sortItems(items, now);
 }
 
 export function buildPredictiveOperationsDashboardReadout(
@@ -245,7 +297,7 @@ export function buildPredictiveOperationsDashboardReadout(
         confidence: 88,
         sourceLabel: 'Scheduler',
         signals: [task.status, task.dueAt, task.detail],
-        command: `ask: Resolve this operational bottleneck with a PLAN-ready recovery sequence. Do not reschedule or mutate records automatically.\n\nTask: ${task.title}\nDue: ${task.dueAt}\nDetail: ${task.detail}`
+        command: `ask: Resolve this operational bottleneck with a PLAN-ready recovery sequence. Do not reschedule or mutate records automatically.\n\nTask: ${quoteContextValue(task.title)}\nDue: ${task.dueAt}\nDetail: ${quoteContextValue(task.detail)}`
       })
     ),
     ...(openTasks.length > workspace.settings.notificationCenter.maxDailyTasks

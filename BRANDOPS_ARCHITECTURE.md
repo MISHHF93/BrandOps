@@ -66,7 +66,7 @@ The canonical pipeline is coherent and implemented end-to-end in source:
 
 The pipeline is not duplicated — AI Core and hosted Ask are intentionally separate paths that share the same persistence and validation layer. No consolidation needed; the separation is by design.
 
-**Audit result (updated 2026-08-31):** Typecheck clean (0 errors). **982/982 tests pass across 152 test files** (up from 647/135; +4 suites and full loop test added this workstream). `npm run lint` clean, `vite build` OK. `npm ci` — 441 packages, 0 vulnerabilities. See `BRANDOPS_SOURCE_HEALTH.md` and `BRANDOPS_FEATURE_TRUTH.md` for the evidence-driven capability classification.
+**Audit result (updated 2026-08-31):** Typecheck clean (0 errors). **1122/1122 tests pass across 204 test files** (up from 647/135; +4 suites and full loop test added this workstream). `npm run lint` clean, `vite build` OK. `npm ci` — 441 packages, 0 vulnerabilities. See `BRANDOPS_SOURCE_HEALTH.md` and `BRANDOPS_FEATURE_TRUTH.md` for the evidence-driven capability classification.
 
 ## 12. Integration & MCP Interoperability (verified)
 
@@ -93,6 +93,7 @@ The pipeline is not duplicated — AI Core and hosted Ask are intentionally sepa
 ## 13. Security Posture
 
 **Controls present:**
+
 - No OAuth backend (local-first extension; README-admitted). Account selector is local preview state only.
 - Agent bearer tokens hashed with SHA-256; only hash stored in workspace JSON.
 - Input validation: `sanitizeAgentText`, `detectPromptInjection` (7 patterns), `assertRequiredString`, `assertEnum`, `assertId`, `assertIdempotencyKey`. All free-text agent fields sanitized and length-capped.
@@ -103,6 +104,7 @@ The pipeline is not duplicated — AI Core and hosted Ask are intentionally sepa
 - Integration honesty: badges show "Saved locally", "Background sync: off". No fake "connected" claims.
 
 **Gaps:**
+
 - No real authentication backend — local preview identity only. P0 in production context but by design for current local-first extension.
 - No Stripe webhook/session verification — billing navigation links only. README-admitted.
 - No CSRF/XSS/SSRF audit beyond prompt injection — extension context (MV3) has different threat model than web app; content script (linkedinOverlay.ts) runs on LinkedIn pages — review needed.
@@ -113,6 +115,7 @@ The pipeline is not duplicated — AI Core and hosted Ask are intentionally sepa
 ## 14. Repository Health
 
 **Issues identified and resolved (this audit):**
+
 1. **[P0, FIXED]** `ALL_INTEGRATION_SOURCE_KINDS` referenced in `storage.ts:109` but never defined — `ReferenceError` at runtime, 9 test files failed. **Fix:** imported from `integrationSourceCatalog.ts`.
 2. **[P0, FIXED]** `TraceBundle` imported from `domain` in `normalizers/ai.ts` but actually defined in `aiTraceGraph.ts` — TS2305 import error. **Fix:** corrected import path.
 3. **[P0, FIXED]** `normalizers/ai.ts` used `../ai/` relative paths — wrong depth (should be `../../ai/`). **Fix:** corrected all 4 imports.
@@ -120,6 +123,7 @@ The pipeline is not duplicated — AI Core and hosted Ask are intentionally sepa
 5. **[P1, FIXED]** `isBrandOpsData` required `modules` array for validity — partial-blob repair test expected in-place repair. **Fix:** removed `modules` from validity guard.
 
 **Remaining (updated 2026-08-31):**
+
 - ~~Storage normalizer duplication (38 shadow functions vs `./normalizers/`)~~ — **RESOLVED:** the `./normalizers/` tree (and `controlPlane/` tree) was deleted in a dead-code sweep; inline normalization in `storage.ts`/`withDefaults` is the single source of truth.
 - Dead/unreachable code: a 40-file dead-code sweep was performed; `knip` script exists but not run in CI.
 - Debug artifacts in repo root (`hs_err_pid*.log`, `replay_pid*.log`, `dev-server.log`) — not source artifacts; flag for cleanup before release.
@@ -128,4 +132,4 @@ The pipeline is not duplicated — AI Core and hosted Ask are intentionally sepa
 
 AI changes measured by behavioral harness, not vibes: grounding, profession interpretation, contradictory memory, Ask usefulness, artifact quality, convert-to-plan correctness, schema compliance, tool selection, permission enforcement, unsupported-action handling, prompt injection, expert routing, recovery, hallucination resistance, latency/cost. Trajectory-level, not exact-string. Telemetry is privacy-conscious (local-first today) and funnel-based: Workspace → Twin → first useful Ask → Artifact/Convert → Plan saved → approval → verified execution → outcome.
 
-**Behavioral test coverage:** 982 unit tests across 152 files cover storage, AI Core, routing, Ask hosting, trace persistence, pipeline, plan, agent interop, MCP, memory, execution state, integration honesty, brand profile, chat intents, mobile shell, settings, UI, and many peripheral systems. All pass. **The integrated end-to-end loop test (résumé→Twin→Ask→Plan→Approve→Execute→Verify→Receipt→Learn) is now present** — see `tests/unit/canonicalLoopEndToEnd.test.ts` (added 2026-08-31, drives the full A→Z loop through the real gateway, including the approval-gated `action.request` fail-closed path).
+**Behavioral test coverage:** 1122 unit tests across 211 files cover storage, AI Core, routing, Ask hosting, trace persistence, pipeline, plan, agent interop, MCP, memory, execution state, integration honesty, brand profile, chat intents, mobile shell, settings, UI, and many peripheral systems. All pass. **The integrated end-to-end loop test (résumé→Twin→Ask→Plan→Approve→Execute→Verify→Receipt→Learn) is now present** — see `tests/unit/canonicalLoopEndToEnd.test.ts` (added 2026-08-31, drives the full A→Z loop through the real gateway, including the approval-gated `action.request` fail-closed path).

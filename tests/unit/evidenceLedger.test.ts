@@ -14,7 +14,7 @@ import {
   getAllEvidence,
   getEvidenceLedger,
   clearEvidenceLedger,
-  computeClaimEvidenceStrength,
+  computeClaimEvidenceStrength
 } from '../../src/services/evidence/evidenceLedger';
 import type { EvidenceSource } from '../../src/services/evidence/evidenceLedger';
 
@@ -36,7 +36,7 @@ describe('Evidence Ledger — Creation', () => {
       sourceLabel: 'github',
       supportsClaims: ['claim-1'],
       attachedEntities: [{ type: 'repository', id: 'owner/repo' }],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(evidence.id).toMatch(/^ev-/);
@@ -56,7 +56,7 @@ describe('Evidence Ledger — Creation', () => {
       sourceLabel: 'evidence-api',
       supportsClaims: [],
       attachedEntities: [],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(evidence.source).toBe('verification-fetch');
@@ -71,7 +71,7 @@ describe('Evidence Ledger — Creation', () => {
       sourceLabel: 'user',
       supportsClaims: [],
       notes: 'Manually added by user',
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     expect(evidence.notes).toBe('Manually added by user');
@@ -82,7 +82,7 @@ describe('Evidence Ledger — Creation', () => {
       evidence: makeEvidenceEntry('verified-1', 'url', 'Verified'),
       source: 'verification-fetch' as EvidenceSource,
       sourceLabel: 'api',
-      supportsClaims: [],
+      supportsClaims: []
     });
     expect(strong.strength).toBeGreaterThanOrEqual(0.8);
 
@@ -90,7 +90,7 @@ describe('Evidence Ledger — Creation', () => {
       evidence: makeEvidenceEntry('unverified-1', 'user-input', 'Unverified'),
       source: 'user-input' as EvidenceSource,
       sourceLabel: 'user',
-      supportsClaims: [],
+      supportsClaims: []
     });
     expect(weak.strength).toBeLessThan(strong.strength);
   });
@@ -107,7 +107,7 @@ describe('Evidence Ledger — Query', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'github',
       supportsClaims: [],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     const retrieved = getEvidenceById(WS_ID, evidence.id);
@@ -125,21 +125,21 @@ describe('Evidence Ledger — Query', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'github',
       supportsClaims: ['claim-1', 'claim-2'],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     createLedgerEvidence({
       evidence: makeEvidenceEntry('ev-2', 'release', 'Evidence 2'),
       source: 'user-input' as EvidenceSource,
       sourceLabel: 'user',
       supportsClaims: ['claim-1'],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     createLedgerEvidence({
       evidence: makeEvidenceEntry('ev-3', 'url', 'Evidence 3'),
       source: 'verification-fetch' as EvidenceSource,
       sourceLabel: 'api',
       supportsClaims: ['claim-3'],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     getAllEvidence(WS_ID); // ensure ledger exists
@@ -158,7 +158,7 @@ describe('Evidence Ledger — Query', () => {
       sourceLabel: 'github',
       supportsClaims: [],
       attachedEntities: [{ type: 'repository', id: 'owner/repo' }],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     createLedgerEvidence({
       evidence: makeEvidenceEntry('ev-2', 'code', 'Evidence for other'),
@@ -166,7 +166,7 @@ describe('Evidence Ledger — Query', () => {
       sourceLabel: 'github',
       supportsClaims: [],
       attachedEntities: [{ type: 'repository', id: 'other/repo' }],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     const forRepo = getEvidenceForEntity(WS_ID, 'repository', 'owner/repo');
@@ -180,14 +180,14 @@ describe('Evidence Ledger — Query', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'g',
       supportsClaims: [],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     createLedgerEvidence({
       evidence: makeEvidenceEntry('e2', 'release', 'E2'),
       source: 'user-input' as EvidenceSource,
       sourceLabel: 'u',
       supportsClaims: [],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     const all = getAllEvidence(WS_ID);
@@ -200,7 +200,7 @@ describe('Evidence Ledger — Query', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'g',
       supportsClaims: [],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     const ledger = getEvidenceLedger(WS_ID);
@@ -222,7 +222,7 @@ describe('Evidence Ledger — Claim Evidence Strength', () => {
       source: 'verification-fetch' as EvidenceSource,
       sourceLabel: 'api',
       supportsClaims: ['claim-1'],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     const strength = computeClaimEvidenceStrength(WS_ID, 'claim-1');
@@ -245,14 +245,14 @@ describe('Evidence Ledger — Claim Evidence Strength', () => {
       source: 'verification-fetch' as EvidenceSource,
       sourceLabel: 'api',
       supportsClaims: ['claim-multi'],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     createLedgerEvidence({
       evidence: makeEvidenceEntry('ev-2', 'release', 'Moderate'),
       source: 'repository' as EvidenceSource,
       sourceLabel: 'github',
       supportsClaims: ['claim-multi'],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     const strength = computeClaimEvidenceStrength(WS_ID, 'claim-multi');
@@ -266,14 +266,14 @@ describe('Evidence Ledger — Claim Evidence Strength', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'github',
       supportsClaims: ['claim-tier'],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     createLedgerEvidence({
       evidence: makeEvidenceEntry('ev-2', 'url', 'Strong evidence'),
       source: 'verification-fetch' as EvidenceSource,
       sourceLabel: 'api',
       supportsClaims: ['claim-tier'],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
 
     const strength = computeClaimEvidenceStrength(WS_ID, 'claim-tier');
@@ -293,7 +293,7 @@ describe('Evidence Ledger — Evidence Strength Levels', () => {
       source: 'verification-fetch' as EvidenceSource,
       sourceLabel: 'api',
       supportsClaims: [],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     expect(evidence.strength).toBeGreaterThan(0.2);
   });
@@ -304,7 +304,7 @@ describe('Evidence Ledger — Evidence Strength Levels', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'github',
       supportsClaims: [],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     expect(evidence.strength).toBeGreaterThan(0.1);
     expect(evidence.strength).toBeLessThan(0.35);
@@ -316,7 +316,7 @@ describe('Evidence Ledger — Evidence Strength Levels', () => {
       source: 'user-input' as EvidenceSource,
       sourceLabel: 'user',
       supportsClaims: [],
-      workspaceId: WS_ID,
+      workspaceId: WS_ID
     });
     expect(evidence.strength).toBeGreaterThan(0);
     expect(evidence.strength).toBeLessThan(0.6);
@@ -330,14 +330,14 @@ describe('Evidence Ledger — Workspace Isolation', () => {
       source: 'repository' as EvidenceSource,
       sourceLabel: 'github',
       supportsClaims: [],
-      workspaceId: 'ws-1',
+      workspaceId: 'ws-1'
     });
     createLedgerEvidence({
       evidence: makeEvidenceEntry('ws2-ev', 'release', 'WS2 evidence'),
       source: 'user-input' as EvidenceSource,
       sourceLabel: 'user',
       supportsClaims: [],
-      workspaceId: 'ws-2',
+      workspaceId: 'ws-2'
     });
 
     const ws1Evidence = getAllEvidence('ws-1');

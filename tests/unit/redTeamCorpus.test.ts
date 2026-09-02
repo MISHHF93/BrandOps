@@ -11,7 +11,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   processThroughFirewall,
   resetFirewall,
-  initializeFirewall,
+  initializeFirewall
 } from '../../src/services/memory/memoryFirewall';
 import {
   RED_TEAM_CORPUS,
@@ -19,7 +19,7 @@ import {
   criticalAndHighPayloads,
   firewallTestPayloads,
   instructionRiskTestPayloads,
-  shouldBeCaughtBy,
+  shouldBeCaughtBy
 } from '../../src/services/redTeam/redTeamCorpus';
 import type { AttackCategory, AttackSeverity } from '../../src/services/redTeam/redTeamCorpus';
 
@@ -41,7 +41,7 @@ describe('Red-Team Corpus — Overview', () => {
       'memory-poisoning',
       'privilege-escalation',
       'deceptive-external-agent',
-      'approval-bypass',
+      'approval-bypass'
     ];
 
     for (const cat of categories) {
@@ -56,7 +56,7 @@ describe('Red-Team Corpus — Overview', () => {
       critical: 0,
       high: 0,
       medium: 0,
-      low: 0,
+      low: 0
     };
 
     for (const p of RED_TEAM_CORPUS) {
@@ -103,7 +103,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'agent-event',
-      sourceLabel: 'achievement-report',
+      sourceLabel: 'achievement-report'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -117,7 +117,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'document',
-      sourceLabel: 'resume.pdf',
+      sourceLabel: 'resume.pdf'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -130,7 +130,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'repository',
-      sourceLabel: 'github.com/awesome-lib',
+      sourceLabel: 'github.com/awesome-lib'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -143,7 +143,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'mcp-response',
-      sourceLabel: 'auth-tool',
+      sourceLabel: 'auth-tool'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -156,7 +156,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'agent-event',
-      sourceLabel: 'claude-code-session',
+      sourceLabel: 'claude-code-session'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -169,7 +169,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'agent-proposal',
-      sourceLabel: 'proposal-agent',
+      sourceLabel: 'proposal-agent'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -184,7 +184,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'agent-proposal',
-      sourceLabel: 'content-draft',
+      sourceLabel: 'content-draft'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -196,7 +196,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'model-output',
-      sourceLabel: 'ai-bio-generator',
+      sourceLabel: 'ai-bio-generator'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -208,7 +208,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'repository',
-      sourceLabel: 'github.com/lib',
+      sourceLabel: 'github.com/lib'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -220,7 +220,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'webpage',
-      sourceLabel: 'search-result',
+      sourceLabel: 'search-result'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -232,7 +232,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'twin-delta',
-      sourceLabel: 'twin-delta-engine',
+      sourceLabel: 'twin-delta-engine'
     });
 
     expect(result.candidate.instructionRisk).toBe('high');
@@ -246,7 +246,7 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
     const result = processThroughFirewall({
       content: payload.payload,
       source: 'integration-import',
-      sourceLabel: 'resume.pdf',
+      sourceLabel: 'resume.pdf'
     });
 
     // This payload doesn't have instruction-like patterns, so it should pass
@@ -260,9 +260,10 @@ describe('Red-Team Corpus — Memory Firewall Defense', () => {
 
   it('benign résumé passes firewall (no injection)', () => {
     const result = processThroughFirewall({
-      content: 'John Doe — Senior Software Engineer. 10 years experience. Built distributed systems at scale.',
+      content:
+        'John Doe — Senior Software Engineer. 10 years experience. Built distributed systems at scale.',
       source: 'user-input',
-      sourceLabel: 'manual-entry',
+      sourceLabel: 'manual-entry'
     });
 
     expect(result.action).toBe('promote');
@@ -289,7 +290,7 @@ describe('Red-Team Corpus — Category Defense Coverage', () => {
         const result = processThroughFirewall({
           content: payload.payload,
           source: 'agent-event',
-          sourceLabel: 'test',
+          sourceLabel: 'test'
         });
         expect(result.candidate.instructionRisk).toBe('high');
         expect(result.requiresVerification).toBe(true);
@@ -304,7 +305,7 @@ describe('Red-Team Corpus — Category Defense Coverage', () => {
         const result = processThroughFirewall({
           content: payload.payload,
           source: 'agent-event',
-          sourceLabel: 'test',
+          sourceLabel: 'test'
         });
         expect(result.allowed).toBe(true); // They're allowed into candidate memory for verification
         expect(result.candidate.instructionRisk).toBe('high');
@@ -322,7 +323,7 @@ describe('Red-Team Corpus — Category Defense Coverage', () => {
         const result = processThroughFirewall({
           content: payload.payload,
           source: 'integration-import',
-          sourceLabel: 'test-repo',
+          sourceLabel: 'test-repo'
         });
         expect(result.candidate.instructionRisk).toBe('high');
         expect(result.requiresVerification).toBe(true);
@@ -338,7 +339,7 @@ describe('Red-Team Corpus — Category Defense Coverage', () => {
         const result = processThroughFirewall({
           content: payload.payload,
           source: 'integration-import',
-          sourceLabel: 'test-tool',
+          sourceLabel: 'test-tool'
         });
         expect(result.candidate.instructionRisk).toBe('high');
         expect(result.requiresVerification).toBe(true);
@@ -351,14 +352,16 @@ describe('Red-Team Corpus — Category Defense Coverage', () => {
 
     it('all 3 payloads trigger instruction risk detection', () => {
       for (const payload of payloads) {
-        const source = payload.target.includes('Twin Delta') ? 'twin-delta' :
-                       payload.target.includes('Professional Signal') ? 'agent-proposal' :
-                       'agent-event';
+        const source = payload.target.includes('Twin Delta')
+          ? 'twin-delta'
+          : payload.target.includes('Professional Signal')
+            ? 'agent-proposal'
+            : 'agent-event';
 
         const result = processThroughFirewall({
           content: payload.payload,
           source,
-          sourceLabel: 'test',
+          sourceLabel: 'test'
         });
         expect(result.candidate.instructionRisk).toBe('high');
         expect(result.requiresVerification).toBe(true);
@@ -413,14 +416,18 @@ describe('Red-Team Corpus — Defense Effectiveness', () => {
     const nonFirewallCategories: AttackCategory[] = [
       'privilege-escalation',
       'deceptive-external-agent',
-      'approval-bypass',
+      'approval-bypass'
     ];
 
     for (const cat of nonFirewallCategories) {
       const payloads = payloadsByCategory(cat);
       for (const payload of payloads) {
         // These should NOT be caught by the firewall (they are handled by other systems)
-        if (payload.target.includes('Agent Identity') || payload.target.includes('Trust Levels') || payload.target.includes('Session')) {
+        if (
+          payload.target.includes('Agent Identity') ||
+          payload.target.includes('Trust Levels') ||
+          payload.target.includes('Session')
+        ) {
           expect(payload.shouldBeCaughtByFirewall).toBe(false);
         }
       }
@@ -494,7 +501,7 @@ describe('Red-Team Corpus — Full Regression', () => {
       'memory-poisoning',
       'privilege-escalation',
       'deceptive-external-agent',
-      'approval-bypass',
+      'approval-bypass'
     ];
 
     for (const cat of requiredCategories) {

@@ -288,6 +288,6 @@ export const CockpitFocusEngine = ({
           />
         ) : null}
       </div>
-  </div>
+    </div>
   );
 };

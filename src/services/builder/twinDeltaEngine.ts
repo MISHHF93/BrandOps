@@ -8,7 +8,12 @@
  * profession changes. Maintains Twin version history.
  */
 
-import type { TwinDelta, TwinDeltaField, TwinUpdateProposal, TwinDeltaEvidence } from '../../types/builder';
+import type {
+  TwinDelta,
+  TwinDeltaField,
+  TwinUpdateProposal,
+  TwinDeltaEvidence
+} from '../../types/builder';
 
 /** Version snapshot for Twin version history (local type — engine's own richer shape). */
 export interface TwinVersion {
@@ -119,14 +124,16 @@ export interface CalculateDeltasResult {
   changeSummary: string;
 }
 
-export function calculateDeltas(
-  input: CalculateDeltasInput
-): CalculateDeltasResult {
+export function calculateDeltas(input: CalculateDeltasInput): CalculateDeltasResult {
   const config = { ...DEFAULT_CONFIG, ...input.config };
   const deltas: TwinDelta[] = [];
   const changeNotes: string[] = [];
 
-  function makeDelta(partial: Omit<TwinDelta, 'id' | 'workspaceId' | 'createdAt' | 'status' | 'proposedBy'> & { evidence?: TwinDeltaEvidence[] }): TwinDelta {
+  function makeDelta(
+    partial: Omit<TwinDelta, 'id' | 'workspaceId' | 'createdAt' | 'status' | 'proposedBy'> & {
+      evidence?: TwinDeltaEvidence[];
+    }
+  ): TwinDelta {
     return {
       id: `delta-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       workspaceId: input.currentTwin.workspaceId,
@@ -143,20 +150,24 @@ export function calculateDeltas(
     const newHeadline = input.newVerifiedInfo.headline.trim();
     if (newHeadline && newHeadline !== input.currentTwin.headline) {
       const isMaterial = config.materialFields.includes('identity/headline');
-      deltas.push(makeDelta({
-        field: 'identity/headline',
-        previousValue: input.currentTwin.headline,
-        proposedValue: newHeadline,
-        evidence: [] as TwinDeltaEvidence[],
-        reason: isMaterial
-          ? `Material change to headline: "${input.currentTwin.headline}" → "${newHeadline}". Requires confirmation.`
-          : `Headline updated: "${input.currentTwin.headline}" → "${newHeadline}".`,
-        confidence: isMaterial ? 0.9 : 0.7,
-        requiresConfirmation: isMaterial,
-        source: input.source ?? 'manual',
-        sourceId: input.sourceId
-      }));
-      changeNotes.push(`Headline: "${input.currentTwin.headline.slice(0, 50)}" → "${newHeadline.slice(0, 50)}"`);
+      deltas.push(
+        makeDelta({
+          field: 'identity/headline',
+          previousValue: input.currentTwin.headline,
+          proposedValue: newHeadline,
+          evidence: [] as TwinDeltaEvidence[],
+          reason: isMaterial
+            ? `Material change to headline: "${input.currentTwin.headline}" → "${newHeadline}". Requires confirmation.`
+            : `Headline updated: "${input.currentTwin.headline}" → "${newHeadline}".`,
+          confidence: isMaterial ? 0.9 : 0.7,
+          requiresConfirmation: isMaterial,
+          source: input.source ?? 'manual',
+          sourceId: input.sourceId
+        })
+      );
+      changeNotes.push(
+        `Headline: "${input.currentTwin.headline.slice(0, 50)}" → "${newHeadline.slice(0, 50)}"`
+      );
     }
   }
 
@@ -164,17 +175,19 @@ export function calculateDeltas(
   if (input.newVerifiedInfo.summary !== undefined) {
     const newSummary = input.newVerifiedInfo.summary.trim();
     if (newSummary && newSummary !== input.currentTwin.summary) {
-      deltas.push(makeDelta({
-        field: 'identity/summary',
-        previousValue: input.currentTwin.summary,
-        proposedValue: newSummary,
-        evidence: [] as TwinDeltaEvidence[],
-        reason: `Summary updated.`,
-        confidence: 0.7,
-        requiresConfirmation: false,
-        source: input.source ?? 'manual',
-        sourceId: input.sourceId
-      }));
+      deltas.push(
+        makeDelta({
+          field: 'identity/summary',
+          previousValue: input.currentTwin.summary,
+          proposedValue: newSummary,
+          evidence: [] as TwinDeltaEvidence[],
+          reason: `Summary updated.`,
+          confidence: 0.7,
+          requiresConfirmation: false,
+          source: input.source ?? 'manual',
+          sourceId: input.sourceId
+        })
+      );
       changeNotes.push('Summary updated');
     }
   }
@@ -184,20 +197,24 @@ export function calculateDeltas(
     const newPositioning = input.newVerifiedInfo.professionalPositioning.trim();
     if (newPositioning && newPositioning !== input.currentTwin.professionalPositioning) {
       const isMaterial = config.materialFields.includes('identity/professionalPositioning');
-      deltas.push(makeDelta({
-        field: 'identity/professionalPositioning',
-        previousValue: input.currentTwin.professionalPositioning,
-        proposedValue: newPositioning,
-        evidence: [] as TwinDeltaEvidence[],
-        reason: isMaterial
-          ? `Material change to professional positioning: "${input.currentTwin.professionalPositioning.slice(0, 60)}" → "${newPositioning.slice(0, 60)}". Requires confirmation.`
-          : `Professional positioning updated.`,
-        confidence: isMaterial ? 0.9 : 0.7,
-        requiresConfirmation: isMaterial,
-        source: input.source ?? 'manual',
-        sourceId: input.sourceId
-      }));
-      changeNotes.push(`Positioning: "${input.currentTwin.professionalPositioning.slice(0, 50)}" → "${newPositioning.slice(0, 50)}"`);
+      deltas.push(
+        makeDelta({
+          field: 'identity/professionalPositioning',
+          previousValue: input.currentTwin.professionalPositioning,
+          proposedValue: newPositioning,
+          evidence: [] as TwinDeltaEvidence[],
+          reason: isMaterial
+            ? `Material change to professional positioning: "${input.currentTwin.professionalPositioning.slice(0, 60)}" → "${newPositioning.slice(0, 60)}". Requires confirmation.`
+            : `Professional positioning updated.`,
+          confidence: isMaterial ? 0.9 : 0.7,
+          requiresConfirmation: isMaterial,
+          source: input.source ?? 'manual',
+          sourceId: input.sourceId
+        })
+      );
+      changeNotes.push(
+        `Positioning: "${input.currentTwin.professionalPositioning.slice(0, 50)}" → "${newPositioning.slice(0, 50)}"`
+      );
     }
   }
 
@@ -205,17 +222,19 @@ export function calculateDeltas(
   if (input.newVerifiedInfo.targetAudience !== undefined) {
     const newAudience = input.newVerifiedInfo.targetAudience.trim();
     if (newAudience && newAudience !== input.currentTwin.targetAudience) {
-      deltas.push(makeDelta({
-        field: 'identity/targetAudience',
-        previousValue: input.currentTwin.targetAudience,
-        proposedValue: newAudience,
-        evidence: [] as TwinDeltaEvidence[],
-        reason: `Target audience updated.`,
-        confidence: 0.7,
-        requiresConfirmation: false,
-        source: input.source ?? 'manual',
-        sourceId: input.sourceId
-      }));
+      deltas.push(
+        makeDelta({
+          field: 'identity/targetAudience',
+          previousValue: input.currentTwin.targetAudience,
+          proposedValue: newAudience,
+          evidence: [] as TwinDeltaEvidence[],
+          reason: `Target audience updated.`,
+          confidence: 0.7,
+          requiresConfirmation: false,
+          source: input.source ?? 'manual',
+          sourceId: input.sourceId
+        })
+      );
       changeNotes.push('Target audience updated');
     }
   }
@@ -224,17 +243,19 @@ export function calculateDeltas(
   if (input.newVerifiedInfo.toneOfVoice !== undefined) {
     const newTone = input.newVerifiedInfo.toneOfVoice.trim();
     if (newTone && newTone !== input.currentTwin.toneOfVoice) {
-      deltas.push(makeDelta({
-        field: 'identity/toneOfVoice',
-        previousValue: input.currentTwin.toneOfVoice,
-        proposedValue: newTone,
-        evidence: [] as TwinDeltaEvidence[],
-        reason: `Tone of voice updated.`,
-        confidence: 0.7,
-        requiresConfirmation: config.materialFields.includes('identity/toneOfVoice'),
-        source: input.source ?? 'manual',
-        sourceId: input.sourceId
-      }));
+      deltas.push(
+        makeDelta({
+          field: 'identity/toneOfVoice',
+          previousValue: input.currentTwin.toneOfVoice,
+          proposedValue: newTone,
+          evidence: [] as TwinDeltaEvidence[],
+          reason: `Tone of voice updated.`,
+          confidence: 0.7,
+          requiresConfirmation: config.materialFields.includes('identity/toneOfVoice'),
+          source: input.source ?? 'manual',
+          sourceId: input.sourceId
+        })
+      );
       changeNotes.push('Tone of voice updated');
     }
   }
@@ -244,8 +265,7 @@ export function calculateDeltas(
     const newAreas = input.newVerifiedInfo.expertiseAreas
       .map((a) => a.trim().toLowerCase())
       .filter((a) => a.length > 0);
-    const currentAreas = input.currentTwin.expertiseAreas
-      .map((a) => a.trim().toLowerCase());
+    const currentAreas = input.currentTwin.expertiseAreas.map((a) => a.trim().toLowerCase());
 
     const added = newAreas.filter((a) => !currentAreas.includes(a));
     const removed = currentAreas.filter((a) => !newAreas.includes(a));
@@ -253,23 +273,27 @@ export function calculateDeltas(
     if (added.length > 0 || removed.length > 0) {
       const newList = [...input.currentTwin.expertiseAreas];
       for (const area of added) {
-        const original = input.newVerifiedInfo.expertiseAreas.find((a) => a.trim().toLowerCase() === area);
+        const original = input.newVerifiedInfo.expertiseAreas.find(
+          (a) => a.trim().toLowerCase() === area
+        );
         if (original && !newList.includes(original)) {
           newList.push(original);
         }
       }
 
-      deltas.push(makeDelta({
-        field: 'identity/expertiseAreas',
-        previousValue: input.currentTwin.expertiseAreas.join(', '),
-        proposedValue: newList.join(', '),
-        evidence: [] as TwinDeltaEvidence[],
-        reason: `Expertise areas updated: +${added.length} new, -${removed.length} removed.`,
-        confidence: 0.65,
-        requiresConfirmation: false,
-        source: input.source ?? 'manual',
-        sourceId: input.sourceId
-      }));
+      deltas.push(
+        makeDelta({
+          field: 'identity/expertiseAreas',
+          previousValue: input.currentTwin.expertiseAreas.join(', '),
+          proposedValue: newList.join(', '),
+          evidence: [] as TwinDeltaEvidence[],
+          reason: `Expertise areas updated: +${added.length} new, -${removed.length} removed.`,
+          confidence: 0.65,
+          requiresConfirmation: false,
+          source: input.source ?? 'manual',
+          sourceId: input.sourceId
+        })
+      );
       changeNotes.push(`Expertise areas: +${added.length}, -${removed.length}`);
     }
   }
@@ -279,8 +303,7 @@ export function calculateDeltas(
     const newSkills = input.newVerifiedInfo.skills
       .map((s) => s.trim().toLowerCase())
       .filter((s) => s.length > 0);
-    const currentSkills = input.currentTwin.skills
-      .map((s) => s.trim().toLowerCase());
+    const currentSkills = input.currentTwin.skills.map((s) => s.trim().toLowerCase());
 
     const added = newSkills.filter((s) => !currentSkills.includes(s));
     const removed = currentSkills.filter((s) => !newSkills.includes(s));
@@ -294,17 +317,19 @@ export function calculateDeltas(
         }
       }
 
-      deltas.push(makeDelta({
-        field: 'resume/skills',
-        previousValue: input.currentTwin.skills.join(', '),
-        proposedValue: newList.join(', '),
-        evidence: [] as TwinDeltaEvidence[],
-        reason: `Skills updated: +${added.length} new, -${removed.length} removed.`,
-        confidence: 0.7,
-        requiresConfirmation: config.materialFields.includes('resume/skills'),
-        source: input.source ?? 'manual',
-        sourceId: input.sourceId
-      }));
+      deltas.push(
+        makeDelta({
+          field: 'resume/skills',
+          previousValue: input.currentTwin.skills.join(', '),
+          proposedValue: newList.join(', '),
+          evidence: [] as TwinDeltaEvidence[],
+          reason: `Skills updated: +${added.length} new, -${removed.length} removed.`,
+          confidence: 0.7,
+          requiresConfirmation: config.materialFields.includes('resume/skills'),
+          source: input.source ?? 'manual',
+          sourceId: input.sourceId
+        })
+      );
       changeNotes.push(`Skills: +${added.length}, -${removed.length}`);
     }
   }
@@ -314,8 +339,7 @@ export function calculateDeltas(
     const newAchievements = input.newVerifiedInfo.achievements
       .map((a) => a.trim().toLowerCase())
       .filter((a) => a.length > 0);
-    const currentAchievements = input.currentTwin.achievements
-      .map((a) => a.trim().toLowerCase());
+    const currentAchievements = input.currentTwin.achievements.map((a) => a.trim().toLowerCase());
 
     const added = newAchievements.filter((a) => !currentAchievements.includes(a));
     const removed = currentAchievements.filter((a) => !newAchievements.includes(a));
@@ -323,23 +347,27 @@ export function calculateDeltas(
     if (added.length > 0 || removed.length > 0) {
       const newList = [...input.currentTwin.achievements];
       for (const achievement of added) {
-        const original = input.newVerifiedInfo.achievements.find((a) => a.trim().toLowerCase() === achievement);
+        const original = input.newVerifiedInfo.achievements.find(
+          (a) => a.trim().toLowerCase() === achievement
+        );
         if (original && !newList.includes(original)) {
           newList.push(original);
         }
       }
 
-      deltas.push(makeDelta({
-        field: 'resume/achievements',
-        previousValue: input.currentTwin.achievements.slice(0, 5).join('; '),
-        proposedValue: newList.slice(0, 5).join('; '),
-        evidence: [] as TwinDeltaEvidence[],
-        reason: `Achievements updated: +${added.length} new, -${removed.length} removed.`,
-        confidence: 0.75,
-        requiresConfirmation: config.materialFields.includes('resume/achievements'),
-        source: input.source ?? 'manual',
-        sourceId: input.sourceId
-      }));
+      deltas.push(
+        makeDelta({
+          field: 'resume/achievements',
+          previousValue: input.currentTwin.achievements.slice(0, 5).join('; '),
+          proposedValue: newList.slice(0, 5).join('; '),
+          evidence: [] as TwinDeltaEvidence[],
+          reason: `Achievements updated: +${added.length} new, -${removed.length} removed.`,
+          confidence: 0.75,
+          requiresConfirmation: config.materialFields.includes('resume/achievements'),
+          source: input.source ?? 'manual',
+          sourceId: input.sourceId
+        })
+      );
       changeNotes.push(`Achievements: +${added.length}, -${removed.length}`);
     }
   }
@@ -349,8 +377,7 @@ export function calculateDeltas(
     const newGoals = input.newVerifiedInfo.goals
       .map((g) => g.trim().toLowerCase())
       .filter((g) => g.length > 0);
-    const currentGoals = input.currentTwin.goals
-      .map((g) => g.trim().toLowerCase());
+    const currentGoals = input.currentTwin.goals.map((g) => g.trim().toLowerCase());
 
     const added = newGoals.filter((g) => !currentGoals.includes(g));
     const removed = currentGoals.filter((g) => !newGoals.includes(g));
@@ -364,17 +391,19 @@ export function calculateDeltas(
         }
       }
 
-      deltas.push(makeDelta({
-        field: 'goals',
-        previousValue: input.currentTwin.goals.slice(0, 5).join('; '),
-        proposedValue: newList.slice(0, 5).join('; '),
-        evidence: [] as TwinDeltaEvidence[],
-        reason: `Goals updated: +${added.length} new, -${removed.length} removed.`,
-        confidence: 0.65,
-        requiresConfirmation: false,
-        source: input.source ?? 'manual',
-        sourceId: input.sourceId
-      }));
+      deltas.push(
+        makeDelta({
+          field: 'goals',
+          previousValue: input.currentTwin.goals.slice(0, 5).join('; '),
+          proposedValue: newList.slice(0, 5).join('; '),
+          evidence: [] as TwinDeltaEvidence[],
+          reason: `Goals updated: +${added.length} new, -${removed.length} removed.`,
+          confidence: 0.65,
+          requiresConfirmation: false,
+          source: input.source ?? 'manual',
+          sourceId: input.sourceId
+        })
+      );
       changeNotes.push(`Goals: +${added.length}, -${removed.length}`);
     }
   }
@@ -383,9 +412,7 @@ export function calculateDeltas(
   const trimmedDeltas = deltas.slice(0, config.maxDeltasPerBatch);
 
   const hasMaterialChanges = trimmedDeltas.some((d) => d.requiresConfirmation);
-  const changeSummary = changeNotes.length > 0
-    ? changeNotes.join('; ')
-    : 'No changes detected.';
+  const changeSummary = changeNotes.length > 0 ? changeNotes.join('; ') : 'No changes detected.';
 
   return {
     deltas: trimmedDeltas,
@@ -408,9 +435,7 @@ export interface CreateProposalResult {
   proposal: TwinUpdateProposal;
 }
 
-export function createTwinUpdateProposal(
-  input: CreateProposalInput
-): CreateProposalResult {
+export function createTwinUpdateProposal(input: CreateProposalInput): CreateProposalResult {
   if (input.deltas.length === 0) {
     throw new Error('Cannot create proposal with no deltas.');
   }
@@ -422,9 +447,14 @@ export function createTwinUpdateProposal(
     id: `proposal-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     workspaceId: input.deltas[0].workspaceId,
     deltas: input.deltas,
-    summary: input.deltas.map((d) => `${d.field}: "${d.previousValue.slice(0, 40)}" → "${d.proposedValue.slice(0, 40)}"`).join('; '),
+    summary: input.deltas
+      .map(
+        (d) => `${d.field}: "${d.previousValue.slice(0, 40)}" → "${d.proposedValue.slice(0, 40)}"`
+      )
+      .join('; '),
     confidence: maxConfidence,
-    reason: input.reason ?? `Proposed by Twin Delta Engine. ${input.deltas.length} field(s) to update.`,
+    reason:
+      input.reason ?? `Proposed by Twin Delta Engine. ${input.deltas.length} field(s) to update.`,
     requiresConfirmation,
     evidence: [],
     source: input.source ?? 'twin-delta-engine',
@@ -457,9 +487,7 @@ export interface ApplyDeltasResult {
   newTwinState: CurrentTwinState;
 }
 
-export function applyDeltas(
-  input: ApplyDeltasInput
-): ApplyDeltasResult {
+export function applyDeltas(input: ApplyDeltasInput): ApplyDeltasResult {
   const appliedDeltas: TwinDelta[] = [];
   const rejectedDeltas: TwinDelta[] = [];
   const editedDeltas: TwinDelta[] = [];
@@ -499,16 +527,28 @@ export function applyDeltas(
         updatedTwin.toneOfVoice = finalValue;
         break;
       case 'identity/expertiseAreas':
-        updatedTwin.expertiseAreas = finalValue.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+        updatedTwin.expertiseAreas = finalValue
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
         break;
       case 'resume/skills':
-        updatedTwin.skills = finalValue.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+        updatedTwin.skills = finalValue
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
         break;
       case 'resume/achievements':
-        updatedTwin.achievements = finalValue.split(';').map((s) => s.trim()).filter((s) => s.length > 0);
+        updatedTwin.achievements = finalValue
+          .split(';')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
         break;
       case 'goals':
-        updatedTwin.goals = finalValue.split(';').map((s) => s.trim()).filter((s) => s.length > 0);
+        updatedTwin.goals = finalValue
+          .split(';')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
         break;
       default:
         // Unknown field — skip

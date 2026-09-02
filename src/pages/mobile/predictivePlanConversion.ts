@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { PredictiveOpportunitySuggestion } from '../../services/plan/predictiveOpportunityLayer';
 import type { OperationalPlanCard } from './PlanOperationalStudio';
 
@@ -119,7 +120,7 @@ export function buildOperationalPlanFromPredictiveSuggestion(
     kind: template.kind,
     promise:
       'Converted from a predictive opportunity. Preview, edit, approve, retry, or export before any execution.',
-    previewCommand: `ask: Convert this predictive opportunity into a reusable operational plan. Include operating stages, repeatable checklist, triggers, owner handoffs, approval gates, risks, success metrics, and receipt expectations. Do not execute externally or mutate workspace records.\n\nOpportunity: ${suggestion.title}\nType: ${suggestion.kind}\nSuggestion: ${suggestion.suggestion}\nWhy this appeared: ${suggestion.whyThisAppeared}\nConfidence: ${suggestion.confidence}%\nSupporting signals: ${supportingSignals.join(' | ')}\nExpected impact: ${suggestion.expectedImpact}\nOffer to the user: Convert this into a reusable operational plan.`,
+    previewCommand: `ask: Convert this predictive opportunity into a reusable operational plan. Include operating stages, repeatable checklist, triggers, owner handoffs, approval gates, risks, success metrics, and receipt expectations. Do not execute externally or mutate workspace records.\n\nOpportunity: ${quoteContextValue(suggestion.title)}\nType: ${suggestion.kind}\nSuggestion: ${quoteContextValue(suggestion.suggestion)}\nWhy this appeared: ${quoteContextValue(suggestion.whyThisAppeared)}\nConfidence: ${suggestion.confidence}%\nSupporting signals: ${supportingSignals.map((s) => quoteContextValue(s)).join(' | ')}\nExpected impact: ${quoteContextValue(suggestion.expectedImpact)}\nOffer to the user: Convert this into a reusable operational plan.`,
     approveCommand: template.approveCommand,
     editTarget: 'palette',
     status: 'needs-input',

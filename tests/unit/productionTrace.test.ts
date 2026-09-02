@@ -16,9 +16,8 @@ import {
   failTrace,
   getTraceId,
   propagateTraceToAITraceBundle,
-  buildCheckpoint,
   traceHasActiveStep,
-  type TraceWorkflowType,
+  type TraceWorkflowType
 } from '../../src/services/tracing/productionTrace';
 
 const WS_ID = 'ws-trace-test';
@@ -49,7 +48,7 @@ describe('Production Trace — Creation', () => {
     const trace = startTrace({
       workflowType: 'execution',
       workspaceId: WS_ID,
-      initialMetadata: { planId: 'plan-1', intent: 'deploy' },
+      initialMetadata: { planId: 'plan-1', intent: 'deploy' }
     });
     expect(trace.steps).toHaveLength(1);
     expect(trace.steps[0].stepType).toBe('CHECKPOINT');
@@ -112,7 +111,7 @@ describe('Production Trace — Step Recording', () => {
     const trace = startTrace({ workflowType: 'ask', workspaceId: WS_ID });
     const ctx = recordStep(trace.traceId, {
       stepType: 'MODEL_CALL',
-      metadata: { model: 'gpt-4', tokens: 1000 },
+      metadata: { model: 'gpt-4', tokens: 1000 }
     });
     expect(ctx!.steps[0].metadata).toEqual({ model: 'gpt-4', tokens: 1000 });
   });
@@ -123,7 +122,11 @@ describe('Production Trace — Step Completion', () => {
     const trace = startTrace({ workflowType: 'ask', workspaceId: WS_ID });
     const ctx1 = recordStep(trace.traceId, { stepType: 'MODEL_CALL' });
     const stepId = ctx1!.steps[0].stepId;
-    const ctx2 = completeStep(trace.traceId, { stepId, status: 'COMPLETED', tokensUsed: { input: 100, output: 50 } });
+    const ctx2 = completeStep(trace.traceId, {
+      stepId,
+      status: 'COMPLETED',
+      tokensUsed: { input: 100, output: 50 }
+    });
     const step = ctx2!.steps[0];
     expect(step.status).toBe('COMPLETED');
     expect(step.endedAt).toBeDefined();
@@ -138,7 +141,7 @@ describe('Production Trace — Step Completion', () => {
     const ctx2 = completeStep(trace.traceId, {
       stepId,
       status: 'FAILED',
-      error: { code: 'TIMEOUT', message: 'External service timed out' },
+      error: { code: 'TIMEOUT', message: 'External service timed out' }
     });
     expect(ctx2!.steps[0].status).toBe('FAILED');
     expect(ctx2!.steps[0].error).toBeDefined();
@@ -203,7 +206,9 @@ describe('Production Trace — Completion', () => {
   it('failTrace returns FAILED record', () => {
     const trace = startTrace({ workflowType: 'execution', workspaceId: WS_ID });
     recordStep(trace.traceId, { stepType: 'EXTERNAL_EXECUTION' });
-    const record = failTrace(trace.traceId, { error: { code: 'FATAL', message: 'Unrecoverable error' } });
+    const record = failTrace(trace.traceId, {
+      error: { code: 'FATAL', message: 'Unrecoverable error' }
+    });
     expect(record).toBeDefined();
     expect(record!.status).toBe('FAILED');
     expect(record!.summary).toContain('FAILED');
@@ -211,7 +216,10 @@ describe('Production Trace — Completion', () => {
 
   it('completeTrace with custom summary', () => {
     const trace = startTrace({ workflowType: 'ask', workspaceId: WS_ID });
-    const record = completeTrace(trace.traceId, { summary: 'Custom summary', relatedEntities: ['plan-1', 'artifact-2'] });
+    const record = completeTrace(trace.traceId, {
+      summary: 'Custom summary',
+      relatedEntities: ['plan-1', 'artifact-2']
+    });
     expect(record!.summary).toBe('Custom summary');
     expect(record!.relatedEntities).toEqual(['plan-1', 'artifact-2']);
   });
@@ -236,11 +244,10 @@ describe('Production Trace — Trace Propagation', () => {
     expect(propagated.trace_id).toBe(trace.traceId);
   });
 
-  it('buildCheckpoint includes traceId when provided', () => {
-    const trace = startTrace({ workflowType: 'plan', workspaceId: WS_ID });
-    const checkpoint = buildCheckpoint({ conversationId: 'conv-1', traceId: trace.traceId, content: 'checkpoint content' } as any);
-    expect(checkpoint.traceId).toBe(trace.traceId);
-  });
+  // Removed: `buildCheckpoint` here was a passthrough shadowing the real
+  // checkpoint builder, and this test asserted it through an `as any` cast that
+  // supplied a field the function did not have. Trace-id propagation is covered
+  // by the `propagateTraceToAITraceBundle` tests above.
 
   it('traceHasActiveStep returns true when step is running', () => {
     const trace = startTrace({ workflowType: 'ask', workspaceId: WS_ID });

@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { MobileWorkspaceSnapshot } from './buildWorkspaceSnapshot';
 import type { TwinSupportedActionType } from '../../types/domain';
 import { twinActionPrompt } from '../../services/digitalTwin/digitalTwin';
@@ -56,15 +57,21 @@ function twinPlanPrefix(snapshot: MobileWorkspaceSnapshot): string {
     .filter(Boolean)
     .join('; ');
   const missing = twin.memory.missingInfo.length
-    ? `Missing info: ${twin.memory.missingInfo.join('; ')}. Ask for clarification before using missing facts.`
+    ? `Missing info: ${twin.memory.missingInfo.map((item) => quoteContextValue(item)).join('; ')}. Ask for clarification before using missing facts.`
     : 'If any required fact is missing, ask for clarification instead of inventing it.';
-  return `In active twin context for ${twin.displayName}, use this voice: ${twin.identity.toneOfVoice}. Positioning: ${twin.identity.professionalPositioning || twin.identity.summary}. Verified facts: ${verified || 'use only reviewed profile data'}. ${memoryContext} ${missing}`;
+  return `In active twin context for ${twin.displayName}, use this voice: ${quoteContextValue(twin.identity.toneOfVoice)}. Positioning: ${quoteContextValue(twin.identity.professionalPositioning || twin.identity.summary)}. Verified facts: ${quoteContextValue(verified || 'use only reviewed profile data')}. ${memoryContext} ${missing}`;
 }
 
 function twinAwareAsk(snapshot: MobileWorkspaceSnapshot, task: string): string {
   const prefix = twinPlanPrefix(snapshot);
   const expert = snapshot.expertOperator;
-  const planningContext = `Planning context: ${expert.professionPath} profile, ${expert.workflowType.replace(/_/g, ' ')} workflow. Recommended sequence: ${expert.plan.guidance.slice(0, 3).join(' | ')}. Execution guidance: ${expert.operate.guidance.slice(0, 3).join(' | ')}. Keep execution approval-gated.`;
+  const planningContext = `Planning context: ${expert.professionPath} profile, ${expert.workflowType.replace(/_/g, ' ')} workflow. Recommended sequence: ${expert.plan.guidance
+    .slice(0, 3)
+    .map((item) => quoteContextValue(item))
+    .join(' | ')}. Execution guidance: ${expert.operate.guidance
+    .slice(0, 3)
+    .map((item) => quoteContextValue(item))
+    .join(' | ')}. Keep execution approval-gated.`;
   return `ask: ${prefix ? `${prefix}\n\n` : ''}${planningContext}\n\n${task}`;
 }
 
@@ -109,7 +116,8 @@ export function buildOperationalPlanCards(
       id: 'outreach-plan',
       title: 'Outreach Plan',
       kind: 'outreach',
-      promise: 'Convert positioning and proof into draft outreach, follow-ups, and approvals — with execution receipts that strengthen the twin.',
+      promise:
+        'Convert positioning and proof into draft outreach, follow-ups, and approvals — with execution receipts that strengthen the twin.',
       previewCommand: twinPrompt(
         snapshot,
         'draft_outreach',
@@ -132,7 +140,8 @@ export function buildOperationalPlanCards(
       id: 'content-calendar',
       title: 'Content Calendar',
       kind: 'content-calendar',
-      promise: 'Transform twin ideas into a repeatable content calendar and publish queue — verified posts feed back into positioning intelligence.',
+      promise:
+        'Transform twin ideas into a repeatable content calendar and publish queue — verified posts feed back into positioning intelligence.',
       previewCommand: twinPrompt(
         snapshot,
         'create_30_day_content_plan',
@@ -184,7 +193,8 @@ export function buildOperationalPlanCards(
       id: 'approval-flow',
       title: 'Approval Flow',
       kind: 'approval-flow',
-      promise: 'Keep AI-generated work gated by human review, approval, retry, and export — verified outcomes strengthen future predictions.',
+      promise:
+        'Keep AI-generated work gated by human review, approval, retry, and export — verified outcomes strengthen future predictions.',
       previewCommand: twinAwareAsk(
         snapshot,
         'Review my pending approvals and explain what needs human confirmation before execution. Flag unsupported claims and ask for missing facts.'

@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData, DigitalTwin } from '../../types/domain';
 import { buildPlatformAwareAskReadout } from '../ai/platformAwareAskContext';
 import { buildConnectedIdentityEngineReadout } from '../connectedIdentity/connectedIdentityEngine';
@@ -224,7 +225,7 @@ function first(values: string[], fallback: string): string {
 }
 
 function commandFor(item: Omit<ContentIdeationItem, 'askToPlanCommand'>): string {
-  return `ask: Convert this predictive content idea into a PLAN-ready content workflow. Include content objective, target audience, format, outline, approval gate, repurposing path, schedule recommendation, success metric, and receipt expectations. Do not publish, schedule, sync, or mutate workspace records automatically.\n\nIdea: ${item.title}\nKind: ${item.kind}\nWhy now: ${item.whyNow}\nConfidence: ${item.confidence}%\nEvidence: ${item.evidenceUsed.join(' | ')}\nExpected impact: ${item.expectedImpact}\nSuggested format: ${item.suggestedFormat}`;
+  return `ask: Convert this predictive content idea into a PLAN-ready content workflow. Include content objective, target audience, format, outline, approval gate, repurposing path, schedule recommendation, success metric, and receipt expectations. Do not publish, schedule, sync, or mutate workspace records automatically.\n\nIdea: ${quoteContextValue(item.title)}\nKind: ${item.kind}\nWhy now: ${quoteContextValue(item.whyNow)}\nConfidence: ${item.confidence}%\nEvidence: ${quoteContextValue(item.evidenceUsed.join(' | '))}\nExpected impact: ${quoteContextValue(item.expectedImpact)}\nSuggested format: ${quoteContextValue(item.suggestedFormat)}`;
 }
 
 function item(input: Omit<ContentIdeationItem, 'askToPlanCommand'>): ContentIdeationItem {

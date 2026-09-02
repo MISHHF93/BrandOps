@@ -35,9 +35,7 @@ export function SettingsAiRoutingPanel({
         expose routing scores inside system prompts for troubleshooting.
       </p>
       <div className="mt-3">
-        <p className="text-fine font-medium uppercase tracking-wide text-textMuted">
-          Routing mode
-        </p>
+        <p className="text-fine font-medium uppercase tracking-wide text-textMuted">Routing mode</p>
         <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
           {MODE_OPTIONS.map((opt) => (
             <button

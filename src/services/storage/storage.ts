@@ -59,7 +59,8 @@ import {
 } from '../../types/domain';
 import { SUPPORTED_TWIN_ACTIONS } from '../digitalTwin/digitalTwin';
 import { ALL_INTEGRATION_SOURCE_KINDS } from '../../shared/integrations/integrationSourceCatalog';
-import { AGENT_CAPABILITY_IDS,
+import {
+  AGENT_CAPABILITY_IDS,
   AgentCapabilityId,
   AgentProposal,
   AgentProposalStatus,
@@ -2576,6 +2577,17 @@ const normalizeAgentSessions = (value: unknown): ExternalAgentSessionsState => {
     };
     if (typeof e.revokedAt === 'string') session.revokedAt = e.revokedAt;
     if (typeof e.expiresAt === 'string') session.expiresAt = e.expiresAt;
+    // An operator-set trust ceiling must survive a reload, or a session that
+    // was deliberately capped silently regains its full grants on next boot.
+    if (
+      e.trustCeiling === 'NONE' ||
+      e.trustCeiling === 'READ_ONLY' ||
+      e.trustCeiling === 'CONTEXT_CONSUMER' ||
+      e.trustCeiling === 'PROPOSER' ||
+      e.trustCeiling === 'ACTION_REQUESTER'
+    ) {
+      session.trustCeiling = e.trustCeiling;
+    }
     return [session];
   });
   return {
@@ -2662,7 +2674,8 @@ const normalizeAgentProposals = (value: unknown): AgentProposalsState => {
       e.kind === 'twin_update' ||
       e.kind === 'artifact' ||
       e.kind === 'content_opportunity' ||
-      e.kind === 'external_action'
+      e.kind === 'external_action' ||
+      e.kind === 'promotion'
         ? e.kind
         : 'external_action';
     const tier =
@@ -2686,10 +2699,27 @@ const normalizeAgentProposals = (value: unknown): AgentProposalsState => {
       status: isAgentProposalStatus(e.status) ? e.status : 'pending',
       tier,
       checkpointId: typeof e.checkpointId === 'string' ? e.checkpointId.slice(0, 160) : undefined,
+      // A promotion proposal is worthless after a reload without its target: the
+      // approval surface would show a request nobody could act on.
+      promotion:
+        e.promotion &&
+        typeof e.promotion === 'object' &&
+        ((e.promotion as Record<string, unknown>).action === 'verify-achievement' ||
+          (e.promotion as Record<string, unknown>).action === 'accept-twin-proposal') &&
+        typeof (e.promotion as Record<string, unknown>).targetId === 'string'
+          ? {
+              action: (e.promotion as { action: 'verify-achievement' | 'accept-twin-proposal' })
+                .action,
+              targetId: String((e.promotion as { targetId: string }).targetId).slice(0, 160)
+            }
+          : undefined,
       createdAt: asIsoString(e.createdAt, nowIso),
       updatedAt: asIsoString(e.updatedAt, nowIso)
     };
     if (typeof e.planId === 'string') proposal.planId = e.planId;
+    // MCP task handle for execution requests — must survive the round trip or a
+    // task the agent is polling becomes unreachable after a reload.
+    if (typeof e.taskId === 'string') proposal.taskId = e.taskId.slice(0, 160);
     if (typeof e.decidedAt === 'string') proposal.decidedAt = e.decidedAt;
     if (typeof e.relatedEventId === 'string') proposal.relatedEventId = e.relatedEventId;
     if (
@@ -2881,6 +2911,38 @@ export function createInMemorySeededWorkspace(): BrandOpsData {
 }
 
 /**
+ * Typed failure surfaced when the underlying storage adapter cannot persist a
+ * write (quota exceeded, IO error, denied permission). Lets callers distinguish
+ * a real storage failure from malformed/corrupt payload handling without
+ * catching bare `Error` and re-scanning message text for evidence.
+ */
+export class StorageWriteError extends Error {
+  constructor(
+    message: string,
+    readonly key: string
+  ) {
+    super(message);
+    this.name = 'StorageWriteError';
+  }
+}
+
+/**
+ * Persist a normalized workspace blob, translating any adapter-level write
+ * failure into a typed `StorageWriteError`. The normalized value is never
+ * partially stored by this layer: either the adapter persists it whole or we
+ * surface the failure (fail-closed) so callers never mistake a silent IO error
+ * for a successful write.
+ */
+const persistWorkspace = async (value: BrandOpsData): Promise<void> => {
+  try {
+    await activeStorage.set(DATA_KEY, value);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new StorageWriteError(`Failed to persist workspace: ${detail}`, DATA_KEY);
+  }
+};
+
+/**
  * Read the raw persisted blob plus a normalized copy. Seeding (first boot) and
  * self-healing of a corrupt blob write here and only here, so a plain read never
  * re-persists the whole workspace (removes the old unconditional write-on-read).
@@ -2896,7 +2958,13 @@ const readWorkspace = async (): Promise<{ raw: unknown; data: BrandOpsData }> =>
   }
 
   const seeded = createSeededWorkspace();
-  await activeStorage.set(DATA_KEY, seeded);
+  try {
+    await activeStorage.set(DATA_KEY, seeded);
+  } catch {
+    // Persistence is unavailable (quota/IO). Still hand the caller a valid,
+    // normalized in-memory workspace so the app can boot rather than bricking
+    // the whole read on a failing write.
+  }
   return { raw: seeded, data: seeded };
 };
 
@@ -2952,13 +3020,13 @@ export const storageService = {
 
   async setData(data: BrandOpsData): Promise<BrandOpsData> {
     const normalized = withDefaults(data);
-    await activeStorage.set(DATA_KEY, normalized);
+    await persistWorkspace(normalized);
     return normalized;
   },
 
   async resetToSeed(): Promise<BrandOpsData> {
     const seeded = createSeededWorkspace();
-    await activeStorage.set(DATA_KEY, seeded);
+    await persistWorkspace(seeded);
     return seeded;
   },
 
@@ -2996,7 +3064,7 @@ export const storageService = {
     }
 
     const normalized = withDefaults(parsed);
-    await activeStorage.set(DATA_KEY, normalized);
+    await persistWorkspace(normalized);
     return normalized;
   }
 };

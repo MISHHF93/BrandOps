@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../interop/validation';
 import type { BrandOpsData, DigitalTwin } from '../../types/domain';
 import { buildPlatformAwareAskReadout } from '../ai/platformAwareAskContext';
 import { buildConnectedIdentityEngineReadout } from '../connectedIdentity/connectedIdentityEngine';
@@ -83,6 +84,38 @@ function uniq(values: string[], cap = 8): string[] {
     if (out.length >= cap) break;
   }
   return out;
+}
+
+/**
+ * A signal that reports nothing is not evidence for anything.
+ *
+ * Confidence is computed from how many signals a suggestion has, and the signal
+ * collectors emit a line per fact whether or not the fact exists:
+ * `"Connected apps: none"`, `"0 active opportunities"`, `"0 open follow-ups"`,
+ * `"0 outreach drafts"`. Each of those added two points.
+ *
+ * So a workspace scored **higher for being empty**. "Identify growth
+ * opportunities from profile and pipeline" came out at **85% confidence** on a
+ * brand-new workspace, with seven supporting signals, every one of which said
+ * there was nothing there.
+ *
+ * Deliberately narrow: a leading zero count, or an explicit "none". A real
+ * signal that merely contains a zero somewhere still counts as evidence.
+ */
+export function isAbsenceSignal(signal: string): boolean {
+  const text = signal.trim().toLowerCase();
+  return /^0\s/.test(text) || /:\s*none$/.test(text) || /\bnone$/.test(text);
+}
+
+/**
+ * The signals that actually say something, which are the ones worth counting.
+ *
+ * Takes both shapes the collectors produce: plain strings, where a line can
+ * report absence, and structured signals, which only exist when there is
+ * something to describe.
+ */
+function evidence(...groups: Array<ReadonlyArray<unknown>>): unknown[] {
+  return groups.flat().filter((signal) => typeof signal !== 'string' || !isAbsenceSignal(signal));
 }
 
 function score(input: {
@@ -216,16 +249,46 @@ function platformSignals(workspace: BrandOpsData): string[] {
 }
 
 function commandFor(suggestion: Omit<PredictiveOpportunitySuggestion, 'previewCommand'>): string {
-  return `ask: Review this Predictive Opportunity Layer suggestion and convert it into a PLAN preview only. Do not execute externally or mutate workspace records. Include the why, confidence, supporting signals, expected impact, approval requirements, risks, editable draft steps, and receipt expectations.\n\nType: ${suggestion.kind}\nTitle: ${suggestion.title}\nSuggestion: ${suggestion.suggestion}\nWhy this appeared: ${suggestion.whyThisAppeared}\nConfidence: ${suggestion.confidence}%\nGenerated from: ${suggestion.generatedFrom.join(', ')}\nSupporting signals: ${suggestion.supportingSignals.join(' | ')}\nExpected impact: ${suggestion.expectedImpact}\nApproval policy: ${APPROVAL_POLICY}`;
+  return `ask: Review this Predictive Opportunity Layer suggestion and convert it into a PLAN preview only. Do not execute externally or mutate workspace records. Include the why, confidence, supporting signals, expected impact, approval requirements, risks, editable draft steps, and receipt expectations.\n\nType: ${suggestion.kind}\nTitle: ${quoteContextValue(suggestion.title)}\nSuggestion: ${quoteContextValue(suggestion.suggestion)}\nWhy this appeared: ${quoteContextValue(suggestion.whyThisAppeared)}\nConfidence: ${suggestion.confidence}%\nGenerated from: ${quoteContextValue(suggestion.generatedFrom.join(', '))}\nSupporting signals: ${quoteContextValue(suggestion.supportingSignals.join(' | '))}\nExpected impact: ${quoteContextValue(suggestion.expectedImpact)}\nApproval policy: ${APPROVAL_POLICY}`;
 }
 
 function makeSuggestion(
   input: Omit<PredictiveOpportunitySuggestion, 'approvalRequired' | 'previewCommand'>
 ): PredictiveOpportunitySuggestion {
+  /**
+   * A supporting signal has to support something.
+   *
+   * The displayed list carried lines like `"0 outreach drafts"` and
+   * `"Connected apps: none"` under the heading "supporting signals" — evidence
+   * that there is no evidence. Removing them means a suggestion built on nothing
+   * falls through to the fallback below and says so, which is the honest thing
+   * for it to say.
+   */
+  const supporting = input.supportingSignals.filter((signal) => !isAbsenceSignal(signal));
+  /**
+   * Named sources only earn their bonus when they produced something.
+   *
+   * `score()` adds four points per entry in the `sources` list, up to twenty —
+   * and that list is a hardcoded literal at every call site. It says
+   * `['profession', 'twin-profile', 'connected-platforms', 'memory-patterns']`
+   * whether or not a single platform is connected or a single memory exists, so
+   * an empty workspace collected the full bonus for sources that had nothing in
+   * them.
+   *
+   * When no supporting signal survives the absence filter, that credit is
+   * withdrawn. The suggestion may still be worth offering — it is, and it still
+   * appears — but it is offered as a suggestion rather than as a near-certainty
+   * derived from evidence nobody has.
+   */
+  const unsupported = supporting.length === 0;
+  const confidence = unsupported
+    ? Math.max(0, input.confidence - Math.min(input.generatedFrom.length * 4, 20))
+    : input.confidence;
   const draft = {
     ...input,
-    supportingSignals: input.supportingSignals.length
-      ? input.supportingSignals
+    confidence,
+    supportingSignals: supporting.length
+      ? supporting
       : [
           'Workspace profile and local operational context are available; connect more sources to strengthen this suggestion.'
         ],
@@ -275,7 +338,7 @@ export function buildPredictiveOpportunityLayerReadout(
       confidence: score({
         base: 48,
         sources: ['profession', 'twin-profile', 'memory-patterns'],
-        signalCount: profession.length + twinProfile.length,
+        signalCount: evidence(profession, twinProfile).length,
         hasTwin,
         platformCount: activePlatforms,
         memoryCount: memory.length
@@ -295,7 +358,7 @@ export function buildPredictiveOpportunityLayerReadout(
       confidence: score({
         base: 52,
         sources: ['profession', 'twin-profile', 'connected-platforms', 'memory-patterns'],
-        signalCount: profession.length + twinProfile.length + platforms.length,
+        signalCount: evidence(profession, twinProfile, platforms).length,
         hasTwin,
         platformCount: activePlatforms,
         memoryCount: memory.length
@@ -315,7 +378,7 @@ export function buildPredictiveOpportunityLayerReadout(
       confidence: score({
         base: 55,
         sources: ['connected-platforms', 'recent-actions', 'behavioral-history', 'memory-patterns'],
-        signalCount: outreachSignals.length + closeSignals.length + recentActions.length,
+        signalCount: evidence(outreachSignals, closeSignals, recentActions).length,
         hasTwin,
         platformCount: activePlatforms,
         memoryCount: memory.length
@@ -349,7 +412,7 @@ export function buildPredictiveOpportunityLayerReadout(
       confidence: score({
         base: 54,
         sources: ['profession', 'connected-platforms', 'behavioral-history', 'memory-patterns'],
-        signalCount: contentSignals.length + workspace.publishingQueue.length + memory.length,
+        signalCount: evidence(contentSignals, memory).length + workspace.publishingQueue.length,
         hasTwin,
         platformCount: activePlatforms,
         memoryCount: memory.length
@@ -378,7 +441,7 @@ export function buildPredictiveOpportunityLayerReadout(
       confidence: score({
         base: 53,
         sources: ['connected-platforms', 'recent-actions', 'behavioral-history'],
-        signalCount: openTasks.length + behavior.length + recentActions.length,
+        signalCount: evidence(recentActions).length + openTasks.length + behavior.length,
         hasTwin,
         platformCount: activePlatforms,
         memoryCount: memory.length
@@ -405,7 +468,8 @@ export function buildPredictiveOpportunityLayerReadout(
       confidence: score({
         base: 56,
         sources: ['recent-actions', 'behavioral-history', 'memory-patterns'],
-        signalCount: followUpRisk.length + openTasks.length + behavioral.predictions.length,
+        signalCount:
+          evidence(followUpRisk).length + openTasks.length + behavioral.predictions.length,
         hasTwin,
         platformCount: activePlatforms,
         memoryCount: memory.length
@@ -435,7 +499,7 @@ export function buildPredictiveOpportunityLayerReadout(
       confidence: score({
         base: 58,
         sources: ['connected-platforms', 'recent-actions', 'behavioral-history'],
-        signalCount: followUpRisk.length + outreachSignals.length + closeSignals.length,
+        signalCount: evidence(followUpRisk, outreachSignals, closeSignals).length,
         hasTwin,
         platformCount: activePlatforms,
         memoryCount: memory.length
@@ -463,8 +527,7 @@ export function buildPredictiveOpportunityLayerReadout(
       confidence: score({
         base: 51,
         sources: ['profession', 'twin-profile', 'connected-platforms', 'memory-patterns'],
-        signalCount:
-          closeSignals.length + contentSignals.length + profession.length + twinProfile.length,
+        signalCount: evidence(closeSignals, contentSignals, profession, twinProfile).length,
         hasTwin,
         platformCount: activePlatforms,
         memoryCount: memory.length

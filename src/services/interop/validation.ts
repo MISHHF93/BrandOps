@@ -47,7 +47,8 @@ const INJECTION_PATTERNS: ReadonlyArray<{ pattern: RegExp; label: string }> = [
     label: 'markup-injection attempt'
   },
   {
-    pattern: /\breveal\s+(your|the)\s+(?:(?:system|hidden)\s+)*(?:system|hidden)\s+(?:prompt|instructions?)\b/i,
+    pattern:
+      /\breveal\s+(your|the)\s+(?:(?:system|hidden)\s+)*(?:system|hidden)\s+(?:prompt|instructions?)\b/i,
     label: 'prompt-exfiltration attempt'
   },
   {
@@ -167,4 +168,69 @@ export function assertIdempotencyKey(value: unknown): string | undefined {
     );
   }
   return value.trim();
+}
+
+/**
+ * Quote a short workspace value that is about to be interpolated into a prompt.
+ *
+ * `screenAttachedText` fences a whole *document*: multi-line, delimited, with an
+ * instruction telling the model to treat it as data. That shape does not fit a
+ * one-line field inside a `Field: value` list, and the Opportunity Engine builds
+ * exactly that — then interpolated artifact titles and summaries into it raw.
+ *
+ * Adversarial probing walked an artifact summary straight into the model-bound
+ * command, carrying its own `ask:` directive and a forged `Expected impact:`
+ * line. The artifact was legitimate in every other sense: a user had approved it
+ * as a *document*. Approving a document is not approving its contents as
+ * instructions, and the two had become the same thing.
+ *
+ * Two defences, because they fail differently. Collapsing whitespace stops a
+ * value forging additional fields — the framing is line-oriented, so a newline
+ * is a structural character here, not cosmetic. Neutralising role markers stops
+ * a value that stays on one line from still reading as a new turn.
+ */
+export function quoteContextValue(value: string, maxLength = 240): string {
+  const verdict = detectPromptInjection(value);
+  if (verdict.injected) {
+    // Refused rather than quoted. A value matching an override signature has no
+    // legitimate reading as context, so there is nothing to preserve.
+    return `[removed: matched an injection signature${verdict.reason ? ` — ${verdict.reason}` : ''}]`;
+  }
+
+  const flattened = value
+    // eslint-disable-next-line no-control-regex -- control characters are the point
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  /**
+   * Applied anywhere, not only at what looks like a sentence boundary.
+   *
+   * The first version anchored to `^` or `[.!?]\s+`, reasoning that "ask:"
+   * mid-sentence is ordinary prose. The probe walked straight past it: the
+   * injected directive arrived as `… Expected impact: high ask: Ignore the plan
+   * above`, where `ask:` follows an ordinary word. An attacker chooses the
+   * preceding character, so anchoring on it defends nothing.
+   *
+   * The cost is a zero-width joiner inside rare legitimate prose, in a string
+   * assembled for a model rather than displayed as copy. That is the cheaper
+   * error by a wide margin.
+   */
+  const neutralized = flattened.replace(
+    /\b(ask|system|assistant|user|human|instruction|prompt)\s*:/gi,
+    '$1⁠:'
+  );
+
+  const capped =
+    neutralized.length > maxLength ? `${neutralized.slice(0, maxLength)}…` : neutralized;
+
+  /**
+   * Quoted, so the boundary is structural rather than implied.
+   *
+   * The surrounding template is a `Field: value` list. Without delimiters a
+   * value can simply *look* like the next field — the probe's summary carried a
+   * forged `Expected impact:` line that read as part of the template itself.
+   * Signature detection cannot be relied on for that; a boundary can.
+   */
+  return `"${capped.replace(/"/g, "'")}"`;
 }

@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData, SchedulerTask } from '../../types/domain';
 import { buildPlatformAwareAskReadout } from '../ai/platformAwareAskContext';
 import { localIntelligence } from './localIntelligence';
@@ -165,7 +166,7 @@ function buildCommand(input: {
   confidence: number;
   evidence: string[];
 }): string {
-  return `ask: Review this Behavioral Intelligence Engine prediction and turn it into a PLAN preview only. Do not execute externally or mutate workspace records. Include approval requirements, source evidence, risks, editable draft steps, and receipt expectations.\n\nPrediction: ${input.title}\nConfidence: ${input.confidence}%\nRationale: ${input.rationale}\nEvidence: ${input.evidence.join(' | ')}\nApproval gate: ${APPROVAL_GATE}`;
+  return `ask: Review this Behavioral Intelligence Engine prediction and turn it into a PLAN preview only. Do not execute externally or mutate workspace records. Include approval requirements, source evidence, risks, editable draft steps, and receipt expectations.\n\nPrediction: ${quoteContextValue(input.title)}\nConfidence: ${input.confidence}%\nRationale: ${quoteContextValue(input.rationale)}\nEvidence: ${quoteContextValue(input.evidence.join(' | '))}\nApproval gate: ${APPROVAL_GATE}`;
 }
 
 function prediction(input: {

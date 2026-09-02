@@ -6,10 +6,7 @@ import { executeAgentToolCall } from '../../src/services/interop/gateway';
 import { createAgentSession } from '../../src/services/interop/sessions';
 import { reviewAgentEvent, promoteAgentEventToTwin } from '../../src/services/interop/events';
 import { createDigitalTwinFromText } from '../../src/services/digitalTwin/digitalTwin';
-import {
-  recordLearningSignal,
-  recordOutcome
-} from '../../src/services/builder/outcomeLearning';
+import { recordLearningSignal, recordOutcome } from '../../src/services/builder/outcomeLearning';
 import { verifyPlanOutcomes } from '../../src/services/execution/planVerifier';
 import { CONTEXT_BUNDLE_IDS } from '../../src/types/agentInterop';
 
@@ -47,7 +44,12 @@ describe('concurrency & failure-injection', () => {
       token: created.token,
       call: {
         capabilityId: 'achievement.record',
-        args: { kind: 'feature_completed', title: 'Ship analytics export', detail: 'Merged.', dedupeKey: 'analytic-export' }
+        args: {
+          kind: 'feature_completed',
+          title: 'Ship analytics export',
+          detail: 'Merged.',
+          dedupeKey: 'analytic-export'
+        }
       }
     });
     expect(first.result.ok).toBe(true);
@@ -61,7 +63,12 @@ describe('concurrency & failure-injection', () => {
       token: created.token,
       call: {
         capabilityId: 'achievement.record',
-        args: { kind: 'feature_completed', title: 'Ship analytics export', detail: 'Merged.', dedupeKey: 'analytic-export' }
+        args: {
+          kind: 'feature_completed',
+          title: 'Ship analytics export',
+          detail: 'Merged.',
+          dedupeKey: 'analytic-export'
+        }
       }
     });
     expect(replay.result.data.deduplicated).toBe(true);

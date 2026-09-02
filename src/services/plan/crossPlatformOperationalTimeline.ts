@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData } from '../../types/domain';
 import { buildOpportunityEngineReadout } from './opportunityEngine';
 import { buildPlatformActionCards } from './platformActionCards';
@@ -51,7 +52,7 @@ function sortTime(value: string): number {
 }
 
 function commandFor(item: Omit<CrossPlatformTimelineItem, 'command'>): string {
-  return `ask: Explain this cross-platform operational timeline item. Be precise about what happened, where it happened, what the AI did, status, approval needs, and receipt expectations. Do not execute externally.\n\nWhat happened: ${item.whatHappened}\nWhere: ${item.whereItHappened}\nWhat AI did: ${item.whatAiDid}\nStatus: ${item.status}`;
+  return `ask: Explain this cross-platform operational timeline item. Be precise about what happened, where it happened, what the AI did, status, approval needs, and receipt expectations. Do not execute externally.\n\nWhat happened: ${quoteContextValue(item.whatHappened)}\nWhere: ${quoteContextValue(item.whereItHappened)}\nWhat AI did: ${quoteContextValue(item.whatAiDid)}\nStatus: ${item.status}`;
 }
 
 function timelineItem(input: Omit<CrossPlatformTimelineItem, 'command'> & { command?: string }) {
@@ -110,7 +111,7 @@ export function buildCrossPlatformOperationalTimeline(
           'Prepared or tracked a draft that must be previewed and approved before external send.',
         at: draft.updatedAt,
         status: draft.status,
-        command: `ask: Review this outreach draft and explain approval requirements before external sending.\n\nTarget: ${draft.targetName}\nCompany: ${draft.company}\nGoal: ${draft.outreachGoal}\nDraft: ${draft.messageBody}`
+        command: `ask: Review this outreach draft and explain approval requirements before external sending.\n\nTarget: ${quoteContextValue(draft.targetName)}\nCompany: ${quoteContextValue(draft.company)}\nGoal: ${quoteContextValue(draft.outreachGoal)}\nDraft: ${quoteContextValue(draft.messageBody)}`
       })
     );
   }
@@ -128,7 +129,7 @@ export function buildCrossPlatformOperationalTimeline(
             : 'Prepared content context that can be converted into a PLAN draft or schedule.',
         at: content.updatedAt,
         status: content.status,
-        command: `ask: Review this content item for PLAN readiness, approval needs, and next step.\n\nTitle: ${content.title}\nStatus: ${content.status}\nGoal: ${content.goal}`
+        command: `ask: Review this content item for PLAN readiness, approval needs, and next step.\n\nTitle: ${quoteContextValue(content.title)}\nStatus: ${content.status}\nGoal: ${quoteContextValue(content.goal)}`
       })
     );
   }
@@ -193,7 +194,7 @@ export function buildCrossPlatformOperationalTimeline(
             : 'Placed this workflow into the operating timeline for prioritization.',
         at: task.dueAt,
         status: task.status,
-        command: `ask: Review this scheduled workflow and recommend the next operational step.\n\nTask: ${task.title}\nDetail: ${task.detail}\nDue: ${task.dueAt}\nStatus: ${task.status}`
+        command: `ask: Review this scheduled workflow and recommend the next operational step.\n\nTask: ${quoteContextValue(task.title)}\nDetail: ${quoteContextValue(task.detail)}\nDue: ${task.dueAt}\nStatus: ${task.status}`
       })
     );
   }

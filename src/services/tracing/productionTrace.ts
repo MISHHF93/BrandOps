@@ -8,7 +8,6 @@
  * assistant turn traces, and AI Core artifacts.
  */
 
-import type { AgentCapabilityId } from '../../types/agentInterop';
 import type { TraceBundle } from '../../types/aiTraceGraph';
 
 // ---------------------------------------------------------------------------
@@ -50,11 +49,7 @@ export type TraceWorkflowType =
   | 'verification';
 
 /** Trace status. */
-export type TraceStatus =
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'BLOCKED';
+export type TraceStatus = 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BLOCKED';
 
 /** A step within a trace. */
 export type TraceStepType =
@@ -179,7 +174,7 @@ export function startTrace(params: {
     workspaceId: params.workspaceId,
     status: 'IN_PROGRESS',
     steps: [],
-    totalLatencyMs: 0,
+    totalLatencyMs: 0
   };
 
   // Add initial metadata as a step if provided
@@ -190,7 +185,7 @@ export function startTrace(params: {
       startedAt: now,
       status: 'COMPLETED',
       latencyMs: 0,
-      metadata: params.initialMetadata,
+      metadata: params.initialMetadata
     });
   }
 
@@ -235,7 +230,7 @@ export function recordStep(
     stepType: params.stepType,
     startedAt: now,
     status: 'RUNNING',
-    metadata: params.metadata,
+    metadata: params.metadata
   };
 
   context.steps.push(step);
@@ -354,7 +349,7 @@ export function completeTrace(
     totalTokensUsed: context.totalTokensUsed,
     totalCostUsd: context.totalCostUsd,
     summary: params?.summary ?? summarizeTrace(context),
-    relatedEntities: params?.relatedEntities ?? [],
+    relatedEntities: params?.relatedEntities ?? []
   };
 
   // Persist the record (in production, this would go to storage)
@@ -390,7 +385,7 @@ export function failTrace(
 
   return completeTrace(traceId, {
     forceStatus: 'FAILED',
-    summary: params.summary ?? summarizeTrace(context),
+    summary: params.summary ?? summarizeTrace(context)
   });
 }
 
@@ -433,84 +428,31 @@ export function getTraceId(context: TraceContext): string {
 /**
  * Propagate trace id to an AI trace bundle.
  */
-export function propagateTraceToAITraceBundle(
-  bundle: TraceBundle,
-  traceId: string
-): TraceBundle {
+export function propagateTraceToAITraceBundle(bundle: TraceBundle, traceId: string): TraceBundle {
   return {
     ...bundle,
-    trace_id: traceId,
+    trace_id: traceId
   };
 }
 
-/**
- * Build a checkpoint with trace id.
+/*
+ * REMOVED (2026-08-31): `buildCheckpoint`, `buildOperatorTrace` and
+ * `buildAuditEntry` lived here, shadowing by name the three builders that
+ * actually write BrandOps' audit ledger — `checkpointStore.buildCheckpoint`,
+ * the operator-trace builder in `dataset/operatorTraces.ts`, and
+ * `interop/audit.ts`.
+ *
+ * They were passthroughs: no id, no timestamp, no length clamping, and return
+ * types of bare `string` fields rather than `Checkpoint` / `OperatorTraceEntry`.
+ * Nothing outside this module's own test called them, so they were dead — but a
+ * developer reaching for `buildCheckpoint` and taking the editor's first
+ * suggestion would have produced a checkpoint with no id and no `at`, and
+ * written it into the ledger the whole audit story depends on.
+ *
+ * The tracing core below (startTrace / recordStep / completeTrace / failTrace)
+ * is unwired but coherent, and is left alone. Trace ids reach AI trace bundles
+ * through `propagateTraceToAITraceBundle`.
  */
-export function buildCheckpoint(input: {
-  conversationId: string;
-  type: string;
-  state: string;
-  summary: string;
-  source: string;
-  traceId?: string;
-}): { conversationId: string; type: string; state: string; summary: string; source: string; traceId?: string } {
-  return {
-    conversationId: input.conversationId,
-    type: input.type,
-    state: input.state,
-    summary: input.summary,
-    source: input.source,
-    traceId: input.traceId,
-  };
-}
-
-/**
- * Build an operator trace with trace id.
- */
-export function buildOperatorTrace(input: {
-  source: string;
-  verb: string;
-  surface: string;
-  capabilityId?: AgentCapabilityId;
-  sessionId?: string;
-  entityType?: string;
-  entityId?: string;
-  outcome?: 'success' | 'failure';
-  traceId?: string;
-}): { source: string; verb: string; surface: string; capabilityId?: AgentCapabilityId; sessionId?: string; entityType?: string; entityId?: string; outcome?: 'success' | 'failure'; traceId?: string } {
-  return {
-    source: input.source,
-    verb: input.verb,
-    surface: input.surface,
-    capabilityId: input.capabilityId,
-    sessionId: input.sessionId,
-    entityType: input.entityType,
-    entityId: input.entityId,
-    outcome: input.outcome,
-    traceId: input.traceId,
-  };
-}
-
-/**
- * Build an audit entry with trace id.
- */
-export function buildAuditEntry(input: {
-  sessionId: string;
-  clientKind: string;
-  capabilityId: AgentCapabilityId;
-  operation: string;
-  ok: boolean;
-  traceId?: string;
-}): { sessionId: string; clientKind: string; capabilityId: AgentCapabilityId; operation: string; ok: boolean; traceId?: string } {
-  return {
-    sessionId: input.sessionId,
-    clientKind: input.clientKind,
-    capabilityId: input.capabilityId,
-    operation: input.operation,
-    ok: input.ok,
-    traceId: input.traceId,
-  };
-}
 
 /** Check if a trace has any active (RUNNING) steps. */
 export function traceHasActiveStep(traceId: string): boolean {

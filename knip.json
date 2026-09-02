@@ -11,9 +11,11 @@
     "src/pages/help/main.tsx",
     "src/pages/integrations/main.tsx",
     "tests/**/*.test.ts",
-    "tests/helpers/**/*.ts"
+    "tests/**/*.test.tsx",
+    "tests/helpers/**/*.ts",
+    "tests/helpers/**/*.tsx"
   ],
-  "project": ["src/**/*.ts", "src/**/*.tsx"],
+  "project": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"],
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true

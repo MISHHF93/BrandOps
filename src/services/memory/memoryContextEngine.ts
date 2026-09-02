@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData, DigitalTwin } from '../../types/domain';
 import { getActiveDigitalTwin } from '../digitalTwin/digitalTwin';
 import { buildBehavioralIntelligenceEngineReadout } from '../intelligence/behavioralIntelligenceEngine';
@@ -338,7 +339,7 @@ function controls(entries: MemoryContextEntry[]): MemoryContextControls {
     .map((item) => `${item.category}: ${item.label} = ${item.value}`)
     .join(' | ');
   return {
-    viewCommand: `ask: Show my Memory & Context Engine summary. Group by goals, preferences, recurring actions, behavioral patterns, preferred workflows, approved outputs, rejected outputs, communication style, and scheduling habits. Do not mutate memory.\n\nMemory: ${preview}`,
+    viewCommand: `ask: Show my Memory & Context Engine summary. Group by goals, preferences, recurring actions, behavioral patterns, preferred workflows, approved outputs, rejected outputs, communication style, and scheduling habits. Do not mutate memory.\n\nMemory: ${quoteContextValue(preview)}`,
     editCommand:
       'ask: Help me edit Memory & Context Engine entries. Show editable goals, preferences, communication style, and scheduling habits first. Do not save changes until I explicitly approve exact updates.',
     deleteCommand:

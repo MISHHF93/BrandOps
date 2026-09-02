@@ -4,7 +4,15 @@
  * configurable thresholds, creates TwinUpdateProposal and asks user to accept/edit/reject.
  */
 
-import type { ActivityEvent, ProfessionalSignal, ProfessionalSignalKind, TwinDeltaField, TwinUpdateProposal, TwinDelta, TwinDeltaEvidence } from '../../types/builder';
+import type {
+  ActivityEvent,
+  ProfessionalSignal,
+  ProfessionalSignalKind,
+  TwinDeltaField,
+  TwinUpdateProposal,
+  TwinDelta,
+  TwinDeltaEvidence
+} from '../../types/builder';
 
 /** Configuration thresholds for signal derivation. */
 export interface SignalEngineConfig {
@@ -64,7 +72,10 @@ const SIGNAL_RULES: SignalRule[] = [
     kind: 'frequently-builds-ai-agent-infrastructure',
     fromKinds: ['feature-built', 'integration-completed'],
     claim: (event, _ctx) => {
-      if (event.detail.toLowerCase().includes('agent') || event.detail.toLowerCase().includes('ai')) {
+      if (
+        event.detail.toLowerCase().includes('agent') ||
+        event.detail.toLowerCase().includes('ai')
+      ) {
         return 'frequently builds AI agent infrastructure';
       }
       return 'frequently builds software features';
@@ -164,8 +175,9 @@ export interface DerivedSignal {
 export function deriveSignals(input: DeriveSignalsInput): DerivedSignal[] {
   const config = { ...DEFAULT_SIGNAL_ENGINE_CONFIG, ...input.config };
   const events = input.events ?? input.state?.events ?? [];
-  const eventsFiltered = events.filter((e) =>
-    e.verificationStatus === 'USER_VERIFIED' || e.verificationStatus === 'INDEPENDENTLY_SUPPORTED'
+  const eventsFiltered = events.filter(
+    (e) =>
+      e.verificationStatus === 'USER_VERIFIED' || e.verificationStatus === 'INDEPENDENTLY_SUPPORTED'
   );
 
   if (eventsFiltered.length === 0) return [];
@@ -188,9 +200,8 @@ export function deriveSignals(input: DeriveSignalsInput): DerivedSignal[] {
       const claim = rule.claim(event, context);
 
       // Check if we already have this signal
-      const existingSignal = derived.find((d) =>
-        d.signal.kind === rule.kind &&
-        d.signal.claim === claim
+      const existingSignal = derived.find(
+        (d) => d.signal.kind === rule.kind && d.signal.claim === claim
       );
 
       if (existingSignal) {
@@ -203,8 +214,9 @@ export function deriveSignals(input: DeriveSignalsInput): DerivedSignal[] {
 
       // Check frequency-based rules
       if (rule.frequencyBased) {
-        const recentEvents = events.filter((e) =>
-          e.timestamp && new Date(e.timestamp).getTime() > Date.now() - config.frequencyWindowMs
+        const recentEvents = events.filter(
+          (e) =>
+            e.timestamp && new Date(e.timestamp).getTime() > Date.now() - config.frequencyWindowMs
         );
         if (recentEvents.length < config.frequencyThreshold) continue;
       }
@@ -251,9 +263,7 @@ export interface SignalsToProposalsInput {
   config?: Partial<SignalEngineConfig>;
 }
 
-export function signalsToTwinUpdateProposals(
-  input: SignalsToProposalsInput
-): DerivedSignal[] {
+export function signalsToTwinUpdateProposals(input: SignalsToProposalsInput): DerivedSignal[] {
   const config = { ...DEFAULT_SIGNAL_ENGINE_CONFIG, ...input.config };
   const derived: DerivedSignal[] = [];
 
@@ -261,7 +271,9 @@ export function signalsToTwinUpdateProposals(
     if (signal.confidence < config.proposalThreshold) continue;
     if (!signal.signal.kind.endsWith('proposedField')) continue;
 
-    const editableField = (SIGNAL_RULES.find((r) => r.kind === signal.signal.kind)?.proposedField) as TwinDeltaField | undefined;
+    const editableField = SIGNAL_RULES.find((r) => r.kind === signal.signal.kind)?.proposedField as
+      | TwinDeltaField
+      | undefined;
     if (!editableField) continue;
 
     const existingValue = getNestedValue(input.existingTwinState, editableField);
@@ -275,7 +287,10 @@ export function signalsToTwinUpdateProposals(
       field: editableField,
       previousValue: existingValue,
       proposedValue,
-      evidence: signal.signal.evidenceIds.map((id) => ({ type: 'activity-event', id })) as TwinDeltaEvidence[],
+      evidence: signal.signal.evidenceIds.map((id) => ({
+        type: 'activity-event',
+        id
+      })) as TwinDeltaEvidence[],
       reason: `Signal "${signal.signal.claim}" suggests updating ${editableField}. Confidence: ${signal.confidence.toFixed(2)}.`,
       confidence: signal.confidence,
       proposedBy: 'professional-signal-engine',

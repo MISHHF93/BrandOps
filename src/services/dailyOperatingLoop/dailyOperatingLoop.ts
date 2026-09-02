@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData, Contact, Opportunity } from '../../types/domain';
 import type {
   ChiefOfStaffAlert,
@@ -61,11 +62,11 @@ function scoreTone(value: number): OperationalIntelligenceTone {
 }
 
 function alertCommand(title: string, detail: string, evidence: string[]): string {
-  return `ask: Act as BrandOps AI Chief of Staff. Review this daily operating alert and turn it into a PLAN preview only. Do not execute externally. Include why it matters, source facts, risks, next steps, approval needs, and receipt expectations.\n\nAlert: ${title}\nDetail: ${detail}\nEvidence: ${evidence.join(' | ') || 'No evidence attached'}`;
+  return `ask: Act as BrandOps AI Chief of Staff. Review this daily operating alert and turn it into a PLAN preview only. Do not execute externally. Include why it matters, source facts, risks, next steps, approval needs, and receipt expectations.\n\nAlert: ${quoteContextValue(title)}\nDetail: ${quoteContextValue(detail)}\nEvidence: ${quoteContextValue(evidence.join(' | ') || 'No evidence attached')}`;
 }
 
 function gapCommand(title: string, missing: string, why: string): string {
-  return `ask: Help me close this BrandOps strategic gap without inventing facts. Create a PLAN-ready preview with questions, source facts needed, safe draft steps, and approval requirements.\n\nGap: ${title}\nMissing: ${missing}\nWhy it matters: ${why}`;
+  return `ask: Help me close this BrandOps strategic gap without inventing facts. Create a PLAN-ready preview with questions, source facts needed, safe draft steps, and approval requirements.\n\nGap: ${quoteContextValue(title)}\nMissing: ${quoteContextValue(missing)}\nWhy it matters: ${quoteContextValue(why)}`;
 }
 
 function isActiveOpportunity(item: Opportunity): boolean {
@@ -541,7 +542,7 @@ function buildRelationshipMemory(workspace: BrandOpsData): RelationshipMemorySig
         relationship: `${opportunity.relationshipStage} ${opportunity.opportunityType}`,
         nextAction: opportunity.nextAction,
         signal: `${opportunity.company} · ${opportunity.confidence}% confidence`,
-        command: `ask: Prepare a Relationship Memory capsule for this relationship. Do not send messages or mutate records. Include context, opportunity, next action, missing facts, approval needs, and recommended PLAN path.\n\nName: ${name}\nCompany: ${opportunity.company}\nRole: ${opportunity.role}\nNext action: ${opportunity.nextAction}`
+        command: `ask: Prepare a Relationship Memory capsule for this relationship. Do not send messages or mutate records. Include context, opportunity, next action, missing facts, approval needs, and recommended PLAN path.\n\nName: ${quoteContextValue(name)}\nCompany: ${quoteContextValue(opportunity.company)}\nRole: ${quoteContextValue(opportunity.role)}\nNext action: ${quoteContextValue(opportunity.nextAction)}`
       };
     });
 }

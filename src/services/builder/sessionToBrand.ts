@@ -4,10 +4,7 @@
  * nothing automatically; shows a review screen for user selection.
  */
 
-import type {
-  ActivityEvent,
-  EvidenceEntry
-} from '../../types/builder';
+import type { ActivityEvent, EvidenceEntry } from '../../types/builder';
 import type { BrandOpsData } from '../../types/domain';
 import type { BuilderActivityState } from './activityGraph';
 
@@ -98,7 +95,11 @@ export function summarizeWorkForBrandOps(input: SessionToBrandInput): SessionToB
   const portfolioValue = assessPortfolioValue(input.sessionEvidence, potentialAchievement);
 
   // Recommended next action
-  const recommendedNextAction = recommendNextAction(potentialAchievement, contentAngles, portfolioValue);
+  const recommendedNextAction = recommendNextAction(
+    potentialAchievement,
+    contentAngles,
+    portfolioValue
+  );
 
   // Proposed event (not saved)
   const proposedEvent = createProposedEvent(input);
@@ -119,24 +120,33 @@ export function summarizeWorkForBrandOps(input: SessionToBrandInput): SessionToB
   };
 }
 
-function detectPotentialAchievement(evidence: DevelopmentSessionEvidence): AchievementCandidateSummary {
+function detectPotentialAchievement(
+  evidence: DevelopmentSessionEvidence
+): AchievementCandidateSummary {
   const title = evidence.workDescription.slice(0, 300);
   const kind = detectAchievementKind(evidence);
 
   const description = [
     `Work session: ${evidence.workDescription}`,
-    evidence.problemsSolved.length > 0 ? `Problems solved: ${evidence.problemsSolved.join('; ')}` : '',
-    evidence.technologiesUsed.length > 0 ? `Technologies: ${evidence.technologiesUsed.join(', ')}` : ''
-  ].filter(Boolean).join(' ');
+    evidence.problemsSolved.length > 0
+      ? `Problems solved: ${evidence.problemsSolved.join('; ')}`
+      : '',
+    evidence.technologiesUsed.length > 0
+      ? `Technologies: ${evidence.technologiesUsed.join(', ')}`
+      : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const relevance = extractProfessionalRelevance(evidence, kind);
 
-  const evEntries: EvidenceEntry[] = evidence.evidence?.map((e) => ({
-    ref: e.ref,
-    kind: mapEvidenceType(e.type),
-    label: e.label,
-    verificationUrl: e.content ? undefined : undefined
-  })) ?? [];
+  const evEntries: EvidenceEntry[] =
+    evidence.evidence?.map((e) => ({
+      ref: e.ref,
+      kind: mapEvidenceType(e.type),
+      label: e.label,
+      verificationUrl: e.content ? undefined : undefined
+    })) ?? [];
 
   return {
     title,
@@ -153,16 +163,33 @@ function detectAchievementKind(evidence: DevelopmentSessionEvidence): string {
   const work = evidence.workDescription.toLowerCase();
   const problems = evidence.problemsSolved.map((p) => p.toLowerCase());
 
-  if (work.includes('release') || work.includes('deploy') || problems.some((p) => p.includes('release') || p.includes('deploy'))) {
+  if (
+    work.includes('release') ||
+    work.includes('deploy') ||
+    problems.some((p) => p.includes('release') || p.includes('deploy'))
+  ) {
     return 'repository-released';
   }
-  if (work.includes('feature') || work.includes('build') || work.includes('implement') || problems.some((p) => p.includes('feature') || p.includes('build'))) {
+  if (
+    work.includes('feature') ||
+    work.includes('build') ||
+    work.includes('implement') ||
+    problems.some((p) => p.includes('feature') || p.includes('build'))
+  ) {
     return 'feature-shipped';
   }
-  if (work.includes('refactor') || work.includes('restructure') || problems.some((p) => p.includes('refactor') || p.includes('restructure'))) {
+  if (
+    work.includes('refactor') ||
+    work.includes('restructure') ||
+    problems.some((p) => p.includes('refactor') || p.includes('restructure'))
+  ) {
     return 'significant-refactor';
   }
-  if (work.includes('document') || work.includes('docs') || problems.some((p) => p.includes('document') || p.includes('docs'))) {
+  if (
+    work.includes('document') ||
+    work.includes('docs') ||
+    problems.some((p) => p.includes('document') || p.includes('docs'))
+  ) {
     return 'documentation-published';
   }
   if (work.includes('test') || problems.some((p) => p.includes('test') && p.includes('improve'))) {
@@ -177,20 +204,42 @@ function detectAchievementKind(evidence: DevelopmentSessionEvidence): string {
   return 'feature-shipped';
 }
 
-function extractProfessionalRelevance(evidence: DevelopmentSessionEvidence, kind: string): string[] {
+function extractProfessionalRelevance(
+  evidence: DevelopmentSessionEvidence,
+  kind: string
+): string[] {
   const relevance: string[] = [];
   const techs = evidence.technologiesUsed.map((t) => t.toLowerCase());
 
-  if (techs.some((t) => t.includes('react') || t.includes('frontend') || t.includes('vue') || t.includes('angular'))) {
+  if (
+    techs.some(
+      (t) =>
+        t.includes('react') || t.includes('frontend') || t.includes('vue') || t.includes('angular')
+    )
+  ) {
     relevance.push('frontend-development');
   }
-  if (techs.some((t) => t.includes('node') || t.includes('backend') || t.includes('api') || t.includes('server'))) {
+  if (
+    techs.some(
+      (t) =>
+        t.includes('node') || t.includes('backend') || t.includes('api') || t.includes('server')
+    )
+  ) {
     relevance.push('backend-development');
   }
-  if (techs.some((t) => t.includes('ai') || t.includes('ml') || t.includes('llm') || t.includes('agent'))) {
+  if (
+    techs.some(
+      (t) => t.includes('ai') || t.includes('ml') || t.includes('llm') || t.includes('agent')
+    )
+  ) {
     relevance.push('ai-machine-learning');
   }
-  if (techs.some((t) => t.includes('devops') || t.includes('ci') || t.includes('cd') || t.includes('infrastructure'))) {
+  if (
+    techs.some(
+      (t) =>
+        t.includes('devops') || t.includes('ci') || t.includes('cd') || t.includes('infrastructure')
+    )
+  ) {
     relevance.push('devops-infrastructure');
   }
   if (techs.some((t) => t.includes('mobile') || t.includes('ios') || t.includes('android'))) {
@@ -221,17 +270,24 @@ function calculateConfidence(evidence: DevelopmentSessionEvidence, _kind: string
   return Math.min(0.95, base);
 }
 
-function generateContentAngles(evidence: DevelopmentSessionEvidence, achievement: AchievementCandidateSummary): string[] {
+function generateContentAngles(
+  evidence: DevelopmentSessionEvidence,
+  achievement: AchievementCandidateSummary
+): string[] {
   const angles: string[] = [];
 
-  angles.push(`How I solved "${evidence.problemsSolved[0] || 'a challenging problem'}" using ${evidence.technologiesUsed.join(' and ')}`);
+  angles.push(
+    `How I solved "${evidence.problemsSolved[0] || 'a challenging problem'}" using ${evidence.technologiesUsed.join(' and ')}`
+  );
 
   if (evidence.problemsSolved.length > 1) {
     angles.push(`Multiple solutions: ${evidence.problemsSolved.slice(0, 3).join('; ')}`);
   }
 
   if (evidence.technologiesUsed.length > 0) {
-    angles.push(`Deep dive into ${evidence.technologiesUsed.slice(0, 3).join(', ')} for this feature`);
+    angles.push(
+      `Deep dive into ${evidence.technologiesUsed.slice(0, 3).join(', ')} for this feature`
+    );
   }
 
   if (achievement.kind === 'feature-shipped') {
@@ -240,14 +296,23 @@ function generateContentAngles(evidence: DevelopmentSessionEvidence, achievement
   if (achievement.kind === 'significant-refactor') {
     angles.push(`Why I refactored ${evidence.workDescription.slice(0, 100)} and what I learned`);
   }
-  if (evidence.problemsSolved.some((p) => p.includes('performance') || p.includes('speed') || p.includes('optimize'))) {
-    angles.push(`Performance improvements: ${evidence.problemsSolved.filter((p) => p.includes('performance') || p.includes('speed')).join('; ')}`);
+  if (
+    evidence.problemsSolved.some(
+      (p) => p.includes('performance') || p.includes('speed') || p.includes('optimize')
+    )
+  ) {
+    angles.push(
+      `Performance improvements: ${evidence.problemsSolved.filter((p) => p.includes('performance') || p.includes('speed')).join('; ')}`
+    );
   }
 
   return angles.slice(0, 5);
 }
 
-function assessPortfolioValue(evidence: DevelopmentSessionEvidence, achievement: AchievementCandidateSummary): PortfolioValueAssessment {
+function assessPortfolioValue(
+  evidence: DevelopmentSessionEvidence,
+  achievement: AchievementCandidateSummary
+): PortfolioValueAssessment {
   let score = 0.3;
   const reasons: string[] = [];
 
@@ -285,7 +350,11 @@ function assessPortfolioValue(evidence: DevelopmentSessionEvidence, achievement:
   };
 }
 
-function recommendNextAction(achievement: AchievementCandidateSummary, contentAngles: string[], portfolioValue: PortfolioValueAssessment): string {
+function recommendNextAction(
+  achievement: AchievementCandidateSummary,
+  contentAngles: string[],
+  portfolioValue: PortfolioValueAssessment
+): string {
   if (portfolioValue.score >= 0.7) {
     return 'Create a portfolio entry and consider writing about this work.';
   }
@@ -308,19 +377,27 @@ function createProposedEvent(input: SessionToBrandInput): ActivityEvent {
     title: evidence.workDescription.slice(0, 300),
     detail: [
       `Session: ${evidence.workDescription}`,
-      evidence.problemsSolved.length > 0 ? `Problems solved: ${evidence.problemsSolved.join('; ')}` : '',
-      evidence.technologiesUsed.length > 0 ? `Technologies: ${evidence.technologiesUsed.join(', ')}` : ''
-    ].filter(Boolean).join(' ').slice(0, 4000),
+      evidence.problemsSolved.length > 0
+        ? `Problems solved: ${evidence.problemsSolved.join('; ')}`
+        : '',
+      evidence.technologiesUsed.length > 0
+        ? `Technologies: ${evidence.technologiesUsed.join(', ')}`
+        : ''
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .slice(0, 4000),
     timestamp: now,
     confidence: 0.8,
     verificationStatus: 'UNVERIFIED',
     trustTier: 'AGENT_REPORTED',
     entityRefs: [],
-    evidence: evidence.evidence?.map((e) => ({
-      ref: e.ref,
-      kind: mapEvidenceType(e.type),
-      label: e.label
-    })) ?? [],
+    evidence:
+      evidence.evidence?.map((e) => ({
+        ref: e.ref,
+        kind: mapEvidenceType(e.type),
+        label: e.label
+      })) ?? [],
     recordedBy: 'session-to-brand',
     recordedReason: 'Captured from authorized development session evidence.',
     createdAt: now,
@@ -328,14 +405,23 @@ function createProposedEvent(input: SessionToBrandInput): ActivityEvent {
   };
 }
 
-function mapEvidenceType(type: SessionEvidenceItem['type']): 'git' | 'document' | 'code' | 'test' | 'milestone' | 'link' | 'other' {
+function mapEvidenceType(
+  type: SessionEvidenceItem['type']
+): 'git' | 'document' | 'code' | 'test' | 'milestone' | 'link' | 'other' {
   switch (type) {
-    case 'commit': return 'git';
-    case 'file': return 'document';
-    case 'test': return 'test';
-    case 'build': return 'milestone';
-    case 'artifact': return 'code';
-    case 'link': return 'link';
-    default: return 'other';
+    case 'commit':
+      return 'git';
+    case 'file':
+      return 'document';
+    case 'test':
+      return 'test';
+    case 'build':
+      return 'milestone';
+    case 'artifact':
+      return 'code';
+    case 'link':
+      return 'link';
+    default:
+      return 'other';
   }
 }

@@ -3,20 +3,20 @@
 **Date:** 2026-08-31
 **Based on:** re-audited source tree, corrected docs, and the full live test baseline.
 **Baseline (real, reproduced this session):** `tsc -b` clean · `eslint` clean ·
-`vite build` OK · **982 tests / 152 files passing** · A→Z canonical loop test present ·
+`vite build` OK · **1122 tests / 211 files passing** · A→Z canonical loop test present ·
 adversarial security + concurrency/failure-injection suites present.
 
 ---
 
 ## 1. System State (truthful, not aspirational)
 
-| Engineering state | Level | Proof |
-|-------------------|-------|-------|
-| CODE_COMPLETE | ✅ | Source compiles, builds; 40 dead files removed |
-| LOCALLY_VERIFIED | ✅ | 982/982 tests pass locally; tsc/lint/build green |
-| CI_VERIFIED | ❌ NOT_VERIFIED | CI on `origin/main` still runs an OLDER tree — 24 test files & several docs are UNTRACKED (not yet committed) |
-| STAGING_VERIFIED | ❌ NOT_VERIFIED | No staging target exists/proven |
-| PRODUCTION_VERIFIED | ❌ NOT_VERIFIED | No production deploy target exists/proven |
+| Engineering state   | Level           | Proof                                                                                                         |
+| ------------------- | --------------- | ------------------------------------------------------------------------------------------------------------- |
+| CODE_COMPLETE       | ✅              | Source compiles, builds; 40 dead files removed                                                                |
+| LOCALLY_VERIFIED    | ✅              | 1122/1122 tests pass locally; tsc/lint/build green                                                            |
+| CI_VERIFIED         | ❌ NOT_VERIFIED | CI on `origin/main` still runs an OLDER tree — 24 test files & several docs are UNTRACKED (not yet committed) |
+| STAGING_VERIFIED    | ❌ NOT_VERIFIED | No staging target exists/proven                                                                               |
+| PRODUCTION_VERIFIED | ❌ NOT_VERIFIED | No production deploy target exists/proven                                                                     |
 
 **Deployment level: LOCALLY_VERIFIED only.** Nothing is "deployed" — no STAGING or
 PRODUCTION proof exists. Any prior "deployed" claim is withdrawn.
@@ -25,19 +25,19 @@ PRODUCTION proof exists. Any prior "deployed" claim is withdrawn.
 
 ## 2. Feature state (canonical loop + security)
 
-| Feature / workflow | EXISTS | WIRED | TESTED | RUNTIME_VERIFIED | FAILURE_VERIFIED |
-|--------------------|:------:|:-----:|:------:|:----------------:|:----------------:|
-| Think→Work (A) | ✅ | ✅ | ✅ | ✅ | ✅ (idempotency/approval-bypass) |
-| Evidence→Twin (B) | ✅ | partial | ✅ | partial | ✅ (user-only promote) |
-| Project→Proof (C) | ✅ (professional signal, not authority) | ✅ | partial | partial | — |
-| Opportunity→Outcome (D) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| External Action (E) | ✅ gate only | ✅ | ✅ | approval gate only / NO execution | ✅ fail-closed |
-| External Agent (F) | ✅ | ✅ | ✅ | ✅ | ✅ (revocation, injection, dedupe) |
-| Automation (G) | primitives only | partial | partial | ❌ | ❌ |
-| Authority (H) | ❌ ABSENT | n/a | n/a | n/a | n/a |
-| Profession Packs | ✅ (this session) | ✅ | ✅ | ✅ | ✅ |
-| Outcome→Learning | ✅ (this session) | ✅ | ✅ | ✅ | ✅ |
-| A→Z end-to-end | ✅ | ✅ | ✅ (new) | ✅ | ✅ |
+| Feature / workflow      |                 EXISTS                  |  WIRED  |  TESTED  |         RUNTIME_VERIFIED          |          FAILURE_VERIFIED          |
+| ----------------------- | :-------------------------------------: | :-----: | :------: | :-------------------------------: | :--------------------------------: |
+| Think→Work (A)          |                   ✅                    |   ✅    |    ✅    |                ✅                 |  ✅ (idempotency/approval-bypass)  |
+| Evidence→Twin (B)       |                   ✅                    | partial |    ✅    |              partial              |       ✅ (user-only promote)       |
+| Project→Proof (C)       | ✅ (professional signal, not authority) |   ✅    | partial  |              partial              |                 —                  |
+| Opportunity→Outcome (D) |                   ✅                    |   ✅    |    ✅    |                ✅                 |                 ✅                 |
+| External Action (E)     |              ✅ gate only               |   ✅    |    ✅    | approval gate only / NO execution |           ✅ fail-closed           |
+| External Agent (F)      |                   ✅                    |   ✅    |    ✅    |                ✅                 | ✅ (revocation, injection, dedupe) |
+| Automation (G)          |             primitives only             | partial | partial  |                ❌                 |                 ❌                 |
+| Authority (H)           |                ❌ ABSENT                |   n/a   |   n/a    |                n/a                |                n/a                 |
+| Profession Packs        |            ✅ (this session)            |   ✅    |    ✅    |                ✅                 |                 ✅                 |
+| Outcome→Learning        |            ✅ (this session)            |   ✅    |    ✅    |                ✅                 |                 ✅                 |
+| A→Z end-to-end          |                   ✅                    |   ✅    | ✅ (new) |                ✅                 |                 ✅                 |
 
 Legend: ✅ = proven by real passing test / real code path. partial = some but not all.
 ❌ = not present / not proven. n/a = not applicable.
@@ -58,7 +58,7 @@ hardened external-agent + security surface. It is NOT ready to be declared
    corrected BRANDOPS docs are untracked. Catching up `git` so the committed tree
    == the tested tree is a prerequisite for CI to mean anything.
 2. Establish a **CI pass on the committed tree** (Node + `tsc -b` + `lint` + `test`
-   + `build`) → upgrade system state to CI_VERIFIED.
+   - `build`) → upgrade system state to CI_VERIFIED.
 3. **Prove a real deployment target** for STAGING then PRODUCTION. Until a target is
    provisioned and a build is verified against it, deployment stays LOCALLY_VERIFIED.
 4. If the roadmap includes networked operation, address the honest-auth/vendor/connector
@@ -80,7 +80,7 @@ hardened external-agent + security surface. It is NOT ready to be declared
   separate, in `aiAskRouting.ts`).
 - **Medium gaps in tests:** multi-tab `storage.local` write race; storage-IO failure
   graceful handling.
-- **Multiple BRANDOPS_*.md docs were corrected this session** (GOLDEN_WORKFLOWS,
+- **Multiple BRANDOPS\_\*.md docs were corrected this session** (GOLDEN_WORKFLOWS,
   STRESS_TEST_REPORT, RELEASE_CERTIFICATION, TRANSFORMATION_LEDGER, FEATURE_TRUTH) to
   remove phantom citations. Any doc that still cites `commandLayer`, `commandExecution`,
   `policyEngine`, `handoffs`, `authorityIntelligence`, `gateway.test.ts`, `idempotency.test.ts`,
@@ -91,7 +91,7 @@ hardened external-agent + security surface. It is NOT ready to be declared
 
 ## 5. What is genuinely proven (positive, verifiable)
 
-- Clean, reproducible local baseline: **982 tests / 152 files**, lint + typecheck + build green.
+- Clean, reproducible local baseline: **1122 tests / 211 files**, lint + typecheck + build green.
 - **A→Z canonical loop** proven end-to-end through the real gateway
   (`canonicalLoopEndToEnd.test.ts`): agent signal → user verify → twin promote →
   approval-gated opportunity → plan draft → execute → verify → learning.

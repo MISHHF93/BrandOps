@@ -64,11 +64,21 @@ describe('two-page workspace snapshot extras', () => {
     expect(snap.planPendingReviewCount).toBe(1);
     expect(snap.planPendingReviewPeek).toHaveLength(1);
     expect(snap.planPendingReviewPeek[0].id).toBe('1');
-    expect(snap.planExecutionReceipts.length).toBeGreaterThanOrEqual(3);
+    expect(snap.planExecutionReceipts.length).toBeGreaterThanOrEqual(2);
     expect(snap.planExecutionReceipts.some((r) => r.action === 'p-test')).toBe(true);
+    /**
+     * A pending trace is no longer a completed action.
+     *
+     * This asserted the opposite — that a receipt existed carrying "Pending
+     * human approval" — and that receipt was the defect. Receipts render under
+     * "Recently done", so the same pending approval appeared twice: once in
+     * "Waiting on you" where it belongs, and once as something that had already
+     * happened. The pending peek above is where it is surfaced, and it still is.
+     */
     expect(
-      snap.planExecutionReceipts.some((r) => r.approvals.includes('Pending human approval'))
-    ).toBe(true);
+      snap.planExecutionReceipts.some((r) => r.approvals.includes('Pending human approval')),
+      'a request awaiting review is being reported as done'
+    ).toBe(false);
     expect(snap.planExecutionReceipts.some((r) => r.warningsErrors.includes('x'))).toBe(true);
   });
 

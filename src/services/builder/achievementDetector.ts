@@ -4,7 +4,12 @@
  * remembering" with Verify / Edit / Dismiss actions.
  */
 
-import type { ActivityEvent, AchievementCandidate, AchievementKind, EvidenceEntry } from '../../types/builder';
+import type {
+  ActivityEvent,
+  AchievementCandidate,
+  AchievementKind,
+  EvidenceEntry
+} from '../../types/builder';
 import { isAchievementEligible } from './activityGraph';
 
 /** Detection rules — each rule maps an activity kind to achievement candidates. */
@@ -105,7 +110,8 @@ const DETECTION_RULES: DetectionRule[] = [
     kind: 'significant-refactor',
     candidateKind: 'significant-refactor-completed',
     title: (e) => `Completed significant refactor: ${e.title}`,
-    description: (e) => `You completed a significant refactor: ${e.title}. ${e.detail.slice(0, 300)}`,
+    description: (e) =>
+      `You completed a significant refactor: ${e.title}. ${e.detail.slice(0, 300)}`,
     evidence: (e) => e.evidence ?? [],
     professionalRelevance: () => ['software-engineering', 'architecture'],
     confidenceModifier: (e) => Math.min(1, 0.55 + e.confidence * 0.3)
@@ -119,9 +125,7 @@ const MIN_CANDIDATE_CONFIDENCE = 0.4;
  * Detect achievement candidates from eligible activity events.
  * Returns candidates with Verify / Edit / Dismiss actions.
  */
-export function detectAchievements(
-  events: ActivityEvent[]
-): AchievementCandidate[] {
+export function detectAchievements(events: ActivityEvent[]): AchievementCandidate[] {
   const candidates: AchievementCandidate[] = [];
 
   for (const event of events) {
@@ -154,7 +158,10 @@ export function detectAchievements(
       suggestedConversion: {
         enabled: confidence >= 0.7,
         planPreset: confidence >= 0.7 ? 'CONTENT_PLAN' : undefined,
-        note: confidence >= 0.7 ? 'High-confidence achievement — suggest converting to a content plan.' : undefined
+        note:
+          confidence >= 0.7
+            ? 'High-confidence achievement — suggest converting to a content plan.'
+            : undefined
       },
       reason: rule.description(event),
       detectedAt: new Date().toISOString(),

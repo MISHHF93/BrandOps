@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { updatePlanStatus, derivePlanStatusFromCheckpoints } from '../../src/services/execution/planStore';
+import {
+  updatePlanStatus,
+  derivePlanStatusFromCheckpoints
+} from '../../src/services/execution/planStore';
 import type { BrandOpsData, Plan } from '../../src/types/domain';
 
 function makeWorkspaceWithPlan(planId: string, status: Plan['status']): BrandOpsData {

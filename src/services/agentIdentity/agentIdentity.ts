@@ -14,9 +14,12 @@
 import type {
   ExternalAgentSession,
   ExternalAgentClientKind,
+  ExternalAgentTrustLevel,
   AgentCapabilityId,
-  ContextBundleId,
+  ContextBundleId
 } from '../../types/agentInterop';
+import { EXTERNAL_AGENT_CLIENT_KINDS, EXTERNAL_AGENT_TRUST_LEVELS } from '../../types/agentInterop';
+import { trustFromCapabilities } from '../interop/policyEngine';
 import type { BrandOpsData } from '../../types/domain';
 
 // ---------------------------------------------------------------------------
@@ -24,25 +27,25 @@ import type { BrandOpsData } from '../../types/domain';
 // ---------------------------------------------------------------------------
 
 /**
- * Trust levels for external agents, derived from their granted capabilities and bundles.
- *
- * These replace implicit trust with explicit, user-understandable classifications.
+ * Trust levels for external agents. Defined in `types/agentInterop` and
+ * re-exported here for the existing importers: a level shown to a person and a
+ * level the gateway enforces must be the same type, not two that look alike.
  */
-export type ExternalAgentTrustLevel =
-  | 'READ_ONLY'           // Can only read context; no proposal or action capability
-  | 'CONTEXT_CONSUMER'    // Can read context + consume builder context; still no write
-  | 'PROPOSER'            // Can create proposals (achievements, artifacts, twin updates, opportunities)
-  | 'ACTION_REQUESTER'    // Can request external actions (highest trust level); still requires approval
-  | 'NONE';               // No active session / revoked
+export type { ExternalAgentTrustLevel } from '../../types/agentInterop';
 
 /** Human-readable label for each trust level. */
 export function trustLevelLabel(level: ExternalAgentTrustLevel): string {
   switch (level) {
-    case 'READ_ONLY': return 'Read Only — can view context only';
-    case 'CONTEXT_CONSUMER': return 'Context Consumer — can view builder context and projects';
-    case 'PROPOSER': return 'Proposer — can propose achievements, artifacts, twin updates, and opportunities';
-    case 'ACTION_REQUESTER': return 'Action Requester — can request external actions (approval required)';
-    case 'NONE': return 'No active session';
+    case 'READ_ONLY':
+      return 'Read Only — can view context only';
+    case 'CONTEXT_CONSUMER':
+      return 'Context Consumer — can view builder context and projects';
+    case 'PROPOSER':
+      return 'Proposer — can propose achievements, artifacts, twin updates, and opportunities';
+    case 'ACTION_REQUESTER':
+      return 'Action Requester — can request external actions (approval required)';
+    case 'NONE':
+      return 'No active session';
   }
 }
 
@@ -58,8 +61,12 @@ export function trustLevelAllowsActions(level: ExternalAgentTrustLevel): boolean
 
 /** Whether this trust level allows context reading. */
 export function trustLevelAllowsContext(level: ExternalAgentTrustLevel): boolean {
-  return level === 'READ_ONLY' || level === 'CONTEXT_CONSUMER' ||
-         level === 'PROPOSER' || level === 'ACTION_REQUESTER';
+  return (
+    level === 'READ_ONLY' ||
+    level === 'CONTEXT_CONSUMER' ||
+    level === 'PROPOSER' ||
+    level === 'ACTION_REQUESTER'
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -67,45 +74,26 @@ export function trustLevelAllowsContext(level: ExternalAgentTrustLevel): boolean
 // ---------------------------------------------------------------------------
 
 /**
- * Derive a trust level from a session's granted capabilities and bundles.
+ * Derive a trust level from a session's granted capabilities.
  *
- * Classification rules:
- * - Has 'action.request' capability → ACTION_REQUESTER
- * - Has proposal capabilities (achievement.record, artifact.create, twin.propose_update, opportunity.create) → PROPOSER
- * - Has builder.read capabilities but no proposal capabilities → CONTEXT_CONSUMER
- * - Has only context.read/goals.read/artifacts.read/plans.read → READ_ONLY
- * - No active session / revoked → NONE
+ * **Delegates to the policy engine on purpose.** This function used to classify
+ * by matching capability *names* — `action.request` → ACTION_REQUESTER, four
+ * named proposal capabilities → PROPOSER, anything starting with `builder.` →
+ * CONTEXT_CONSUMER. That list stopped being true the moment a capability was
+ * added without editing it: a session holding `builder.sessions.revoke`, the
+ * single most consequential capability in the registry, was classified
+ * READ_ONLY.
+ *
+ * The registry already records each capability's tier and whether it is
+ * read-only, so trust is derived from that. Displaying a level the gateway would
+ * not enforce is worse than showing nothing — it tells a person a session is
+ * safer than it is.
  */
-function deriveTrustFromCapabilities(caps: AgentCapabilityId[]): ExternalAgentTrustLevel {
-  const hasActionRequest = caps.includes('action.request');
-  const hasProposalCaps = caps.some(cap =>
-    cap === 'achievement.record' ||
-    cap === 'artifact.create' ||
-    cap === 'twin.propose_update' ||
-    cap === 'opportunity.create'
-  );
-  const hasBuilderRead = caps.some(cap => cap.startsWith('builder.') && !cap.includes('dismiss') && !cap.includes('revoke'));
-  const hasReadOnly = caps.some(cap =>
-    cap === 'context.read' || cap === 'goals.read' || cap === 'artifacts.read' || cap === 'plans.read'
-  );
-
-  if (hasActionRequest) return 'ACTION_REQUESTER';
-  if (hasProposalCaps) return 'PROPOSER';
-  if (hasBuilderRead || caps.length > 4) return 'CONTEXT_CONSUMER';
-  if (hasReadOnly) return 'READ_ONLY';
-
-  // Has capabilities but none of the above patterns — default to READ_ONLY
-  if (caps.length > 0) return 'READ_ONLY';
-
-  // No capabilities granted — effectively READ_ONLY but with no context access
-  return 'NONE';
-}
-
 export function deriveTrustLevel(
   session: ExternalAgentSession | null | undefined
 ): ExternalAgentTrustLevel {
   if (!session || session.status === 'revoked') return 'NONE';
-  return deriveTrustFromCapabilities(session.grantedCapabilities);
+  return trustFromCapabilities(session.grantedCapabilities);
 }
 
 // ---------------------------------------------------------------------------
@@ -166,7 +154,9 @@ function formatLastActivityAge(lastActivityAt: string): string {
  * Build an AgentIdentity from a session.
  */
 export function buildAgentIdentity(session: ExternalAgentSession): AgentIdentity {
-  const trustLevel = deriveTrustFromCapabilities(session.grantedCapabilities);
+  // Revoked sessions display NONE rather than the level their grants imply —
+  // a revoked agent is not a PROPOSER that happens to be switched off.
+  const trustLevel = deriveTrustLevel(session);
   const now = new Date();
 
   let authenticationStatus: 'authenticated' | 'revoked' | 'expired';
@@ -192,8 +182,10 @@ export function buildAgentIdentity(session: ExternalAgentSession): AgentIdentity
     lastActivityAt: session.lastActivityAt,
     revokedAt: session.revokedAt ?? null,
     expiresAt: session.expiresAt ?? null,
-    isActive: session.status === 'active' && (!session.expiresAt || new Date(session.expiresAt).getTime() >= now.getTime()),
-    lastActivityAge: formatLastActivityAge(session.lastActivityAt),
+    isActive:
+      session.status === 'active' &&
+      (!session.expiresAt || new Date(session.expiresAt).getTime() >= now.getTime()),
+    lastActivityAge: formatLastActivityAge(session.lastActivityAt)
   };
 }
 
@@ -222,34 +214,40 @@ export interface AgentIdentityRegistry {
 /**
  * Build an AgentIdentityRegistry from workspace data.
  */
-export function buildAgentIdentityRegistry(
-  data: BrandOpsData
-): AgentIdentityRegistry {
+export function buildAgentIdentityRegistry(data: BrandOpsData): AgentIdentityRegistry {
   const sessions = data.externalAgentSessions?.entries ?? [];
   const identities = sessions.map(buildAgentIdentity);
 
   const activeIdentities = identities.filter((id) => id.isActive);
-  const byTrustLevel: Record<string, AgentIdentity[]> = {};
-  const byClientKind: Record<string, AgentIdentity[]> = {};
+
+  /**
+   * Every level and every client kind gets a key, even when empty.
+   *
+   * These are typed as total `Record`s, and they used to be built sparsely and
+   * then cast — so `registry.byTrustLevel.PROPOSER.length`, which the type says
+   * is safe, threw whenever no session happened to hold that level. The cast was
+   * what hid it. Seeding the maps makes the type true instead of asserted.
+   */
+  const byTrustLevel = Object.fromEntries(
+    EXTERNAL_AGENT_TRUST_LEVELS.map((level) => [level, [] as AgentIdentity[]])
+  ) as Record<ExternalAgentTrustLevel, AgentIdentity[]>;
+  const byClientKind = Object.fromEntries(
+    EXTERNAL_AGENT_CLIENT_KINDS.map((kind) => [kind, [] as AgentIdentity[]])
+  ) as Record<ExternalAgentClientKind, AgentIdentity[]>;
 
   for (const identity of identities) {
-    const tl = identity.trustLevel;
-    byTrustLevel[tl] = byTrustLevel[tl] ?? [];
-    byTrustLevel[tl].push(identity);
-
-    const ck = identity.clientKind;
-    byClientKind[ck] = byClientKind[ck] ?? [];
-    byClientKind[ck].push(identity);
+    byTrustLevel[identity.trustLevel].push(identity);
+    byClientKind[identity.clientKind].push(identity);
   }
 
   return {
     identities,
     activeIdentities,
-    byTrustLevel: byTrustLevel as Record<ExternalAgentTrustLevel, AgentIdentity[]>,
-    byClientKind: byClientKind as Record<ExternalAgentClientKind, AgentIdentity[]>,
+    byTrustLevel,
+    byClientKind,
     totalCount: identities.length,
     activeCount: activeIdentities.length,
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 }
 
@@ -266,9 +264,7 @@ export function getAgentIdentityById(
 /**
  * Get identities that require attention (revoked, expired, or inactive for > 30 days).
  */
-export function getIdentitiesRequiringAttention(
-  registry: AgentIdentityRegistry
-): AgentIdentity[] {
+export function getIdentitiesRequiringAttention(registry: AgentIdentityRegistry): AgentIdentity[] {
   const now = Date.now();
   return registry.identities.filter((id) => {
     if (id.authenticationStatus === 'authenticated' && id.isActive) {

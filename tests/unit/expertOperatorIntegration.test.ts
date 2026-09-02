@@ -82,9 +82,6 @@ describe('expertOperatorIntegration', () => {
 
     const snapshot = buildWorkspaceSnapshot(ws);
     const expertReceipt = snapshot.expertOperator.operate.receipt;
-    const planReceipt = snapshot.planExecutionReceipts.find(
-      (receipt) => receipt.sourceLabel === 'Expert operator'
-    );
 
     expect(snapshot.expertOperator.receipts).toHaveLength(3);
     expect(expertReceipt.activatedExperts.length).toBeGreaterThan(0);
@@ -95,7 +92,22 @@ describe('expertOperatorIntegration', () => {
     expect(JSON.stringify(expertReceipt)).not.toMatch(
       /developerOnly|observedSignals|routingReasons/i
     );
-    expect(planReceipt?.reasoningSummary).toContain('Expert');
-    expect(planReceipt?.sourceFactsUsed.join(' ')).toContain('routing confidence');
+    /**
+     * The routing readout is not an execution receipt.
+     *
+     * These two lines used to reach into `planExecutionReceipts` — the list
+     * behind "Recently done" — and assert the expert readout was in it. It was,
+     * and that was the defect: a readout computed *during the render* appeared
+     * as completed work, so an empty workspace with nothing in it showed three
+     * actions marked `recorded`.
+     *
+     * The readout itself is real and still asserted above, through
+     * `snapshot.expertOperator`, where it is framed as routing rather than as
+     * something that happened.
+     */
+    expect(
+      snapshot.planExecutionReceipts.some((receipt) => receipt.sourceLabel === 'Expert operator'),
+      'routing readout is being reported as completed work'
+    ).toBe(false);
   });
 });

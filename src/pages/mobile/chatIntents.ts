@@ -375,7 +375,8 @@ const ROUTE_PLAIN: Record<CommandRoute, string> = {
   'ai-pipeline-run': 'Runs an AI workspace analysis',
   'ai-core-batch-run': 'Runs a BrandOps AI review',
   'update-opportunity': 'Updates a deal or stage',
-  unsupported: 'I will try to interpret your request or route it to the right expert — try Ask My Twin for open-ended questions'
+  unsupported:
+    'I will try to interpret your request or route it to the right expert — try Ask My Twin for open-ended questions'
 };
 
 export function getInputRouteHint(text: string): string | null {

@@ -10,21 +10,21 @@ import type { Goal } from '../../types/builder';
 // ---------------------------------------------------------------------------
 
 /** Health status for a goal. */
-export type GoalHealthStatus =
-  | 'ON_TRACK'
-  | 'AT_RISK'
-  | 'STALLED'
-  | 'COMPLETED'
-  | 'NEEDS_REVIEW';
+export type GoalHealthStatus = 'ON_TRACK' | 'AT_RISK' | 'STALLED' | 'COMPLETED' | 'NEEDS_REVIEW';
 
 /** Human-readable label for each status. */
 export function goalHealthStatusLabel(status: GoalHealthStatus): string {
   switch (status) {
-    case 'ON_TRACK': return 'On Track — progress is steady and evidence-backed';
-    case 'AT_RISK': return 'At Risk — some indicators are concerning';
-    case 'STALLED': return 'Stalled — no recent progress detected';
-    case 'COMPLETED': return 'Completed — goal has been achieved';
-    case 'NEEDS_REVIEW': return 'Needs Review — requires manual assessment';
+    case 'ON_TRACK':
+      return 'On Track — progress is steady and evidence-backed';
+    case 'AT_RISK':
+      return 'At Risk — some indicators are concerning';
+    case 'STALLED':
+      return 'Stalled — no recent progress detected';
+    case 'COMPLETED':
+      return 'Completed — goal has been achieved';
+    case 'NEEDS_REVIEW':
+      return 'Needs Review — requires manual assessment';
   }
 }
 
@@ -100,16 +100,29 @@ export function evaluateGoalHealth(params: {
 
   for (const g of goals) {
     const achievements = (data.builderActivity?.achievements ?? []) as unknown as Array<{
-      id: string; title?: string; goalIds?: string[]; outcome?: { observed: boolean; metric?: number };
+      id: string;
+      title?: string;
+      goalIds?: string[];
+      outcome?: { observed: boolean; metric?: number };
     }>;
     const plans = (data.planWorkspace?.plans ?? []) as unknown as Array<{
-      id: string; title?: string; goalId?: string; completionStatus?: string; status?: string; blocked?: boolean; outcomes?: string[];
+      id: string;
+      title?: string;
+      goalId?: string;
+      completionStatus?: string;
+      status?: string;
+      blocked?: boolean;
+      outcomes?: string[];
     }>;
     const activities = (data.builderActivity?.events ?? []) as unknown as Array<{
-      timestamp: string; type: string; goalIds?: string[];
+      timestamp: string;
+      type: string;
+      goalIds?: string[];
     }>;
     const artifacts = (data.builderActivity?.artifacts ?? []) as unknown as Array<{
-      id: string; goalId?: string; status?: string;
+      id: string;
+      goalId?: string;
+      status?: string;
     }>;
 
     // Compute factors
@@ -124,23 +137,39 @@ export function evaluateGoalHealth(params: {
 
     // Check raw status first
     if (g.status === 'completed') {
-      status = 'COMPLETED'; confidence = 0.95;
+      status = 'COMPLETED';
+      confidence = 0.95;
     } else if (g.status === 'paused') {
-      status = 'NEEDS_REVIEW'; confidence = 0.7;
+      status = 'NEEDS_REVIEW';
+      confidence = 0.7;
     } else if (g.status === 'abandoned') {
-      status = 'NEEDS_REVIEW'; confidence = 0.6;
+      status = 'NEEDS_REVIEW';
+      confidence = 0.6;
     } else {
       // Active goal — evaluate based on factors
       const blockedPlanIds = blockedFactor.blockedPlanIds ?? [];
 
       if (blockedPlanIds.length > 0) {
-        status = 'AT_RISK'; confidence = 0.6;
+        status = 'AT_RISK';
+        confidence = 0.6;
       } else {
-        const avgFactor = (progressFactor.value + activityFactor.value + blockedFactor.value + outcomeFactor.value) / 4;
+        const avgFactor =
+          (progressFactor.value +
+            activityFactor.value +
+            blockedFactor.value +
+            outcomeFactor.value) /
+          4;
 
-        if (avgFactor >= 0.5) { status = 'ON_TRACK'; confidence = 0.8; }
-        else if (avgFactor >= 0.3) { status = 'AT_RISK'; confidence = 0.7; }
-        else { status = 'STALLED'; confidence = 0.65; }
+        if (avgFactor >= 0.5) {
+          status = 'ON_TRACK';
+          confidence = 0.8;
+        } else if (avgFactor >= 0.3) {
+          status = 'AT_RISK';
+          confidence = 0.7;
+        } else {
+          status = 'STALLED';
+          confidence = 0.65;
+        }
       }
     }
 
@@ -153,11 +182,31 @@ export function evaluateGoalHealth(params: {
       outcomeEvidence: outcomeFactor.details ?? [],
       confidence,
       factors: [
-        { name: 'progress', weight: 0.35, value: progressFactor.value, description: progressFactor.description },
-        { name: 'recent-activity', weight: 0.25, value: activityFactor.value, description: activityFactor.description },
-        { name: 'blocked-plans', weight: 0.25, value: blockedFactor.value, description: blockedFactor.description },
-        { name: 'outcome', weight: 0.15, value: outcomeFactor.value, description: outcomeFactor.description },
-      ],
+        {
+          name: 'progress',
+          weight: 0.35,
+          value: progressFactor.value,
+          description: progressFactor.description
+        },
+        {
+          name: 'recent-activity',
+          weight: 0.25,
+          value: activityFactor.value,
+          description: activityFactor.description
+        },
+        {
+          name: 'blocked-plans',
+          weight: 0.25,
+          value: blockedFactor.value,
+          description: blockedFactor.description
+        },
+        {
+          name: 'outcome',
+          weight: 0.15,
+          value: outcomeFactor.value,
+          description: outcomeFactor.description
+        }
+      ]
     };
 
     const health: GoalHealth = {
@@ -167,10 +216,12 @@ export function evaluateGoalHealth(params: {
       evidence,
       computedAt: now,
       rawStatus: g.status,
-      confidence,
+      confidence
     };
 
-    if (goal) { return health; }
+    if (goal) {
+      return health;
+    }
     result.set(g.id, health);
   }
 
@@ -179,16 +230,26 @@ export function evaluateGoalHealth(params: {
 
 function statusLabelForStatus(status: GoalHealthStatus): string {
   switch (status) {
-    case 'ON_TRACK': return 'ON_TRACK';
-    case 'AT_RISK': return 'AT_RISK';
-    case 'STALLED': return 'STALLED';
-    case 'COMPLETED': return 'COMPLETED';
-    case 'NEEDS_REVIEW': return 'NEEDS_REVIEW';
+    case 'ON_TRACK':
+      return 'ON_TRACK';
+    case 'AT_RISK':
+      return 'AT_RISK';
+    case 'STALLED':
+      return 'STALLED';
+    case 'COMPLETED':
+      return 'COMPLETED';
+    case 'NEEDS_REVIEW':
+      return 'NEEDS_REVIEW';
   }
 }
 
 function isPlanCompleted(p: { completionStatus?: string; status?: string }): boolean {
-  return p.completionStatus === 'completed' || p.status === 'completed' || p.status === 'executed' || p.status === 'verified';
+  return (
+    p.completionStatus === 'completed' ||
+    p.status === 'completed' ||
+    p.status === 'executed' ||
+    p.status === 'verified'
+  );
 }
 
 /**
@@ -200,14 +261,18 @@ function computeProgressFactor(
   plans: Array<{ id: string; goalId?: string; completionStatus?: string; status?: string }>,
   artifacts: Array<{ id: string; goalId?: string; status?: string }>
 ): { value: number; details?: string[]; description: string } {
-  const relevantAchievements = achievements.filter((a) => !a.goalIds || a.goalIds.includes(goal.id));
+  const relevantAchievements = achievements.filter(
+    (a) => !a.goalIds || a.goalIds.includes(goal.id)
+  );
   const relevantPlans = plans.filter((p) => !p.goalId || p.goalId === goal.id);
   const relevantArtifacts = artifacts.filter((a) => !a.goalId || a.goalId === goal.id);
 
   const achievementCount = relevantAchievements.length;
   const completedPlans = relevantPlans.filter(isPlanCompleted).length;
   const totalPlans = relevantPlans.length;
-  const completedArtifacts = relevantArtifacts.filter((a) => a.status === 'published' || a.status === 'approved').length;
+  const completedArtifacts = relevantArtifacts.filter(
+    (a) => a.status === 'published' || a.status === 'approved'
+  ).length;
   const totalArtifacts = relevantArtifacts.length;
 
   let value = 0;
@@ -235,7 +300,7 @@ function computeProgressFactor(
   return {
     value: Math.min(1, value),
     details: details.length > 0 ? details : undefined,
-    description: details.length > 0 ? details.join(', ') : 'No progress evidence',
+    description: details.length > 0 ? details.join(', ') : 'No progress evidence'
   };
 }
 
@@ -282,9 +347,13 @@ function computeBlockedPlansFactor(
   }
 
   const blockedPlanIds = blockedPlans.map((p) => p.id);
-  const value = Math.max(0, 1 - (blockedPlans.length / Math.max(1, relevantPlans.length)));
+  const value = Math.max(0, 1 - blockedPlans.length / Math.max(1, relevantPlans.length));
 
-  return { value, blockedPlanIds, description: `${blockedPlans.length} blocked plan(s) out of ${relevantPlans.length}` };
+  return {
+    value,
+    blockedPlanIds,
+    description: `${blockedPlans.length} blocked plan(s) out of ${relevantPlans.length}`
+  };
 }
 
 /**
@@ -292,16 +361,19 @@ function computeBlockedPlansFactor(
  */
 function computeOutcomeFactor(
   goal: Goal,
-  achievements: Array<{ id: string; goalIds?: string[]; outcome?: { observed: boolean; metric?: number } }>,
+  achievements: Array<{
+    id: string;
+    goalIds?: string[];
+    outcome?: { observed: boolean; metric?: number };
+  }>,
   plans: Array<{ id: string; goalId?: string; completionStatus?: string; outcomes?: string[] }>
 ): { value: number; details?: string[]; description: string } {
-  const outcomeAchievements = achievements.filter((a) =>
-    (!a.goalIds || a.goalIds.includes(goal.id)) && a.outcome?.observed
+  const outcomeAchievements = achievements.filter(
+    (a) => (!a.goalIds || a.goalIds.includes(goal.id)) && a.outcome?.observed
   );
 
-  const completedPlans = plans.filter((p) =>
-    (!p.goalId || p.goalId === goal.id) &&
-    p.completionStatus === 'completed'
+  const completedPlans = plans.filter(
+    (p) => (!p.goalId || p.goalId === goal.id) && p.completionStatus === 'completed'
   );
 
   const details: string[] = [];
@@ -318,17 +390,16 @@ function computeOutcomeFactor(
   }
 
   // Also count achievements that are goal-related as outcome evidence (even without explicit outcome field)
-  const goalAchievements = achievements.filter((a) =>
-    !a.goalIds || a.goalIds.includes(goal.id)
-  );
+  const goalAchievements = achievements.filter((a) => !a.goalIds || a.goalIds.includes(goal.id));
   if (goalAchievements.length > 0 && details.length === 0) {
     value = Math.min(0.6, (goalAchievements.length / 5) * 0.6);
     details.push(`${goalAchievements.length} goal-related achievement(s)`);
   }
 
   return {
-    value: Math.min(1, value), details: details.length > 0 ? details : undefined,
-    description: details.length === 0 ? 'No outcome evidence' : 'Outcome evidence present',
+    value: Math.min(1, value),
+    details: details.length > 0 ? details : undefined,
+    description: details.length === 0 ? 'No outcome evidence' : 'Outcome evidence present'
   };
 }
 
@@ -336,9 +407,13 @@ function computeOutcomeFactor(
  * Evaluate health for all goals in the workspace.
  */
 export function evaluateAllGoalHealth(params: {
-  data: BrandOpsData; recentActivityWindowDays?: number;
+  data: BrandOpsData;
+  recentActivityWindowDays?: number;
 }): Map<string, GoalHealth> {
-  return evaluateGoalHealth({ data: params.data, recentActivityWindowDays: params.recentActivityWindowDays }) as Map<string, GoalHealth>;
+  return evaluateGoalHealth({
+    data: params.data,
+    recentActivityWindowDays: params.recentActivityWindowDays
+  }) as Map<string, GoalHealth>;
 }
 
 /**
@@ -348,7 +423,11 @@ export function getGoalsNeedingAttention(healthMap: Map<string, GoalHealth>): Go
   const needsAttention: GoalHealth[] = [];
 
   for (const health of healthMap.values()) {
-    if (health.status === 'AT_RISK' || health.status === 'STALLED' || health.status === 'NEEDS_REVIEW') {
+    if (
+      health.status === 'AT_RISK' ||
+      health.status === 'STALLED' ||
+      health.status === 'NEEDS_REVIEW'
+    ) {
       needsAttention.push(health);
     }
   }

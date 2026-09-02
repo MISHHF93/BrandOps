@@ -991,6 +991,19 @@ export interface PlanReceipt {
   summary: string;
 }
 
+/** Durable idempotency records, so a retry after a restart is still a replay. */
+export interface AgentIdempotencyState {
+  entries: Array<{
+    hash: string;
+    sessionId: string;
+    capabilityId: string;
+    at: string;
+    // The result the original call returned, replayed verbatim.
+    result: import('./agentInterop').AgentToolResult;
+  }>;
+  updatedAt: string;
+}
+
 export interface PlanWorkspaceState {
   plans: Plan[];
   receipts: PlanReceipt[];
@@ -1158,6 +1171,7 @@ export interface BrandOpsData {
   externalAgentEvents?: import('./agentInterop').ExternalAgentEventsState;
   /** Proposed twin/artifact/action changes awaiting user decision inside PLAN. */
   agentProposals?: import('./agentInterop').AgentProposalsState;
+  agentIdempotency?: AgentIdempotencyState;
   /** Unconditional audit of every external-agent invocation (capped). */
   externalAgentAudit?: import('./agentInterop').ExternalAgentAuditState;
   /** Agent handoffs - explicit task delegation between agents. */

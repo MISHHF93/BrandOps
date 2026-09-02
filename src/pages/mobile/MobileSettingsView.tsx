@@ -197,8 +197,8 @@ function AccountMembershipSection({
             )}
           </div>
           <p className="mt-2 text-fine leading-snug text-textSoft">
-            Billing links are for navigation only. Membership verification is handled locally in this
-            version of BrandOps.
+            Billing links are for navigation only. Membership verification is handled locally in
+            this version of BrandOps.
           </p>
           {membership.renewalDate ? (
             <p className="mt-2 text-fine text-textSoft">Renews: {membership.renewalDate}</p>
@@ -1259,14 +1259,13 @@ export const MobileSettingsView = ({
                 </h3>
                 {documentSurface === 'integrations' ? (
                   <p className="mt-1 text-meta text-textMuted">
-                    You are viewing the Integrations hub — it shares the same interface as
-                    the mobile app.
+                    You are viewing the Integrations hub — it shares the same interface as the
+                    mobile app.
                   </p>
                 ) : (
                   <>
                     <p className="mt-1 text-meta text-textMuted">
-                      Opens the Integrations hub in a new tab — same interface as
-                      this workspace.
+                      Opens the Integrations hub in a new tab — same interface as this workspace.
                     </p>
                     <button
                       type="button"

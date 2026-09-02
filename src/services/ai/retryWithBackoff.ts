@@ -35,7 +35,11 @@ function parseRetryAfter(response: Response): number | null {
   return Math.min(seconds * 1000, 60_000);
 }
 
-function computeDelay(attempt: number, config: Required<RetryConfig>, retryAfterMs: number | null): number {
+function computeDelay(
+  attempt: number,
+  config: Required<RetryConfig>,
+  retryAfterMs: number | null
+): number {
   const exponential = config.baseDelayMs * Math.pow(2, attempt);
   const jitter = Math.random() * config.baseDelayMs;
   const delay = Math.min(exponential + jitter, config.maxDelayMs);

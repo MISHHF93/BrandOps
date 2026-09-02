@@ -59,11 +59,7 @@ export function SurfaceNavLinks({ className }: SurfaceNavLinksProps) {
       <a className={linkClass} href={integrationsTabHref} title="Integrations tab">
         Integrations tab
       </a>
-      <a
-        className={linkClass}
-        href={integrationsHubHref}
-        title="Integrations hub"
-      >
+      <a className={linkClass} href={integrationsHubHref} title="Integrations hub">
         Integrations hub
       </a>
       <a className={linkClass} href={settingsHref}>

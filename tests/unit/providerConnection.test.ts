@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { markProviderConnected, markProviderDisconnected, markProviderError } from '../../src/shared/account/providerConnection';
+import {
+  markProviderConnected,
+  markProviderDisconnected,
+  markProviderError
+} from '../../src/shared/account/providerConnection';
 import type { BrandOpsData } from '../../src/types/domain';
 
 function makeWorkspace(): BrandOpsData {

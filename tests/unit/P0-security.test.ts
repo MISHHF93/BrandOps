@@ -131,8 +131,18 @@ describe('P0 Security — Isolation & Authorization', () => {
     // The workspace boundary is structural: each workspace is a separate
     // BrandOpsData object with its own digitalTwins. No shared global state
     // crosses workspace boundaries in the local-first architecture.
-    expect(wsB.id).not.toBe(wsA.id);
+    //
+    // `expect(wsB.id).not.toBe(wsA.id)` used to stand here. It compared a field
+    // this test had just assigned two different values to — a tautology reading
+    // as an isolation check, and one TypeScript could not even see, since
+    // `BrandOpsData` has no `id` (it survives only because `withDefaults`
+    // preserves unknown keys). Isolation is worth asserting properly: writing
+    // through one workspace must not be observable through the other.
     expect(wsB.digitalTwins?.activeTwinId).not.toBe(wsA.digitalTwins?.activeTwinId);
+    expect(wsB.digitalTwins).not.toBe(wsA.digitalTwins);
+    expect(wsB.digitalTwins?.twins).not.toBe(wsA.digitalTwins?.twins);
+    wsA.digitalTwins?.twins.push({ ...wsA.digitalTwins.twins[0], id: 'twin-injected' });
+    expect(wsB.digitalTwins?.twins.some((t) => t.id === 'twin-injected')).toBe(false);
   });
 
   it('approval bypass: plan in draft status cannot be executed', () => {
@@ -197,7 +207,7 @@ describe('P0 Security — Isolation & Authorization', () => {
       ...saved.workspace,
       planWorkspace: {
         ...saved.workspace.planWorkspace,
-        plans: saved.workspace.planWorkspace?.plans.map(p =>
+        plans: saved.workspace.planWorkspace?.plans.map((p) =>
           p.id === plan!.id ? { ...p, status: 'rejected' } : p
         )
       }
@@ -228,7 +238,11 @@ describe('P0 Security — Isolation & Authorization', () => {
     const draftWithInternalSteps = {
       ...draft.draft,
       steps: [
-        makePlanStep({ id: 'step-safe-1', title: 'Review document', description: 'Read the document' })
+        makePlanStep({
+          id: 'step-safe-1',
+          title: 'Review document',
+          description: 'Read the document'
+        })
       ]
     };
 
@@ -245,7 +259,7 @@ describe('P0 Security — Isolation & Authorization', () => {
       ...saved.workspace,
       planWorkspace: {
         ...saved.workspace.planWorkspace,
-        plans: saved.workspace.planWorkspace?.plans.map(p =>
+        plans: saved.workspace.planWorkspace?.plans.map((p) =>
           p.id === plan!.id ? { ...p, status: 'approved' } : p
         )
       }
@@ -263,9 +277,9 @@ describe('P0 Security — Isolation & Authorization', () => {
     expect(secondRun.summary).toContain('not approved for execution');
 
     // Count execution_started checkpoints — only one from first run
-    const execStartedCheckpoints = secondRun.workspace.checkpoints?.entries.filter(
-      (c) => c.type === 'plan.execution_started'
-    ).length ?? 0;
+    const execStartedCheckpoints =
+      secondRun.workspace.checkpoints?.entries.filter((c) => c.type === 'plan.execution_started')
+        .length ?? 0;
     expect(execStartedCheckpoints).toBe(1);
   });
 });

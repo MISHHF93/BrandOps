@@ -29,11 +29,17 @@ jobs:
       - name: Verify formatting (Prettier)
         run: npm run format
 
-      - name: Run tests (unit + integration parity with release)
-        run: npm run test && npm run test:integration
-
+      # Build first: the suite verifies the shipped artifact, not only the source
+      # that produces it. `bundleBudget` measures dist/ chunk weight and
+      # `launchGateContract` checks that the auth gate survives minification —
+      # both fail rather than skip when dist/ is absent, so an unverified build
+      # cannot pass as a verified one. Testing before building made those six
+      # tests fail on a clean checkout.
       - name: Build extension
         run: npm run build
+
+      - name: Run tests (unit + integration parity with release)
+        run: npm run test && npm run test:integration
 
       - name: Verify build artifacts
         run: npm run verify:dist

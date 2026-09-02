@@ -84,7 +84,11 @@ describe('Outcome → Learning', () => {
 
   it('planVerifier: a fully-verified plan records a plan-completed-successfully signal', () => {
     const ws = makeWorkspace();
-    ws.planWorkspace = { plans: [makePlan(ws, 'executed')], receipts: [], updatedAt: new Date().toISOString() };
+    ws.planWorkspace = {
+      plans: [makePlan(ws, 'executed')],
+      receipts: [],
+      updatedAt: new Date().toISOString()
+    };
 
     const result = verifyPlanOutcomes(ws, 'plan-1', {
       outcomes: [
@@ -105,7 +109,11 @@ describe('Outcome → Learning', () => {
 
   it('planVerifier: a partially-failed plan records a plan-failed signal and partial score', () => {
     const ws = makeWorkspace();
-    ws.planWorkspace = { plans: [makePlan(ws, 'executed')], receipts: [], updatedAt: new Date().toISOString() };
+    ws.planWorkspace = {
+      plans: [makePlan(ws, 'executed')],
+      receipts: [],
+      updatedAt: new Date().toISOString()
+    };
 
     const result = verifyPlanOutcomes(ws, 'plan-1', {
       outcomes: [
@@ -115,7 +123,9 @@ describe('Outcome → Learning', () => {
     });
     expect(result.verified).toBe(true);
     expect(result.allAchieved).toBe(false);
-    expect(getRecentLearningSignals(result.workspace).some((s) => s.signalType === 'plan-failed')).toBe(true);
+    expect(
+      getRecentLearningSignals(result.workspace).some((s) => s.signalType === 'plan-failed')
+    ).toBe(true);
     expect(getAverageOutcomeScore(result.workspace, 'plan-completion-rate')).toBe(0.5);
   });
 

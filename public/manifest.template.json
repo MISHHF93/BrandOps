@@ -12,7 +12,7 @@
       "128": "icons/128.png"
     }
   },
-  "permissions": ["storage", "activeTab", "alarms", "notifications", "tabs"],
+  "permissions": ["storage", "alarms", "notifications"],
   "host_permissions": [
     "https://*.linkedin.com/*",
     "https://api.openai.com/*",

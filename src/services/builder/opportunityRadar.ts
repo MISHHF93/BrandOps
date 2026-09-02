@@ -1,4 +1,3 @@
-
 /**
  * Opportunity Radar — consolidates recommendation logic into explicit opportunity
  * categories with ranking from evidence strength, goal alignment, freshness,
@@ -43,10 +42,17 @@ export function computeOpportunityRadar(
 
   // Generate from achievements
   for (const achievement of achievements) {
-    if (achievement.verificationStatus !== 'USER_VERIFIED' && achievement.verificationStatus !== 'INDEPENDENTLY_SUPPORTED') {
+    if (
+      achievement.verificationStatus !== 'USER_VERIFIED' &&
+      achievement.verificationStatus !== 'INDEPENDENTLY_SUPPORTED'
+    ) {
       continue;
     }
-    if (achievement.timestamp && new Date(achievement.timestamp).getTime() < staleCutoff && achievement.kind !== 'project-milestone-reached') {
+    if (
+      achievement.timestamp &&
+      new Date(achievement.timestamp).getTime() < staleCutoff &&
+      achievement.kind !== 'project-milestone-reached'
+    ) {
       continue;
     }
 
@@ -62,7 +68,10 @@ export function computeOpportunityRadar(
       workspaceId: achievement.workspaceId,
       category,
       title: `From "` + achievement.title + `"`,
-      description: `Achievement "` + achievement.title + `" (${achievement.kind}) suggests a ${category.toLowerCase()} opportunity.`,
+      description:
+        `Achievement "` +
+        achievement.title +
+        `" (${achievement.kind}) suggests a ${category.toLowerCase()} opportunity.`,
       reason: `Derived from verified achievement with confidence ${achievement.confidence.toFixed(2)}.`,
       evidence: achievement.evidence ?? [],
       confidence: achievement.confidence,
@@ -79,7 +88,9 @@ export function computeOpportunityRadar(
       stale: false
     };
     rec.rankScore = rankRadarRecommendation(rec, achievement);
-    rec.stale = achievement.timestamp ? new Date(achievement.timestamp).getTime() < staleCutoff : false;
+    rec.stale = achievement.timestamp
+      ? new Date(achievement.timestamp).getTime() < staleCutoff
+      : false;
     all.push(rec);
   }
 
@@ -126,35 +137,59 @@ function categoryEffort(category: OpportunityCategory): 'low' | 'medium' | 'high
 
 function categoryGoalAlignment(category: OpportunityCategory): string[] {
   switch (category) {
-    case 'CONTENT': return ['build-public-profile', 'demonstrate-expertise'];
-    case 'PORTFOLIO': return ['strengthen-portfolio', 'proof-of-work'];
-    case 'BUILD': return ['deliver-value', 'technical-growth'];
-    case 'PUBLISH': return ['capture-value', 'expand-reach'];
-    case 'FOLLOW_UP': return ['capture-value', 'continuous-improvement'];
-    case 'CONNECT': return ['expand-network', 'create-opportunities'];
-    case 'DOCUMENT': return ['knowledge-sharing', 'reduce-friction'];
-    case 'LEARN': return ['skill-growth', 'long-term-value'];
-    case 'AUTOMATE': return ['efficiency', 'leverage'];
-    case 'POSITIONING': return ['align-positioning', 'focus-messaging'];
-    case 'OUTREACH': return ['expand-network', 'create-opportunities'];
-    default: return ['general'];
+    case 'CONTENT':
+      return ['build-public-profile', 'demonstrate-expertise'];
+    case 'PORTFOLIO':
+      return ['strengthen-portfolio', 'proof-of-work'];
+    case 'BUILD':
+      return ['deliver-value', 'technical-growth'];
+    case 'PUBLISH':
+      return ['capture-value', 'expand-reach'];
+    case 'FOLLOW_UP':
+      return ['capture-value', 'continuous-improvement'];
+    case 'CONNECT':
+      return ['expand-network', 'create-opportunities'];
+    case 'DOCUMENT':
+      return ['knowledge-sharing', 'reduce-friction'];
+    case 'LEARN':
+      return ['skill-growth', 'long-term-value'];
+    case 'AUTOMATE':
+      return ['efficiency', 'leverage'];
+    case 'POSITIONING':
+      return ['align-positioning', 'focus-messaging'];
+    case 'OUTREACH':
+      return ['expand-network', 'create-opportunities'];
+    default:
+      return ['general'];
   }
 }
 
 function categoryPrimaryAction(category: OpportunityCategory, achievement: Achievement): string {
   switch (category) {
-    case 'CONTENT': return `Draft content based on "${achievement.title}"`;
-    case 'PORTFOLIO': return `Add "${achievement.title}" to portfolio`;
-    case 'BUILD': return `Plan next build step from "${achievement.title}"`;
-    case 'PUBLISH': return `Publish "${achievement.title}" results`;
-    case 'FOLLOW_UP': return `Schedule follow-up for "${achievement.title}"`;
-    case 'CONNECT': return `Connect with peers interested in "${achievement.title}"`;
-    case 'DOCUMENT': return `Document "${achievement.title}"`;
-    case 'LEARN': return `Reflect on what "${achievement.title}" taught you`;
-    case 'AUTOMATE': return `Automate repetitive work from "${achievement.title}"`;
-    case 'POSITIONING': return `Review positioning in light of "${achievement.title}"`;
-    case 'OUTREACH': return `Outreach around "${achievement.title}"`;
-    default: return `Review "${achievement.title}"`;
+    case 'CONTENT':
+      return `Draft content based on "${achievement.title}"`;
+    case 'PORTFOLIO':
+      return `Add "${achievement.title}" to portfolio`;
+    case 'BUILD':
+      return `Plan next build step from "${achievement.title}"`;
+    case 'PUBLISH':
+      return `Publish "${achievement.title}" results`;
+    case 'FOLLOW_UP':
+      return `Schedule follow-up for "${achievement.title}"`;
+    case 'CONNECT':
+      return `Connect with peers interested in "${achievement.title}"`;
+    case 'DOCUMENT':
+      return `Document "${achievement.title}"`;
+    case 'LEARN':
+      return `Reflect on what "${achievement.title}" taught you`;
+    case 'AUTOMATE':
+      return `Automate repetitive work from "${achievement.title}"`;
+    case 'POSITIONING':
+      return `Review positioning in light of "${achievement.title}"`;
+    case 'OUTREACH':
+      return `Outreach around "${achievement.title}"`;
+    default:
+      return `Review "${achievement.title}"`;
   }
 }
 
@@ -164,5 +199,11 @@ function rankRadarRecommendation(rec: RadarRecommendation, achievement: Achievem
     : 0.5;
   const effortScore = rec.effort === 'low' ? 0.15 : rec.effort === 'medium' ? 0.05 : 0;
   const goalAlignmentScore = rec.goalAlignment.length > 0 ? 0.1 : 0;
-  return rec.confidence * 0.4 + rec.expectedValue * 0.25 + freshness * 0.15 + effortScore + goalAlignmentScore;
+  return (
+    rec.confidence * 0.4 +
+    rec.expectedValue * 0.25 +
+    freshness * 0.15 +
+    effortScore +
+    goalAlignmentScore
+  );
 }

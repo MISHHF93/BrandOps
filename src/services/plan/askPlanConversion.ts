@@ -682,6 +682,17 @@ export function savePlanDraftToWorkspace(input: SavePlanDraftInput): SavePlanDra
     entityType: 'plan',
     entityId: plan.id,
     outcome: 'success',
+    /**
+     * The same capability the MCP path already records for this operation.
+     *
+     * `convertToPlan.ts` writes `capabilityId: 'plan.convert'` for the identical
+     * conversion; this path — the one a person actually goes through — recorded
+     * no capability at all. That is why an approval row could say who was asking
+     * and what for, but never what approving would do: the trace did not say
+     * which capability it was, so there was nothing to look the consequence up
+     * against.
+     */
+    capabilityId: 'plan.convert',
     reviewStatus: status === 'pending-approval' ? 'pending' : undefined,
     labels: ['converted-from-ask', 'human-gated', PLAN_PRESET_LABELS[plan.planType]],
     annotatorNote:

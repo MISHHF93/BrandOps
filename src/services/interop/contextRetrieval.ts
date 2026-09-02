@@ -509,9 +509,7 @@ function contentContextItems(
 
   if (query?.trim()) {
     const embeddingMatches = searchContentByRelevance(workspace, query, 5);
-    const seenIds = new Set(
-      workspace.contentLibrary.slice(0, 10).map((item) => item.id)
-    );
+    const seenIds = new Set(workspace.contentLibrary.slice(0, 10).map((item) => item.id));
     for (const match of embeddingMatches) {
       if (seenIds.has(match.itemId)) continue;
       seenIds.add(match.itemId);
@@ -564,7 +562,11 @@ function professionContextItems(workspace: BrandOpsData, now: Date): AgentContex
         trustTier: tier,
         updatedAt: updatedAt ?? intel?.updatedAt,
         now,
-        provenanceRef: `brandops://profession/${entityId}`
+        // `entityId` already begins with `profession/`, so the old
+        // `brandops://profession/${entityId}` produced `brandops://profession/profession/identity`.
+        // Every other workspace-scoped bundle in this file uses the `workspace/`
+        // authority; this one now matches instead of inventing a second one.
+        provenanceRef: `brandops://workspace/${entityId}`
       })
     );
   };
@@ -646,7 +648,10 @@ function professionContextItems(workspace: BrandOpsData, now: Date): AgentContex
 }
 
 const BUNDLE_BUILDERS: Readonly<
-  Record<ContextBundleId, (workspace: BrandOpsData, now: Date, query?: string) => AgentContextPayloadItem[]>
+  Record<
+    ContextBundleId,
+    (workspace: BrandOpsData, now: Date, query?: string) => AgentContextPayloadItem[]
+  >
 > = {
   PUBLIC_IDENTITY: publicIdentityItems,
   BUILDER_CONTEXT: builderContextItems,
@@ -727,6 +732,68 @@ export function searchArtifacts(
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map(({ score: _score, ...rest }) => rest);
+}
+
+/**
+ * One artifact by exact id, projected identically to a `searchArtifacts` hit.
+ *
+ * It walks the same three slices in the same order, so an id that search
+ * returned always resolves here — the two cannot disagree about what an artifact
+ * is, or about how one is summarized. Lookup is by id, never by relevance:
+ * scoring an id string against titles finds nothing, which is precisely the bug
+ * this function exists to avoid.
+ */
+export function getArtifactById(
+  workspace: BrandOpsData,
+  artifactId: string
+): {
+  id: string;
+  kind: string;
+  title: string;
+  summary: string;
+  updatedAt?: string;
+  provenanceRef: string;
+} | null {
+  const project = (title: string, body: string, id: string, kind: string, updatedAt?: string) => ({
+    id,
+    kind,
+    title: title.slice(0, 200),
+    summary: (body || title).replace(/\s+/g, ' ').slice(0, 400),
+    updatedAt,
+    provenanceRef: `brandops://workspace/${id}`
+  });
+
+  const artifact = workspace.integrationHub.artifacts.find((item) => item.id === artifactId);
+  if (artifact)
+    return project(
+      artifact.title,
+      artifact.summary,
+      artifact.id,
+      `artifact:${artifact.artifactType}`,
+      artifact.updatedAt
+    );
+
+  const content = workspace.contentLibrary.find((item) => item.id === artifactId);
+  if (content)
+    return project(
+      content.title,
+      content.body,
+      content.id,
+      `content:${content.type}`,
+      content.updatedAt
+    );
+
+  const publishing = workspace.publishingQueue.find((item) => item.id === artifactId);
+  if (publishing)
+    return project(
+      publishing.title,
+      publishing.body,
+      publishing.id,
+      `publishing:${publishing.status}`,
+      publishing.updatedAt
+    );
+
+  return null;
 }
 
 /** Fresh content samples — used by WRITING_VOICE / content prompts without leaking unrelated memory. */

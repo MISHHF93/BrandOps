@@ -9,7 +9,12 @@
  */
 
 import type { BrandOpsData } from '../../types/domain';
-import type { Goal, OpportunityRecommendation, AchievementCandidate, ProfessionalSignal } from '../../types/builder';
+import type {
+  Goal,
+  OpportunityRecommendation,
+  AchievementCandidate,
+  ProfessionalSignal
+} from '../../types/builder';
 
 // ---------------------------------------------------------------------------
 // Why Now Types
@@ -38,7 +43,15 @@ export interface WhyNowExplanation {
 /** A piece of evidence supporting the "why now". */
 export interface WhyNowEvidenceItem {
   /** Evidence type. */
-  type: 'recent-activity' | 'goal-priority' | 'missing-artifact' | 'new-achievement' | 'signal-change' | 'plan-completion' | 'opportune-moment' | 'user-action';
+  type:
+    | 'recent-activity'
+    | 'goal-priority'
+    | 'missing-artifact'
+    | 'new-achievement'
+    | 'signal-change'
+    | 'plan-completion'
+    | 'opportune-moment'
+    | 'user-action';
   /** Description. */
   description: string;
   /** Timestamp (if applicable). */
@@ -55,25 +68,44 @@ export interface WhyNowEvidenceItem {
  * Generate a "why now" explanation for a recommendation.
  * Uses the recommendation data plus workspace context to construct the narrative.
  */
-export function buildWhyNow(
-  params: {
-    recommendation: OpportunityRecommendation | AchievementCandidate | ProfessionalSignal;
-    data: BrandOpsData;
-    /** Which goal(s) the recommendation relates to. */
-    relatedGoals?: string[];
-    /** Optional trace id for correlation. */
-    traceId?: string;
-  }
-): WhyNowExplanation {
+export function buildWhyNow(params: {
+  recommendation: OpportunityRecommendation | AchievementCandidate | ProfessionalSignal;
+  data: BrandOpsData;
+  /** Which goal(s) the recommendation relates to. */
+  relatedGoals?: string[];
+  /** Optional trace id for correlation. */
+  traceId?: string;
+}): WhyNowExplanation {
   const rec = params.recommendation;
   const data = params.data;
 
   // Extract context
-  const achievements = (data.builderActivity?.achievements ?? []) as unknown as Array<{ timestamp: string; twinSummary?: string }>;
-  const goals = params.relatedGoals?.map((id) => data.builderActivity?.goals?.find((g) => g.id === id)).filter((g): g is Goal => Boolean(g)) ?? [];
-  const plans = (data.planWorkspace?.plans ?? []) as unknown as Array<{ id: string; completionStatus: string; status?: string; completedAt?: string; updatedAt?: string; title?: string }>;
-  const artifacts = (data.builderActivity?.artifacts ?? []) as unknown as Array<{ id: string; title: string; status: string; type: string }>;
-  const recentActivity = (data.builderActivity?.events ?? []) as unknown as Array<{ timestamp: string; type: string }>;
+  const achievements = (data.builderActivity?.achievements ?? []) as unknown as Array<{
+    timestamp: string;
+    twinSummary?: string;
+  }>;
+  const goals =
+    params.relatedGoals
+      ?.map((id) => data.builderActivity?.goals?.find((g) => g.id === id))
+      .filter((g): g is Goal => Boolean(g)) ?? [];
+  const plans = (data.planWorkspace?.plans ?? []) as unknown as Array<{
+    id: string;
+    completionStatus: string;
+    status?: string;
+    completedAt?: string;
+    updatedAt?: string;
+    title?: string;
+  }>;
+  const artifacts = (data.builderActivity?.artifacts ?? []) as unknown as Array<{
+    id: string;
+    title: string;
+    status: string;
+    type: string;
+  }>;
+  const recentActivity = (data.builderActivity?.events ?? []) as unknown as Array<{
+    timestamp: string;
+    type: string;
+  }>;
 
   const evidence: WhyNowEvidenceItem[] = [];
   let shouldInterrupt = false;
@@ -141,12 +173,14 @@ export function buildWhyNow(
   // Adjust confidence for fragility
   if (evidence.length === 0) {
     isFragile = true;
-    criticalAssumption = 'No recent activity or goal context found — recommendation is based purely on static profile data.';
+    criticalAssumption =
+      'No recent activity or goal context found — recommendation is based purely on static profile data.';
     confidence = 0.1;
     shouldInterrupt = false;
   } else if (evidence.length <= 1) {
     isFragile = true;
-    criticalAssumption = 'Only one weak signal supports this recommendation — the "why now" is tenuous.';
+    criticalAssumption =
+      'Only one weak signal supports this recommendation — the "why now" is tenuous.';
     confidence = Math.min(confidence, 0.3);
   }
 
@@ -161,7 +195,7 @@ export function buildWhyNow(
     confidence: Math.min(1, confidence),
     shouldInterrupt,
     isFragile,
-    criticalAssumption,
+    criticalAssumption
   };
 }
 
@@ -208,7 +242,7 @@ function findRecentActivityEvidence(
     type: 'recent-activity',
     description: `You had ${recent.length} activity event(s) in the last 48 hours${types.length > 0 ? ` (${types.join(', ')})` : ''}.`,
     timestamp: recent[0].timestamp,
-    weight: 0.25,
+    weight: 0.25
   };
 }
 
@@ -222,7 +256,9 @@ function findGoalPriorityEvidence(
   if (goals.length === 0) return undefined;
 
   // Check if any goal is active and high priority
-  const activeHighPriority = goals.filter((g) => g.status === 'active' && (!g.priority || g.priority >= 0.7));
+  const activeHighPriority = goals.filter(
+    (g) => g.status === 'active' && (!g.priority || g.priority >= 0.7)
+  );
 
   if (activeHighPriority.length === 0) return undefined;
 
@@ -230,7 +266,7 @@ function findGoalPriorityEvidence(
   return {
     type: 'goal-priority',
     description: `Your active goal "${goal.title}" is prioritized. This recommendation aligns with that goal.`,
-    weight: 0.2,
+    weight: 0.2
   };
 }
 
@@ -245,8 +281,8 @@ function findMissingArtifactEvidence(
   // Check if there's a recommendation to create content but no corresponding artifact
   if (!('category' in rec) || rec.category !== 'content-piece-opportunity') return undefined;
 
-  const relevantArtifacts = artifacts.filter((a) =>
-    a.status !== 'published' && a.status !== 'approved'
+  const relevantArtifacts = artifacts.filter(
+    (a) => a.status !== 'published' && a.status !== 'approved'
   );
 
   if (relevantArtifacts.length === 0) return undefined;
@@ -254,7 +290,7 @@ function findMissingArtifactEvidence(
   return {
     type: 'missing-artifact',
     description: `You have ${relevantArtifacts.length} draft/ideas that could be developed into published content.`,
-    weight: 0.2,
+    weight: 0.2
   };
 }
 
@@ -279,7 +315,7 @@ function findNewAchievementEvidence(
     type: 'new-achievement',
     description: `You accepted ${count} achievement(s) in the last 7 days. Most recent: ${latest.twinSummary ?? 'Unsummarized'}.`,
     timestamp: latest.timestamp,
-    weight: 0.25,
+    weight: 0.25
   };
 }
 
@@ -294,7 +330,7 @@ function findSignalChangeEvidence(
     return {
       type: 'signal-change',
       description: `This signal was detected with ${Math.round(rec.confidence * 100)}% confidence based on recent patterns.`,
-      weight: 0.15,
+      weight: 0.15
     };
   }
 
@@ -305,11 +341,22 @@ function findSignalChangeEvidence(
  * Find plan completion evidence.
  */
 function findPlanCompletionEvidence(
-  plans: Array<{ id: string; completionStatus: string; status?: string; completedAt?: string; updatedAt?: string; title?: string }>,
+  plans: Array<{
+    id: string;
+    completionStatus: string;
+    status?: string;
+    completedAt?: string;
+    updatedAt?: string;
+    title?: string;
+  }>,
   _rec: OpportunityRecommendation | AchievementCandidate | ProfessionalSignal
 ): WhyNowEvidenceItem | undefined {
   const completedPlans = plans.filter(
-    (p) => p.completionStatus === 'completed' || p.status === 'completed' || p.status === 'executed' || p.status === 'verified'
+    (p) =>
+      p.completionStatus === 'completed' ||
+      p.status === 'completed' ||
+      p.status === 'executed' ||
+      p.status === 'verified'
   );
 
   if (completedPlans.length === 0) return undefined;
@@ -320,7 +367,7 @@ function findPlanCompletionEvidence(
     type: 'plan-completion',
     description: `You recently completed a plan${latest.title ? ` ("${latest.title}")` : ''}. This creates momentum for the next step.`,
     timestamp: latest.completedAt ?? latest.updatedAt,
-    weight: 0.2,
+    weight: 0.2
   };
 }
 
@@ -341,7 +388,7 @@ function findOpportuneMomentEvidence(
   return {
     type: 'opportune-moment',
     description: `This is a high-value opportunity (${Math.round(rec.expectedValue * 100)}% expected value) and you have active goals.`,
-    weight: 0.1,
+    weight: 0.1
   };
 }
 

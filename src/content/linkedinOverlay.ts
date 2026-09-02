@@ -10,6 +10,8 @@ import {
 } from './linkedinCompanionSafety';
 
 const ROOT_ID = 'brandops-linkedin-companion-root';
+/** The element in the page. Everything the user sees lives in its shadow root. */
+const HOST_ID = 'brandops-linkedin-companion-host';
 const STYLE_ID = 'brandops-linkedin-companion-style';
 const PANEL_VISIBLE_KEY = 'brandops:linkedin-companion:open';
 const LAUNCHER_ICON_PATH = 'icons/48.png';
@@ -48,7 +50,8 @@ const companionState = {
   } as CompanionElementState,
   fieldRefs: {} as Partial<Record<keyof CompanionFormState, FieldElement>>,
   observers: [] as Array<() => void>,
-  refreshToken: 0
+  refreshToken: 0,
+  shadow: null as ShadowRoot | null
 };
 
 const isLinkedInProfilePage = (url: URL) => {
@@ -121,8 +124,16 @@ const applyLiquidMotionToCompanionRoot = async (root: HTMLDivElement) => {
   root.style.setProperty('--duration-liquid-enter', reduced ? '0ms' : '320ms');
 };
 
-const ensureStyles = () => {
-  if (document.getElementById(STYLE_ID)) return;
+/**
+ * Styles are appended to whatever root the companion lives in.
+ *
+ * They used to go into `document.head`, which only worked because the panel
+ * itself was in the page. Inside a shadow root the page's stylesheet does not
+ * reach in and this one has to travel with it.
+ */
+const ensureStyles = (container: ShadowRoot | HTMLElement) => {
+  const existing = container.querySelector(`#${STYLE_ID}`);
+  if (existing) return;
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
@@ -342,7 +353,7 @@ const ensureStyles = () => {
       }
     }
   `;
-  document.head.appendChild(style);
+  container.appendChild(style);
 };
 
 const buildProfileContext = (): LinkedInProfileContext => ({
@@ -663,12 +674,35 @@ const createPanel = async () => {
 const buildCompanion = async () => {
   if (companionState.detached) return;
 
-  const existingRoot = document.getElementById(ROOT_ID);
-  if (existingRoot) existingRoot.remove();
+  const existingHost = document.getElementById(HOST_ID);
+  if (existingHost) existingHost.remove();
 
-  ensureStyles();
   syncFormWithProfile();
   companionState.profileUrl = window.location.href;
+
+  /**
+   * The companion lives in a closed shadow root, not in the page.
+   *
+   * It was appended straight to `document.body`, and it renders the user's own
+   * pipeline into `<select>` options — company names, opportunity titles, drawn
+   * from workspace storage. Driving the overlay in a DOM confirmed it: with a
+   * demo workspace loaded, "Northstar Robotics" and "SignalForge" were sitting
+   * in the host page's markup, where any script on linkedin.com — LinkedIn's
+   * own, or anything it loads — could read them with one `querySelectorAll`.
+   *
+   * A content script's *variables* are isolated from the page; the DOM it
+   * creates is not. This product exists to hold professional identity data, and
+   * a slice of that data was being published into a third-party page as a side
+   * effect of drawing a dropdown.
+   *
+   * `closed` rather than `open` so page scripts cannot reach the tree through
+   * `host.shadowRoot` either. Internal lookups go through `companionState.root`.
+   */
+  const host = document.createElement('div');
+  host.id = HOST_ID;
+  const shadow = host.attachShadow({ mode: 'closed' });
+  companionState.shadow = shadow;
+  ensureStyles(shadow);
 
   const root = document.createElement('div');
   root.id = ROOT_ID;
@@ -695,7 +729,8 @@ const buildCompanion = async () => {
   });
 
   root.append(panel, launcher);
-  document.body.appendChild(root);
+  shadow.appendChild(root);
+  document.body.appendChild(host);
   await applyLiquidMotionToCompanionRoot(root);
 
   companionState.elements.launcher = launcher;
@@ -711,8 +746,9 @@ const buildCompanion = async () => {
 
 const teardownCompanion = () => {
   companionState.detached = true;
-  const root = document.getElementById(ROOT_ID);
-  if (root) root.remove();
+  companionState.shadow = null;
+  const host = document.getElementById(HOST_ID);
+  if (host) host.remove();
 };
 
 const refreshForLocationChange = () => {

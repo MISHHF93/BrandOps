@@ -45,7 +45,7 @@ export const NOTIFICATION_PRIORITY_WEIGHT: Record<NotificationPriority, number> 
   urgent: 4,
   high: 3,
   normal: 2,
-  low: 1,
+  low: 1
 };
 
 // ---------------------------------------------------------------------------
@@ -164,7 +164,7 @@ export function classifyNotification(input: NotificationInput): ClassifiedNotifi
     timestamp: now,
     relatedEntityIds: input.relatedEntityIds,
     suggestedAction: input.suggestedAction,
-    acknowledged: false,
+    acknowledged: false
   };
 }
 

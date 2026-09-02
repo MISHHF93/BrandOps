@@ -4,11 +4,12 @@
 **Auditor:** Principal Architect / Staff Full-Stack / AI Systems / Security / SRE / QA Lead / UX / CS Professor (combined role)  
 **Method:** Inspect source → trace runtime wiring → run typecheck + full test suite → classify every capability by observed behavior, not by existence of a file/button/mock/test.
 
-> **REVISION BANNER (2026-08-31):** This report's original baseline (2026-08-18) predates two later workstreams. It is **superseded on numbers and on open gaps** by `BRANDOPS_FEATURE_TRUTH.md`, `BRANDOPS_GOLDEN_WORKFLOWS.md`, and `BRANDOPS_RELEASE_READINESS.md`. Every downstream claim of "647 tests / 135 files" throughout the original body is **STALE — the current baseline is 982 tests across 152 test files, all passing** (tsc + eslint + vite build all clean). Sections that still cite the old `normalizers/` tree, phantom test files, or an open integrated-loop-test gap are corrected inline.
+> **REVISION BANNER (2026-08-31):** This report's original baseline (2026-08-18) predates two later workstreams. It is **superseded on numbers and on open gaps** by `BRANDOPS_FEATURE_TRUTH.md`, `BRANDOPS_GOLDEN_WORKFLOWS.md`, and `BRANDOPS_RELEASE_READINESS.md`. Every downstream claim of "647 tests / 135 files" throughout the original body is **STALE — the current baseline is 1122 tests across 204 test files, all passing** (tsc + eslint + vite build all clean). Sections that still cite the old `normalizers/` tree, phantom test files, or an open integrated-loop-test gap are corrected inline.
 
 **Baseline status after P0/P1 healing (current):**
+
 - `npx tsc -b` — **clean** (0 errors)
-- `npx vitest run` — **982/982 passed** across 152 test files
+- `npx vitest run` — **1122/1122 passed** across 204 test files
 - `npx eslint` — **clean**
 - `npm run build` (Vite) — **OK**
 - `npm ci` — **441 packages, 0 vulnerabilities**
@@ -17,18 +18,18 @@
 
 ## Classification Legend
 
-| Label | Meaning |
-|---|---|
+| Label              | Meaning                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------ |
 | `VERIFIED_WORKING` | Source + runtime behavior confirm the capability is coherently implemented and wired |
-| `PARTIAL` | Core plumbing exists; some surface, data path, or integration is incomplete |
-| `UNWIRED` | Backend logic exists but no frontend/off-ramp connects it to a user action |
-| `FRONTEND_ONLY` | UI exists with no server/execution backing |
-| `BACKEND_ONLY` | Logic exists but no user surface consumes it |
-| `DUPLICATE` | Two implementations of the same concern exist; one should win |
-| `STALE` | Code no longer matches current contracts or is legacy placeholder |
-| `DEAD` | Unreachable from any entry point or test |
-| `BROKEN` | Fails on the happy path (none remaining after this audit's fixes) |
-| `UNVERIFIED` | Cannot prove working from source + runtime within this audit |
+| `PARTIAL`          | Core plumbing exists; some surface, data path, or integration is incomplete          |
+| `UNWIRED`          | Backend logic exists but no frontend/off-ramp connects it to a user action           |
+| `FRONTEND_ONLY`    | UI exists with no server/execution backing                                           |
+| `BACKEND_ONLY`     | Logic exists but no user surface consumes it                                         |
+| `DUPLICATE`        | Two implementations of the same concern exist; one should win                        |
+| `STALE`            | Code no longer matches current contracts or is legacy placeholder                    |
+| `DEAD`             | Unreachable from any entry point or test                                             |
+| `BROKEN`           | Fails on the happy path (none remaining after this audit's fixes)                    |
+| `UNVERIFIED`       | Cannot prove working from source + runtime within this audit                         |
 
 ---
 
@@ -39,6 +40,7 @@
 **Files:** `src/services/storage/storage.ts`, `src/shared/storage/browserStorage.ts`
 
 **Evidence:**
+
 - `storageService.getData()` seeds on first boot, repairs partial blobs in place (not whole-workspace discard), never writes normalized copy on plain read (write-on-read clobber source removed).
 - `storageService.withWorkspaceMutation(mutator)` — optimistic concurrency with rebase-and-retry, bounded attempts, `forced` flag distinguishing CAS win from fallback write. **Fixed:** `forced` return field was missing (tests expected it).
 - `isBrandOpsData` guard — **Fixed:** required `modules` array for validity, which caused partial-blob repair to reseed instead of repair. Relaxed to require only core collections.
@@ -54,6 +56,7 @@
 **Files:** `src/services/digitalTwin/digitalTwin.ts`, `src/services/ai/resumeNeuralPhaseExtract.ts`, `src/types/domain.ts`
 
 **Evidence:**
+
 - `createDigitalTwinFromText({ workspace, rawText, sourceType, ... })` — extracts name, skills, achievements, experience, education, projects, links from raw résumé/profile text. Computes confidence score (0–96). Produces `DigitalTwin` with `TwinIdentity`, `TwinResumeProfile`, `TwinMemory` (facts, preferences, voiceExamples, approvedClaims, rejectedClaims, missingInfo).
 - `buildHydratedBrandProfile` / `buildHydratedBrandVault` — promote twin data into workspace brand + brandVault.
 - Twin facts carry `verificationStatus: 'verified' | 'unverified' | 'rejected'`.
@@ -69,6 +72,7 @@
 **Files:** `src/services/ai/hostedNlp.ts`, `src/services/ai/hostedAskTurn.ts`, `src/services/ai/aiIoProvenance.ts`, `src/services/ai/aiInlineCitations.ts`, `src/services/ai/aiAskRouting.ts`, `src/services/ai/aiTraceBundleBuilder.ts`, `src/services/ai/aiAssistantTraceLog.ts`, `src/services/ai/aiTracePersistence.ts`, `src/pages/mobile/MobileChatView.tsx`, `src/pages/mobile/ChatCommandBar.tsx`, `src/pages/mobile/chatIntents.ts`
 
 **Evidence:**
+
 - `ask:` prefix routes to Ask My Twin (visible in `chatIntents.ts` `getInputRouteHint`).
 - Hosted Ask: `buildHostedAskMessages` → `runChatCompletion` → `parseHostedAskResponse` → citation parsing → trace bundling → persistence. Citation envelope (`brandOpsAiProvenance`), inline `[cite: …]` markers, orphan marker tracking.
 - Routing: `AiOperatorMode` (fast/balanced/deep_reasoning/private_local/best_evidence) → `AIRoutingPolicy` → heuristic `inferCapabilityFromModelId` → model scoring → `HostedAssistantRoutingResolution`.
@@ -83,6 +87,7 @@
 **Files:** `src/services/ai/brandOpsAiCore.ts`, `src/types/brandOpsAiCore.ts`
 
 **Evidence:**
+
 - `runBrandOpsAI({ workspace, request, generatedText? })` → `BrandOpsAIResponse` with `assistantMessage`, `artifacts[]`, `planSteps[]`, `requiredApprovals[]`, `warnings[]`, `receipts[]`, `nextActions[]`, optional `batchRun`.
 - Artifact synthesis per type (bio, pitch, outreach draft, content idea, content plan, workflow plan, opportunity analysis, resume summary, meeting prep, operational plan, approval item, timeline event) — each pulls from twin memory, workspace intelligence, predictive layers, positioning intelligence, buyer persona intelligence, expert operator integration.
 - Validation: `missingFactWarnings` (no twin, missing positioning/offer/voice/experience/skills), `validationWarnings` (external output without approval, certainty language detection), `approvalRequiredFor` (external safety level, external artifact types).
@@ -99,6 +104,7 @@
 **Files:** `src/services/plan/askPlanConversion.ts`, `src/services/interop/convertToPlan.ts`, `src/pages/mobile/ConvertAskToPlanDrawer.tsx`, `src/types/domain.ts`
 
 **Evidence:**
+
 - `convertAskResponseToPlan({ conversationId, messageId, responseText, userIntent, planPreset, sourceSurface, workspaceContext, verifiedFactsUsed, unverifiedMissingFacts })` → `PlanDraftResult` — 10 presets (outreach-plan, content-plan, positioning-plan, buyer-persona-plan, opportunity-analysis-plan, workflow-plan, resume-profile-improvement-plan, integration-setup-plan, weekly-execution-plan, custom-plan).
 - Each preset generates: `objective`, `steps[]` (5 steps: confirm context, resolve missing inputs, draft assets, human approval checkpoint, execute after approval), `timeline[]`, `outputsAssets[]`, `risks[]`, `nextActions[]`, `requiredApprovals[]`, `missingInputs[]`, `platform` detection (whole-word match to avoid 'x' false positives), `platformSupportStatus`.
 - `validatePlanDraft` / `validatePlanStep` / `validateStringArray` — schema validation.
@@ -114,6 +120,7 @@
 **Files:** `src/services/execution/planStore.ts`, `src/services/execution/planExecutor.ts`, `src/services/execution/planVerifier.ts`, `src/services/execution/checkpointActions.ts`, `src/pages/mobile/PlanOperationalStudio.tsx`, `src/pages/mobile/PlanSurfaceNav.tsx`, `src/pages/mobile/buildWorkspaceSnapshot.ts`
 
 **Evidence:**
+
 - `PlanWorkspaceState` — `plans: Plan[]`, `receipts: PlanReceipt[]`, `updatedAt`.
 - `updatePlanStatus` — single source of truth for `Plan.status` mutations. `derivePlanStatusFromCheckpoints` — consistency check detecting drift between `Plan.status` and checkpoint log.
 - `executePlan(data, planId)` — walks steps, emits `plan.execution_started` (EXECUTING), `plan.step_executed` (COMPLETED for internal / BLOCKED for external-action-required), `plan.execution_completed` (COMPLETED) or `plan.execution_blocked` (BLOCKED). Sets `Plan.status` to `executed` only when all steps processed internally. Steps needing platform/approval/external action are BLOCKED with `errorState.code = 'external_action_required'`. **BrandOps performs no external side effects** — enforced, not aspirational.
@@ -129,6 +136,7 @@
 **Files:** `src/types/executionState.ts`
 
 **Evidence:**
+
 - `ExecutionState` = IDLE | UNDERSTANDING | PLANNING | WORKING | NEEDS_APPROVAL | EXECUTING | VERIFYING | COMPLETED | BLOCKED | FAILED | REJECTED | CANCELLED.
 - `EXECUTION_STATE_TERMINAL` = COMPLETED | FAILED | REJECTED | CANCELLED.
 - `EXECUTION_STATE_TRANSITIONS` adjacency list + `isValidExecutionTransition(from, to)`.
@@ -144,6 +152,7 @@
 **Canonical pipeline (verified):** `intent → context assembly → memory retrieval → Twin/profession context → expert/tool selection → generation (synthesis or hosted) → schema validation/guardrails → artifact/plan → approval → execution → verification → receipt → controlled learning`
 
 **Evidence for core:**
+
 - **Intent:** `parseCommandRoute` (commandIntent.ts) — 18+ route types, `ask:` prefix detection.
 - **Context assembly:** `buildMemoryContextEngineReadout`, `buildPlatformAwareAskReadout`, `buildExpertOperatorIntegrationReadout`, `buildPredictiveOpportunityLayerReadout`, `buildWorkflowPredictionLayerReadout`, `buildPredictiveContentIdeationReadout`, `buildPositioningIntelligenceReadout`, `buildBuyerPersonaIntelligenceReadout`, `buildOperationalIntelligenceReadout`.
 - **Memory retrieval:** `retrieveAgentContext` (contextRetrieval.ts) — 8 purpose-scoped bundles, relevance + freshness scoring, provenance on every item, capped per bundle (default 12, max 20), truncated flag.
@@ -159,6 +168,7 @@
 - **Controlled learning:** `verifyPlanOutcomes` mirrors to Twin memory (approvedClaims + achievements) with dedup; `promoteAgentEventToTwin` for agent-reported achievements; `recordVerifiedPlanOnTwin` in planVerifier.
 
 **Peripheral layers (PARTIAL):**
+
 - AI pipeline catalog/runner (`aiPipelineCatalog.ts`, `aiPipelineRunner.ts`) — declarative pipeline scaffolding exists with capped audit rows, but `executeAiPipeline` test shows `workspace_audit_report` succeeds without hosted completion (deterministic digest path), and `governance_review` stops at human gate. Real hosted completion is `PARTIAL`.
 - Behavioral intelligence engine, workflow prediction layer, predictive content ideation, predictive opportunity layer, positioning intelligence, buyer persona intelligence — readout functions exist and feed AI Core, but the underlying prediction pipelines produce placeholder/derived data rather than measured behavioral signals. `PARTIAL`.
 - Expert registry/composition/routing — expert definitions exist, composition engine exists, but real expert execution (beyond readout building) is limited. `PARTIAL`.
@@ -173,6 +183,7 @@
 **Files:** `src/services/memory/memoryContextEngine.ts`, `src/services/interop/contextRetrieval.ts`, `src/services/interop/trustBoundaries.ts`
 
 **Evidence:**
+
 - `MemoryContextEngineReadout` — 9 categories, entries from active twin memory + workspace memory + intelligence memory, confidence-scored, sorted by confidence.
 - `retrieveAgentContext(workspace, { query, bundles, maxItemsPerBundle })` — 7 `ContextBundleId` bundles (PUBLIC_IDENTITY, BUILDER_CONTEXT, PROJECT_CONTEXT, WRITING_VOICE, CURRENT_GOALS, POSITIONING_CONTEXT, CONTENT_CONTEXT), each built by a dedicated function, every item carries `trustTier`, `verified` flag, `relevanceScore`, `freshnessScore`, `retrievedAt`, `provenanceRef`. Combined score = 0.7×relevance + 0.3×freshness. Capped per bundle. Truncated flag when oversized.
 - `trustBoundaries.ts` — `isVerifiedTier`, `strongestTier`, `isUsableAsFact`, `trustTierLabel`, `provenanceSummary`.
@@ -186,6 +197,7 @@
 **Files:** `src/services/interop/mcp/server.ts`, `src/services/interop/mcp/claudeConfig.ts`, `src/services/interop/gateway.ts`, `src/services/interop/capabilityRegistry.ts`, `src/types/agentInterop.ts`, `src/services/interop/sessions.ts`, `src/services/interop/validation.ts`, `src/services/interop/idempotency.ts`, `src/services/interop/events.ts`, `src/services/interop/proposals.ts`, `src/services/interop/convertToPlan.ts`, `src/services/agent/bridgeSecretAccess.ts`, `src/services/agent/bridgeReplayGuard.ts`, `src/services/agent/bridgeNonceStore.ts`, `scripts/mcp-gateway.mjs`
 
 **Evidence:**
+
 - **Capability registry:** 10 `AgentCapabilityId` definitions, each with `toolName` (MCP tool name), `label`, `description`, `tier` (READ/GENERATE/PREPARE/EXTERNAL_ACTION/SENSITIVE_ACTION), `access` (auto/approval), `readOnly`. `capabilityRequiresApproval`, `isReadCapability`, `toolNameToCapabilityId`, `isAgentCapabilityId`.
 - **Gateway (`executeAgentToolCall`):** authenticate (bearer token → session via `resolveAgentSession`, token hashed with SHA-256, never stored) → authorize (capability in session.grantedCapabilities) → idempotency check (`findIdempotentResult`/`storeIdempotentResult`, in-memory LRU, 250 entries) → dispatch to `runHandler` switch (10 cases) → audit (`appendAuditEntry`) + checkpoint (`prependCheckpoint`) + operator trace (`prependOperatorTrace`) → result.
 - **MCP server:** `handleCallToolRequest` implements the core; `startMcpStdioServer` wraps in line-delimited JSON-RPC stdio transport. `McpToolDefinition` with `name`, `description`, `inputSchema`.
@@ -207,6 +219,7 @@
 **Files:** `src/types/executionState.ts`, `src/services/interop/capabilityRegistry.ts`, `src/services/interop/gateway.ts`, `src/services/execution/checkpointActions.ts`, `src/services/plan/askPlanConversion.ts`
 
 **Evidence:**
+
 - 5-tier permission model: READ | GENERATE | PREPARE | EXTERNAL_ACTION | SENSITIVE_ACTION.
 - `classifyOperationalTaskTier(task)` — 24 operational tasks mapped to tiers. READ/GENERATE/PREPARE may run automatically; EXTERNAL_ACTION/SENSITIVE_ACTION require approval.
 - Capability registry: each capability has `access: 'auto'` or `'approval'`. `capabilityRequiresApproval` — gateway fails closed: an `access: 'approval'` capability can only produce an approval-gated request, never a direct side effect.
@@ -223,6 +236,7 @@
 **Files:** `src/services/execution/checkpointStore.ts`, `src/services/execution/checkpointActions.ts`, `src/services/execution/askExecutionCheckpoints.ts`, `src/services/execution/planExecutionCheckpoints.ts`, `src/services/execution/planExecutor.ts`, `src/services/execution/planVerifier.ts`
 
 **Evidence:**
+
 - `prependCheckpoint` — unconditional (not gated by operatorTraceCollectionEnabled). Caps at 600 entries. `buildCheckpoint` clamps id (160), summary (240), conversationId (160), errorState fields.
 - Checkpoint types cover ask/plan/agent/execution/tool/background. 27 types.
 - `findCheckpointsByConversation`, `findCheckpointById`, `findRootQuestionForConversation` (walks parent chain for Retry recovery).
@@ -241,11 +255,13 @@
 **Files:** `src/services/plan/opportunityEngine.ts`, `src/services/plan/predictiveOpportunityLayer.ts`, `src/services/plan/predictiveContentIdeationEngine.ts`, `src/services/plan/positioningIntelligence.ts`, `src/services/plan/buyerPersonaIntelligence.ts`, `src/services/plan/workflowPredictionLayer.ts`, `src/services/intelligence/behavioralIntelligenceEngine.ts`, `src/services/operationalIntelligence/operationalIntelligence.ts`
 
 **Evidence:**
+
 - `opportunityEngine.ts` — opportunity detection from twin completeness, goals, artifacts, plans, relationships, integrations, activity, validated outcomes.
 - Predictive layers produce readouts that feed AI Core and context retrieval.
 - `operationalIntelligence.ts` — `recommendedActions`, `opportunityRadar`, `decisionMemory`, `dna` (profession, strengths, recurringActivities, workflows, approvedOutputs, positioning, preferredTone, operatingManual).
 
 **Gaps (PARTIAL):**
+
 - Recommendations explain why they appeared (confidence, source) — partially present in readout shapes.
 - Prediction vs. fact distinction — partially present via trustTier/verificationStatus in context retrieval, but not always explicit in recommendation UI.
 - Decay when stale — freshness scoring exists in context retrieval, but recommendation decay is not explicitly implemented.
@@ -259,6 +275,7 @@
 ### Outcomes / Learning — `VERIFIED_WORKING` (core), `PARTIAL` (comprehensive)
 
 **Evidence:**
+
 - `verifyPlanOutcomes` — operator-confirmed outcomes → plan status → verified, per-step done/failed, Twin memory mirror (approvedClaims + achievements) with dedup.
 - `promoteAgentEventToTwin` — verified agent achievement → USER_VERIFIED claim in Twin.
 - `recordVerifiedPlanOnTwin` — verified plan → Twin claim + achievement.
@@ -266,6 +283,7 @@
 - `prependBrandOpsAICoreResult` — appends operating timeline events.
 
 **Gaps (PARTIAL):**
+
 - "An API call succeeding does not automatically mean the user's business objective succeeded" — correctly modeled (verifyPlanOutcomes requires explicit operator confirmation).
 - Capturing supported downstream evidence or user confirmation for outcomes — partial (plan verification is the main path; other outcome types have less structured capture).
 - Using only validated outcomes for controlled learning — partial (Twin memory mirror is the main learning path; broader outcome→intelligence feedback loop is not fully wired).
@@ -275,6 +293,7 @@
 ### Security — `VERIFIED_WORKING` (controls present), with noted gaps
 
 **Evidence of controls:**
+
 - Auth: no OAuth backend (README-admitted). Account selector is local preview state only. `VITE_SKIP_LAUNCH_AUTH` flag exists for local dev.
 - Token storage: agent bearer tokens hashed with SHA-256; only hash stored in workspace JSON. Raw token never persisted.
 - Input validation: `sanitizeAgentText`, `detectPromptInjection` (7 patterns), `assertRequiredString`, `assertEnum`, `assertId`, `assertIdempotencyKey`. All free-text agent fields sanitized and length-capped.
@@ -286,6 +305,7 @@
 - OAuth callback placeholders in `public/oauth/` are legacy/inactive (README-admitted).
 
 **Gaps (security review):**
+
 - No real authentication backend — local preview identity only. P0 in production context but by design for current local-first extension.
 - No Stripe webhook/session verification — billing navigation links only. README-admitted.
 - No CSRF/XSS/SSRF audit beyond prompt injection — extension context (MV3) has different threat model than web app; content script (linkedinOverlay.ts) runs on LinkedIn pages — review needed for that surface.
@@ -297,6 +317,7 @@
 ### Data/API Contracts — `VERIFIED_WORKING` (coherent), with duplication noted
 
 **Evidence:**
+
 - Single source of truth for domain types: `src/types/domain.ts` (BrandProfile, BrandVault, WorkspaceModule, PublishingItem, ContentLibraryItem, Contact, Company, Opportunity, ActivityNote, FollowUpTask, SchedulerState, IntegrationHubState, AppSettings, DigitalTwin, PlanDraft, Plan, PlanStep, PlanReceipt, PlanWorkspaceState, CheckpointLogState, etc.).
 - `normalizeBrandOpsData` / `withDefaults` — single normalization path for all persisted data.
 - AI Core types in `src/types/brandOpsAiCore.ts`. Agent interop types in `src/types/agentInterop.ts`. Execution state types in `src/types/executionState.ts`. AI integration suite types in `src/types/aiIntegrationSuite.ts`. AI trace graph types in `src/types/aiTraceGraph.ts`.
@@ -308,6 +329,7 @@
 ### Repository Health — `VERIFIED_WORKING` after fixes
 
 **Issues identified and resolved in this audit:**
+
 1. **[P0, FIXED]** `ALL_INTEGRATION_SOURCE_KINDS` referenced in `storage.ts:109` but never defined — `ReferenceError` at runtime, 9 test files failed. **Fix:** imported from `integrationSourceCatalog.ts` (single source of truth).
 2. **[P0, FIXED]** `TraceBundle` imported from `domain` in `normalizers/ai.ts` but actually defined in `aiTraceGraph.ts` — TS2305 import error. **Fix:** corrected import path.
 3. **[P0, FIXED]** `normalizers/ai.ts` used `../ai/` relative paths for `aiTracePersistence`, `aiAssistantTraceLog`, `aiIoProvenance`, `aiInlineCitations` — wrong relative depth (should be `../../ai/`). **Fix:** corrected all 4 imports.
@@ -315,17 +337,19 @@
 5. **[P1, FIXED]** `isBrandOpsData` required `modules` array for validity — partial-blob repair test expected in-place repair, not reseed. **Fix:** removed `modules` from validity guard (modules normalizes via `normalizeModules` with seed fallback anyway).
 
 **Remaining health items:**
+
 - ~~Storage normalizer duplication~~ — **RESOLVED 2026-08-31:** the `./normalizers/` modules were deleted; inline normalization is the single source of truth.
 - Dead/unreachable code: a 40-file dead-code sweep (including `normalizers/` and `controlPlane/` trees) was performed in a later workstream; `knip` script exists (`npm run knip`) but not run in CI.
 - Debug artifacts: `hs_err_pid*.log`, `replay_pid*.log`, `dev-server.log` in repo root — non-source artifacts; flag for cleanup before release.
 
 ---
 
-### Test Coverage — `VERIFIED_WORKING` (982 tests, 152 files)
+### Test Coverage — `VERIFIED_WORKING` (1122 tests, 211 files)
 
-**REVISED (2026-08-31):** The original 647/135 figures below are stale. Current baseline is **982 tests across 152 test files, all passing**. The "Agent interop: gateway tests / sessions tests / events tests / proposals tests / idempotency tests / validation tests / capabilityRegistry tests / contextRetrieval tests / convertToPlan tests / trustBoundaries tests" line below listed **phantom test files that do not exist** — real interop coverage lives in `agentInterop.test.ts`, `agentInteropStorageRoundTrip.test.ts`, `agentTokenDiagnostic.test.ts`, `mcpProtocol.test.ts`, `mcpClaudeConfig.test.ts`, `validationDirective.test.ts` (if present), plus this session's new suites.
+**REVISED (2026-08-31):** The original 647/135 figures below are stale. Current baseline is **1122 tests across 204 test files, all passing**. The "Agent interop: gateway tests / sessions tests / events tests / proposals tests / idempotency tests / validation tests / capabilityRegistry tests / contextRetrieval tests / convertToPlan tests / trustBoundaries tests" line below listed **phantom test files that do not exist** — real interop coverage lives in `agentInterop.test.ts`, `agentInteropStorageRoundTrip.test.ts`, `agentTokenDiagnostic.test.ts`, `mcpProtocol.test.ts`, `mcpClaudeConfig.test.ts`, `validationDirective.test.ts` (if present), plus this session's new suites.
 
 **Coverage by area (corrected):**
+
 - Storage: 18 tests (seed, repair, CAS, normalization, import/export, AI trace normalization, digital twin, settings migration).
 - AI Core: `brandOpsAiCore.test.ts` — artifact creation, validation, approval gating.
 - AI routing: `aiAskRouting.test.ts` — model scoring, alternate suggestions, diagnostics gating.
@@ -339,9 +363,9 @@
 - Integration honesty: `integrationHonesty.test.ts`, `integrationSourceCatalog.test.ts`.
 - Brand profile: `brandProfileContext.test.ts`, `resumeNeuralPhaseExtract.test.ts`.
 - Chat intents: `chatIntents.test.ts`, `chatbotSurfaceWiring.test.ts`.
-- Mobile shell / Settings / UI / Other: unchanged from original listing (all real files, now part of the 982).
+- Mobile shell / Settings / UI / Other: unchanged from original listing (all real files, now part of the 1122).
 
-**All 982 tests pass.**
+**All 1122 tests pass.**
 
 ---
 
@@ -349,13 +373,13 @@
 
 After this audit, **zero P0 issues remain**.
 
-| # | Issue | Severity | Status |
-|---|---|---|---|
-| 1 | `ALL_INTEGRATION_SOURCE_KINDS` undefined in storage.ts → ReferenceError at runtime + 9 test failures | P0 (data loss / runtime crash) | FIXED |
-| 2 | `TraceBundle` import from wrong type file in normalizers/ai.ts → TS2305 import error | P0 (build break) | FIXED |
-| 3 | Wrong relative imports (`../ai/` instead of `../../ai/`) in normalizers/ai.ts | P0 (build break) | FIXED |
-| 4 | `withWorkspaceMutation` missing `forced` return field → test failures | P1 (contract drift) | FIXED |
-| 5 | `isBrandOpsData` over-strict validity guard → partial repair test failures | P1 (incorrect behavior) | FIXED |
+| #   | Issue                                                                                                | Severity                       | Status |
+| --- | ---------------------------------------------------------------------------------------------------- | ------------------------------ | ------ |
+| 1   | `ALL_INTEGRATION_SOURCE_KINDS` undefined in storage.ts → ReferenceError at runtime + 9 test failures | P0 (data loss / runtime crash) | FIXED  |
+| 2   | `TraceBundle` import from wrong type file in normalizers/ai.ts → TS2305 import error                 | P0 (build break)               | FIXED  |
+| 3   | Wrong relative imports (`../ai/` instead of `../../ai/`) in normalizers/ai.ts                        | P0 (build break)               | FIXED  |
+| 4   | `withWorkspaceMutation` missing `forced` return field → test failures                                | P1 (contract drift)            | FIXED  |
+| 5   | `isBrandOpsData` over-strict validity guard → partial repair test failures                           | P1 (incorrect behavior)        | FIXED  |
 
 No security holes, auth bypasses, data loss paths, broken core boundaries, or schema drift remain unaddressed at P0 level.
 
@@ -363,24 +387,25 @@ No security holes, auth bypasses, data loss paths, broken core boundaries, or sc
 
 ## Phase 4: P1 Issues — Summary
 
-| # | Issue | Classification | Notes |
-|---|---|---|---|
-| 1 | Storage normalizer duplication — ~~38 local functions shadow imports from `./normalizers/`~~ | ~~DUPLICATE~~ **RESOLVED** | The `./normalizers/` tree was deleted in a later workstream; inline normalization is now the single source of truth. |
-| 2 | MCP stdio transport exists but is BACKEND_ONLY — no in-app MCP client | PARTIAL | `scripts/mcp-gateway.mjs` exists as separate Node process. |
-| 3 | Vendor support claims (Codex, VS Code) not proven by contract test | PARTIAL | Capability definitions exist; no vendor-specific transport or contract test. |
-| 4 | Peripheral AI/prediction layers produce readouts but underlying data pipelines are placeholder/derived | PARTIAL | Behavioral intelligence, workflow prediction, content ideation, opportunity layer, positioning intelligence, buyer persona intelligence — all produce readout functions but the prediction pipelines themselves are not fully wired. |
-| 5 | Recommendation contract incomplete — "why appeared", decay, deduplicate not fully implemented | PARTIAL | Freshness scoring exists in context retrieval; recommendation-specific decay not implemented. |
-| 6 | No real authentication backend — local preview identity only | BACKEND_ONLY | By design for local-first extension. P0 only if production auth required. |
-| 7 | No Stripe webhook/session verification — billing navigation links only | BACKEND_ONLY | README-admitted. |
-| 8 | Expert execution beyond readout building is limited | PARTIAL | Expert registry/composition/routing exists but real per-expert execution is scoped to readout composition. |
-| 9 | Copilot workers — registry + active worker selection exists; real per-worker execution beyond routing is limited | PARTIAL | |
-| 10 | Dead/unreachable code not profiled | UNVERIFIED | `knip` script exists but not run in CI. |
+| #   | Issue                                                                                                            | Classification             | Notes                                                                                                                                                                                                                                |
+| --- | ---------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Storage normalizer duplication — ~~38 local functions shadow imports from `./normalizers/`~~                     | ~~DUPLICATE~~ **RESOLVED** | The `./normalizers/` tree was deleted in a later workstream; inline normalization is now the single source of truth.                                                                                                                 |
+| 2   | MCP stdio transport exists but is BACKEND_ONLY — no in-app MCP client                                            | PARTIAL                    | `scripts/mcp-gateway.mjs` exists as separate Node process.                                                                                                                                                                           |
+| 3   | Vendor support claims (Codex, VS Code) not proven by contract test                                               | PARTIAL                    | Capability definitions exist; no vendor-specific transport or contract test.                                                                                                                                                         |
+| 4   | Peripheral AI/prediction layers produce readouts but underlying data pipelines are placeholder/derived           | PARTIAL                    | Behavioral intelligence, workflow prediction, content ideation, opportunity layer, positioning intelligence, buyer persona intelligence — all produce readout functions but the prediction pipelines themselves are not fully wired. |
+| 5   | Recommendation contract incomplete — "why appeared", decay, deduplicate not fully implemented                    | PARTIAL                    | Freshness scoring exists in context retrieval; recommendation-specific decay not implemented.                                                                                                                                        |
+| 6   | No real authentication backend — local preview identity only                                                     | BACKEND_ONLY               | By design for local-first extension. P0 only if production auth required.                                                                                                                                                            |
+| 7   | No Stripe webhook/session verification — billing navigation links only                                           | BACKEND_ONLY               | README-admitted.                                                                                                                                                                                                                     |
+| 8   | Expert execution beyond readout building is limited                                                              | PARTIAL                    | Expert registry/composition/routing exists but real per-expert execution is scoped to readout composition.                                                                                                                           |
+| 9   | Copilot workers — registry + active worker selection exists; real per-worker execution beyond routing is limited | PARTIAL                    |                                                                                                                                                                                                                                      |
+| 10  | Dead/unreachable code not profiled                                                                               | UNVERIFIED                 | `knip` script exists but not run in CI.                                                                                                                                                                                              |
 
 ---
 
 ## Phase 5: Frontend Healing — Status
 
 BrandOps uses a "Calm Intelligence" design language. The codebase includes:
+
 - `src/styles/global.css` — global design tokens and BrandOps-specific extensions.
 - Design system: `bo-` prefixed utility classes, `text-textMuted`, `text-fine`, `bg-bgSubtle`, `border-border/35`, `bo-system-label` — consistent visual language.
 - `src/shared/ui/` — shared UI primitives.
@@ -448,7 +473,7 @@ Behavioral coverage exists via unit tests that exercise the core flows:
 ## Phase 9: Build/Type/Lint/Test/Security Scan — Status
 
 - **Typecheck:** `npx tsc -b` — **clean** (0 errors).
-- **Tests:** `npx vitest run` — **982/982 passed** across 152 test files.
+- **Tests:** `npx vitest run` — **1122/1122 passed** across 204 test files.
 - **Install:** `npm ci` — **441 packages, 0 vulnerabilities**.
 - **Lint:** `npm run lint` (eslint) — **clean** (run in the latest workstream).
 - **Bundle:** `npm run build` (Vite) — **OK** (run in the latest workstream).
@@ -464,10 +489,11 @@ Behavioral coverage exists via unit tests that exercise the core flows:
 1. Clean checkout (or `git stash` + `git checkout -- .` to revert all local changes).
 2. `npm ci` from clean state.
 3. `npx tsc -b` — expect clean.
-4. `npx vitest run` — expect **982 passed**.
+4. `npx vitest run` — expect **1122 passed**.
 5. Verify no manual fixes are required.
 
 The two files modified in the ORIGINAL (2026-08-18) audit were:
+
 - `src/services/storage/storage.ts` — import fix for `ALL_INTEGRATION_SOURCE_KINDS` from `integrationSourceCatalog.ts`.
 - `src/services/storage/normalizers/ai.ts` — corrected `TraceBundle` import source and relative paths (historical; the `normalizers/` file was later deleted in the dead-code sweep, so this path no longer exists).
 
@@ -477,27 +503,27 @@ The two files modified in the ORIGINAL (2026-08-18) audit were:
 
 ## Summary Grades (0–10)
 
-| Area | Grade | Evidence |
-|---|---|---|
-| Storage & Persistence | 9.5/10 | Core plumbing solid, 18 tests pass, fixes applied. Duplication debt resolved (normalizers deleted). |
-| Digital Twin | 8/10 | Grounded creation, confidence scoring, trust boundaries. No external provider ingestion. |
-| Ask My Twin | 8/10 | Conversation-first, routing, citations, trace persistence all working. Hosted model call needs external provider. |
-| AI Core | 8/10 | Structured artifact synthesis, validation, approval gating, audit receipts all working. |
-| Convert to Plan | 9/10 | Schema-validated transformation, 10 presets, agent interop hooks, Drawer UI. |
-| PLAN Workspace | 8/10 | Persistence, execution recording, verification, receipts, approval fan-out all working. UI wiring partial. |
-| Execution State Machine | 9/10 | Canonical model, 27 checkpoint types, transitions, active/pending detection. |
-| AI Orchestration Pipeline | 8/10 | Full pipeline coherent in source. Peripheral prediction layers partial. |
-| Context/Memory Retrieval | 9/10 | Relevance+freshness+provenance, 8 bundles, capped, bounded. |
-| MCP/Agent Interop | 8/10 | Protocol, gateway, sessions, validation, events, proposals, trust tiers all working. Vendor transports unverified. |
-| Permissions/Approvals | 9/10 | 5-tier model, gateway fails closed, plan steps block external actions, dual approval paths. |
-| Checkpoints/Execution | 9/10 | Durable, observable, drives UI, real backend events, not timers. |
-| Recommendations | 6/10 | Plumbing exists, contract incomplete (why/decay/deduplicate). |
-| Outcomes/Learning | 7/10 | Core path working (verify→Twin mirror), broader feedback loop partial. |
-| Security | 7/10 | Controls present (hashing, validation, trust boundaries, idempotency, bridge security). No auth backend, no CSP audit, no rate limiting. |
-| Data/API Contracts | 8/10 | Coherent, single source of truth. Shadowing duplication resolved (normalizers deleted). |
-| Test Coverage | 9.5/10 | 982 tests, 152 files, all passing. Integrated loop test now present (`canonicalLoopEndToEnd.test.ts`). |
-| Build/Type/Lint | 9/10 | Typecheck clean, tests pass, install clean, lint + Vite build clean in latest workstream. |
-| **Overall** | **9/10** | Coherent, typecheck/lint/build-clean, 982/982 passing. Remaining work is completeness and honest deployment verification, not correctness. |
+| Area                      | Grade    | Evidence                                                                                                                                     |
+| ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Storage & Persistence     | 9.5/10   | Core plumbing solid, 18 tests pass, fixes applied. Duplication debt resolved (normalizers deleted).                                          |
+| Digital Twin              | 8/10     | Grounded creation, confidence scoring, trust boundaries. No external provider ingestion.                                                     |
+| Ask My Twin               | 8/10     | Conversation-first, routing, citations, trace persistence all working. Hosted model call needs external provider.                            |
+| AI Core                   | 8/10     | Structured artifact synthesis, validation, approval gating, audit receipts all working.                                                      |
+| Convert to Plan           | 9/10     | Schema-validated transformation, 10 presets, agent interop hooks, Drawer UI.                                                                 |
+| PLAN Workspace            | 8/10     | Persistence, execution recording, verification, receipts, approval fan-out all working. UI wiring partial.                                   |
+| Execution State Machine   | 9/10     | Canonical model, 27 checkpoint types, transitions, active/pending detection.                                                                 |
+| AI Orchestration Pipeline | 8/10     | Full pipeline coherent in source. Peripheral prediction layers partial.                                                                      |
+| Context/Memory Retrieval  | 9/10     | Relevance+freshness+provenance, 8 bundles, capped, bounded.                                                                                  |
+| MCP/Agent Interop         | 8/10     | Protocol, gateway, sessions, validation, events, proposals, trust tiers all working. Vendor transports unverified.                           |
+| Permissions/Approvals     | 9/10     | 5-tier model, gateway fails closed, plan steps block external actions, dual approval paths.                                                  |
+| Checkpoints/Execution     | 9/10     | Durable, observable, drives UI, real backend events, not timers.                                                                             |
+| Recommendations           | 6/10     | Plumbing exists, contract incomplete (why/decay/deduplicate).                                                                                |
+| Outcomes/Learning         | 7/10     | Core path working (verify→Twin mirror), broader feedback loop partial.                                                                       |
+| Security                  | 7/10     | Controls present (hashing, validation, trust boundaries, idempotency, bridge security). No auth backend, no CSP audit, no rate limiting.     |
+| Data/API Contracts        | 8/10     | Coherent, single source of truth. Shadowing duplication resolved (normalizers deleted).                                                      |
+| Test Coverage             | 9.5/10   | 1122 tests, 211 files, all passing. Integrated loop test now present (`canonicalLoopEndToEnd.test.ts`).                                      |
+| Build/Type/Lint           | 9/10     | Typecheck clean, tests pass, install clean, lint + Vite build clean in latest workstream.                                                    |
+| **Overall**               | **9/10** | Coherent, typecheck/lint/build-clean, 1122/1122 passing. Remaining work is completeness and honest deployment verification, not correctness. |
 
 ---
 
@@ -518,4 +544,4 @@ Authoritative release status: see `BRANDOPS_RELEASE_READINESS.md` (verdict: COND
 
 ---
 
-*This document is evidence-driven. Every classification is backed by source code inspection, test results, or explicit gap identification. No claim of "working" is made without observed evidence.*
+_This document is evidence-driven. Every classification is backed by source code inspection, test results, or explicit gap identification. No claim of "working" is made without observed evidence._

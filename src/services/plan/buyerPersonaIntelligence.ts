@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData, DigitalTwin } from '../../types/domain';
 import { buildPlatformAwareAskReadout } from '../ai/platformAwareAskContext';
 import { buildConnectedIdentityEngineReadout } from '../connectedIdentity/connectedIdentityEngine';
@@ -375,7 +376,7 @@ function buildPersonas(input: {
 }
 
 function actionCommand(action: string, details: string): string {
-  return `ask: Buyer Persona Intelligence ${action}. Do not save, send, sync, or mutate workspace records automatically. Keep the result reviewable in PLAN with approval, regenerate, edit, and compare-version options.\n\n${details}`;
+  return `ask: Buyer Persona Intelligence ${quoteContextValue(action)}. Do not save, send, sync, or mutate workspace records automatically. Keep the result reviewable in PLAN with approval, regenerate, edit, and compare-version options.\n\n${quoteContextValue(details)}`;
 }
 
 export function buildBuyerPersonaIntelligenceReadout(

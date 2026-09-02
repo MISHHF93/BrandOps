@@ -15,7 +15,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
       {
         order: 1,
         title: 'Identify achievement source',
-        instruction: 'Determine whether the achievement comes from an activity event, agent report, or user input.',
+        instruction:
+          'Determine whether the achievement comes from an activity event, agent report, or user input.',
         mapsToTool: 'brandops_record_achievement',
         expectedInput: 'Source event or user description',
         outputHint: 'Achievement source identified'
@@ -23,7 +24,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
       {
         order: 2,
         title: 'Record the achievement',
-        instruction: 'Record the achievement with title, description, kind, evidence, and confidence.',
+        instruction:
+          'Record the achievement with title, description, kind, evidence, and confidence.',
         mapsToTool: 'brandops_record_achievement',
         expectedInput: 'Achievement details',
         outputHint: 'Achievement recorded as UNVERIFIED'
@@ -31,13 +33,15 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
       {
         order: 3,
         title: 'Suggest verification',
-        instruction: 'If the achievement is from an agent or integration, suggest the user verify it.',
+        instruction:
+          'If the achievement is from an agent or integration, suggest the user verify it.',
         mapsToTool: undefined,
         expectedInput: 'Achievement id',
         outputHint: 'Verification suggestion displayed'
       }
     ],
-    invocationHint: 'Use this skill when the user or an agent wants to capture a professional achievement. The skill guides the capture process but the actual recording happens through BrandOps APIs.'
+    invocationHint:
+      'Use this skill when the user or an agent wants to capture a professional achievement. The skill guides the capture process but the actual recording happens through BrandOps APIs.'
   },
   'turn-build-into-content': {
     id: 'turn-build-into-content',
@@ -78,18 +82,20 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
         outputHint: 'Plan conversion offered'
       }
     ],
-    invocationHint: 'Use this skill when the user wants to turn a build or achievement into content. The skill suggests angles and creates the opportunity; the user decides which to pursue.'
+    invocationHint:
+      'Use this skill when the user wants to turn a build or achievement into content. The skill suggests angles and creates the opportunity; the user decides which to pursue.'
   },
   'review-project-positioning': {
     id: 'review-project-positioning',
     name: 'Review Project Positioning',
-    description: 'Review a project\'s positioning in light of its verified achievements.',
+    description: "Review a project's positioning in light of its verified achievements.",
     requiredCapabilities: ['context.read', 'twin.propose_update'],
     steps: [
       {
         order: 1,
         title: 'Gather project context',
-        instruction: 'Retrieve the project\'s verified achievements, goals, and current positioning.',
+        instruction:
+          "Retrieve the project's verified achievements, goals, and current positioning.",
         mapsToTool: 'brandops_get_context',
         expectedInput: 'Project id or context query',
         outputHint: 'Project context retrieved'
@@ -97,7 +103,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
       {
         order: 2,
         title: 'Analyze positioning alignment',
-        instruction: 'Compare the project\'s actual achievements against the current positioning statement.',
+        instruction:
+          "Compare the project's actual achievements against the current positioning statement.",
         mapsToTool: undefined,
         expectedInput: 'Project achievements and positioning',
         outputHint: 'Alignment analysis complete'
@@ -105,7 +112,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
       {
         order: 3,
         title: 'Identify positioning gaps',
-        instruction: 'Identify gaps between what the project has achieved and what the positioning claims.',
+        instruction:
+          'Identify gaps between what the project has achieved and what the positioning claims.',
         mapsToTool: undefined,
         expectedInput: 'Alignment analysis',
         outputHint: 'Gaps identified'
@@ -119,7 +127,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
         outputHint: 'Positioning proposal created'
       }
     ],
-    invocationHint: 'Use this skill when the user wants to review whether a project\'s positioning matches its achievements. The skill analyzes gaps and proposes updates.'
+    invocationHint:
+      "Use this skill when the user wants to review whether a project's positioning matches its achievements. The skill analyzes gaps and proposes updates."
   },
   'generate-builder-update': {
     id: 'generate-builder-update',
@@ -160,7 +169,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
         outputHint: 'Update draft complete'
       }
     ],
-    invocationHint: 'Use this skill when the user wants a summary of their recent professional activity. The skill retrieves context, summarizes achievements, and drafts the update.'
+    invocationHint:
+      'Use this skill when the user wants a summary of their recent professional activity. The skill retrieves context, summarizes achievements, and drafts the update.'
   },
   'prepare-launch-narrative': {
     id: 'prepare-launch-narrative',
@@ -201,7 +211,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
         outputHint: 'Launch content opportunity created'
       }
     ],
-    invocationHint: 'Use this skill when the user wants to prepare a launch narrative for a release or milestone. The skill structures the story and creates a content opportunity.'
+    invocationHint:
+      'Use this skill when the user wants to prepare a launch narrative for a release or milestone. The skill structures the story and creates a content opportunity.'
   },
   'convert-work-session-to-portfolio-evidence': {
     id: 'convert-work-session-to-portfolio-evidence',
@@ -220,7 +231,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
       {
         order: 2,
         title: 'Identify portfolio value',
-        instruction: 'Identify what makes this work portfolio-worthy: technologies, impact, complexity.',
+        instruction:
+          'Identify what makes this work portfolio-worthy: technologies, impact, complexity.',
         mapsToTool: undefined,
         expectedInput: 'Session summary',
         outputHint: 'Portfolio value identified'
@@ -242,7 +254,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
         outputHint: 'Artifact proposal created'
       }
     ],
-    invocationHint: 'Use this skill when the user wants to turn a work session into portfolio evidence. The skill captures the achievement and creates an artifact proposal.'
+    invocationHint:
+      'Use this skill when the user wants to turn a work session into portfolio evidence. The skill captures the achievement and creates an artifact proposal.'
   },
   'review-professional-profile': {
     id: 'review-professional-profile',
@@ -291,7 +304,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
         outputHint: 'Profile update proposals created'
       }
     ],
-    invocationHint: 'Use this skill when the user wants to review their professional profile against recent activity. The skill identifies gaps and proposes updates.'
+    invocationHint:
+      'Use this skill when the user wants to review their professional profile against recent activity. The skill identifies gaps and proposes updates.'
   },
   'create-weekly-builder-review': {
     id: 'create-weekly-builder-review',
@@ -302,7 +316,8 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
       {
         order: 1,
         title: 'Retrieve weekly activity',
-        instruction: 'Get all verified activity, achievements, and opportunities from the past week.',
+        instruction:
+          'Get all verified activity, achievements, and opportunities from the past week.',
         mapsToTool: 'brandops_get_context',
         expectedInput: 'Week time range',
         outputHint: 'Weekly activity retrieved'
@@ -318,7 +333,7 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
       {
         order: 3,
         title: 'Identify learnings',
-        instruction: 'Derive learnings from the week\'s activity and achievements.',
+        instruction: "Derive learnings from the week's activity and achievements.",
         mapsToTool: undefined,
         expectedInput: 'Work summary',
         outputHint: 'Learnings derived'
@@ -334,13 +349,15 @@ export const SKILL_PACKS: Record<SkillPackId, SkillPack> = {
       {
         order: 5,
         title: 'Offer learnings for memory',
-        instruction: 'Offer the user the chance to approve selected learnings into longer-term memory.',
+        instruction:
+          'Offer the user the chance to approve selected learnings into longer-term memory.',
         mapsToTool: 'brandops_propose_twin_update',
         expectedInput: 'Approved learnings',
         outputHint: 'Learnings offered for memory'
       }
     ],
-    invocationHint: 'Use this skill at the end of a week to generate a professional review. The skill summarizes activity, derives learnings, and offers them for memory.'
+    invocationHint:
+      'Use this skill at the end of a week to generate a professional review. The skill summarizes activity, derives learnings, and offers them for memory.'
   }
 };
 

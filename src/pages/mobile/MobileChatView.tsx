@@ -203,7 +203,9 @@ function StreamingAssistantText({
 
   return (
     <div className="space-y-2">
-      {isGenerating ? <span className="bo-terminal-meta">twin reasoning from verified facts...</span> : null}
+      {isGenerating ? (
+        <span className="bo-terminal-meta">twin reasoning from verified facts...</span>
+      ) : null}
       <p
         className="bo-streaming-text whitespace-pre-wrap break-words leading-relaxed"
         aria-label={text}
@@ -417,7 +419,9 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                 {activeDigitalTwin.memory.missingInfo.length > 0 ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/30 bg-warningSoft/15 px-2 py-1 text-textSoft">
                     <AlertCircle size={11} aria-hidden />
-                    <span className="text-warning font-medium">{activeDigitalTwin.memory.missingInfo.length} fact factor</span>
+                    <span className="text-warning font-medium">
+                      {activeDigitalTwin.memory.missingInfo.length} fact factor
+                    </span>
                   </span>
                 ) : null}
               </div>
@@ -651,81 +655,118 @@ export const MobileChatView = (props: MobileChatViewProps) => {
                       </div>
                     )}
 
-                    <div
-                      className={clsx('bo-action-strip', message.role === 'user' && 'justify-end')}
-                    >
-                      {canConvert && priorUserMessage && message.role === 'assistant' ? (
+                    {/*
+                      Per-message actions, folded away on older messages.
+
+                      Every message carried Copy, Save and Pin, and assistant
+                      messages added Convert to Plan — all always rendered. A
+                      twenty-message conversation came to 219 words of content and
+                      **70 controls**: eleven words and three-and-a-half buttons
+                      per message, so the actions outweighed the thing they act on.
+
+                      The newest message keeps them open, because that is what
+                      almost every action is aimed at. Older messages fold theirs
+                      behind one control, so scrolling back through a conversation
+                      shows the conversation. Nothing is removed and nothing is
+                      more than a tap away.
+                    */}
+                    <details className="mt-1.5" open={index === conversationMessages.length - 1}>
+                      <summary
+                        className={clsx(
+                          'cursor-pointer list-none text-overline uppercase tracking-wide text-textSoft hover:text-textMuted [&::-webkit-details-marker]:hidden',
+                          message.role === 'user' && 'text-right',
+                          btnFocus
+                        )}
+                      >
+                        Actions
+                      </summary>
+                      <div
+                        className={clsx(
+                          'bo-action-strip',
+                          message.role === 'user' && 'justify-end'
+                        )}
+                      >
+                        {canConvert && priorUserMessage && message.role === 'assistant' ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onConvertAskToPlan?.({
+                                kind: 'execution-plan',
+                                askOutput: message.text,
+                                messageId: message.id,
+                                originalUserMessage: priorUserMessage.text,
+                                verifiedFactsUsed: sourceFactsFromMessage(
+                                  message,
+                                  activeDigitalTwin
+                                ),
+                                unverifiedMissingFacts: missingFactsFromMessage(
+                                  message,
+                                  activeDigitalTwin
+                                )
+                              })
+                            }
+                            className={clsx(
+                              'inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primarySoft/15 px-2 py-1 text-overline font-semibold uppercase tracking-wide text-primary transition-colors hover:bg-primarySoft/30',
+                              btnFocus
+                            )}
+                            title="Convert this response into a Plan"
+                          >
+                            <GitBranch size={12} aria-hidden />
+                            Convert to Plan
+                          </button>
+                        ) : null}
                         <button
                           type="button"
-                          onClick={() => onConvertAskToPlan?.({
-                            kind: 'execution-plan',
-                            askOutput: message.text,
-                            messageId: message.id,
-                            originalUserMessage: priorUserMessage.text,
-                            verifiedFactsUsed: sourceFactsFromMessage(message, activeDigitalTwin),
-                            unverifiedMissingFacts: missingFactsFromMessage(message, activeDigitalTwin)
-                          })}
+                          onClick={() => copyToClipboard(message.text)}
                           className={clsx(
-                            'inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primarySoft/15 px-2 py-1 text-overline font-semibold uppercase tracking-wide text-primary transition-colors hover:bg-primarySoft/30',
+                            'bo-ask-card-action',
+                            'border-border/40 hover:border-borderStrong',
                             btnFocus
                           )}
-                          title="Convert this response into a Plan"
+                          title="Copy to clipboard"
                         >
-                          <GitBranch size={12} aria-hidden />
-                          Convert to Plan
+                          <Copy className="h-3.5 w-3.5" aria-hidden />
+                          Copy
                         </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(message.text)}
-                        className={clsx(
-                          'bo-ask-card-action',
-                          'border-border/40 hover:border-borderStrong',
-                          btnFocus
-                        )}
-                        title="Copy to clipboard"
-                      >
-                        <Copy className="h-3.5 w-3.5" aria-hidden />
-                        Copy
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => saveMessage(message)}
-                        className={clsx(
-                          'bo-ask-card-action',
-                          isSaved && 'border-success/45 text-success',
-                          btnFocus
-                        )}
-                      >
-                        <BookmarkPlus className="h-3.5 w-3.5" aria-hidden />
-                        {isSaved ? 'Saved' : 'Save'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => togglePin(message.id)}
-                        className={clsx(
-                          'bo-ask-card-action',
-                          isPinned && 'border-primary/45 text-primary',
-                          btnFocus
-                        )}
-                      >
-                        <Pin className="h-3.5 w-3.5" aria-hidden />
-                        {isPinned ? 'Pinned' : 'Pin'}
-                      </button>
-                      {message.planConversion ? (
                         <button
                           type="button"
-                          onClick={() => onOpenConvertedPlan?.(message.planConversion!.planId)}
+                          onClick={() => saveMessage(message)}
                           className={clsx(
-                            'bo-ask-card-action border-success/45 text-success',
+                            'bo-ask-card-action',
+                            isSaved && 'border-success/45 text-success',
                             btnFocus
                           )}
                         >
-                          <GitBranch size={12} aria-hidden />
-                          Open Plan
+                          <BookmarkPlus className="h-3.5 w-3.5" aria-hidden />
+                          {isSaved ? 'Saved' : 'Save'}
                         </button>
-                      ) : null}
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => togglePin(message.id)}
+                          className={clsx(
+                            'bo-ask-card-action',
+                            isPinned && 'border-primary/45 text-primary',
+                            btnFocus
+                          )}
+                        >
+                          <Pin className="h-3.5 w-3.5" aria-hidden />
+                          {isPinned ? 'Pinned' : 'Pin'}
+                        </button>
+                        {message.planConversion ? (
+                          <button
+                            type="button"
+                            onClick={() => onOpenConvertedPlan?.(message.planConversion!.planId)}
+                            className={clsx(
+                              'bo-ask-card-action border-success/45 text-success',
+                              btnFocus
+                            )}
+                          >
+                            <GitBranch size={12} aria-hidden />
+                            Open Plan
+                          </button>
+                        ) : null}
+                      </div>
+                    </details>
                   </div>
                 </article>
               );

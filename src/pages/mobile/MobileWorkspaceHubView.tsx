@@ -1,3 +1,5 @@
+import { quoteContextValue } from '../../services/interop/validation';
+import { describeApprovalConsequence } from '../../services/interop/capabilityRegistry';
 import clsx from 'clsx';
 import { useMemo, useState } from 'react';
 import {
@@ -29,12 +31,14 @@ import { workspaceQueueCommandLine } from './pulseTimeline';
 import { buildOperationalPlanCards, type OperationalPlanCard } from './PlanOperationalStudio';
 import { mobileChipClass } from './mobileTabPrimitives';
 import { defaultBrandProfile } from '../../config/workspaceDefaults';
+import { toneBorderClass, toneClass, toneInteractiveClass } from '../../shared/ui/tone';
 
 type FeedKind =
   | 'approval'
   | 'opportunity'
   | 'recommendation'
   | 'active-plan'
+  | 'ready-plan'
   | 'completed-action'
   | 'saved-insight'
   | 'twin-update'
@@ -47,7 +51,21 @@ interface FeedItem {
   kind: FeedKind;
   title: string;
   summary: string;
+  /** Raw state from whichever system produced the item. Never rendered directly. */
   status: string;
+  /**
+   * A qualifier that is not a state: a confidence score, the queue an item came
+   * from. Rendered quietly, and never in the chip.
+   */
+  note?: string;
+  /**
+   * What approving this does, for the rows that ask to be approved.
+   *
+   * The one piece of detail that is *not* behind the disclosure. Everything else
+   * on a collapsed row describes the request; this describes the consequence,
+   * and a reader deciding whether to approve needs it before they open anything.
+   */
+  consequence?: { effect: string; reversible: boolean | null; leavesWorkspace: boolean };
   tone: FeedTone;
   priority: number;
   primaryAction: string;
@@ -98,6 +116,7 @@ const FEED_LABELS: Record<FeedKind, string> = {
   opportunity: 'Opportunity',
   recommendation: 'Recommended next move',
   'active-plan': 'Active plan',
+  'ready-plan': 'Ready to start',
   'completed-action': 'Recent receipt',
   'saved-insight': 'Saved insight',
   'twin-update': 'Twin update',
@@ -109,36 +128,105 @@ const FEED_ICONS: Record<FeedKind, typeof ShieldCheck> = {
   opportunity: Radar,
   recommendation: Lightbulb,
   'active-plan': Compass,
+  'ready-plan': Compass,
   'completed-action': History,
   'saved-insight': FileText,
   'twin-update': UserRound,
   'integration-reminder': AlertTriangle
 };
 
-const FEED_FILTERS: Array<{ id: FeedFilter; label: string }> = [
-  { id: 'all', label: 'All' },
-  { id: 'attention', label: 'What should I do?' },
-  { id: 'approvals', label: 'Approvals' },
-  { id: 'opportunities', label: 'Opportunities' },
-  { id: 'active', label: 'Active' },
-  { id: 'recent', label: 'Recent' }
-];
+/**
+ * The states a reader is asked to learn.
+ *
+ * The chip beside each row was labelled "status" and carried four unrelated
+ * things: a real state (`in progress`), a confidence score (`100% confidence`),
+ * the queue an item arrived from (`Scheduler`), and a receipt's execution status
+ * (`recorded`). All four were styled identically, so the one visual element that
+ * should answer "what state is this in?" answered a different question depending
+ * on the row.
+ *
+ * Internal state is untouched — `status` still carries whatever the producing
+ * system said, and the expanded detail still shows it verbatim. This is only
+ * about what the collapsed row asks the reader to hold in their head.
+ *
+ * A raw value with no entry here renders no chip rather than a guess. Inventing
+ * a state for something we cannot map would be worse than showing none.
+ */
+export const USER_FACING_STATE: Record<string, string> = {
+  // Needs you
+  'pending-approval': 'Needs you',
+  'pending approval': 'Needs you',
+  'approval pending': 'Needs you',
+  pending: 'Needs you',
+  waiting: 'Needs you',
+  'needs-input': 'Needs you',
+  'needs input': 'Needs you',
+  'needs setup': 'Needs you',
+  'setup needed': 'Needs you',
+  // Ready
+  ready: 'Ready',
+  draft: 'Ready',
+  approved: 'Ready',
+  // Working
+  active: 'Working',
+  'in-progress': 'Working',
+  'in progress': 'Working',
+  executing: 'Working',
+  // Blocked
+  blocked: 'Blocked',
+  // Verifying
+  executed: 'Verifying',
+  'awaiting verification': 'Verifying',
+  // Done
+  verified: 'Done',
+  recorded: 'Done',
+  completed: 'Done',
+  complete: 'Done',
+  done: 'Done',
+  success: 'Done',
+  // Failed
+  failed: 'Failed',
+  failure: 'Failed',
+  rejected: 'Failed'
+};
 
-function toneClass(tone: FeedTone): string {
-  switch (tone) {
-    case 'success':
-      return 'border-success/45 bg-successSoft/20 text-success';
-    case 'warning':
-      return 'border-warning/45 bg-warningSoft/20 text-warning';
-    case 'danger':
-      return 'border-danger/45 bg-dangerSoft/15 text-danger';
-    case 'info':
-      return 'border-info/45 bg-infoSoft/15 text-info';
-    case 'primary':
-      return 'border-primary/45 bg-primarySoft/20 text-primary';
-    default:
-      return 'border-border/45 bg-bgSubtle/70 text-textMuted';
-  }
+/**
+ * Raw values that are deliberately not states.
+ *
+ * `suggested` and `opportunity` describe what a row *is*, and the group heading
+ * already says that. A queue name like `Scheduler` is a source. Listing them
+ * explicitly is what lets `planStatusVocabulary` assert that everything else the
+ * product can produce is mapped — an unmapped state renders no chip at all, and
+ * the first version of this map silently dropped the chip from a plan awaiting
+ * approval, which is the one state that most needs to be visible.
+ */
+export const NON_STATE_STATUSES = new Set(['suggested', 'opportunity']);
+
+export function userFacingState(raw: string): string | null {
+  return USER_FACING_STATE[raw.trim().toLowerCase()] ?? null;
+}
+
+/**
+ * What the group heading already told the reader.
+ *
+ * "Recently done" containing rows each chipped `Done` says the same thing twice,
+ * and a chip that is always identical within its group carries no information
+ * at all. Suppressed per group rather than per row, so a `Failed` receipt still
+ * stands out among the done ones.
+ */
+function informativeStates(items: FeedItem[]): Set<string> {
+  const states = items.map((item) => userFacingState(item.status)).filter(Boolean) as string[];
+  const distinct = new Set(states);
+  /**
+   * Suppressed whenever the group is uniform, including at one item.
+   *
+   * A first version required two items before it would suppress, which made a
+   * group show its chip at one item and hide it at two — the interface changing
+   * shape as data arrived, for no reason the reader could see. "Waiting on you"
+   * is the case that exposed it: approvals and twin prompts both map to
+   * `Needs you`, so that chip is redundant with the heading at every size.
+   */
+  return distinct.size === 1 ? new Set() : distinct;
 }
 
 function compactTime(value: string): string {
@@ -269,7 +357,20 @@ function operationalCardToFeedItem(
           : 'Review it, edit if needed, then approve execution.';
   return {
     id: `plan-${plan.id}`,
-    kind: 'active-plan',
+    /**
+     * Underway, or merely on offer.
+     *
+     * These five cards are templates the product always shows — "Workflow Plan",
+     * "Outreach Plan", "Content Calendar" and so on. They exist whether or not
+     * the reader has ever touched them, and they were all filed as
+     * `active-plan`, which puts them under a heading reading "In progress" with
+     * the hint "Already underway."
+     *
+     * On a brand-new workspace that meant **five things listed as underway and a
+     * tile reading "Active Plans: 4"**, for someone who had done nothing. A card
+     * only reports progress once its own status says so.
+     */
+    kind: plan.status === 'in-progress' || plan.status === 'blocked' ? 'active-plan' : 'ready-plan',
     title: plan.title,
     summary: plan.promise,
     status: plan.status.replace(/-/g, ' '),
@@ -299,7 +400,7 @@ function operationalCardToFeedItem(
 }
 
 function approvalPrompt(action: string, item: PlanPendingOperatorReviewPeek): string {
-  return `ask: ${action}. Explain the output, what changes if approved, missing facts, risks, and receipt expectations. Do not execute externally.\n\n${JSON.stringify(item, null, 2)}`;
+  return `ask: ${quoteContextValue(action)}. Explain the output, what changes if approved, missing facts, risks, and receipt expectations. Do not execute externally.\n\n${JSON.stringify(item, null, 2)}`;
 }
 
 function approvalToFeedItem(args: {
@@ -316,6 +417,9 @@ function approvalToFeedItem(args: {
     title: item.verb,
     summary: item.preview || 'Review this generated output before anything changes.',
     status: 'waiting',
+    consequence: item.capabilityId
+      ? (describeApprovalConsequence(item.capabilityId) ?? undefined)
+      : undefined,
     tone: 'warning',
     priority: 5,
     primaryAction: 'Review',
@@ -355,10 +459,25 @@ function opportunityToFeedItem(args: {
     kind: 'opportunity',
     title: item.title,
     summary: item.suggestion,
-    status: `${item.confidence}% confidence`,
+    status: 'suggested',
+    note: `${item.confidence}% confidence`,
     tone: 'primary',
     priority: 30,
     primaryAction: 'Convert',
+    /**
+     * Gated like every other action item.
+     *
+     * This was the one feed item of seven that set no `primaryDisabled`, so a
+     * locked workspace disabled its `Review` action and left `Convert` live —
+     * and converting an opportunity into a plan writes to the workspace. Found
+     * by driving the rendered interface and then reading why one control behaved
+     * differently from its neighbours.
+     *
+     * The two items that legitimately omit this are `Set up` and `Open setup`:
+     * they navigate to the settings that lift the lock, and disabling them would
+     * strand the user inside it.
+     */
+    primaryDisabled: disabled,
     onPrimary: () => onConvertPredictiveOpportunityToPlan(item),
     details: [item.whyThisAppeared, `Expected impact: ${item.expectedImpact}`],
     timeline: ['Evaluate', 'Run small experiment', 'Capture receipt'],
@@ -387,7 +506,8 @@ function recommendationToFeedItem(
     kind: 'recommendation',
     title: item.title,
     summary: item.detail,
-    status: item.confidence ? `${item.confidence}% confidence` : 'suggested',
+    status: 'suggested',
+    note: item.confidence ? `${item.confidence}% confidence` : undefined,
     tone: 'info',
     priority: 35,
     primaryAction: 'Review',
@@ -411,7 +531,9 @@ function queueToFeedItem(
     kind: 'recommendation',
     title: row.title,
     summary: row.subtitle,
+    // The badge names the queue this came from — a source, not a state.
     status: row.badge ?? row.kind,
+    note: row.badge ?? row.kind,
     tone: urgent ? 'warning' : 'muted',
     priority: urgent ? 28 : 42,
     primaryAction: 'Handle',
@@ -463,7 +585,8 @@ function twinFeedItem(snapshot: MobileWorkspaceSnapshot, onOpenSettings: () => v
     summary: twin
       ? twin.identity.professionalPositioning || twin.identity.summary || 'Twin context is active.'
       : 'Add profile, offer, voice, and proof so PLAN can make better decisions.',
-    status: twin ? `${twin.confidenceScore}% confidence` : 'setup needed',
+    status: twin ? 'ready' : 'setup needed',
+    note: twin ? `${twin.confidenceScore}% confidence` : undefined,
     tone: missing.length ? 'warning' : twin ? 'success' : 'warning',
     priority: twin && missing.length === 0 ? 80 : 12,
     primaryAction: twin ? 'Review gaps' : 'Set up',
@@ -616,14 +739,154 @@ function FeedDetail({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-function FeedItemRow({ item, btnFocus }: { item: FeedItem; btnFocus: string }) {
+/**
+ * The feed, grouped by what the reader has to *do* about it.
+ *
+ * The page rendered eighteen items as sibling `h3`s drawn from seven different
+ * sources — a setup prompt, a Twin proposal, eight suggestions, a contact, five
+ * plan templates and two execution records — every one of them styled
+ * identically. It asked "What needs your attention?" and then answered it
+ * eighteen times with equal weight. 936 words and 46 controls, none of which
+ * looked more important than any other, which is the same as none of them
+ * looking important.
+ *
+ * Grouping is by intent rather than by the system each item came from. A person
+ * opening this wants to know what is waiting on *them* before they want to know
+ * what a recommendation engine thought of overnight, and the two are not
+ * comparable — one is a decision they owe someone, the other is an idea they can
+ * ignore.
+ *
+ * Order is the reading order: decisions, then work already moving, then
+ * suggestions, then things already finished, then setup. Anything unmapped falls
+ * to the end rather than vanishing.
+ */
+const FEED_GROUPS: ReadonlyArray<{
+  id: string;
+  title: string;
+  hint: string;
+  kinds: ReadonlyArray<FeedKind>;
+}> = [
+  {
+    id: 'decisions',
+    title: 'Waiting on you',
+    hint: 'Nothing here moves until you decide.',
+    kinds: ['approval', 'twin-update']
+  },
+  {
+    id: 'moving',
+    title: 'In progress',
+    hint: 'Already underway.',
+    kinds: ['active-plan']
+  },
+  {
+    id: 'ready',
+    title: 'Ready to start',
+    hint: 'Set up and waiting for you to begin.',
+    kinds: ['ready-plan']
+  },
+  {
+    id: 'suggested',
+    title: 'Suggested',
+    hint: 'Ideas from your workspace. Safe to ignore.',
+    kinds: ['opportunity', 'recommendation']
+  },
+  {
+    id: 'done',
+    title: 'Recently done',
+    hint: 'Finished, with receipts.',
+    kinds: ['completed-action']
+  },
+  {
+    id: 'setup',
+    title: 'Set up',
+    hint: 'One-time steps that unlock the rest.',
+    kinds: ['integration-reminder']
+  }
+];
+
+/** How many of a group are shown before the reader asks for the rest. */
+const COLLAPSED_GROUP_SIZE = 3;
+
+function FeedGroup({
+  title,
+  hint,
+  items,
+  btnFocus
+}: {
+  title: string;
+  hint: string;
+  items: FeedItem[];
+  btnFocus: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const shown = expanded ? items : items.slice(0, COLLAPSED_GROUP_SIZE);
+  const hidden = items.length - shown.length;
+  // Computed over the whole group, not the visible slice, so expanding a group
+  // does not change what its rows are labelled.
+  const distinctKinds = new Set(items.map((item) => item.kind)).size;
+  const informative = informativeStates(items);
+
+  return (
+    <section className="mt-3" aria-label={`${title} (${items.length})`}>
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 className="text-label font-semibold text-text">
+          {title}{' '}
+          <span className="text-textSoft" aria-hidden>
+            {items.length}
+          </span>
+        </h3>
+      </div>
+      <p className="mt-0.5 text-meta text-textSoft">{hint}</p>
+
+      <div className="mt-2 grid gap-2">
+        {shown.map((item) => (
+          <FeedItemRow
+            key={item.id}
+            item={item}
+            btnFocus={btnFocus}
+            showKind={distinctKinds > 1}
+            informative={informative}
+          />
+        ))}
+      </div>
+
+      {hidden > 0 ? (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className={clsx(
+            'mt-2 rounded-lg border border-border/45 px-2.5 py-1 text-fine text-textMuted hover:text-text',
+            btnFocus
+          )}
+        >
+          Show {hidden} more
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
+function FeedItemRow({
+  item,
+  btnFocus,
+  showKind = true,
+  informative
+}: {
+  item: FeedItem;
+  btnFocus: string;
+  showKind?: boolean;
+  /** States worth chipping in this group; omitted means chip whatever maps. */
+  informative?: Set<string>;
+}) {
   const Icon = FEED_ICONS[item.kind];
+  const mapped = userFacingState(item.status);
+  const state = mapped && (!informative || informative.has(mapped)) ? mapped : null;
   return (
     <details
       id={item.id}
       className={clsx(
         'group scroll-mt-28 rounded-xl border bg-bgElevated/55 px-3 py-2.5 open:border-primary/35 open:bg-surface/70',
-        item.tone === 'danger' ? 'border-danger/35' : item.tone === 'warning' ? 'border-warning/35' : 'border-border/35'
+        toneBorderClass(item.tone)
       )}
     >
       <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
@@ -631,37 +894,61 @@ function FeedItemRow({ item, btnFocus }: { item: FeedItem; btnFocus: string }) {
           <span
             className={clsx(
               'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border',
-              item.tone === 'success' ? 'border-success/45 bg-successSoft/20 text-success' :
-              item.tone === 'warning' ? 'border-warning/45 bg-warningSoft/20 text-warning' :
-              item.tone === 'danger' ? 'border-danger/45 bg-dangerSoft/15 text-danger' :
-              item.tone === 'info' ? 'border-info/45 bg-infoSoft/15 text-info' :
-              item.tone === 'primary' ? 'border-primary/45 bg-primarySoft/20 text-primary' :
-              'border-border/45 bg-bgSubtle/70 text-textMuted'
+              toneClass(item.tone)
             )}
           >
             <Icon className="h-4 w-4" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
-              <p className="bo-system-label">{FEED_LABELS[item.kind]}</p>
-              <span
-                className={clsx(
-                  'rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
-                  item.tone === 'success' ? 'border-success/45 bg-successSoft/20 text-success' :
-                  item.tone === 'warning' ? 'border-warning/45 bg-warningSoft/20 text-warning' :
-                  item.tone === 'danger' ? 'border-danger/45 bg-dangerSoft/15 text-danger' :
-                  item.tone === 'info' ? 'border-info/45 bg-infoSoft/15 text-info' :
-                  item.tone === 'primary' ? 'border-primary/45 bg-primarySoft/20 text-primary' :
-                  'border-border/45 bg-bgSubtle/70 text-textMuted'
-                )}
-              >
-                {item.status}
-              </span>
+              {/*
+                The kind label renders only where it distinguishes something.
+
+                Grouping the feed by kind made this label redundant by
+                construction: "Recent receipt" under "Recently done", "Active
+                plan" under "In progress". Measured on the demo workspace, 6 of
+                the 9 rendered labels sat in a group containing exactly one kind,
+                so they restated the heading directly above them. It still earns
+                its place in "Waiting on you" and "Suggested", which mix two.
+              */}
+              {showKind ? <p className="bo-system-label">{FEED_LABELS[item.kind]}</p> : null}
+              {state ? (
+                <span
+                  className={clsx(
+                    'rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
+                    toneClass(item.tone)
+                  )}
+                >
+                  {state}
+                </span>
+              ) : null}
+              {item.note ? <span className="text-fine text-textSoft">{item.note}</span> : null}
             </div>
-            <h3 className="mt-1 text-label font-semibold leading-tight text-text">{item.title}</h3>
+            <h4 className="mt-1 text-label font-semibold leading-tight text-text">{item.title}</h4>
             <p className="mt-1 line-clamp-2 text-meta leading-snug text-textMuted">
               {item.summary}
             </p>
+            {/*
+              Consequence before the button, not behind the disclosure.
+
+              Everything else on a collapsed row describes the request. This
+              describes what happens if the reader says yes — and they are being
+              asked to say yes right here, so hiding it one level down asks for a
+              decision while withholding what the decision does.
+            */}
+            {item.consequence ? (
+              <p
+                className={clsx(
+                  'mt-1 text-fine leading-snug',
+                  item.consequence.leavesWorkspace || item.consequence.reversible === false
+                    ? 'text-warning'
+                    : 'text-textSoft'
+                )}
+              >
+                {item.consequence.effect}
+                {item.consequence.reversible === false ? ' Rejecting runs nothing.' : ''}
+              </p>
+            ) : null}
           </div>
           <button
             type="button"
@@ -699,12 +986,9 @@ function FeedItemRow({ item, btnFocus }: { item: FeedItem; btnFocus: string }) {
               }}
               className={clsx(
                 'rounded-lg border px-2.5 py-1.5 text-fine font-semibold disabled:opacity-45',
-                action.tone === 'success' ? 'border-success/45 bg-successSoft/20 text-success' :
-                action.tone === 'warning' ? 'border-warning/45 bg-warningSoft/20 text-warning' :
-                action.tone === 'danger' ? 'border-danger/45 bg-dangerSoft/15 text-danger' :
-                action.tone === 'info' ? 'border-info/45 bg-infoSoft/15 text-info' :
-                action.tone === 'primary' ? 'border-primary/45 bg-primarySoft/20 text-primary' :
-                'border-border/45 bg-bgSubtle/70 text-textMuted',
+                // A button, so it gains the hover state the static chips do not.
+                // It previously used the chip mapping and had no hover at all.
+                toneInteractiveClass(action.tone),
                 btnFocus
               )}
             >
@@ -762,7 +1046,12 @@ export const MobileWorkspaceHubView = ({
         plan.status === 'executed'
     ).length +
     convertedOperationalPlans.length +
-    buildOperationalPlanCards(snapshot).filter((plan) => plan.status !== 'needs-input').length;
+    // Counted the same way the feed groups them: a template nobody has started
+    // is not an active plan. This read `!== 'needs-input'`, so four untouched
+    // templates made an empty workspace report four active plans.
+    buildOperationalPlanCards(snapshot).filter(
+      (plan) => plan.status === 'in-progress' || plan.status === 'blocked'
+    ).length;
   const opportunityCount =
     snapshot.predictiveOpportunityLayer.suggestions.length +
     snapshot.convertedAskPlans.filter((plan) => plan.status === 'opportunity').length;
@@ -785,7 +1074,6 @@ export const MobileWorkspaceHubView = ({
     () => filterFeedItems(feedItems, feedFilter),
     [feedFilter, feedItems]
   );
-  const attention = feedItems.find((item) => item.priority <= 20) ?? feedItems[0];
   const member =
     launchAccess.membership.status === 'active'
       ? 'Local membership active · unverified'
@@ -804,10 +1092,12 @@ export const MobileWorkspaceHubView = ({
               Operational workspace
             </p>
             <h2 className="mt-1 text-h3 text-text">What needs your attention?</h2>
-            <p className="mt-1 text-meta leading-snug text-textMuted">
-              Actions, approvals, active plans, opportunities, and recent receipts — one feed,
-              prioritized by your twin context.
-            </p>
+            {/*
+              The sentence here listed "actions, approvals, active plans,
+              opportunities, and recent receipts", which is the group headings
+              read aloud before the reader reaches them. It described a flat feed
+              that no longer exists.
+            */}
           </div>
           <button
             type="button"
@@ -828,7 +1118,7 @@ export const MobileWorkspaceHubView = ({
             }
             tone={profileIncomplete ? 'warning' : 'success'}
             active={feedFilter === 'attention'}
-            onClick={() => setFeedFilter('attention')}
+            onClick={() => setFeedFilter(feedFilter === 'attention' ? 'all' : 'attention')}
             btnFocus={btnFocus}
           />
           <SummaryPill
@@ -836,7 +1126,7 @@ export const MobileWorkspaceHubView = ({
             value={String(activePlanCount)}
             tone="info"
             active={feedFilter === 'active'}
-            onClick={() => setFeedFilter('active')}
+            onClick={() => setFeedFilter(feedFilter === 'active' ? 'all' : 'active')}
             btnFocus={btnFocus}
           />
           <SummaryPill
@@ -844,7 +1134,7 @@ export const MobileWorkspaceHubView = ({
             value={String(snapshot.planPendingReviewCount)}
             tone={snapshot.planPendingReviewCount ? 'warning' : 'success'}
             active={feedFilter === 'approvals'}
-            onClick={() => setFeedFilter('approvals')}
+            onClick={() => setFeedFilter(feedFilter === 'approvals' ? 'all' : 'approvals')}
             btnFocus={btnFocus}
           />
           <SummaryPill
@@ -852,35 +1142,54 @@ export const MobileWorkspaceHubView = ({
             value={String(opportunityCount)}
             tone="primary"
             active={feedFilter === 'opportunities'}
-            onClick={() => setFeedFilter('opportunities')}
+            onClick={() => setFeedFilter(feedFilter === 'opportunities' ? 'all' : 'opportunities')}
             btnFocus={btnFocus}
           />
         </div>
 
-        <nav className="mt-3 flex flex-wrap gap-1.5" aria-label="Plan feed focus">
-          {FEED_FILTERS.map((filter) => (
-            <button
-              key={filter.id}
-              type="button"
-              onClick={() => setFeedFilter(filter.id)}
-              className={clsx(
-                'shrink-0 rounded-full border px-3 py-1.5 text-fine font-semibold',
-                feedFilter === filter.id
-                  ? 'border-primary/55 bg-primarySoft/20 text-primary'
-                  : 'border-border/45 bg-bgSubtle/55 text-textMuted',
-                btnFocus
-              )}
-              aria-pressed={feedFilter === filter.id}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </nav>
+        {/*
+          The filter row is gone, and the tiles above absorbed it.
+          
+          Four of its six chips set exactly the same state as a tile —
+          "Pending Approvals" the tile and "Approvals" the chip were the same
+          button drawn twice — so the header offered eleven controls of which
+          eight were four duplicated pairs. The tiles are the better half of each
+          pair because they carry the count as well as the filter.
+          
+          "All" is gone too: a tile that is already active now clears back to it,
+          which is one control doing what two did. And with the feed grouped by
+          the same categories, most of this filtering is answered by simply
+          reading down the page.
+        */}
 
         {lockHint ? (
-          <p className="mt-3 rounded-xl border border-warning/35 bg-warningSoft/15 px-3 py-2 text-meta leading-snug text-warning">
-            {lockHint}
-          </p>
+          <div className="mt-3 rounded-xl border border-warning/35 bg-warningSoft/15 px-3 py-2">
+            <p className="text-meta leading-snug text-warning">{lockHint}</p>
+            {/*
+              The way out of the lock, on the message that describes it.
+
+              Removing the "Start here" card removed the only enabled control on
+              a locked Plan page that reached Settings — every other control is
+              disabled by the lock, which is the point of it. A lock that hides
+              the route to the thing that lifts it strands the person inside it,
+              and `interactionSafety` caught this within a minute of the card
+              coming out.
+
+              This is the better home for it either way: the sentence already
+              says to open Settings, and now saying so and going there are one
+              control instead of an instruction and a hunt.
+            */}
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className={clsx(
+                'mt-2 rounded-lg border border-warning/45 px-2.5 py-1 text-fine font-semibold text-warning',
+                btnFocus
+              )}
+            >
+              Open Settings
+            </button>
+          </div>
         ) : null}
         {!firstRunJourneyVisible && profileIncomplete ? (
           <p className="mt-3 rounded-xl border border-warning/35 bg-warningSoft/15 px-3 py-2 text-meta leading-snug text-warning">
@@ -902,8 +1211,10 @@ export const MobileWorkspaceHubView = ({
           </p>
           <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-fine text-textSoft">
             <span>
-              <strong className="font-medium text-text">{snapshot.activeDigitalTwin.displayName}</strong>
-              {' '}&middot; {snapshot.activeDigitalTwin.confidenceScore}% confidence
+              <strong className="font-medium text-text">
+                {snapshot.activeDigitalTwin.displayName}
+              </strong>{' '}
+              &middot; {snapshot.activeDigitalTwin.confidenceScore}% confidence
             </span>
             {snapshot.positioning ? (
               <span className="line-clamp-1">{snapshot.positioning}</span>
@@ -926,9 +1237,9 @@ export const MobileWorkspaceHubView = ({
         </div>
       ) : null}
 
-      {(snapshot.expertOperator.ask.expertNames.length > 0 ||
-        snapshot.predictiveOpportunityLayer.suggestions.length > 0 ||
-        snapshot.predictiveContentIdeationEngine.allIdeas.length > 0) ? (
+      {snapshot.expertOperator.ask.expertNames.length > 0 ||
+      snapshot.predictiveOpportunityLayer.suggestions.length > 0 ||
+      snapshot.predictiveContentIdeationEngine.allIdeas.length > 0 ? (
         <div className="mt-3 rounded-2xl border border-border/35 bg-bgElevated/55 px-3 py-2.5">
           <p className="bo-system-label text-primary">
             <Brain className="h-3.5 w-3.5" aria-hidden />
@@ -938,7 +1249,8 @@ export const MobileWorkspaceHubView = ({
             {snapshot.expertOperator.ask.expertNames.length > 0 ? (
               <span>
                 <strong className="font-medium text-text">
-                  {snapshot.expertOperator.ask.expertNames.length} expert{snapshot.expertOperator.ask.expertNames.length > 1 ? 's' : ''}
+                  {snapshot.expertOperator.ask.expertNames.length} expert
+                  {snapshot.expertOperator.ask.expertNames.length > 1 ? 's' : ''}
                 </strong>{' '}
                 active: {snapshot.expertOperator.ask.expertNames.slice(0, 3).join(', ')}
                 {snapshot.expertOperator.ask.expertNames.length > 3 ? '…' : ''}
@@ -966,45 +1278,57 @@ export const MobileWorkspaceHubView = ({
         </div>
       ) : null}
 
-      {attention ? (
-        <div className="mt-3 rounded-2xl border border-primary/25 bg-primarySoft/10 px-3 py-3">
-          <p className="bo-system-label text-primary">Start here</p>
-          <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-            <p className="min-w-0 flex-1 text-label font-semibold text-text">{attention.title}</p>
-            <span
-              className={clsx(
-                'rounded-full border px-2 py-0.5 text-overline font-bold uppercase',
-                toneClass(attention.tone)
-              )}
-            >
-              {attention.status}
-            </span>
-          </div>
-          <p className="mt-1 text-meta leading-snug text-textMuted">{attention.summary}</p>
-          {attention.primaryAction ? (
-            <button
-              type="button"
-              disabled={attention.primaryDisabled}
-              onClick={() => void attention.onPrimary?.()}
-              className={clsx(
-                'mt-2 inline-flex items-center gap-1.5 rounded-lg border border-primary/45 bg-primarySoft/20 px-3 py-1.5 text-fine font-semibold text-primary disabled:opacity-45',
-                btnFocus
-              )}
-            >
-              {attention.primaryAction}
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+      {/*
+        The "Start here" card used to sit here, and it rendered `attention` —
+        which is `feedItems.find(...) ?? feedItems[0]`, the same object the first
+        group renders as its first row.
+
+        So the top of the page showed one item twice: same title, same status
+        chip, same summary, same button, one directly above the other. It made
+        sense when the feed below was a flat list of eighteen equal-weight items
+        and something had to be lifted out of it. Once the feed was grouped and
+        "Waiting on you" became the first thing under the header, the card was
+        promoting an item to the position it already held.
+      */}
 
       <div className="mt-3 grid gap-2">
         <p className="text-fine text-textSoft" aria-live="polite">
-          Showing {visibleFeedItems.length} of {feedItems.length} feed items.
+          {/*
+            "Showing 18 of 18 feed items" is a line that only ever tells the
+            reader something when the two numbers differ.
+          */}
+          {visibleFeedItems.length === feedItems.length
+            ? `${feedItems.length} items.`
+            : `Showing ${visibleFeedItems.length} of ${feedItems.length}. Tap the active tile to clear the filter.`}
         </p>
         {visibleFeedItems.length ? (
-          visibleFeedItems.map((item) => (
-            <FeedItemRow key={item.id} item={item} btnFocus={btnFocus} />
-          ))
+          <>
+            {FEED_GROUPS.map((group) => {
+              const items = visibleFeedItems.filter((item) => group.kinds.includes(item.kind));
+              if (!items.length) return null;
+              return (
+                <FeedGroup
+                  key={group.id}
+                  title={group.title}
+                  hint={group.hint}
+                  items={items}
+                  btnFocus={btnFocus}
+                />
+              );
+            })}
+            {/*
+              Anything a group does not claim still appears, rather than being
+              silently dropped — a new feed kind should look unsorted, not
+              missing.
+            */}
+            {(() => {
+              const claimed = new Set(FEED_GROUPS.flatMap((group) => group.kinds));
+              const rest = visibleFeedItems.filter((item) => !claimed.has(item.kind));
+              return rest.length ? (
+                <FeedGroup title="Other" hint="Not yet grouped." items={rest} btnFocus={btnFocus} />
+              ) : null;
+            })()}
+          </>
         ) : (
           <div className="rounded-xl border border-dashed border-border/50 bg-bgSubtle/30 px-3 py-5 text-center">
             <p className="text-sm font-medium text-text">No items in this focus</p>

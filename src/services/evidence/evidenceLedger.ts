@@ -8,7 +8,12 @@
  * "Show evidence" traversal from claims.
  */
 
-import type { EvidenceEntry, EvidenceKind, VerificationStatus, TrustTier } from '../../types/builder';
+import type {
+  EvidenceEntry,
+  EvidenceKind,
+  VerificationStatus,
+  TrustTier
+} from '../../types/builder';
 import type { EntityRef } from '../../types/builder';
 
 // ---------------------------------------------------------------------------
@@ -114,7 +119,7 @@ function generateEvidenceId(ref: string, kind: EvidenceKind, label: string): str
   let hash = 0;
   for (let i = 0; i < hashInput.length; i++) {
     const char = hashInput.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
   return `ev-${Math.abs(hash).toString(36)}-${Date.now().toString(36)}`;
@@ -126,38 +131,64 @@ function generateEvidenceId(ref: string, kind: EvidenceKind, label: string): str
 /** Derive verification status from evidence source. */
 function deriveVerificationStatus(source: EvidenceSource): VerificationStatus {
   switch (source) {
-    case 'verification-fetch': return 'SYSTEM_VERIFIED';
-    case 'user-input': return 'USER_VERIFIED';
-    case 'agent-event': return 'UNVERIFIED';
-    case 'agent-proposal': return 'UNVERIFIED';
-    case 'twin-delta': return 'UNVERIFIED';
-    case 'professional-signal': return 'UNVERIFIED';
-    case 'activity-event': return 'UNVERIFIED';
-    case 'integration-import': return 'UNVERIFIED';
-    case 'webpage': return 'UNVERIFIED';
-    case 'document': return 'UNVERIFIED';
-    case 'repository': return 'UNVERIFIED';
-    case 'mcp-response': return 'UNVERIFIED';
-    default: return 'UNVERIFIED';
+    case 'verification-fetch':
+      return 'SYSTEM_VERIFIED';
+    case 'user-input':
+      return 'USER_VERIFIED';
+    case 'agent-event':
+      return 'UNVERIFIED';
+    case 'agent-proposal':
+      return 'UNVERIFIED';
+    case 'twin-delta':
+      return 'UNVERIFIED';
+    case 'professional-signal':
+      return 'UNVERIFIED';
+    case 'activity-event':
+      return 'UNVERIFIED';
+    case 'integration-import':
+      return 'UNVERIFIED';
+    case 'webpage':
+      return 'UNVERIFIED';
+    case 'document':
+      return 'UNVERIFIED';
+    case 'repository':
+      return 'UNVERIFIED';
+    case 'mcp-response':
+      return 'UNVERIFIED';
+    default:
+      return 'UNVERIFIED';
   }
 }
 
 /** Derive trust tier from evidence source. */
 function deriveTrustTier(source: EvidenceSource): TrustTier {
   switch (source) {
-    case 'verification-fetch': return 'BRANDOPS_VERIFIED' as TrustTier;
-    case 'user-input': return 'USER_VERIFIED' as TrustTier;
-    case 'agent-event': return 'AGENT_REPORTED' as TrustTier;
-    case 'agent-proposal': return 'AGENT_REPORTED' as TrustTier;
-    case 'twin-delta': return 'AGENT_REPORTED' as TrustTier;
-    case 'professional-signal': return 'AGENT_REPORTED' as TrustTier;
-    case 'activity-event': return 'AGENT_REPORTED' as TrustTier;
-    case 'integration-import': return 'EXTERNAL_SOURCE' as TrustTier;
-    case 'webpage': return 'EXTERNAL_SOURCE' as TrustTier;
-    case 'document': return 'EXTERNAL_SOURCE' as TrustTier;
-    case 'repository': return 'EXTERNAL_SOURCE' as TrustTier;
-    case 'mcp-response': return 'EXTERNAL_SOURCE' as TrustTier;
-    default: return 'UNKNOWN' as TrustTier;
+    case 'verification-fetch':
+      return 'BRANDOPS_VERIFIED' as TrustTier;
+    case 'user-input':
+      return 'USER_VERIFIED' as TrustTier;
+    case 'agent-event':
+      return 'AGENT_REPORTED' as TrustTier;
+    case 'agent-proposal':
+      return 'AGENT_REPORTED' as TrustTier;
+    case 'twin-delta':
+      return 'AGENT_REPORTED' as TrustTier;
+    case 'professional-signal':
+      return 'AGENT_REPORTED' as TrustTier;
+    case 'activity-event':
+      return 'AGENT_REPORTED' as TrustTier;
+    case 'integration-import':
+      return 'EXTERNAL_SOURCE' as TrustTier;
+    case 'webpage':
+      return 'EXTERNAL_SOURCE' as TrustTier;
+    case 'document':
+      return 'EXTERNAL_SOURCE' as TrustTier;
+    case 'repository':
+      return 'EXTERNAL_SOURCE' as TrustTier;
+    case 'mcp-response':
+      return 'EXTERNAL_SOURCE' as TrustTier;
+    default:
+      return 'UNKNOWN' as TrustTier;
   }
 }
 
@@ -190,13 +221,13 @@ export function createLedgerEvidence(params: {
     strength: computeEvidenceStrength({
       verificationStatus: deriveVerificationStatus(params.source),
       trustTier: deriveTrustTier(params.source),
-      source: params.source,
-      }),
-      notes: params.notes,
+      source: params.source
+    }),
+    notes: params.notes
   };
 
   const wsId = params.workspaceId ?? WS_ID_DEFAULT;
-   addEvidence(wsId, evidence);
+  addEvidence(wsId, evidence);
   return evidence;
 }
 
@@ -210,7 +241,7 @@ export function getEvidenceLedger(workspaceId: string): EvidenceLedger {
   const ledger: EvidenceLedger = {
     items: [],
     maxItems: MAX_EVIDENCE_ITEMS,
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
   ledgers.set(workspaceId, ledger);
   return ledger;
@@ -239,7 +270,10 @@ export function addEvidence(workspaceId: string, evidence: LedgerEvidence): Ledg
 /**
  * Get evidence by id.
  */
-export function getEvidenceById(workspaceId: string, evidenceId: string): LedgerEvidence | undefined {
+export function getEvidenceById(
+  workspaceId: string,
+  evidenceId: string
+): LedgerEvidence | undefined {
   return getEvidenceLedger(workspaceId).items.find((e) => e.id === evidenceId);
 }
 
@@ -254,15 +288,17 @@ export function getAllEvidence(workspaceId: string): LedgerEvidence[] {
  * Get evidence supporting a specific claim.
  */
 export function getEvidenceForClaim(workspaceId: string, claimId: string): LedgerEvidence[] {
-  return getEvidenceLedger(workspaceId).items.filter((e) =>
-    e.supportsClaims.includes(claimId)
-  );
+  return getEvidenceLedger(workspaceId).items.filter((e) => e.supportsClaims.includes(claimId));
 }
 
 /**
  * Get evidence attached to a specific entity.
  */
-export function getEvidenceForEntity(workspaceId: string, entityType: string, entityId: string): LedgerEvidence[] {
+export function getEvidenceForEntity(
+  workspaceId: string,
+  entityType: string,
+  entityId: string
+): LedgerEvidence[] {
   return getEvidenceLedger(workspaceId).items.filter((e) =>
     e.attachedEntities.some((ent) => ent.type === entityType && ent.id === entityId)
   );
@@ -290,7 +326,7 @@ export function updateEvidenceVerification(
   evidence.strength = computeEvidenceStrength({
     verificationStatus,
     trustTier: trustTier ?? evidence.trustTier,
-    source: evidence.source,
+    source: evidence.source
   });
 
   ledger.updatedAt = new Date().toISOString();
@@ -433,7 +469,7 @@ export function computeClaimEvidenceStrength(
       strongestTrustTier: 'UNKNOWN' as TrustTier,
       combinedStrength: 0,
       evidenceIds: [],
-      strengths: [],
+      strengths: []
     };
   }
 
@@ -442,7 +478,7 @@ export function computeClaimEvidenceStrength(
       USER_VERIFIED: 4,
       SYSTEM_VERIFIED: 3,
       INDEPENDENTLY_SUPPORTED: 2,
-      UNVERIFIED: 1,
+      UNVERIFIED: 1
     };
     return (rank[e.verificationStatus] ?? 0) > (rank[best] ?? 0) ? e.verificationStatus : best;
   }, 'UNVERIFIED' as VerificationStatus);
@@ -454,7 +490,7 @@ export function computeClaimEvidenceStrength(
       AGENT_REPORTED: 3,
       EXTERNAL_SOURCE: 2,
       MODEL_INFERRED: 1,
-      UNKNOWN: 0,
+      UNKNOWN: 0
     };
     return rank[e.trustTier] > rank[best] ? e.trustTier : best;
   }, 'UNKNOWN' as TrustTier);
@@ -470,7 +506,7 @@ export function computeClaimEvidenceStrength(
     strongestTrustTier,
     combinedStrength,
     evidenceIds: evidence.map((e) => e.id),
-    strengths,
+    strengths
   };
 }
 
@@ -487,7 +523,7 @@ export function evidenceSummaryForClaim(workspaceId: string, claimId: string): s
   const parts = [
     `${strength.evidenceCount} evidence item(s)`,
     `Strongest verification: ${strength.strongestVerification}`,
-    `Combined strength: ${(strength.combinedStrength * 100).toFixed(0)}%`,
+    `Combined strength: ${(strength.combinedStrength * 100).toFixed(0)}%`
   ];
 
   if (strength.strengths.includes('STRONG')) {
@@ -515,7 +551,7 @@ export function importEvidenceLedger(workspaceId: string, ledger: EvidenceLedger
   ledgers.set(workspaceId, {
     items: ledger.items,
     maxItems: ledger.maxItems,
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   });
 }
 

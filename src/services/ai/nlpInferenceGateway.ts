@@ -43,6 +43,39 @@ export function joinOpenAiCompatibleUrl(base: string, segment: string): string {
 }
 
 /** Turns bare `HTTP n` into actionable copy when OpenAI-compatible APIs return 401/403/404. */
+/**
+ * Strip anything that looks like a credential out of provider-supplied text.
+ *
+ * The inference base URL is operator-configurable — this product supports Azure
+ * OpenAI and any OpenAI-compatible endpoint — so the response body is text from
+ * a server BrandOps does not control. Some gateways and proxies echo the request
+ * back in their errors, and the request carries `Authorization: Bearer <key>`.
+ *
+ * Without this, that snippet flows straight into the returned `message` and
+ * `raw`, which reach traces, checkpoints and the interface. A key that leaves in
+ * a header must not come back in something the product stores.
+ *
+ * Applied to provider text on the way *in*, at the one place it enters, rather
+ * than at each of the places it later gets written.
+ */
+export function redactProviderText<T>(value: T): T {
+  if (typeof value === 'string') {
+    return value
+      .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]+/gi, 'Bearer [redacted]')
+      .replace(/\bsk-[A-Za-z0-9._-]{8,}/g, '[redacted]') as unknown as T;
+  }
+  if (Array.isArray(value)) return value.map((entry) => redactProviderText(entry)) as unknown as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
+        key,
+        redactProviderText(entry)
+      ])
+    ) as unknown as T;
+  }
+  return value;
+}
+
 function openAiCompatibleHttpDetail(status: number, parsed: unknown): string {
   const providerSnippet = (): string => {
     if (!parsed || typeof parsed !== 'object') return '';
@@ -173,9 +206,9 @@ export async function runChatCompletion(
       return {
         ok: false,
         code: 'http_error',
-        message: openAiCompatibleHttpDetail(res.status, parsed),
+        message: redactProviderText(openAiCompatibleHttpDetail(res.status, parsed)),
         status: res.status,
-        raw: parsed
+        raw: redactProviderText(parsed)
       };
     }
 
@@ -283,9 +316,9 @@ export async function runEmbeddings(
       return {
         ok: false,
         code: 'http_error',
-        message: openAiCompatibleHttpDetail(res.status, parsed),
+        message: redactProviderText(openAiCompatibleHttpDetail(res.status, parsed)),
         status: res.status,
-        raw: parsed
+        raw: redactProviderText(parsed)
       };
     }
 

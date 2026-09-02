@@ -13,7 +13,7 @@ import {
   notificationLevelInterrupts,
   notificationLevelAggregates,
   shouldInterrupt,
-  shouldAggregate,
+  shouldAggregate
 } from '../../src/services/intelligence/notificationClassifier';
 import type { NotificationInput } from '../../src/services/intelligence/notificationClassifier';
 
@@ -27,7 +27,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: true,
       timeSensitive: true,
       isFailure: false,
-      isSecurity: true,
+      isSecurity: true
     };
 
     const notification = classifyNotification(input);
@@ -45,7 +45,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: true,
       timeSensitive: true,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -61,7 +61,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: true,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -77,7 +77,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -93,7 +93,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -109,7 +109,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: true,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -125,7 +125,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -141,7 +141,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -157,7 +157,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -173,7 +173,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -189,7 +189,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -205,7 +205,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: true,
       isFailure: true,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -221,7 +221,7 @@ describe('Notification Intelligence — Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: true,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -269,7 +269,7 @@ describe('Notification Intelligence — Priority', () => {
       requiresAction: true,
       timeSensitive: true,
       isFailure: false,
-      isSecurity: true,
+      isSecurity: true
     };
 
     const notification = classifyNotification(input);
@@ -287,7 +287,7 @@ describe('Notification Intelligence — Priority', () => {
       requiresAction: true,
       timeSensitive: true,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
     expect(classifyNotification(input1).priority).toBe('high');
 
@@ -300,7 +300,7 @@ describe('Notification Intelligence — Priority', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
     expect(classifyNotification(input2).priority).toBe('normal');
   });
@@ -334,7 +334,7 @@ describe('Notification Intelligence — Classified Notification Structure', () =
       isFailure: false,
       isSecurity: false,
       relatedEntityIds: ['entity-1', 'entity-2'],
-      suggestedAction: 'Review this',
+      suggestedAction: 'Review this'
     };
 
     const notification = classifyNotification(input);
@@ -360,7 +360,7 @@ describe('Notification Intelligence — Classified Notification Structure', () =
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
     const input2: NotificationInput = {
       title: 'Notification 2',
@@ -370,7 +370,7 @@ describe('Notification Intelligence — Classified Notification Structure', () =
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const n1 = classifyNotification(input1);
@@ -390,7 +390,7 @@ describe('Notification Intelligence — Edge Cases', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -407,7 +407,7 @@ describe('Notification Intelligence — Edge Cases', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -423,7 +423,7 @@ describe('Notification Intelligence — Edge Cases', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -439,7 +439,7 @@ describe('Notification Intelligence — Edge Cases', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -457,7 +457,7 @@ describe('Notification Intelligence — Source-Based Classification', () => {
       requiresAction: false, // Even if requiresAction is false
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -473,7 +473,7 @@ describe('Notification Intelligence — Source-Based Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);
@@ -489,7 +489,7 @@ describe('Notification Intelligence — Source-Based Classification', () => {
       requiresAction: false,
       timeSensitive: false,
       isFailure: false,
-      isSecurity: false,
+      isSecurity: false
     };
 
     const notification = classifyNotification(input);

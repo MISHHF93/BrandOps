@@ -177,8 +177,8 @@ export const ConnectedAgentsPanel = ({
         <div className="space-y-3 border-t border-border/30 px-4 pb-4 pt-3">
           {sessions.length === 0 ? (
             <p className="text-meta text-textMuted">
-              No sessions yet. Create one to authorize an agent — then connect it to send
-              verified achievements or suggest twin updates.
+              No sessions yet. Create one to authorize an agent — then connect it to send verified
+              achievements or suggest twin updates.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -261,15 +261,15 @@ export const ConnectedAgentsPanel = ({
             <p className="text-fine leading-snug text-textSoft">
               The gateway authenticates your token against a workspace file. After creating a
               session, press{' '}
-              <span className="font-semibold text-text">Export workspace for agent</span> and set the
-              workspace file path below to the saved file — otherwise the token cannot resolve.
+              <span className="font-semibold text-text">Export workspace for agent</span> and set
+              the workspace file path below to the saved file — otherwise the token cannot resolve.
             </p>
           ) : null}
           <div className="rounded-lg border border-border/30 bg-surface/45 px-2 py-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-fine text-textSoft">
-                Claude Code connect config — add this to your Claude settings and
-                restart Claude Code.
+                Claude Code connect config — add this to your Claude settings and restart Claude
+                Code.
               </p>
               <button
                 type="button"
@@ -304,8 +304,8 @@ export const ConnectedAgentsPanel = ({
         <div className="space-y-3 border-t border-border/30 px-4 pb-4 pt-3">
           {events.length === 0 ? (
             <p className="text-meta text-textMuted">
-              No agent signals yet. Create a session, then have an agent send
-              verified achievements or propose twin updates.
+              No agent signals yet. Create a session, then have an agent send verified achievements
+              or propose twin updates.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -488,8 +488,8 @@ export const ConnectedAgentsPanel = ({
         >
           Agent capabilities
           <span className="ml-2 text-meta font-normal text-textSoft">
-            {tools.length} capabilities let the agent read workspace context, propose achievements, create artifacts, and
-            request approvals — scoped by session and capability tier
+            {tools.length} capabilities let the agent read workspace context, propose achievements,
+            create artifacts, and request approvals — scoped by session and capability tier
           </span>
         </summary>
         <div className="border-t border-border/30 px-4 pb-4 pt-3">

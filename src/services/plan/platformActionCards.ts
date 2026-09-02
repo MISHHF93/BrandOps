@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData } from '../../types/domain';
 import { buildPlatformAwareAskReadout } from '../ai/platformAwareAskContext';
 
@@ -93,7 +94,7 @@ function action(input: {
     approvalRequirement:
       input.approvalRequirement ??
       'Preview only. Human approval is required before sending, posting, scheduling, syncing, or creating external tasks.',
-    command: `ask: ${input.task}\n\nPlatform: ${input.platform}\nSource context: ${context}\nRules: Use only connected platform context and approved summaries. If required source details are missing, say what is missing. Do not execute externally. Include approval requirements and receipt expectations.`
+    command: `ask: ${quoteContextValue(input.task)}\n\nPlatform: ${quoteContextValue(input.platform)}\nSource context: ${quoteContextValue(context)}\nRules: Use only connected platform context and approved summaries. If required source details are missing, say what is missing. Do not execute externally. Include approval requirements and receipt expectations.`
   };
 }
 

@@ -94,9 +94,9 @@ describe('Profession packs → context wiring', () => {
       bundles: ['PROFESSION_CONTEXT'],
       now: NOW
     })[0];
-    expect(bundle.items.some((i) => i.text.includes('generic professional operating runtime'))).toBe(
-      true
-    );
+    expect(
+      bundle.items.some((i) => i.text.includes('generic professional operating runtime'))
+    ).toBe(true);
   });
 
   it('keeps the canonical context bundles intact after adding PROFESSION_CONTEXT', () => {
@@ -126,9 +126,7 @@ describe('Profession packs → context wiring', () => {
   });
 
   it('can resolve each pack by canonical id', () => {
-    expect(getProfessionPack('founder-consultant')?.name).toBe(
-      FOUNDER_CONSULTANT_PACK.name
-    );
+    expect(getProfessionPack('founder-consultant')?.name).toBe(FOUNDER_CONSULTANT_PACK.name);
     expect(getProfessionPack('sales-marketing')?.name).toBe(SALES_MARKETING_PACK.name);
     expect(getProfessionPack('research-analytical')?.name).toBe(RESEARCH_ANALYTICAL_PACK.name);
   });

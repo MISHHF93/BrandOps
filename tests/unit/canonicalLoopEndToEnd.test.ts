@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cloneSeedData } from '../helpers/fixtures';
 import type { BrandOpsData } from '../../src/types/domain';
-import {
-  createAgentSession
-} from '../../src/services/interop/sessions';
+import { createAgentSession } from '../../src/services/interop/sessions';
 import { executeAgentToolCall } from '../../src/services/interop/gateway';
 import {
   reviewAgentEvent,
@@ -63,7 +61,11 @@ describe('A→Z canonical interop loop', () => {
       token,
       call: {
         toolName: 'brandops_record_achievement',
-        args: { kind: 'feature_completed', title: 'Expose token-scoped sync API', detail: 'Shipped and merged.' }
+        args: {
+          kind: 'feature_completed',
+          title: 'Expose token-scoped sync API',
+          detail: 'Shipped and merged.'
+        }
       }
     });
     expect(record.result.ok).toBe(true);
@@ -77,7 +79,11 @@ describe('A→Z canonical interop loop', () => {
       token,
       call: {
         toolName: 'brandops_record_achievement',
-        args: { kind: 'feature_completed', title: 'Expose token-scoped sync API', detail: 'Shipped and merged.' }
+        args: {
+          kind: 'feature_completed',
+          title: 'Expose token-scoped sync API',
+          detail: 'Shipped and merged.'
+        }
       }
     });
     expect(replay.result.data.deduplicated).toBe(true);
@@ -138,7 +144,9 @@ describe('A→Z canonical interop loop', () => {
     const signals = getRecentLearningSignals(verify.workspace);
     expect(signals.length).toBeGreaterThan(0);
     expect(
-      signals.some((s) => s.signalType === 'plan-completed-successfully' || s.signalType === 'plan-failed')
+      signals.some(
+        (s) => s.signalType === 'plan-completed-successfully' || s.signalType === 'plan-failed'
+      )
     ).toBe(true);
 
     // 8. Every consequential hop left an operator trace and a checkpoint.
@@ -146,7 +154,9 @@ describe('A→Z canonical interop loop', () => {
     expect(
       traces.some((t) => t.capabilityId === 'achievement.record' && t.outcome === 'success')
     ).toBe(true);
-    expect(verify.workspace.checkpoints?.entries.some((c) => c.type === 'agent.achievement_promoted')).toBe(true);
+    expect(
+      verify.workspace.checkpoints?.entries.some((c) => c.type === 'agent.achievement_promoted')
+    ).toBe(true);
   });
 
   it('a write capability (action.request) is approval-fail-closed through the gateway', async () => {
@@ -161,7 +171,18 @@ describe('A→Z canonical interop loop', () => {
     const res = await executeAgentToolCall({
       workspace: created.workspace,
       token: created.token,
-      call: { capabilityId: 'action.request', args: { action: 'publish', target: 'acme', summary: 'Send the launch email' } }
+      call: {
+        capabilityId: 'action.request',
+        args: {
+          action: 'publish',
+          target: 'acme',
+          summary: 'Send the launch email',
+          intent: {
+            objective: 'Send the Acme launch email.',
+            reason: 'The user approved the launch sequence in this session.'
+          }
+        }
+      }
     });
     // approval-access capability succeeded only by producing a pending request,
     // and the returned result reports approvalRequired = true (nothing executed).
@@ -236,7 +257,10 @@ describe('A→Z canonical interop loop', () => {
     const ctx = await executeAgentToolCall({
       workspace: ws,
       token: created.token,
-      call: { capabilityId: 'context.read', args: { bundles: ['CURRENT_GOALS', 'PROFESSION_CONTEXT'] } }
+      call: {
+        capabilityId: 'context.read',
+        args: { bundles: ['CURRENT_GOALS', 'PROFESSION_CONTEXT'] }
+      }
     });
     // read succeeded
     expect(ctx.result.ok).toBe(true);
@@ -244,7 +268,10 @@ describe('A→Z canonical interop loop', () => {
     const writeAttempt = await executeAgentToolCall({
       workspace: ctx.workspace,
       token: created.token,
-      call: { capabilityId: 'achievement.record', args: { kind: 'feature_completed', title: 'x', detail: 'y' } }
+      call: {
+        capabilityId: 'achievement.record',
+        args: { kind: 'feature_completed', title: 'x', detail: 'y' }
+      }
     });
     expect(writeAttempt.result.ok).toBe(false);
     expect(writeAttempt.result.errorCode).toBe('capability_not_granted');

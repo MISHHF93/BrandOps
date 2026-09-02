@@ -84,7 +84,17 @@ describe('agent interop: sessions', () => {
       grantedCapabilities: [...AGENT_CAPABILITY_IDS],
       readOnly: true
     });
-    expect(created.session.grantedCapabilities.every((cap) => cap.endsWith('.read'))).toBe(true);
+    // Read-only is decided by the registry's `readOnly` flag, not by the shape
+    // of the id — a capability that only reads is safe whether it is named
+    // `.read` or `.list`, and least-privilege must not hinge on naming luck.
+    expect(
+      created.session.grantedCapabilities.every(
+        (cap) => AGENT_CAPABILITY_REGISTRY[cap].readOnly === true
+      )
+    ).toBe(true);
+    expect(created.session.grantedCapabilities).toContain('builder.receipts.list');
+    expect(created.session.grantedCapabilities).not.toContain('action.request');
+    expect(created.session.grantedCapabilities).not.toContain('builder.sessions.revoke');
   });
 
   it('session creation emits an agent.session_connected checkpoint and trace', async () => {
@@ -397,7 +407,11 @@ describe('agent interop: gateway', () => {
         args: {
           action: 'publish',
           target: 'linkedin',
-          summary: 'Post the shipped-auth write-up.'
+          summary: 'Post the shipped-auth write-up.',
+          intent: {
+            objective: 'Publish the shipped-auth write-up to LinkedIn.',
+            reason: 'The user asked for the launch to be announced once auth shipped.'
+          }
         }
       }
     });
@@ -416,21 +430,54 @@ describe('agent interop: gateway', () => {
 
   it('the approval gate predicate matches the declared access and only action.request requires approval', () => {
     for (const [id] of Object.entries(AGENT_CAPABILITY_REGISTRY) as Array<
-      [keyof typeof AGENT_CAPABILITY_REGISTRY, (typeof AGENT_CAPABILITY_REGISTRY)[keyof typeof AGENT_CAPABILITY_REGISTRY]]
+      [
+        keyof typeof AGENT_CAPABILITY_REGISTRY,
+        (typeof AGENT_CAPABILITY_REGISTRY)[keyof typeof AGENT_CAPABILITY_REGISTRY]
+      ]
     >) {
       if (id === 'action.request') {
         expect(capabilityRequiresApproval(id)).toBe(true);
         continue;
       }
-      // builder.sessions.revoke and builder.activity.ingest-session-summary are also approval-gated
-      if (id === 'builder.sessions.revoke' || id === 'builder.activity.ingest-session-summary') {
+      /**
+       * The rest of the approval-gated set.
+       *
+       * `execution.request` is gated because requesting execution IS requesting
+       * approval — the task handle it returns opens at the boundary, never at a
+       * running job.
+       *
+       * `builder.achievements.verify` and `builder.twin-proposals.accept` were
+       * added 2026-08-31. Both are *promote* operations — one turns an
+       * agent-reported signal into professional evidence, the other writes the
+       * Digital Twin — and both ran as `auto`, so an agent could accept its own
+       * Twin proposal. That is the fourth invariant inverted.
+       */
+      if (
+        id === 'builder.sessions.revoke' ||
+        id === 'builder.activity.ingest-session-summary' ||
+        id === 'execution.request' ||
+        id === 'builder.achievements.verify' ||
+        id === 'builder.twin-proposals.accept'
+      ) {
         expect(capabilityRequiresApproval(id)).toBe(true);
         continue;
       }
       expect(capabilityRequiresApproval(id)).toBe(false);
     }
+    // The approval-gated set is small and deliberate. It growing is a design
+    // decision; it growing *silently* is how a promote path opens.
     expect(
-      Object.values(AGENT_CAPABILITY_REGISTRY).filter((def) => def.access === 'approval')
-    ).toHaveLength(3);
+      Object.values(AGENT_CAPABILITY_REGISTRY)
+        .filter((def) => def.access === 'approval')
+        .map((def) => def.id)
+        .sort()
+    ).toEqual([
+      'action.request',
+      'builder.achievements.verify',
+      'builder.activity.ingest-session-summary',
+      'builder.sessions.revoke',
+      'builder.twin-proposals.accept',
+      'execution.request'
+    ]);
   });
 });

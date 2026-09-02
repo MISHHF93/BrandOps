@@ -23,13 +23,15 @@ import {
   filterDismissedSignals,
   isSignalDismissedBySourceId,
   clearSignalStore,
-  getSignalStore,
+  getSignalStore
 } from '../../src/services/opportunity/opportunityLifecycle';
 import type { OpportunityRecommendation } from '../../src/types/builder';
 
 const WS_ID = 'ws-opp-test';
 
-function makeRecommendation(overrides: Partial<OpportunityRecommendation> = {}): OpportunityRecommendation {
+function makeRecommendation(
+  overrides: Partial<OpportunityRecommendation> = {}
+): OpportunityRecommendation {
   return {
     id: 'opp-rec-1',
     workspaceId: WS_ID,
@@ -43,9 +45,12 @@ function makeRecommendation(overrides: Partial<OpportunityRecommendation> = {}):
     effort: 'medium',
     goalAlignment: ['growth'],
     primaryAction: 'Evaluate and plan outreach',
-    actions: [{ type: 'save', label: 'Save for later' }, { type: 'dismiss', label: 'Not relevant' }],
+    actions: [
+      { type: 'save', label: 'Save for later' },
+      { type: 'dismiss', label: 'Not relevant' }
+    ],
     createdAt: new Date().toISOString(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -69,7 +74,11 @@ describe('Opportunity Lifecycle — Signal Creation', () => {
 
   it('creates signal with custom lifecycle state', () => {
     const rec = makeRecommendation();
-    const signal = createSignalFromRecommendation({ recommendation: rec, workspaceId: WS_ID, lifecycleState: 'QUALIFIED' });
+    const signal = createSignalFromRecommendation({
+      recommendation: rec,
+      workspaceId: WS_ID,
+      lifecycleState: 'QUALIFIED'
+    });
 
     expect(signal.lifecycleState).toBe('QUALIFIED');
     expect(signal.transitions.QUALIFIED).toBeDefined();
@@ -88,7 +97,11 @@ describe('Opportunity Lifecycle — Signal Creation', () => {
       effort: 'high',
       goalAlignment: ['revenue', 'ecosystem'],
       primaryAction: 'Schedule meeting',
-      actions: [{ type: 'save', label: 'Save' }, { type: 'dismiss', label: 'Dismiss' }, { type: 'plan', label: 'Plan approach' }],
+      actions: [
+        { type: 'save', label: 'Save' },
+        { type: 'dismiss', label: 'Dismiss' },
+        { type: 'plan', label: 'Plan approach' }
+      ]
     });
 
     const signal = createSignalFromRecommendation({ recommendation: rec, workspaceId: WS_ID });
@@ -153,12 +166,20 @@ describe('Opportunity Lifecycle — State Transitions', () => {
     expect(acted!.actedExecutionId).toBe('exec-1');
 
     // ACTED → OUTCOME_OBSERVED
-    const observed = observeOutcome({ workspaceId: WS_ID, signalId: signal.id, observation: 'Great results' });
+    const observed = observeOutcome({
+      workspaceId: WS_ID,
+      signalId: signal.id,
+      observation: 'Great results'
+    });
     expect(observed!.lifecycleState).toBe('OUTCOME_OBSERVED');
     expect(observed!.outcomeObservation).toBe('Great results');
 
     // OUTCOME_OBSERVED → LEARNED
-    const learned = learnSignal({ workspaceId: WS_ID, signalId: signal.id, learning: 'Content works well' });
+    const learned = learnSignal({
+      workspaceId: WS_ID,
+      signalId: signal.id,
+      learning: 'Content works well'
+    });
     expect(learned!.lifecycleState).toBe('LEARNED');
     expect(learned!.learning).toBe('Content works well');
   });
@@ -214,7 +235,11 @@ describe('Opportunity Lifecycle — Dismissal', () => {
     const signal = createSignalFromRecommendation({ recommendation: rec, workspaceId: WS_ID });
     addSignal(WS_ID, signal);
 
-    const dismissed = dismissSignal({ workspaceId: WS_ID, signalId: signal.id, reason: 'Not relevant to current strategy' });
+    const dismissed = dismissSignal({
+      workspaceId: WS_ID,
+      signalId: signal.id,
+      reason: 'Not relevant to current strategy'
+    });
     expect(dismissed).toBeDefined();
     expect(dismissed!.lifecycleState).toBe('DISMISSED');
     expect(dismissed!.dismissedReason).toBe('Not relevant to current strategy');
@@ -328,7 +353,11 @@ describe('Opportunity Lifecycle — Rediscovery Prevention', () => {
     planSignal({ workspaceId: WS_ID, signalId: signal.id, planId: 'plan-1' });
     actSignal({ workspaceId: WS_ID, signalId: signal.id, executionId: 'exec-1' });
     observeOutcome({ workspaceId: WS_ID, signalId: signal.id, observation: 'Success' });
-    const learned = learnSignal({ workspaceId: WS_ID, signalId: signal.id, learning: 'Content strategy works' });
+    const learned = learnSignal({
+      workspaceId: WS_ID,
+      signalId: signal.id,
+      learning: 'Content strategy works'
+    });
 
     expect(learned!.lifecycleState).toBe('LEARNED');
     expect(learned!.learning).toBe('Content strategy works');

@@ -35,13 +35,13 @@ export type CandidateSource =
 
 /** Trust classification for candidate memory — extends TrustTier with memory-specific granularity. */
 export type MemoryTrustClassification =
-  | 'USER_VERIFIED'       // User explicitly confirmed this content
-  | 'BRANDOPS_VERIFIED'   // Deterministic rule confirmed (e.g. checksum match, source verification)
-  | 'AGENT_REPORTED'      // Reported by an agent, not yet user-verified
-  | 'EXTERNAL_SOURCE'     // Imported from external source, not yet verified
-  | 'MODEL_INFERRED'      // Inferred by a model, low trust
-  | 'INSTRUCTION_RISK'    // Contains instruction-like content — requires special handling
-  | 'REJECTED'            // Rejected by firewall, never enters durable memory
+  | 'USER_VERIFIED' // User explicitly confirmed this content
+  | 'BRANDOPS_VERIFIED' // Deterministic rule confirmed (e.g. checksum match, source verification)
+  | 'AGENT_REPORTED' // Reported by an agent, not yet user-verified
+  | 'EXTERNAL_SOURCE' // Imported from external source, not yet verified
+  | 'MODEL_INFERRED' // Inferred by a model, low trust
+  | 'INSTRUCTION_RISK' // Contains instruction-like content — requires special handling
+  | 'REJECTED' // Rejected by firewall, never enters durable memory
   | 'UNKNOWN';
 
 /** Instruction-like risk assessment. */
@@ -70,7 +70,12 @@ export interface CandidateMemoryEntry {
   verifiedAt?: string;
   /** If promoted to durable memory, when and to which memory type. */
   promotedToDurableAt?: string;
-  promotedToMemoryType?: 'approvedClaims' | 'rejectedClaims' | 'twin-fact' | 'professional-signal' | 'evidence';
+  promotedToMemoryType?:
+    | 'approvedClaims'
+    | 'rejectedClaims'
+    | 'twin-fact'
+    | 'professional-signal'
+    | 'evidence';
   /** Optional reference to the durable memory id after promotion. */
   durableMemoryId?: string;
   /** Firewall decision reason (for rejected entries or entries requiring verification). */
@@ -132,7 +137,9 @@ function sanitizeSourceLabel(raw: string): string {
   if (typeof raw !== 'string') return 'unknown';
   const cleaned = raw.replace(/\s+/g, ' ').trim();
   if (!cleaned) return 'unknown';
-  return cleaned.length > MAX_SOURCE_LABEL_LENGTH ? cleaned.slice(0, MAX_SOURCE_LABEL_LENGTH) : cleaned;
+  return cleaned.length > MAX_SOURCE_LABEL_LENGTH
+    ? cleaned.slice(0, MAX_SOURCE_LABEL_LENGTH)
+    : cleaned;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,7 +150,10 @@ function sanitizeSourceLabel(raw: string): string {
  * Classify the trust level of candidate content based on its source.
  * This extends the existing TrustTier with memory-specific granularity.
  */
-function classifyTrust(source: CandidateSource, explicitTier?: TrustTier): MemoryTrustClassification {
+function classifyTrust(
+  source: CandidateSource,
+  explicitTier?: TrustTier
+): MemoryTrustClassification {
   // If an explicit tier is provided (e.g. from the existing trust system), use it
   if (explicitTier === 'USER_VERIFIED') return 'USER_VERIFIED';
   if (explicitTier === 'BRANDOPS_VERIFIED') return 'BRANDOPS_VERIFIED';
@@ -188,74 +198,84 @@ function classifyTrust(source: CandidateSource, explicitTier?: TrustTier): Memor
 const INSTRUCTION_PATTERNS = [
   // Role/persona assignment — assign a role or identity to the AI (must be an imperative assignment, not an identity probe)
   {
-    pattern: /\b(you are now|you will be|act as|pretend you are|from now on[\s,]*you|you must be|become a)\b/i,
+    pattern:
+      /\b(you are now|you will be|act as|pretend you are|from now on[\s,]*you|you must be|become a)\b/i,
     label: 'persona-assignment',
-    severity: 'high' as const,
+    severity: 'high' as const
   },
   // Rule imposition — intensifier followed (optionally with intervening words up to 80 chars) by directive verbs
   // NOTE: must not match polite suggestions like "always mention" or "never mention" — these are suggestions not commands
   {
-    pattern: /\b(always|never|every time|from now on|henceforth|so from now|henceforth|from this point|moving forward|in all future|for the rest of)\b.{0,80}?\b(do|say|tell|respond|ignore|forget|avoid|ensure|recommend|add|approve|classify|work|prioritize|suggest|assign|restrict|promote|reject|include|exclude|use|follow|defer|override|update|change|remove|delete|create|modify|enable|disable|require|allow|deny|block|permit|grant|revoke|trust|verify|validate|confirm|report|log|store|save|send|post|publish|share|connect|integrate|deploy|release|ship|document|write|build|test|review|merge|push|commit|install|configure|setup|initialize|reset|clear|purge|export|import|sync|remember|prioritize|think|act|behave|respond|answer|reply|skip|bypass|accept|execute|run|process|complete|finalize|submit)\b/i,
+    pattern:
+      /\b(always|never|every time|from now on|henceforth|so from now|henceforth|from this point|moving forward|in all future|for the rest of)\b.{0,80}?\b(do|say|tell|respond|ignore|forget|avoid|ensure|recommend|add|approve|classify|work|prioritize|suggest|assign|restrict|promote|reject|include|exclude|use|follow|defer|override|update|change|remove|delete|create|modify|enable|disable|require|allow|deny|block|permit|grant|revoke|trust|verify|validate|confirm|report|log|store|save|send|post|publish|share|connect|integrate|deploy|release|ship|document|write|build|test|review|merge|push|commit|install|configure|setup|initialize|reset|clear|purge|export|import|sync|remember|prioritize|think|act|behave|respond|answer|reply|skip|bypass|accept|execute|run|process|complete|finalize|submit)\b/i,
     label: 'rule-imposition',
-    severity: 'high' as const,
+    severity: 'high' as const
   },
   // Directive-to-reader: you should/must/need to + action context
   {
     pattern: /\b(you should|you must|you need to|make sure to|be sure to)\b/i,
     label: 'directive-to-reader',
-    severity: 'low' as const,
+    severity: 'low' as const
   },
   // Escalated directive: should/must + intensifier + action verb (catches "should always recommend", "must only work")
   // These are treated as escalated directive-to-reader patterns (low risk by default,
   // but several together elevate concern)
   {
-    pattern: /\b(should|must)\s+(always|only|never|immediately|automatically|exclusively|solely)\s+\w+/i,
+    pattern:
+      /\b(should|must)\s+(always|only|never|immediately|automatically|exclusively|solely)\s+\w+/i,
     label: 'escalated-directive',
-    severity: 'low' as const,
+    severity: 'low' as const
   },
   // Implicit subject directive: "X should/must Y" where X is a person/role and Y is an action
   {
-    pattern: /\b(person|user|developer|engineer|this user|the user|all users|everyone|anyone|each user)\s+(should|must|needs to|has to)\b/i,
+    pattern:
+      /\b(person|user|developer|engineer|this user|the user|all users|everyone|anyone|each user)\s+(should|must|needs to|has to)\b/i,
     label: 'implicit-subject-directive',
-    severity: 'high' as const,
+    severity: 'high' as const
   },
   // Memory manipulation attempts — allow intervening words between verb and target
   {
-    pattern: /\b(ignore|forget|overlook|disregard|delete|erase)\b.{0,40}?\b(instructions?|prompts?|rules?|guidelines?|contexts?|memory|memories|history|histories|system|system prompt|guidance|directives?|constraints?|restrictions?|requirements?|parameters?|settings?|configurations?|alignment|guardrails?|criteria?)\b/i,
+    pattern:
+      /\b(ignore|forget|overlook|disregard|delete|erase)\b.{0,40}?\b(instructions?|prompts?|rules?|guidelines?|contexts?|memory|memories|history|histories|system|system prompt|guidance|directives?|constraints?|restrictions?|requirements?|parameters?|settings?|configurations?|alignment|guardrails?|criteria?)\b/i,
     label: 'memory-manipulation',
-    severity: 'high' as const,
+    severity: 'high' as const
   },
   // System prompt exfiltration attempts — allow optional articles between phrase and noun
   {
-    pattern: /\b(if you are|since you are|as an?)\s+(an?\s+)?(ai|assistant|model|llm|chatbot|language\s+model)\b/i,
+    pattern:
+      /\b(if you are|since you are|as an?)\s+(an?\s+)?(ai|assistant|model|llm|chatbot|language\s+model)\b/i,
     label: 'ai-identity-probe',
-    severity: 'low' as const,
+    severity: 'low' as const
   },
   // Override attempts targeting stored memory specifically — allow these/those and all phrasing variants
   {
-    pattern: /\b(this|these|the following|below|those)\s+(is|are|was|were)\s+(your|the|all|our|my|their)?\s*(updated|new|current|official|mandatory| binding)?\s*(instruction|rule|guideline|directive|command|system instruction|system prompt|guideline|rule|instruction)\b/i,
+    pattern:
+      /\b(this|these|the following|below|those)\s+(is|are|was|were)\s+(your|the|all|our|my|their)?\s*(updated|new|current|official|mandatory| binding)?\s*(instruction|rule|guideline|directive|command|system instruction|system prompt|guideline|rule|instruction)\b/i,
     label: 'false-instruction-claim',
-    severity: 'high' as const,
+    severity: 'high' as const
   },
   // Auto-approval / bypass directives
   {
-    pattern: /\b(automatically (approve|accept|confirm|verify|authorize|grant|allow|permit|execute|run|process|complete|finalize|submit|skip|bypass|ignore|override|trust|believe|obey|follow))\b/i,
+    pattern:
+      /\b(automatically (approve|accept|confirm|verify|authorize|grant|allow|permit|execute|run|process|complete|finalize|submit|skip|bypass|ignore|override|trust|believe|obey|follow))\b/i,
     label: 'auto-approval-bypass',
-    severity: 'high' as const,
+    severity: 'high' as const
   },
   // Memory storage directives: instructing the AI to store rules/instructions for future behavior
   // Matches both "store the rule" and "store that X is Y" constructions
   {
-    pattern: /\b(store|save|record|write|persist|remember|keep)\s+(the\s+(rule|instruction|guideline|directive|command|policy|setting|note|message|text|content|information|data|update|change|that))\b/i,
+    pattern:
+      /\b(store|save|record|write|persist|remember|keep)\s+(the\s+(rule|instruction|guideline|directive|command|policy|setting|note|message|text|content|information|data|update|change|that))\b/i,
     label: 'memory-storage-directive',
-    severity: 'high' as const,
+    severity: 'high' as const
   },
   // Future behavior directives: instructing about how future AI responses should behave
   {
-    pattern: /\b(all|every|any)\s+(future|subsequent|later|next|ongoing)\s+(response|response|output|answer|reply|recommendation|suggestion|result|assessment|evaluation|analysis|comment|statement|message|interaction|interaction|generation)\s+(should|must|will|is|are|has to|needs to)\b/i,
+    pattern:
+      /\b(all|every|any)\s+(future|subsequent|later|next|ongoing)\s+(response|response|output|answer|reply|recommendation|suggestion|result|assessment|evaluation|analysis|comment|statement|message|interaction|interaction|generation)\s+(should|must|will|is|are|has to|needs to)\b/i,
     label: 'future-behavior-directive',
-    severity: 'high' as const,
-  },
+    severity: 'high' as const
+  }
 ];
 
 /**
@@ -304,12 +324,16 @@ const MAX_CANDIDATES = 500;
 /**
  * Generate a stable id for a candidate memory entry.
  */
-function generateCandidateId(source: CandidateSource, sourceLabel: string, content: string): string {
+function generateCandidateId(
+  source: CandidateSource,
+  sourceLabel: string,
+  content: string
+): string {
   const hashInput = `${source}::${sourceLabel}::${content.slice(0, 120)}`;
   let hash = 0;
   for (let i = 0; i < hashInput.length; i++) {
     const char = hashInput.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
   const hashStr = Math.abs(hash).toString(36);
@@ -342,7 +366,7 @@ export function submitToCandidateMemory(params: {
       allowed: false,
       requiresVerification: false,
       reason: 'Content was empty after sanitization.',
-      action: 'reject',
+      action: 'reject'
     };
   }
 
@@ -368,7 +392,11 @@ export function submitToCandidateMemory(params: {
     reason = `Content matched low-risk directive patterns. User verification recommended before storage.`;
   }
   // Non-user-verified content from external sources requires verification
-  else if (trustClassification === 'AGENT_REPORTED' || trustClassification === 'EXTERNAL_SOURCE' || trustClassification === 'MODEL_INFERRED') {
+  else if (
+    trustClassification === 'AGENT_REPORTED' ||
+    trustClassification === 'EXTERNAL_SOURCE' ||
+    trustClassification === 'MODEL_INFERRED'
+  ) {
     if (params.requiresVerificationOverride !== true) {
       requiresVerification = true;
       action = 'verify';
@@ -390,7 +418,7 @@ export function submitToCandidateMemory(params: {
     instructionRisk,
     requiresVerification,
     traceId: params.traceId,
-    firewallReason: reason,
+    firewallReason: reason
   };
 
   // Store the candidate (for later promotion)
@@ -408,11 +436,15 @@ export function submitToCandidateMemory(params: {
     allowed: firewallAction !== 'reject',
     requiresVerification,
     reason,
-    action: firewallAction,
+    action: firewallAction
   };
 }
 
-function emptyCandidate(params: { source: CandidateSource; sourceLabel?: string; traceId?: string }): CandidateMemoryEntry {
+function emptyCandidate(params: {
+  source: CandidateSource;
+  sourceLabel?: string;
+  traceId?: string;
+}): CandidateMemoryEntry {
   return {
     id: `cand-empty-${Date.now().toString(36)}`,
     content: '',
@@ -422,25 +454,24 @@ function emptyCandidate(params: { source: CandidateSource; sourceLabel?: string;
     trustClassification: 'UNKNOWN',
     instructionRisk: 'none',
     requiresVerification: false,
-    traceId: params.traceId,
+    traceId: params.traceId
   };
 }
 
-/**
- * Run arbitrary content through the memory firewall pipeline.
+/*
+ * REMOVED (2026-08-31): a second `processThroughFirewall` lived here — same
+ * name, same signature as the real one in `memoryFirewall.ts`, but a bare
+ * passthrough to `submitToCandidateMemory` that consulted **no firewall
+ * configuration at all**: blocked sources ignored, `autoRejectLowTrust`
+ * ignored, `requireVerificationForExternalSources` ignored.
  *
- * Thin wrapper around `submitToCandidateMemory` for consumers that want to
- * process content without creating a candidate entry on their own.
+ * Nothing imported it, so it was dead — but it was dead in the most dangerous
+ * possible shape. Any future caller reaching for "the firewall" and letting the
+ * editor auto-import would have silently got the version that enforces nothing,
+ * and the call site would have looked correct in review. Use
+ * `memoryFirewall.processThroughFirewall`; it is the only entry point that
+ * applies the configuration.
  */
-export function processThroughFirewall(params: {
-  content: unknown;
-  source: CandidateSource;
-  sourceLabel?: string;
-  traceId?: string;
-  explicitTrustTier?: TrustTier;
-}): FirewallResult {
-  return submitToCandidateMemory(params);
-}
 
 /**
  * Alias for {@link getCandidate}.
@@ -452,7 +483,9 @@ export function getCandidateEntry(id: string): CandidateMemoryEntry | undefined 
 /**
  * Alias for {@link getCandidates}.
  */
-export function queryCandidates(options?: Parameters<typeof getCandidates>[0]): CandidateMemoryEntry[] {
+export function queryCandidates(
+  options?: Parameters<typeof getCandidates>[0]
+): CandidateMemoryEntry[] {
   return getCandidates(options);
 }
 
@@ -506,7 +539,12 @@ export function promoteToDurableMemory(
   candidateId: string,
   params: {
     /** The memory type to promote to. */
-    memoryType: 'approvedClaims' | 'rejectedClaims' | 'twin-fact' | 'professional-signal' | 'evidence';
+    memoryType:
+      | 'approvedClaims'
+      | 'rejectedClaims'
+      | 'twin-fact'
+      | 'professional-signal'
+      | 'evidence';
     /** Optional user who approved the promotion (for audit). */
     verifiedBy?: string;
     /** Optional trace id for correlation. */
@@ -532,7 +570,7 @@ export function promoteToDurableMemory(
     promotedToMemoryType: params.memoryType,
     durableMemoryId: `durable-${candidateId.slice(0, 20)}`,
     verifiedBy: params.verifiedBy ?? candidate.verifiedBy,
-    verifiedAt: params.verifiedBy ? new Date().toISOString() : candidate.verifiedAt,
+    verifiedAt: params.verifiedBy ? new Date().toISOString() : candidate.verifiedAt
   };
 
   candidateStore.set(candidateId, updated);
@@ -549,7 +587,7 @@ export function rejectCandidate(candidateId: string, reason?: string): boolean {
   candidateStore.set(candidateId, {
     ...candidate,
     trustClassification: 'REJECTED',
-    firewallReason: reason ?? candidate.firewallReason,
+    firewallReason: reason ?? candidate.firewallReason
   });
 
   return true;
@@ -591,7 +629,7 @@ export function getCandidateStats(): {
     'user-input': 0,
     'twin-delta': 0,
     'skill-pack': 0,
-    'integration-import': 0,
+    'integration-import': 0
   };
   const byTrustClassification: Record<MemoryTrustClassification, number> = {
     USER_VERIFIED: 0,
@@ -601,7 +639,7 @@ export function getCandidateStats(): {
     MODEL_INFERRED: 0,
     INSTRUCTION_RISK: 0,
     REJECTED: 0,
-    UNKNOWN: 0,
+    UNKNOWN: 0
   };
   const byInstructionRisk: Record<InstructionRisk, number> = { none: 0, high: 0, low: 0 };
 
@@ -611,7 +649,8 @@ export function getCandidateStats(): {
 
   for (const e of entries) {
     bySource[e.source] = (bySource[e.source] ?? 0) + 1;
-    byTrustClassification[e.trustClassification] = (byTrustClassification[e.trustClassification] ?? 0) + 1;
+    byTrustClassification[e.trustClassification] =
+      (byTrustClassification[e.trustClassification] ?? 0) + 1;
     byInstructionRisk[e.instructionRisk] = (byInstructionRisk[e.instructionRisk] ?? 0) + 1;
 
     if (e.requiresVerification) pending++;
@@ -626,7 +665,7 @@ export function getCandidateStats(): {
     byInstructionRisk,
     pendingVerification: pending,
     promoted,
-    rejected,
+    rejected
   };
 }
 
@@ -647,7 +686,7 @@ export function getVerificationQueue(options?: {
   return getCandidates({
     requiresVerification: true,
     source: options?.source,
-    limit: options?.limit,
+    limit: options?.limit
   });
 }
 

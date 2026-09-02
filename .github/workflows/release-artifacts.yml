@@ -1,5 +1,12 @@
 # Builds artifacts for **Chrome Web Store** (extension tarball) and **Google Play** prep (Capacitor Android sync).
 # Play signing / `bundleRelease` still happens in Android Studio or a follow-up job with keystore secrets.
+#
+# Both artifact jobs depend on `quality`. Before that dependency existed, a tag
+# could be pushed at any commit and this workflow would package and upload a
+# Chrome Web Store tarball from a tree that had never passed a test — the CI
+# workflow runs on pushes to `main` and on pull requests, and nothing connected
+# the two. The thing that ships is now gated on the verification, rather than
+# merely coexisting with it in the same repository.
 name: Release artifacts
 
 on:
@@ -12,7 +19,30 @@ permissions:
   contents: read
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run check
+      - run: npm run format
+
+      # Build before test: the suite verifies the shipped artifact, not only the
+      # source that produces it. `bundleBudget` and `launchGateContract` read
+      # `dist/` and fail rather than skip when it is absent.
+      - run: npm run build
+      - run: npm run test
+      - run: npm run test:integration
+      - run: npm run verify:dist
+
   chrome-extension:
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +65,7 @@ jobs:
           retention-days: 60
 
   capacitor-android-sync:
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +77,7 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+      - run: npm run verify:dist
       - run: npx cap sync android
 
       - uses: actions/upload-artifact@v4

@@ -40,7 +40,7 @@ import {
   type FirewallResult,
   type CandidateSource,
   type MemoryTrustClassification,
-  type InstructionRisk,
+  type InstructionRisk
 } from './candidateMemory';
 
 // Re-export for test convenience
@@ -69,10 +69,10 @@ export interface MemoryFirewallConfig {
 export const DEFAULT_FIREWALL_CONFIG: MemoryFirewallConfig = {
   enabled: true,
   requireVerificationForAnyInstructionRisk: false, // Only high risk requires verification by default
-  requireVerificationForExternalSources: true,     // External sources always require verification
+  requireVerificationForExternalSources: true, // External sources always require verification
   blockedSources: ['webpage', 'document', 'repository'], // These require explicit import flow, not direct memory entry
-  autoRejectLowTrust: false,                        // Queue for verification instead of auto-reject
-  maxCandidateAgeMs: 7 * 24 * 60 * 60 * 1000,      // 7 days
+  autoRejectLowTrust: false, // Queue for verification instead of auto-reject
+  maxCandidateAgeMs: 7 * 24 * 60 * 60 * 1000 // 7 days
 };
 
 // ---------------------------------------------------------------------------
@@ -147,12 +147,12 @@ export function processThroughFirewall(params: {
       source: params.source,
       sourceLabel: params.sourceLabel,
       explicitTrustTier: params.explicitTrustTier,
-      traceId: params.traceId,
+      traceId: params.traceId
     });
     return {
       ...result,
       action: result.action === 'reject' ? 'reject' : 'promote', // Disable verification requirement
-      requiresVerification: false,
+      requiresVerification: false
     };
   }
 
@@ -163,14 +163,14 @@ export function processThroughFirewall(params: {
       source: params.source,
       sourceLabel: params.sourceLabel,
       explicitTrustTier: params.explicitTrustTier,
-      traceId: params.traceId,
+      traceId: params.traceId
     });
     return {
       ...candidate,
       allowed: false,
       requiresVerification: false,
       reason: `Source "${params.source}" is blocked by firewall configuration. Content was not stored.`,
-      action: 'reject',
+      action: 'reject'
     };
   }
 
@@ -180,21 +180,25 @@ export function processThroughFirewall(params: {
     source: params.source,
     sourceLabel: params.sourceLabel,
     explicitTrustTier: params.explicitTrustTier,
-    traceId: params.traceId,
+    traceId: params.traceId
   });
 
   // Apply config-based overrides
   if (result.action === 'promote') {
     // Check if we should upgrade to verification
-    if (currentConfig.requireVerificationForExternalSources &&
-        (result.candidate.trustClassification === 'AGENT_REPORTED' ||
-         result.candidate.trustClassification === 'EXTERNAL_SOURCE' ||
-         result.candidate.trustClassification === 'MODEL_INFERRED')) {
+    if (
+      currentConfig.requireVerificationForExternalSources &&
+      (result.candidate.trustClassification === 'AGENT_REPORTED' ||
+        result.candidate.trustClassification === 'EXTERNAL_SOURCE' ||
+        result.candidate.trustClassification === 'MODEL_INFERRED')
+    ) {
       result.requiresVerification = true;
       result.action = 'verify';
       result.reason = `Firewall configuration requires verification for ${result.candidate.trustClassification} content.`;
-    } else if (currentConfig.requireVerificationForAnyInstructionRisk &&
-               result.candidate.instructionRisk !== 'none') {
+    } else if (
+      currentConfig.requireVerificationForAnyInstructionRisk &&
+      result.candidate.instructionRisk !== 'none'
+    ) {
       result.requiresVerification = true;
       result.action = 'verify';
       result.reason = `Firewall configuration requires verification for content with ${result.candidate.instructionRisk} instruction risk.`;
@@ -204,27 +208,32 @@ export function processThroughFirewall(params: {
   // Check for stale candidates (older than maxCandidateAgeMs)
   const candidateAge = Date.now() - new Date(result.candidate.submittedAt).getTime();
   if (candidateAge > currentConfig.maxCandidateAgeMs && result.action !== 'reject') {
-    rejectCandidate(result.candidate.id, `Candidate expired after ${currentConfig.maxCandidateAgeMs}ms`);
+    rejectCandidate(
+      result.candidate.id,
+      `Candidate expired after ${currentConfig.maxCandidateAgeMs}ms`
+    );
     return {
       ...result,
       allowed: false,
       requiresVerification: false,
       reason: `Candidate expired after ${currentConfig.maxCandidateAgeMs}ms (maxCandidateAgeMs).`,
-      action: 'reject',
+      action: 'reject'
     };
   }
 
   // Auto-reject low trust if configured
-  if (currentConfig.autoRejectLowTrust &&
-      (result.candidate.trustClassification === 'MODEL_INFERRED' ||
-       result.candidate.trustClassification === 'EXTERNAL_SOURCE')) {
+  if (
+    currentConfig.autoRejectLowTrust &&
+    (result.candidate.trustClassification === 'MODEL_INFERRED' ||
+      result.candidate.trustClassification === 'EXTERNAL_SOURCE')
+  ) {
     rejectCandidate(result.candidate.id, 'Auto-rejected by firewall: low trust classification');
     return {
       ...result,
       allowed: false,
       requiresVerification: false,
       reason: 'Firewall auto-rejected low-trust content (autoRejectLowTrust is enabled).',
-      action: 'reject',
+      action: 'reject'
     };
   }
 
@@ -240,7 +249,12 @@ export function processThroughFirewall(params: {
 export function promoteToDurableMemory(
   candidateId: string,
   params: {
-    memoryType: 'approvedClaims' | 'rejectedClaims' | 'twin-fact' | 'professional-signal' | 'evidence';
+    memoryType:
+      | 'approvedClaims'
+      | 'rejectedClaims'
+      | 'twin-fact'
+      | 'professional-signal'
+      | 'evidence';
     verifiedBy?: string;
     traceId?: string;
   }
@@ -276,7 +290,7 @@ export function queryCandidates(options?: {
     source: options?.source,
     trustClassification: options?.trustClassification,
     requiresVerification: options?.requiresVerification,
-    limit: options?.limit,
+    limit: options?.limit
   }).filter((e) => {
     if (options?.instructionRisk && e.instructionRisk !== options.instructionRisk) return false;
     return true;
@@ -339,23 +353,32 @@ export function candidateSummary(candidate: CandidateMemoryEntry): string {
 
 function trustClassificationLabel(tier: MemoryTrustClassification): string {
   switch (tier) {
-    case 'USER_VERIFIED': return 'Verified by user';
-    case 'BRANDOPS_VERIFIED': return 'Verified by BrandOps';
-    case 'AGENT_REPORTED': return 'Reported by agent (unverified)';
-    case 'EXTERNAL_SOURCE': return 'Imported from external source';
-    case 'MODEL_INFERRED': return 'Inferred by model (low trust)';
-    case 'INSTRUCTION_RISK': return 'Contains instruction-like content — high risk';
-    case 'REJECTED': return 'Rejected by firewall';
-    case 'UNKNOWN': return 'Unknown provenance';
+    case 'USER_VERIFIED':
+      return 'Verified by user';
+    case 'BRANDOPS_VERIFIED':
+      return 'Verified by BrandOps';
+    case 'AGENT_REPORTED':
+      return 'Reported by agent (unverified)';
+    case 'EXTERNAL_SOURCE':
+      return 'Imported from external source';
+    case 'MODEL_INFERRED':
+      return 'Inferred by model (low trust)';
+    case 'INSTRUCTION_RISK':
+      return 'Contains instruction-like content — high risk';
+    case 'REJECTED':
+      return 'Rejected by firewall';
+    case 'UNKNOWN':
+      return 'Unknown provenance';
   }
 }
 
 function instructionRiskLabel(risk: InstructionRisk): string {
   switch (risk) {
-    case 'none': return 'None detected';
-    case 'low': return 'Low — some directive patterns detected';
-    case 'high': return 'High — persona assignment, rule imposition, or memory manipulation detected';
+    case 'none':
+      return 'None detected';
+    case 'low':
+      return 'Low — some directive patterns detected';
+    case 'high':
+      return 'High — persona assignment, rule imposition, or memory manipulation detected';
   }
 }
-
-

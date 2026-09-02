@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsAIArtifact, BrandOpsAIResponse } from '../../types/brandOpsAiCore';
 import type {
   BrandOpsOperatingTimelineCategory,
@@ -68,7 +69,7 @@ export function buildOperatingTimelineEventsFromAiCoreResponse(
       tone: timelineToneForArtifact(artifact),
       entityType: 'ai-core-artifact',
       entityId: artifact.id,
-      replayCommand: `ask: Replay this BrandOps AI Core artifact as an operating timeline memory. Explain strategic meaning, source facts, confidence, approvals, next actions, and what changed.\n\nArtifact: ${artifact.title}\nType: ${artifact.type}\nStatus: ${artifact.status}\nContent: ${artifact.content.slice(0, 1200)}`,
+      replayCommand: `ask: Replay this BrandOps AI Core artifact as an operating timeline memory. Explain strategic meaning, source facts, confidence, approvals, next actions, and what changed.\n\nArtifact: ${quoteContextValue(artifact.title)}\nType: ${artifact.type}\nStatus: ${artifact.status}\nContent: ${quoteContextValue(artifact.content.slice(0, 1200))}`,
       confidence: clampPercent(artifact.confidenceScore)
     })
   );
@@ -87,7 +88,7 @@ export function buildOperatingTimelineEventsFromAiCoreResponse(
         batch.status === 'completed' ? 'success' : batch.status === 'failed' ? 'danger' : 'warning',
       entityType: 'ai-core-batch-run',
       entityId: batch.id,
-      replayCommand: `ask: Replay this BrandOps AI Batch Run. Summarize completed artifacts, failed artifacts, retry path, approvals, and strategic evolution.\n\nIntent: ${batch.intent}\nSummary: ${batch.finalSummary}`,
+      replayCommand: `ask: Replay this BrandOps AI Batch Run. Summarize completed artifacts, failed artifacts, retry path, approvals, and strategic evolution.\n\nIntent: ${quoteContextValue(batch.intent)}\nSummary: ${quoteContextValue(batch.finalSummary)}`,
       confidence: undefined
     },
     ...artifactEvents

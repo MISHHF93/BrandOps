@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { AiBridgeSettings, AppSettings } from '../../types/domain';
 import { hasOpenAiCompatibleApiKey } from '../../services/ai/aiSecretsAccess';
 import { MobileTabSection } from './mobileTabPrimitives';
+import { toneSubtleClass } from '../../shared/ui/tone';
 
 export interface AiBridgeConfigurationInput {
   adapterMode: AppSettings['aiAdapterMode'];
@@ -239,9 +240,9 @@ export function SettingsAiBridgePanel({
       {status ? (
         <p
           className={`mt-2 rounded border px-2 py-1.5 text-meta ${
-            status.tone === 'success'
-              ? 'border-success/35 bg-successSoft/10 text-success'
-              : 'border-danger/35 bg-dangerSoft/10 text-danger'
+            // Byte-identical to the panel beside it, and to the shared subtle
+            // weight — consolidating these three is provably no visual change.
+            toneSubtleClass(status.tone)
           }`}
           role={status.tone === 'danger' ? 'alert' : 'status'}
         >

@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData, SchedulerTask } from '../../types/domain';
 import { buildPlatformAwareAskReadout } from '../ai/platformAwareAskContext';
 import { getActiveDigitalTwin } from '../digitalTwin/digitalTwin';
@@ -111,7 +112,7 @@ function countBy(values: unknown[]): Array<{ key: string; count: number }> {
 }
 
 function workflowCommand(action: string, prediction: Omit<WorkflowPrediction, 'controls'>): string {
-  return `ask: Workflow Prediction Layer ${action}. ${QUESTION} Keep this reviewable in PLAN. Do not save, publish, schedule, send, sync, template, reuse, automate, or mutate workspace records without explicit approval.\n\nWorkflow: ${prediction.title}\nPattern: ${prediction.repeatedPattern}\nConfidence: ${prediction.confidence}%\nEvidence: ${prediction.evidence.join(' | ')}\nRecommended steps: ${prediction.recommendedSteps.join(' | ')}\nTemplate name: ${prediction.reusableTemplateName}\nApproval gate: ${prediction.approvalGate}`;
+  return `ask: Workflow Prediction Layer ${quoteContextValue(action)}. ${QUESTION} Keep this reviewable in PLAN. Do not save, publish, schedule, send, sync, template, reuse, automate, or mutate workspace records without explicit approval.\n\nWorkflow: ${quoteContextValue(prediction.title)}\nPattern: ${quoteContextValue(prediction.repeatedPattern)}\nConfidence: ${prediction.confidence}%\nEvidence: ${quoteContextValue(prediction.evidence.join(' | '))}\nRecommended steps: ${quoteContextValue(prediction.recommendedSteps.join(' | '))}\nTemplate name: ${quoteContextValue(prediction.reusableTemplateName)}\nApproval gate: ${prediction.approvalGate}`;
 }
 
 function prediction(

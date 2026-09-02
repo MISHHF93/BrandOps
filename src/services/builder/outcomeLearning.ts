@@ -11,6 +11,7 @@
  */
 
 import type { BrandOpsData } from '../../types/domain';
+import { resolveWorkspaceId } from '../workspaceIdentity';
 
 // ---------------------------------------------------------------------------
 // Outcome scoring
@@ -36,6 +37,18 @@ export type OutcomeDimension =
   | 'twin-accuracy'
   | 'opportunity-value'
   | 'user-correction-frequency';
+
+/** Runtime list of the canonical dimensions — validates untrusted input at boundaries. */
+export const OUTCOME_DIMENSIONS: readonly OutcomeDimension[] = [
+  'plan-completion-rate',
+  'plan-success-rate',
+  'approval-ease',
+  'tool-effectiveness',
+  'context-relevance',
+  'twin-accuracy',
+  'opportunity-value',
+  'user-correction-frequency'
+];
 
 // ---------------------------------------------------------------------------
 // Outcome record
@@ -131,7 +144,7 @@ export function recordOutcome(input: {
   const timestamp = new Date().toISOString();
   const record: OutcomeRecord = {
     id: `outcome-${timestamp.slice(0, 10)}-${Math.random().toString(36).slice(2, 8)}`,
-    workspaceId: input.workspace.builderActivity?.workspaceId ?? 'default',
+    workspaceId: resolveWorkspaceId(input.workspace),
     planId: input.planId,
     dimension: input.dimension,
     score: Math.max(0, Math.min(1, input.score)),
@@ -146,7 +159,10 @@ export function recordOutcome(input: {
   return {
     ...input.workspace,
     builderActivity: {
-      ...(input.workspace.builderActivity ?? { events: [], workspaceId: 'default' }),
+      ...(input.workspace.builderActivity ?? {
+        events: [],
+        workspaceId: resolveWorkspaceId(input.workspace)
+      }),
       outcomeScores: updated,
       updatedAt: timestamp
     }
@@ -167,7 +183,7 @@ export function recordLearningSignal(input: {
   const timestamp = new Date().toISOString();
   const signal: LearningSignal = {
     id: `signal-${timestamp.slice(0, 10)}-${Math.random().toString(36).slice(2, 8)}`,
-    workspaceId: input.workspace.builderActivity?.workspaceId ?? 'default',
+    workspaceId: resolveWorkspaceId(input.workspace),
     signalType: input.signalType,
     source: input.source,
     detail: input.detail,
@@ -185,7 +201,10 @@ export function recordLearningSignal(input: {
   return {
     ...input.workspace,
     builderActivity: {
-      ...(input.workspace.builderActivity ?? { events: [], workspaceId: 'default' }),
+      ...(input.workspace.builderActivity ?? {
+        events: [],
+        workspaceId: resolveWorkspaceId(input.workspace)
+      }),
       signals: updated,
       preferenceHints: hints,
       updatedAt: timestamp
@@ -234,8 +253,15 @@ function updatePreferenceHints(workspace: BrandOpsData, signal: LearningSignal):
     confidence: computeConfidence(1, 0) * signal.strength,
     source: signal.source,
     createdAt: signal.createdAt,
-    confirmations: signal.signalType.includes('accepted') || signal.signalType.includes('success') ? 1 : 0,
-    contradictions: signal.signalType.includes('rejected') || signal.signalType.includes('failed') || signal.signalType.includes('corrected') || signal.signalType.includes('dismissed') ? 1 : 0
+    confirmations:
+      signal.signalType.includes('accepted') || signal.signalType.includes('success') ? 1 : 0,
+    contradictions:
+      signal.signalType.includes('rejected') ||
+      signal.signalType.includes('failed') ||
+      signal.signalType.includes('corrected') ||
+      signal.signalType.includes('dismissed')
+        ? 1
+        : 0
   };
 
   return [...existing, hint].slice(0, 200);
@@ -255,11 +281,17 @@ export function getRecentLearningSignals(workspace: BrandOpsData, limit = 20): L
   return (workspace.builderActivity?.signals ?? []).slice(0, limit);
 }
 
-export function getOutcomeScoresByDimension(workspace: BrandOpsData, dimension: OutcomeDimension): OutcomeRecord[] {
+export function getOutcomeScoresByDimension(
+  workspace: BrandOpsData,
+  dimension: OutcomeDimension
+): OutcomeRecord[] {
   return (workspace.builderActivity?.outcomeScores ?? []).filter((o) => o.dimension === dimension);
 }
 
-export function getAverageOutcomeScore(workspace: BrandOpsData, dimension: OutcomeDimension): number {
+export function getAverageOutcomeScore(
+  workspace: BrandOpsData,
+  dimension: OutcomeDimension
+): number {
   const scores = getOutcomeScoresByDimension(workspace, dimension);
   if (scores.length === 0) return 0.5;
   const sum = scores.reduce((a, b) => a + b.score, 0);
@@ -287,7 +319,7 @@ export function decayExpiredSignals(workspace: BrandOpsData): BrandOpsData {
   return {
     ...workspace,
     builderActivity: {
-      ...(workspace.builderActivity ?? { events: [], workspaceId: 'default' }),
+      ...(workspace.builderActivity ?? { events: [], workspaceId: resolveWorkspaceId(workspace) }),
       signals: updated,
       updatedAt: now.toISOString()
     }

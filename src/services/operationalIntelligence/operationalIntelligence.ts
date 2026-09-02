@@ -1,3 +1,4 @@
+import { quoteContextValue } from '../../services/interop/validation';
 import type { BrandOpsData } from '../../types/domain';
 import type {
   OperationalIntelligenceAction,
@@ -63,7 +64,7 @@ function commandFor(input: {
   evidence: string[];
   source: string;
 }): string {
-  return `ask: Turn this Operational Intelligence Core recommendation into a PLAN preview only. Do not execute externally or mutate workspace records. Include why it matters, source facts, missing facts, approval needs, risks, next steps, and receipt expectations.\n\nSource: ${input.source}\nTitle: ${input.title}\nDetail: ${input.detail}\nWhy now: ${input.why}\nEvidence: ${input.evidence.join(' | ') || 'No supporting evidence yet'}`;
+  return `ask: Turn this Operational Intelligence Core recommendation into a PLAN preview only. Do not execute externally or mutate workspace records. Include why it matters, source facts, missing facts, approval needs, risks, next steps, and receipt expectations.\n\nSource: ${quoteContextValue(input.source)}\nTitle: ${quoteContextValue(input.title)}\nDetail: ${quoteContextValue(input.detail)}\nWhy now: ${quoteContextValue(input.why)}\nEvidence: ${quoteContextValue(input.evidence.join(' | ') || 'No supporting evidence yet')}`;
 }
 
 function actionFromOpportunity(signal: WorkspaceOpportunitySignal): OperationalIntelligenceAction {
@@ -276,7 +277,7 @@ function buildMissingFactQuestions(workspace: BrandOpsData): OperationalIntellig
   const push = (input: Omit<OperationalIntelligenceGapQuestion, 'command'>) => {
     questions.push({
       ...input,
-      command: `ask: Help me answer this missing Operational Intelligence Core question without inventing facts. Tell me why it matters, what evidence is needed, and how it should affect ASK and PLAN.\n\nQuestion: ${input.question}\nWhy it matters: ${input.whyItMatters}`
+      command: `ask: Help me answer this missing Operational Intelligence Core question without inventing facts. Tell me why it matters, what evidence is needed, and how it should affect ASK and PLAN.\n\nQuestion: ${quoteContextValue(input.question)}\nWhy it matters: ${quoteContextValue(input.whyItMatters)}`
     });
   };
   if (!twin) {

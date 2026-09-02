@@ -71,35 +71,22 @@ export type VerificationStatus =
   | 'USER_VERIFIED'
   | 'SYSTEM_VERIFIED';
 
-/** Human-readable label for each trust tier. */
-export function trustTierLabel(tier: TrustTier): string {
-  switch (tier) {
-    case 'USER_VERIFIED': return 'User Verified';
-    case 'BRANDOPS_VERIFIED': return 'BrandOps Verified';
-    case 'AGENT_REPORTED': return 'Agent Reported';
-    case 'EXTERNAL_SOURCE': return 'External Source';
-    case 'MODEL_INFERRED': return 'Model Inferred';
-    case 'UNKNOWN': return 'Unknown';
-  }
-}
-
-/** Strongest trust tier from a list. */
-export function strongestTier(tiers: TrustTier[]): TrustTier {
-  const rank: Record<TrustTier, number> = {
-    USER_VERIFIED: 6,
-    BRANDOPS_VERIFIED: 5,
-    AGENT_REPORTED: 3,
-    EXTERNAL_SOURCE: 2,
-    MODEL_INFERRED: 1,
-    UNKNOWN: 0,
-  };
-  return tiers.reduce((best, t) => (rank[t] > rank[best] ? t : best), 'UNKNOWN');
-}
-
-/** Whether a trust tier is usable as fact. */
-export function isUsableAsFact(tier: TrustTier): boolean {
-  return tier === 'USER_VERIFIED' || tier === 'BRANDOPS_VERIFIED';
-}
+/*
+ * REMOVED (2026-08-31): `trustTierLabel`, `strongestTier` and `isUsableAsFact`
+ * lived here as a second implementation of the trust-tier semantics that
+ * `services/interop/trustBoundaries.ts` already owns — down to a **third,
+ * inlined copy of the rank table**, separate from `TRUST_TIER_RANK` in
+ * `agentInterop.ts`. They agreed today; nothing kept them agreeing, and a change
+ * to the canonical rank would silently not have reached this copy.
+ *
+ * Nothing imported them — every import of this module is `import type` — so they
+ * were dead weight *and* a drift hazard: an auto-import of `isUsableAsFact`
+ * would have picked whichever the editor offered first, and the two answer the
+ * same question about a trust boundary. Use `trustBoundaries.ts`, which reads
+ * the canonical `TRUST_TIER_RANK`.
+ *
+ * This is a types module. It should not ship behavior at all.
+ */
 
 // ---------------------------------------------------------------------------
 // Activity Event
@@ -288,12 +275,7 @@ export interface Project {
   updatedAt: string;
 }
 
-export type ProjectStatus =
-  | 'active'
-  | 'completed'
-  | 'paused'
-  | 'stalled'
-  | 'unknown';
+export type ProjectStatus = 'active' | 'completed' | 'paused' | 'stalled' | 'unknown';
 
 export interface ProjectMilestone {
   achievementId: string;
@@ -470,9 +452,7 @@ export type TwinDeltaField =
   | 'identity/expertiseAreas'
   | 'goals';
 
-export type TwinDeltaEvidence =
-  | EvidenceEntry
-  | { type: string; id: string };
+export type TwinDeltaEvidence = EvidenceEntry | { type: string; id: string };
 
 export interface TwinDelta {
   id: string;
@@ -484,7 +464,14 @@ export interface TwinDelta {
   reason: string;
   confidence: number;
   /** Who/what proposed this delta. */
-  proposedBy: 'signal-engine' | 'activity-graph' | 'project-intelligence' | 'user' | 'session-to-brand' | 'opportunity-engine' | 'professional-signal-engine';
+  proposedBy:
+    | 'signal-engine'
+    | 'activity-graph'
+    | 'project-intelligence'
+    | 'user'
+    | 'session-to-brand'
+    | 'opportunity-engine'
+    | 'professional-signal-engine';
   status: 'proposed' | 'accepted' | 'edited' | 'rejected';
   /** When the user accepted/edited/rejected. */
   decidedAt?: string;
@@ -818,7 +805,7 @@ export type PolicyDecision =
 
 export interface PolicyContext {
   actor: string;
-  actorType: 'user' | 'agent' | 'skill' | 'hook' | 'system' | 'dev-hook',
+  actorType: 'user' | 'agent' | 'skill' | 'hook' | 'system' | 'dev-hook';
   workspaceId: string;
   clientKind?: string;
   sessionId?: string;
@@ -874,9 +861,6 @@ import { CONTEXT_BUNDLE_IDS } from './agentInterop';
 
 /** New bundle for agent execution context — project state, active plan, readiness. */
 
-export const EXTENDED_CONTEXT_BUNDLE_IDS = [
-  ...CONTEXT_BUNDLE_IDS,
-  'EXECUTION_CONTEXT'
-] as const;
+export const EXTENDED_CONTEXT_BUNDLE_IDS = [...CONTEXT_BUNDLE_IDS, 'EXECUTION_CONTEXT'] as const;
 
 // Re-export from agentInterop for services that need these types

@@ -7,9 +7,11 @@ export const SHELL_TAB_PURPOSE: Record<MobileShellTabId, string> = {
   workspace:
     'Workspace — plans, approvals, execution receipts, and your professional operating feed.',
   chat: 'Ask My Twin — twin-grounded strategic thinking with expert routing and Ask → Plan conversion.',
-  daily: 'Cockpit — daily focus board, predictions, quick actions, and next-best-move intelligence.',
+  daily:
+    'Cockpit — daily focus board, predictions, quick actions, and next-best-move intelligence.',
   integrations: 'Integrations — connected data sources, agents, sync hubs, and workspace I/O.',
-  settings: 'Settings — Digital Twin creation, AI routing config, voice preferences, and workspace model.'
+  settings:
+    'Settings — Digital Twin creation, AI routing config, voice preferences, and workspace model.'
 };
 
 /**

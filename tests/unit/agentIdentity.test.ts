@@ -15,9 +15,9 @@ import {
   trustLevelLabel,
   trustLevelAllowsProposals,
   trustLevelAllowsActions,
-  trustLevelAllowsContext,
+  trustLevelAllowsContext
 } from '../../src/services/agentIdentity/agentIdentity';
-import type { ExternalAgentSession } from '../../src/types/agentInterop';
+import type { AgentCapabilityId, ExternalAgentSession } from '../../src/types/agentInterop';
 
 function makeSession(overrides: Partial<ExternalAgentSession> = {}): ExternalAgentSession {
   return {
@@ -32,9 +32,9 @@ function makeSession(overrides: Partial<ExternalAgentSession> = {}): ExternalAge
     grantedBundles: [],
     createdAt: '2026-01-01T00:00:00Z',
     lastActivityAt: '2026-01-15T00:00:00Z',
-    revokedAt: null,
-    expiresAt: null,
-    ...overrides,
+    revokedAt: undefined,
+    expiresAt: undefined,
+    ...overrides
   };
 }
 
@@ -49,9 +49,12 @@ describe('Agent Identity — Trust Level Derivation', () => {
     expect(deriveTrustLevel(session)).toBe('READ_ONLY');
   });
 
-  it('derives CONTEXT_CONSUMER for builder.read capabilities', () => {
+  it('derives READ_ONLY for a read-only builder capability', () => {
+    // Changed 2026-08-31: derivation now comes from the capability registry, and
+    // `builder.context.read` is `readOnly: true`. Calling it CONTEXT_CONSUMER told
+    // a person something the gateway does not enforce — it gates this at READ_ONLY.
     const session = makeSession({ grantedCapabilities: ['builder.context.read'] });
-    expect(deriveTrustLevel(session)).toBe('CONTEXT_CONSUMER');
+    expect(deriveTrustLevel(session)).toBe('READ_ONLY');
   });
 
   it('derives PROPOSER for achievement.record capability', () => {
@@ -97,9 +100,13 @@ describe('Agent Identity — Trust Level Derivation', () => {
     expect(deriveTrustLevel(undefined)).toBe('NONE');
   });
 
-  it('derives READ_ONLY when session has capabilities but none match specific patterns', () => {
-    const session = makeSession({ grantedCapabilities: ['custom.capability'] });
-    expect(deriveTrustLevel(session)).toBe('READ_ONLY');
+  it('derives NONE for a capability that is not in the registry', () => {
+    // An id the registry does not know confers no trust at all. It used to confer
+    // READ_ONLY, which is backwards: an unrecognized grant is not a small grant.
+    const session = makeSession({
+      grantedCapabilities: ['custom.capability' as AgentCapabilityId]
+    });
+    expect(deriveTrustLevel(session)).toBe('NONE');
   });
 
   it('derives NONE when session has no capabilities', () => {
@@ -111,9 +118,15 @@ describe('Agent Identity — Trust Level Derivation', () => {
 describe('Agent Identity — Trust Level Labels and Permissions', () => {
   it('returns correct label for each trust level', () => {
     expect(trustLevelLabel('READ_ONLY')).toBe('Read Only — can view context only');
-    expect(trustLevelLabel('CONTEXT_CONSUMER')).toBe('Context Consumer — can view builder context and projects');
-    expect(trustLevelLabel('PROPOSER')).toBe('Proposer — can propose achievements, artifacts, twin updates, and opportunities');
-    expect(trustLevelLabel('ACTION_REQUESTER')).toBe('Action Requester — can request external actions (approval required)');
+    expect(trustLevelLabel('CONTEXT_CONSUMER')).toBe(
+      'Context Consumer — can view builder context and projects'
+    );
+    expect(trustLevelLabel('PROPOSER')).toBe(
+      'Proposer — can propose achievements, artifacts, twin updates, and opportunities'
+    );
+    expect(trustLevelLabel('ACTION_REQUESTER')).toBe(
+      'Action Requester — can request external actions (approval required)'
+    );
     expect(trustLevelLabel('NONE')).toBe('No active session');
   });
 
@@ -142,7 +155,7 @@ describe('Agent Identity — Build Agent Identity', () => {
   it('builds identity from active session', () => {
     const session = makeSession({
       grantedCapabilities: ['context.read', 'artifact.create'],
-      lastActivityAt: '2026-01-15T10:00:00Z',
+      lastActivityAt: '2026-01-15T10:00:00Z'
     });
     const identity = buildAgentIdentity(session);
 
@@ -162,7 +175,7 @@ describe('Agent Identity — Build Agent Identity', () => {
   it('marks identity as expired when expiresAt is in the past', () => {
     const session = makeSession({
       grantedCapabilities: ['context.read'],
-      expiresAt: '2025-01-01T00:00:00Z',
+      expiresAt: '2025-01-01T00:00:00Z'
     });
     const identity = buildAgentIdentity(session);
     expect(identity.authenticationStatus).toBe('expired');
@@ -182,11 +195,15 @@ describe('Agent Identity — Build Agent Identity', () => {
     const identity = buildAgentIdentity(session);
     expect(identity.lastActivityAge).toMatch(/^\d+m ago$/);
 
-    const session2 = makeSession({ lastActivityAt: new Date(Date.now() - 2 * 3600000).toISOString() });
+    const session2 = makeSession({
+      lastActivityAt: new Date(Date.now() - 2 * 3600000).toISOString()
+    });
     const identity2 = buildAgentIdentity(session2);
     expect(identity2.lastActivityAge).toMatch(/^\d+h ago$/);
 
-    const session3 = makeSession({ lastActivityAt: new Date(Date.now() - 5 * 86400000).toISOString() });
+    const session3 = makeSession({
+      lastActivityAt: new Date(Date.now() - 5 * 86400000).toISOString()
+    });
     const identity3 = buildAgentIdentity(session3);
     expect(identity3.lastActivityAge).toMatch(/^\d+d ago$/);
   });
@@ -197,10 +214,19 @@ describe('Agent Identity — Registry', () => {
     const data = {
       externalAgentSessions: {
         entries: [
-          makeSession({ id: 's1', grantedCapabilities: ['context.read'], clientKind: 'claude-code' }),
-          makeSession({ id: 's2', grantedCapabilities: ['artifact.create'], clientKind: 'codex', status: 'revoked' }),
-        ],
-      },
+          makeSession({
+            id: 's1',
+            grantedCapabilities: ['context.read'],
+            clientKind: 'claude-code'
+          }),
+          makeSession({
+            id: 's2',
+            grantedCapabilities: ['artifact.create'],
+            clientKind: 'codex',
+            status: 'revoked'
+          })
+        ]
+      }
     } as any;
 
     const registry = buildAgentIdentityRegistry(data);
@@ -210,14 +236,19 @@ describe('Agent Identity — Registry', () => {
     expect(registry.identities.length).toBe(2);
     expect(registry.activeIdentities.length).toBe(1);
     expect(registry.byTrustLevel['READ_ONLY'].length).toBe(1);
-    expect(registry.byTrustLevel['PROPOSER'].length).toBe(1);
+    // s2 holds `artifact.create` but is revoked, so it displays NONE rather than
+    // PROPOSER. A revoked agent is not a proposer that happens to be switched off.
+    expect(registry.byTrustLevel['PROPOSER'].length).toBe(0);
+    expect(registry.byTrustLevel['NONE'].length).toBe(1);
+    // Every level has a key even when empty — the type promises a total map.
+    expect(registry.byTrustLevel['ACTION_REQUESTER']).toEqual([]);
     expect(registry.byClientKind['claude-code'].length).toBe(1);
     expect(registry.byClientKind['codex'].length).toBe(1);
   });
 
   it('returns undefined for non-existent session id', () => {
     const data = {
-      externalAgentSessions: { entries: [makeSession({ id: 's1' })] },
+      externalAgentSessions: { entries: [makeSession({ id: 's1' })] }
     } as any;
     const registry = buildAgentIdentityRegistry(data);
     expect(getAgentIdentityById(registry, 'missing')).toBeUndefined();
@@ -225,7 +256,7 @@ describe('Agent Identity — Registry', () => {
 
   it('returns identity for existing session id', () => {
     const data = {
-      externalAgentSessions: { entries: [makeSession({ id: 's1' })] },
+      externalAgentSessions: { entries: [makeSession({ id: 's1' })] }
     } as any;
     const registry = buildAgentIdentityRegistry(data);
     const identity = getAgentIdentityById(registry, 's1');
@@ -237,12 +268,16 @@ describe('Agent Identity — Registry', () => {
     const data = {
       externalAgentSessions: {
         entries: [
-          makeSession({ id: 's1', status: 'active', lastActivityAt: new Date(Date.now() - 40 * 86400000).toISOString() }),
+          makeSession({
+            id: 's1',
+            status: 'active',
+            lastActivityAt: new Date(Date.now() - 40 * 86400000).toISOString()
+          }),
           makeSession({ id: 's2', status: 'revoked' }),
           makeSession({ id: 's3', status: 'active', expiresAt: '2025-01-01T00:00:00Z' }),
-          makeSession({ id: 's4', status: 'active', lastActivityAt: new Date().toISOString() }),
-        ],
-      },
+          makeSession({ id: 's4', status: 'active', lastActivityAt: new Date().toISOString() })
+        ]
+      }
     } as any;
     const registry = buildAgentIdentityRegistry(data);
     const attention = getIdentitiesRequiringAttention(registry);
