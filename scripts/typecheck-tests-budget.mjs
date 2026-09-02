@@ -44,8 +44,13 @@ const tscBin = createRequire(import.meta.url).resolve('typescript/bin/tsc');
  * the overloads its implementation always had, and 157 after typing the
  * evidence-ledger fixture — which turned up three `{ type: 'repository' }`
  * entity refs, a type that does not exist.
+ *
+ * 129 after adding `@types/jsdom`. `jsdom` was already a dependency and its
+ * types were simply absent, so nine files imported it as `any` and every value
+ * derived from it became `unknown` — thirty-two errors from one missing package.
+ * Types-only, MIT, no runtime code, and `npm audit` reports nothing.
  */
-const BUDGET = 157;
+const BUDGET = 129;
 
 /** Errors that are breakage rather than debt, and are therefore not budgeted. */
 const NEVER = {

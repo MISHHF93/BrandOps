@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1631 tests / 219 files** passing · `vite build` succeeds.
+**1638 tests / 220 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,53 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 58 — 2026-09-02 · the page was three-quarters suggestions
+
+Plan has been called too complicated three times now, and five cycles of repairs had not settled it.
+Those cycles cut the word count, the duplicate labels, the fabricated receipts and the leaked
+identifiers — **and none of them changed the page's proportions**, which turns out to be the whole
+complaint:
+
+```
+   4 items were work     waiting on you, in progress, recently done
+  12 items were offers   ready to start, suggested, set up
+  -> 75% of the page was things nobody had started
+```
+
+Six groups sat in one column as peers, so a reader walked past twelve suggestions to find four things
+happening. Shortening a list like that makes it a shorter list of the wrong things.
+
+The offers now sit behind **one disclosure carrying its own count** — _"Things you could start 12 ·
+Nothing here has started. Safe to ignore."_ — and the page opens on work. **Visible words 214 → 116.**
+Nothing is removed; the suggestions are one tap away and still fully rendered, which a counter-case
+test enforces.
+
+**The condition for opening it was unreachable, and writing the test is what caught that.** The first
+version opened the offers when the work column was empty — and the work column is never empty,
+because the twin-status row is built unconditionally and always lands in "Waiting on you". It would
+have shipped as a dead branch with a passing test above it. The condition is now about **movement**:
+nothing in progress and nothing recently done, which a brand-new workspace really does reach.
+
+**And a types package was worth more than any hand-fix.** `jsdom` was already a dependency with its
+types absent, so nine test files imported it as `any` and every value derived from it became
+`unknown`. Adding `@types/jsdom` — types only, MIT, no runtime code, `npm audit` clean — took the
+test-type budget **161 → 129**, thirty-two errors from one missing package.
+
+| Repair                                           | Dimension | Evidence                                              |
+| ------------------------------------------------ | --------- | ----------------------------------------------------- |
+| Work and offers are separate regions             | P1, P2    | 75% offers in the column → one counted door           |
+| Visible weight nearly halved                     | P2        | 214 → 116 words; 7 tests, 5 mutations both directions |
+| The disclosure's condition is one that can occur | D1        | The first was unreachable by construction             |
+| `@types/jsdom` added                             | D1        | 161 → 129 test type errors                            |
+
+**PLAN score: 84.0 → 85.5** (P1 13.5 → 14.0, P2 12.5 → 13.5).
+
+The lesson is about the earlier cycles rather than this one. Five passes measured **how much** the
+page said and never **what proportion of it mattered** — and every one of them reported an
+improvement.
+
+---
 
 ### Cycle 57 — 2026-09-02 · a score that ignored the thing it asked for
 

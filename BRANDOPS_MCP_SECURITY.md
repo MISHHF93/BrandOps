@@ -3,7 +3,7 @@
 **Status:** Source-derived threat model for the MCP surface. Every control below names the module
 that enforces it and the test that proves it.
 **Last updated:** 2026-08-31
-**Baseline:** 1122 tests / 219 files · `tsc`, `eslint`, `vite build` clean.
+**Baseline:** 1122 tests / 220 files · `tsc`, `eslint`, `vite build` clean.
 **Companion documents:** [`BRANDOPS_MCP_ARCHITECTURE.md`](BRANDOPS_MCP_ARCHITECTURE.md) ·
 [`BRANDOPS_MCP_CAPABILITY_MATRIX.md`](BRANDOPS_MCP_CAPABILITY_MATRIX.md) ·
 [`BRANDOPS_MCP_CERTIFICATION.md`](BRANDOPS_MCP_CERTIFICATION.md)

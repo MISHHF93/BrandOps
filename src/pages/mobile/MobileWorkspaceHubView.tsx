@@ -847,6 +847,36 @@ function FeedDetail({ title, items }: { title: string; items: string[] }) {
  * suggestions, then things already finished, then setup. Anything unmapped falls
  * to the end rather than vanishing.
  */
+/**
+ * Work the reader has, and work the product is offering them.
+ *
+ * The page had six groups in one column and no distinction between the two, and
+ * measuring the demo workspace showed why that read as complicated:
+ *
+ * ```
+ *   4 items are actual work      (waiting on you, in progress, recently done)
+ *   12 items are offers          (ready to start, suggested, set up)
+ *   -> 75% of the page is things nobody has started
+ * ```
+ *
+ * Earlier cycles cut the word count and the duplicate labels, and none of them
+ * changed that proportion — a reader still walked past twelve suggestions to
+ * find four things happening. So the offers now sit behind one disclosure, and
+ * the page opens on work.
+ *
+ * The exception is a workspace with no work in it, where the offers are the only
+ * thing worth showing and the disclosure opens by default. A new user should not
+ * meet a nearly empty page with everything folded away.
+ */
+const GROUP_KIND: Record<string, 'work' | 'offer'> = {
+  decisions: 'work',
+  moving: 'work',
+  done: 'work',
+  ready: 'offer',
+  suggested: 'offer',
+  setup: 'offer'
+};
+
 const FEED_GROUPS: ReadonlyArray<{
   id: string;
   title: string;
@@ -866,6 +896,12 @@ const FEED_GROUPS: ReadonlyArray<{
     kinds: ['active-plan']
   },
   {
+    id: 'done',
+    title: 'Recently done',
+    hint: 'Finished, with receipts.',
+    kinds: ['completed-action']
+  },
+  {
     id: 'ready',
     title: 'Ready to start',
     hint: 'Set up and waiting for you to begin.',
@@ -876,12 +912,6 @@ const FEED_GROUPS: ReadonlyArray<{
     title: 'Suggested',
     hint: 'Ideas from your workspace. Safe to ignore.',
     kinds: ['opportunity', 'recommendation']
-  },
-  {
-    id: 'done',
-    title: 'Recently done',
-    hint: 'Finished, with receipts.',
-    kinds: ['completed-action']
   },
   {
     id: 'setup',
@@ -1190,6 +1220,47 @@ export const MobileWorkspaceHubView = ({
       ? 'Local membership active · unverified'
       : 'No verified membership';
 
+  /**
+   * Split once, so the two lists and their counts cannot disagree.
+   *
+   * `notListed` is only knowable for the decisions group — approvals carry a
+   * true total while the peek that feeds the rows is capped. Every other group
+   * renders everything it was given.
+   */
+  const renderableGroups = FEED_GROUPS.map((group) => {
+    const items = visibleFeedItems.filter((item) => group.kinds.includes(item.kind));
+    const listedApprovals = items.filter((item) => item.kind === 'approval').length;
+    return {
+      group,
+      items,
+      notListed:
+        group.id === 'decisions'
+          ? Math.max(0, snapshot.planPendingReviewCount - listedApprovals)
+          : 0
+    };
+  }).filter((entry) => entry.items.length > 0);
+
+  const workGroups = renderableGroups.filter((entry) => GROUP_KIND[entry.group.id] === 'work');
+  const offerGroups = renderableGroups.filter((entry) => GROUP_KIND[entry.group.id] !== 'work');
+  /**
+   * Whether anything is actually moving, which is not the same as whether the
+   * work column has entries.
+   *
+   * A first version opened the offers when `workGroups` was empty, and that
+   * branch could never run: the twin-status row is built unconditionally and
+   * always lands in "Waiting on you", so the work column is never empty. It
+   * would have been an unreachable branch shipped with a test claiming it worked.
+   *
+   * What is reachable, and what the reader actually cares about, is whether
+   * anything is under way or recently finished. A workspace whose only "work" is
+   * a prompt to set up a twin has nothing moving, and the suggestions are then
+   * the most useful thing on the page.
+   */
+  const hasMovement = workGroups.some(
+    (entry) => entry.group.id === 'moving' || entry.group.id === 'done'
+  );
+  const offerCount = offerGroups.reduce((total, entry) => total + entry.items.length, 0);
+
   return (
     <section
       className="bo-plan-flat-root rounded-2xl border border-border/45 bg-bg/80 p-3 text-sm text-textMuted sm:p-4"
@@ -1421,32 +1492,49 @@ export const MobileWorkspaceHubView = ({
         </p>
         {visibleFeedItems.length ? (
           <>
-            {FEED_GROUPS.map((group) => {
-              const items = visibleFeedItems.filter((item) => group.kinds.includes(item.kind));
-              if (!items.length) return null;
-              /**
-               * Only the decisions group knows its own true total, because only
-               * approvals carry one: `planPendingReviewCount` counts them all
-               * while the peek that feeds the rows is capped at eight. The other
-               * groups render everything they are given, so nothing is missing
-               * from them to declare.
-               */
-              const listedApprovals = items.filter((item) => item.kind === 'approval').length;
-              const notListed =
-                group.id === 'decisions'
-                  ? Math.max(0, snapshot.planPendingReviewCount - listedApprovals)
-                  : 0;
-              return (
-                <FeedGroup
-                  key={group.id}
-                  title={group.title}
-                  hint={group.hint}
-                  items={items}
-                  btnFocus={btnFocus}
-                  notListed={notListed}
-                />
-              );
-            })}
+            {/*
+              Work first, and only work.
+
+              The offers that used to sit in this column are below, behind one
+              disclosure. A reader opening the page now meets what is happening
+              rather than twelve things that are not.
+            */}
+            {workGroups.map(({ group, items, notListed }) => (
+              <FeedGroup
+                key={group.id}
+                title={group.title}
+                hint={group.hint}
+                items={items}
+                btnFocus={btnFocus}
+                notListed={notListed}
+              />
+            ))}
+
+            {offerGroups.length ? (
+              <details className="mt-3" open={!hasMovement}>
+                <summary
+                  className={clsx(
+                    'cursor-pointer list-none rounded-lg px-1 py-1 text-label font-semibold text-text [&::-webkit-details-marker]:hidden',
+                    btnFocus
+                  )}
+                >
+                  Things you could start <span className="text-textSoft">{offerCount}</span>
+                  <span className="ml-2 text-meta font-normal text-textSoft">
+                    Nothing here has started. Safe to ignore.
+                  </span>
+                </summary>
+                {offerGroups.map(({ group, items, notListed }) => (
+                  <FeedGroup
+                    key={group.id}
+                    title={group.title}
+                    hint={group.hint}
+                    items={items}
+                    btnFocus={btnFocus}
+                    notListed={notListed}
+                  />
+                ))}
+              </details>
+            ) : null}
             {/*
               Anything a group does not claim still appears, rather than being
               silently dropped — a new feed kind should look unsorted, not
