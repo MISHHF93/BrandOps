@@ -20,8 +20,10 @@ import type { BrandOpsData, DigitalTwin } from '../../types/domain';
 import { verifyAchievement } from './achievementService';
 import type { TwinUpdateProposal } from '../../types/builder';
 import {
+  addVersionToHistory,
   applyDeltas,
   calculateDeltas,
+  createInitialVersionHistory,
   createTwinUpdateProposal,
   type CurrentTwinState
 } from './twinDeltaEngine';
@@ -174,8 +176,26 @@ export function applyTwinProposalAcceptance(
     editedDeltas: new Map()
   });
 
+  /**
+   * Record what changed, which the engine has always computed.
+   *
+   * `applyDeltas` returns a `version` — the snapshot before, the snapshot after,
+   * the deltas applied, who applied them and when — and this function used
+   * `updatedTwin` and threw the rest away. So the Twin changed and nothing said
+   * it had. For a product whose subject is verified identity, an unrecorded
+   * edit is the one kind it cannot afford.
+   *
+   * Seeded from the state *before* this change, so the first entry is where the
+   * Twin was rather than where it ended up.
+   */
+  const before = twinState(twin);
+  const history =
+    workspace.twinVersionHistory ??
+    createInitialVersionHistory(twin.id, before.workspaceId, before);
+
   return {
     ...workspace,
+    twinVersionHistory: addVersionToHistory(history, result.version),
     digitalTwins: {
       activeTwinId: workspace.digitalTwins?.activeTwinId ?? null,
       twins: (workspace.digitalTwins?.twins ?? []).map((entry) =>

@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1653 tests / 222 files** passing · `vite build` succeeds.
+**1661 tests / 223 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,44 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 61 — 2026-09-02 · the Twin changed and nothing said so
+
+Third half-wired vertical in three cycles, and the same shape again. `applyDeltas` returns a
+`version` — the snapshot before, the snapshot after, the deltas applied, who applied them and when —
+and `applyTwinProposalAcceptance` used `updatedTwin` and **discarded the rest**.
+`addVersionToHistory` and `createInitialVersionHistory` existed to store those snapshots and had no
+caller.
+
+So the Twin moved and nothing recorded that it had. For a product whose subject is verified identity,
+an unrecorded edit is the one kind it cannot afford.
+
+**Wiring it exposed a duplicated concept.** `TwinVersion` was declared **twice** — a five-field stub
+in `types/builder.ts` and the real thirteen-field shape in `twinDeltaEngine.ts` — and the two were
+incompatible. Nothing used the stub, so nothing failed, right up until the history was stored and the
+definitions had to meet. There is now one definition, in the types file, with the engine importing
+it.
+
+**Mutation testing found a gap my own tests could not see.** Two of three mutations passed at first,
+and one of those was my fault twice over: the mutation had not applied, because prettier had wrapped
+the line I was matching. Re-run properly, it failed. The third was a real hole — every assertion
+looked at the _appended_ version, so seeding the history from the post-change state instead of the
+pre-change state left them all green. A history seeded from where the Twin ended up would claim it
+always had the achievement, erasing the change it exists to describe. There is now an assertion on
+the seeded entry.
+
+| Repair                                       | Dimension | Evidence                                          |
+| -------------------------------------------- | --------- | ------------------------------------------------- |
+| Accepted Twin updates record a version       | D4, D10   | Was discarded; 8 tests, 3 mutations               |
+| One `TwinVersion`, not two incompatible ones | D1        | The stub was used by nothing until this needed it |
+| The history starts from before the change    | D4        | Found by mutation, not by reading                 |
+
+**Knip 99 → 96. Score movement: none** — D4 and D10 are capped by things this does not address.
+
+Three cycles, three verticals wired at one end only. The pattern is now specific enough to look for
+deliberately: **a function that returns more than its caller destructures.**
+
+---
 
 ### Cycle 60 — 2026-09-02 · three quarters of a vertical, connected at one end
 

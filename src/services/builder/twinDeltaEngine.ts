@@ -1,3 +1,5 @@
+import type { TwinVersion, TwinVersionHistoryState } from '../../types/builder';
+export type { TwinVersion, TwinVersionHistoryState };
 /**
  * Twin Delta Engine — stops rebuilding the entire Digital Twin when new information
  * arrives. Calculates explicit deltas between existing verified Twin state and newly
@@ -16,44 +18,7 @@ import type {
 } from '../../types/builder';
 
 /** Version snapshot for Twin version history (local type — engine's own richer shape). */
-export interface TwinVersion {
-  id: string;
-  workspaceId: string;
-  twinId: string;
-  snapshot: {
-    headline: string;
-    summary: string;
-    professionalPositioning: string;
-    targetAudience: string;
-    toneOfVoice: string;
-    expertiseAreas: string[];
-    skills: string[];
-    achievements: string[];
-    goals: string[];
-  };
-  previousSnapshot: {
-    headline: string;
-    summary: string;
-    professionalPositioning: string;
-    targetAudience: string;
-    toneOfVoice: string;
-    expertiseAreas: string[];
-    skills: string[];
-    achievements: string[];
-    goals: string[];
-  };
-  changes: Array<{ field: string; from: string; to: string; status: string }>;
-  appliedBy: string;
-  appliedAt: string;
-  appliedDeltas: string[];
-  deltaCount: number;
-  hasMaterialChanges: boolean;
-}
 
-export interface TwinVersionHistoryState {
-  versions: TwinVersion[];
-  currentVersion: number;
-}
 export interface CurrentTwinState {
   id: string;
   workspaceId: string;

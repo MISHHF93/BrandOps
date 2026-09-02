@@ -1161,6 +1161,17 @@ export interface BrandOpsData {
   /** Builder intelligence — activity, achievements, projects, signals, twin proposals, and opportunities. */
   builderActivity?: import('./builder').BuilderActivityState;
   /** Machine-readable registry of BrandOps capabilities (optional; normalized on read). */
+  /**
+   * Snapshots of the Twin, one per accepted update proposal.
+   *
+   * `applyDeltas` has always returned a `version` describing what changed, who
+   * applied it and when — and the acceptance path **discarded it**, so the Twin
+   * moved with no record of having moved. `addVersionToHistory` and
+   * `createInitialVersionHistory` existed to hold them and had no caller.
+   *
+   * Optional, so a workspace written before this field existed loads unchanged.
+   */
+  twinVersionHistory?: import('./builder').TwinVersionHistoryState;
   featureRegistry?: {
     entries: import('./builder').FeatureRegistryEntry[];
     updatedAt: string;

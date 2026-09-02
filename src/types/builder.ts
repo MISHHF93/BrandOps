@@ -516,12 +516,49 @@ export interface TwinUpdateProposal {
 // Twin Version (version history for Twin changes)
 // ---------------------------------------------------------------------------
 
+/**
+ * One snapshot of the Twin, as `applyDeltas` produces it.
+ *
+ * This concept was declared **twice** — a five-field stub here and the real
+ * thirteen-field shape in `twinDeltaEngine.ts` — and the two were incompatible.
+ * Nothing used the stub, so nothing failed, right up until the version history
+ * was wired and the two definitions met.
+ *
+ * The engine's shape is the one that exists at runtime, so it lives here where
+ * types belong and the engine imports it.
+ */
 export interface TwinVersion {
-  version: number;
-  timestamp: string;
-  changedBy: string;
-  changeSummary: string;
-  deltasApplied: string[];
+  id: string;
+  workspaceId: string;
+  twinId: string;
+  snapshot: {
+    headline: string;
+    summary: string;
+    professionalPositioning: string;
+    targetAudience: string;
+    toneOfVoice: string;
+    expertiseAreas: string[];
+    skills: string[];
+    achievements: string[];
+    goals: string[];
+  };
+  previousSnapshot: {
+    headline: string;
+    summary: string;
+    professionalPositioning: string;
+    targetAudience: string;
+    toneOfVoice: string;
+    expertiseAreas: string[];
+    skills: string[];
+    achievements: string[];
+    goals: string[];
+  };
+  changes: Array<{ field: string; from: string; to: string; status: string }>;
+  appliedBy: string;
+  appliedAt: string;
+  appliedDeltas: string[];
+  deltaCount: number;
+  hasMaterialChanges: boolean;
 }
 
 export interface TwinVersionHistory {
