@@ -33,7 +33,7 @@ import { promotionApprovalBinding } from '../../src/services/interop/approvalBin
 import { withDefaults } from '../../src/services/storage/storage';
 import { populatedWorkspace } from '../helpers/populatedWorkspace';
 import type { BrandOpsData } from '../../src/types/domain';
-import type { TwinDelta } from '../../src/types/builder';
+import type { TwinDelta, TwinDeltaField } from '../../src/types/builder';
 
 const EVENT_ID = 'event-fp-1';
 
@@ -180,7 +180,7 @@ function proposalWorkspace(summary: string, deltas: TwinDelta[]): BrandOpsData {
   } as BrandOpsData;
 }
 
-function delta(id: string, field: string, proposedValue: string): TwinDelta {
+function delta(id: string, field: TwinDeltaField, proposedValue: string): TwinDelta {
   return {
     id,
     workspaceId: 'local-workspace',
@@ -191,8 +191,9 @@ function delta(id: string, field: string, proposedValue: string): TwinDelta {
     reason: 'fixture',
     confidence: 0.9,
     proposedBy: 'signal-engine',
-    status: 'proposed'
-  } as TwinDelta;
+    status: 'proposed',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  };
 }
 
 const proposalFingerprint = (summary: string, deltas: TwinDelta[]) =>
@@ -203,7 +204,9 @@ const proposalFingerprint = (summary: string, deltas: TwinDelta[]) =>
 
 describe('a twin proposal approval fingerprint', () => {
   it('is produced at all', () => {
-    expect(proposalFingerprint('A summary', [delta('d1', 'headline', 'New')])).toBeDefined();
+    expect(
+      proposalFingerprint('A summary', [delta('d1', 'identity/headline', 'New')])
+    ).toBeDefined();
   });
 
   it('does not let a summary impersonate a delta', () => {
@@ -218,8 +221,10 @@ describe('a twin proposal approval fingerprint', () => {
      * it: `checkApprovalBinding` compares fingerprints alone for promotions and
      * uses the count only to word the message.
      */
-    const harmless = proposalFingerprint('Tidy up 0:d1:headline:Chief Architect', []);
-    const armed = proposalFingerprint('Tidy up', [delta('d1', 'headline', 'Chief Architect')]);
+    const harmless = proposalFingerprint('Tidy up 0:d1:identity/headline:Chief Architect', []);
+    const armed = proposalFingerprint('Tidy up', [
+      delta('d1', 'identity/headline', 'Chief Architect')
+    ]);
 
     expect(armed, 'an empty proposal fingerprinted the same as one editing the Twin').not.toBe(
       harmless
@@ -227,18 +232,18 @@ describe('a twin proposal approval fingerprint', () => {
   });
 
   it('distinguishes two deltas whose values differ only by where a space falls', () => {
-    const a = proposalFingerprint('S', [delta('d1', 'headline', 'Staff Engineer')]);
+    const a = proposalFingerprint('S', [delta('d1', 'identity/headline', 'Staff Engineer')]);
     const b = proposalFingerprint('S', [
-      delta('d1', 'headline', 'Staff'),
-      delta('d2', 'headline', 'Engineer')
+      delta('d1', 'identity/headline', 'Staff'),
+      delta('d2', 'identity/headline', 'Engineer')
     ]);
 
     expect(b).not.toBe(a);
   });
 
   it('still changes when a delta value genuinely changes', () => {
-    const a = proposalFingerprint('S', [delta('d1', 'headline', 'One')]);
-    const b = proposalFingerprint('S', [delta('d1', 'headline', 'Two')]);
+    const a = proposalFingerprint('S', [delta('d1', 'identity/headline', 'One')]);
+    const b = proposalFingerprint('S', [delta('d1', 'identity/headline', 'Two')]);
 
     expect(a).toBeDefined();
     expect(b).not.toBe(a);
