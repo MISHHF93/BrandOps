@@ -1,0 +1,23 @@
+# Line endings are decided here, not by each machine's git config.
+#
+# Without this file, `core.autocrlf=true` (the Windows default, and what is set
+# on at least one machine that touches this repository) rewrites every text file
+# to CRLF on checkout. Prettier's `endOfLine` default is `lf`, so `npm run
+# format` -- the exact command CI runs -- fails on a fresh clone before a single
+# edit is made. Reproduced: `git checkout` a source file, and it comes back with
+# CRLF terminators and immediately fails the format gate.
+#
+# `eol=lf` pins the working tree as well as the repository, so the result no
+# longer depends on who cloned it or how their git is configured.
+* text=auto eol=lf
+
+# Binary, so git must never touch the bytes.
+*.png binary
+*.jpg binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.jks binary
+*.keystore binary
+*.woff binary
+*.woff2 binary
