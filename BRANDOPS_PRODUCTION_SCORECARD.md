@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1661 tests / 223 files** passing · `vite build` succeeds.
+**1667 tests / 224 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -69,7 +69,7 @@ acted on.
 | D7  | Connectors / External Actions        | 6       | **4.0**  | 3.5  | **+0.5** | Dispatch path with four honest outcomes, and it refuses anything without a standing approval — checked at the dispatcher, not only in one caller. One real connector (outbound webhook). No vendor connector, no live delivery verified                                                     |
 | D8  | Security / Authorization / Isolation | 10      | **10.0** | 10.0 | —        | Model-input surface fully screened and guarded. An approval cannot be spent on an action the user did not see, no connector runs without one standing, and the workspace lock is verified in the rendered interface rather than assumed. Auth backend, TLS and CSP remain out of scope here |
 | D9  | Reliability / Durable Execution      | 7       | **7.0**  | 6.5  | **+0.5** | Failure injection plus a 40-capability sweep proving none throws out of the gateway and every call is audited. Workspace writes are atomic and journaled: 25 mid-write SIGKILLs leave 25 readable workspaces, and an interrupted write recovers and repairs itself                          |
-| D10 | Verification / Receipts / Outcomes   | 6       | **6.0**  | 5.5  | **+0.5** | Every dispatch outcome leaves a receipt recording whether the effect was proven. Export/import verified lossless and credential-free — the escape hatch the product recommends. No live delivery verified end to end                                                                        |
+| D10 | Verification / Receipts / Outcomes   | 6       | **6.0**  | 6.0  | —        | Every dispatch outcome leaves a receipt recording whether the effect was proven. Export/import verified lossless and credential-free — the escape hatch the product recommends. No live delivery verified end to end                                                                        |
 | D11 | AI Evaluations / Grounding           | 5       | **4.5**  | 4.0  | **+0.5** | Scored grounding eval; guards mutation-verified. Provider transport now exercised against a real endpoint — retry, rate-limit and auth-failure behaviour, and credentials redacted out of provider text. Model answer quality still unmeasured: that needs a model                          |
 | D12 | Frontend / UX / Design Quality       | 8       | **8.0**  | 7.5  | **+0.5** | Five surfaces audited on real HTML; every rendered control checked against the workspace lock. Both directions of the LinkedIn companion's boundary verified. Still no visual regression or viewport testing — both need a browser                                                          |
 | D13 | Accessibility / Responsive Quality   | 3       | **3.0**  | 2.5  | **+0.5** | Structural audit over five rendered surfaces plus WCAG contrast computed for both themes — text and focus rings clear AA in each. Borders below non-text contrast are measured and pinned, not silently carried. Viewport reflow still needs a browser                                      |
@@ -224,6 +224,55 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 62 — 2026-09-02 · looking for the pattern instead of tripping over it
+
+Three cycles had each found the same defect by accident, so cycle 61 named it: **a function that
+returns more than its caller destructures**. This cycle searched for that shape on purpose — every
+exported `*Result` interface, and which of its fields are read nowhere in the repository.
+
+Eight hits. The largest was the one worth taking:
+
+```
+  SessionToBrandResult    2/9 fields read nowhere: proposedEvent, proposedAchievement
+  CalculateDeltasResult   2/3: hasMaterialChanges, changeSummary
+  ApplyDeltasResult       2/6: rejectedDeltas, newTwinState
+```
+
+`summarizeWorkForBrandOps` returns a proposed event and a proposed achievement, both documented as
+_"not saved until user confirms"_ — and **nothing saved them**. They were computed, returned to the
+agent, and lost. There was no confirm step because there was nothing to confirm.
+
+That was the missing first link in a chain whose other three were wired over the two preceding
+cycles. It is now complete, and every link is a person's decision:
+
+```
+  session summary → stored candidate → verification → Twin proposal → accepted, version recorded
+       (agent)        UNVERIFIED        (operator)      (operator)        (operator)
+```
+
+Stored through `ingestActivityEvent` rather than pushed onto the array, so it validates, fingerprints
+and de-duplicates — an agent summarising the same session twice is ordinary, and produces one
+candidate. The event keeps `UNVERIFIED` / `AGENT_REPORTED` standing: **storing a candidate is not
+promoting a claim.** A test asserts that summarising alone moves nothing — no Twin change, no
+proposal, no version.
+
+| Repair                                                      | Dimension | Evidence                                          |
+| ----------------------------------------------------------- | --------- | ------------------------------------------------- |
+| Session proposals are stored where a person can act on them | D4, D10   | Were computed and discarded; 6 tests, 4 mutations |
+| Stored unverified, and proven to move nothing on its own    | D4, D8    | The counter-case that matters most                |
+| One candidate per session, not one per call                 | D9        | Goes through the canonical fingerprinting path    |
+
+**Knip 96, unchanged — the budget did not move, and that is the honest number.** The two fields are
+now read, but the sweep also surfaced six more result types with unread fields, so the wiring and the
+discovery cancelled out.
+
+Six of the eight remain, and two of them sit on code from the last two cycles: `hasMaterialChanges`
+is computed and ignored, and `rejectedDeltas` cannot be produced at all because
+`applyTwinProposalAcceptance` accepts every delta unconditionally. **A person cannot reject part of a
+Twin proposal.** That is the next one.
+
+---
 
 ### Cycle 61 — 2026-09-02 · the Twin changed and nothing said so
 

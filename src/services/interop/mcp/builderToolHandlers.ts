@@ -970,8 +970,77 @@ export function runBuilderHandler(
         workspaceId: builderWorkspaceId(workspace)
       });
 
+      /**
+       * The proposals now land somewhere a person can act on them.
+       *
+       * `summarizeWorkForBrandOps` returns a `proposedEvent` and a
+       * `proposedAchievement`, both documented as *"not saved until user
+       * confirms"* — and nothing saved them. They were computed, handed back to
+       * the agent, and lost. There was no confirm step because there was
+       * nothing to confirm.
+       *
+       * Stored through `ingestActivityEvent`, which is the canonical path: it
+       * validates, fingerprints and de-duplicates, so a session summarised twice
+       * does not become two candidates. The event keeps the summariser's
+       * `UNVERIFIED` / `AGENT_REPORTED` standing — storing a candidate is not
+       * promoting a claim, and the operator still has to verify it.
+       *
+       * That verification is what produces a Twin update proposal, which is
+       * what an operator accepts to change the Twin and record a version. This
+       * was the missing first link in that chain.
+       */
+      const stored = ingestActivityEvent(workspace, {
+        workspaceId: result.proposedEvent.workspaceId,
+        source: result.proposedEvent.source,
+        sourceId: result.proposedEvent.sourceId,
+        kind: result.proposedEvent.kind,
+        title: result.proposedEvent.title,
+        detail: result.proposedEvent.detail,
+        timestamp: result.proposedEvent.timestamp,
+        confidence: result.proposedEvent.confidence,
+        verificationStatus: 'UNVERIFIED',
+        trustTier: 'AGENT_REPORTED',
+        evidence: result.proposedEvent.evidence,
+        recordedBy: sessionLabel,
+        recordedReason: `Session summary prepared by ${session.clientName}.`
+      });
+
+      const activity = stored.workspace.builderActivity;
+      const alreadyCandidate = (activity?.achievements ?? []).some(
+        (entry) => entry.eventId === stored.event.id
+      );
+      const withCandidate: BrandOpsData =
+        activity && !alreadyCandidate
+          ? {
+              ...stored.workspace,
+              builderActivity: {
+                ...activity,
+                achievements: [
+                  {
+                    id: `achievement-${stored.event.id}`,
+                    workspaceId: stored.event.workspaceId,
+                    eventId: stored.event.id,
+                    title: result.proposedAchievement.title,
+                    description: result.proposedAchievement.description,
+                    kind: result.potentialAchievement.kind as AchievementCandidate['kind'],
+                    sourceEvents: [stored.event.id],
+                    confidence: result.proposedAchievement.confidence,
+                    professionalRelevance: result.proposedAchievement.professionalRelevance,
+                    verificationRequired: true,
+                    evidence: result.proposedAchievement.evidence,
+                    reason: result.proposedAchievement.reason,
+                    detectedAt: stored.event.timestamp,
+                    updatedAt: stored.event.timestamp
+                  },
+                  ...(activity.achievements ?? [])
+                ],
+                updatedAt: new Date().toISOString()
+              }
+            }
+          : stored.workspace;
+
       const receipt = createReceipt({
-        workspace,
+        workspace: withCandidate,
         requestedBy: sessionLabel,
         approvedBy: 'user',
         source: 'bridge',
@@ -992,7 +1061,14 @@ export function runBuilderHandler(
       return {
         workspace: receipt.workspace,
         ok: true,
-        data: { summary: result, receiptId: receipt.receipt.id }
+        data: {
+          summary: result,
+          receiptId: receipt.receipt.id,
+          // The ids the agent needs to refer to what was actually stored.
+          eventId: stored.event.id,
+          achievementId: `achievement-${stored.event.id}`,
+          deduplicated: stored.dedupResult.deduplicated
+        }
       };
     }
 

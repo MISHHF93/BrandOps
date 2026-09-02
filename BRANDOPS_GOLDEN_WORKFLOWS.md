@@ -14,7 +14,7 @@ that do not exist (`authorityIntelligence.ts`, `commandLayer.ts`, `commandExecut
 Those citations were phantom. They are removed or re-pointed to the real components below.
 
 **Current real baseline:** `tsc -b` clean, `eslint` clean, `vite build` OK, **1122 tests /
-223 files passing**.
+224 files passing**.
 
 ---
 

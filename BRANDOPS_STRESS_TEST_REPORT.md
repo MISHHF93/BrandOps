@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-31 (re-audited)
 **Method:** Failure-injection + concurrency/idempotency tests re-run against the real tree.
-**Baseline:** `tsc -b` clean, `eslint` clean, `vite build` OK, **1122 tests / 223 files passing**.
+**Baseline:** `tsc -b` clean, `eslint` clean, `vite build` OK, **1122 tests / 224 files passing**.
 
 > Honesty note: the prior report (2026-08-30) cited tests that do not exist
 > (`gateway.test.ts`, `commandExecution.test.ts`, `idempotency.test.ts`,

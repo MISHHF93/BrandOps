@@ -3,7 +3,7 @@
 **Date:** 2026-08-31
 **Based on:** re-audited source tree, corrected docs, and the full live test baseline.
 **Baseline (real, reproduced this session):** `tsc -b` clean · `eslint` clean ·
-`vite build` OK · **1122 tests / 223 files passing** · A→Z canonical loop test present ·
+`vite build` OK · **1122 tests / 224 files passing** · A→Z canonical loop test present ·
 adversarial security + concurrency/failure-injection suites present.
 
 ---
@@ -91,7 +91,7 @@ hardened external-agent + security surface. It is NOT ready to be declared
 
 ## 5. What is genuinely proven (positive, verifiable)
 
-- Clean, reproducible local baseline: **1122 tests / 223 files**, lint + typecheck + build green.
+- Clean, reproducible local baseline: **1122 tests / 224 files**, lint + typecheck + build green.
 - **A→Z canonical loop** proven end-to-end through the real gateway
   (`canonicalLoopEndToEnd.test.ts`): agent signal → user verify → twin promote →
   approval-gated opportunity → plan draft → execute → verify → learning.
