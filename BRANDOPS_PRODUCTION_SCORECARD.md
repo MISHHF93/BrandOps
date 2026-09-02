@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1564 tests / 212 files** passing · `vite build` succeeds.
+**1571 tests / 213 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,53 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 49 — 2026-09-02 · the other end of the data range
+
+Three cycles asked what a surface claims for someone who has done nothing. Nobody had asked the
+opposite. A workspace with **25 pending approvals and 35 completed actions** gave two answers.
+
+**A cap that starved the history — and it was my own regression.** Cycle 46 correctly stopped pending
+traces becoming receipts, but did it with a `continue` _inside_ a loop over the first twelve entries.
+Traces are newest-first, so twelve pending approvals consumed the entire budget and not one completed
+action was reached. "Recently done" showed **nothing at all**.
+
+The busier the workspace, the emptier its history. That is the opposite of what a cap is for, and it
+shipped three cycles ago in a commit whose whole subject was making that list honest. Filtering now
+happens before the cap: **0 → 12**.
+
+**A group presenting a subset as the whole.** Approval rows come from a peek capped at eight while
+the tile above reports the true count, so one screen said both:
+
+```
+  tile    Pending Approvals   25
+  group   Waiting on you (5)      [Show 2 more]
+```
+
+"Show 2 more" tells a reader that five is all there is. Twenty were invisible and nothing said
+otherwise. The heading now reads **"Waiting on you (5 of 26)"** with _"21 more not listed here"_ — and
+the `aria-label` carries the same figure, so a screen reader is told what a sighted reader is told.
+
+| Repair                                                       | Dimension | Evidence                                      |
+| ------------------------------------------------------------ | --------- | --------------------------------------------- |
+| Pending work no longer starves completed work out of the cap | P11, D5   | 25 pending / 35 done: 0 → 12 receipts         |
+| A truncated group says how much it is not showing            | P11, P3   | "(5)" → "(5 of 26)", label and heading agree  |
+| A complete group still says nothing of the sort              | P11       | The counter-case for the same defect reversed |
+
+**Score movement: none.** P11 is at full marks; this repairs a regression beneath it rather than
+extending it.
+
+**Two of my own instruments were wrong again, and both were caught by mutation rather than by
+reading.** The counter-case assertion searched approval lines for the word "pending" — wording cycle
+46 had already deleted, so removing the filter left it green. And the fixture stamped every trace
+`outcome: 'success'`, including the pending ones, so a pending receipt that leaked through still read
+as succeeded. A pending request has no outcome; the fixture now says so, and the assertion reads
+`executionStatus`, which no phrasing change can satisfy.
+
+The pattern across these cycles is consistent enough to name: **when a guard passes under mutation,
+the fixture is usually the thing that is lying.**
+
+---
 
 ### Cycle 48 — 2026-09-02 · a badge that argued with the line beneath it
 

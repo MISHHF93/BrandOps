@@ -811,12 +811,26 @@ function FeedGroup({
   title,
   hint,
   items,
-  btnFocus
+  btnFocus,
+  notListed = 0
 }: {
   title: string;
   hint: string;
   items: FeedItem[];
   btnFocus: string;
+  /**
+   * How many exist that were never handed to this group.
+   *
+   * The approval feed is built from a peek capped at eight, while the tile above
+   * it reports the true count. With 25 approvals pending, the tile read
+   * **"Pending Approvals 25"** and the group directly beneath it read **"Waiting
+   * on you (5)"** with a button offering "Show 2 more" — which tells a reader
+   * that five is all there is.
+   *
+   * "Show N more" is honest about the rows this group is holding back. It cannot
+   * speak for rows the group never received, so the count has to.
+   */
+  notListed?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? items : items.slice(0, COLLAPSED_GROUP_SIZE);
@@ -827,16 +841,26 @@ function FeedGroup({
   const informative = informativeStates(items);
 
   return (
-    <section className="mt-3" aria-label={`${title} (${items.length})`}>
+    <section
+      className="mt-3"
+      aria-label={
+        notListed > 0
+          ? `${title} (${items.length} of ${items.length + notListed})`
+          : `${title} (${items.length})`
+      }
+    >
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-label font-semibold text-text">
           {title}{' '}
           <span className="text-textSoft" aria-hidden>
-            {items.length}
+            {notListed > 0 ? `${items.length} of ${items.length + notListed}` : items.length}
           </span>
         </h3>
       </div>
-      <p className="mt-0.5 text-meta text-textSoft">{hint}</p>
+      <p className="mt-0.5 text-meta text-textSoft">
+        {hint}
+        {notListed > 0 ? ` ${notListed} more not listed here.` : ''}
+      </p>
 
       <div className="mt-2 grid gap-2">
         {shown.map((item) => (
@@ -1306,6 +1330,18 @@ export const MobileWorkspaceHubView = ({
             {FEED_GROUPS.map((group) => {
               const items = visibleFeedItems.filter((item) => group.kinds.includes(item.kind));
               if (!items.length) return null;
+              /**
+               * Only the decisions group knows its own true total, because only
+               * approvals carry one: `planPendingReviewCount` counts them all
+               * while the peek that feeds the rows is capped at eight. The other
+               * groups render everything they are given, so nothing is missing
+               * from them to declare.
+               */
+              const listedApprovals = items.filter((item) => item.kind === 'approval').length;
+              const notListed =
+                group.id === 'decisions'
+                  ? Math.max(0, snapshot.planPendingReviewCount - listedApprovals)
+                  : 0;
               return (
                 <FeedGroup
                   key={group.id}
@@ -1313,6 +1349,7 @@ export const MobileWorkspaceHubView = ({
                   hint={group.hint}
                   items={items}
                   btnFocus={btnFocus}
+                  notListed={notListed}
                 />
               );
             })}

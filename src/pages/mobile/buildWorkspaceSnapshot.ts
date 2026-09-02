@@ -678,20 +678,23 @@ function buildPlanExecutionReceipts(workspace: BrandOpsData): PlanExecutionRecei
     });
   }
 
-  for (const trace of (workspace.operatorTraces?.entries ?? []).slice(0, 12)) {
-    /**
-     * A request awaiting review is not a completed action.
-     *
-     * Every trace became a receipt, pending ones included, and receipts render
-     * under "Recently done". So a single pending approval appeared **twice**:
-     * once in "Waiting on you", correctly, and once in "Recently done", which
-     * says it happened. It had not happened — that is what the reader was being
-     * asked to decide.
-     *
-     * It reappears here the moment it is approved or rejected, carrying the
-     * outcome, which is when it becomes something that occurred.
-     */
-    if (trace.reviewStatus === 'pending') continue;
+  /**
+   * Filtered before the cap, not after.
+   *
+   * Cycle 46 correctly stopped pending traces becoming receipts, but did it with
+   * a `continue` *inside* a loop over the first twelve entries. Traces are
+   * newest-first, so twelve pending approvals consumed the entire budget and
+   * every completed action fell off the end: a workspace with 25 pending and 35
+   * resolved traces showed **nothing at all** under "Recently done".
+   *
+   * The busier the workspace, the emptier the history — which is the opposite of
+   * what a cap is for.
+   */
+  const resolvedTraces = (workspace.operatorTraces?.entries ?? [])
+    .filter((entry) => entry.reviewStatus !== 'pending')
+    .slice(0, 12);
+
+  for (const trace of resolvedTraces) {
     const facts = detailFacts(trace.details);
     // Pending traces never reach here, so this only distinguishes the two
     // outcomes a reviewed trace can have.

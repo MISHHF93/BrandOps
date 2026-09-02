@@ -44,10 +44,15 @@ const noop = () => {};
  * The whole surface is itself a `<section aria-label="Plan">`, so selecting on
  * the attribute alone caught it too. A group is identifiable by carrying its
  * count, which is also the thing that makes it useful to read.
+ *
+ * Two shapes, because a group that was handed a capped subset says so: "(5)"
+ * when it holds everything, "(5 of 25)" when twenty more exist that it never
+ * received. The label matches the visible heading in both cases, so a screen
+ * reader is told what a sighted reader is told.
  */
 const groupSections = (doc: Document): Element[] =>
   Array.from(doc.querySelectorAll('section[aria-label]')).filter((section) =>
-    /\(\d+\)$/.test(section.getAttribute('aria-label') ?? '')
+    /\((\d+ of )?\d+\)$/.test(section.getAttribute('aria-label') ?? '')
   );
 
 function planPage() {
@@ -148,7 +153,7 @@ describe('how the page is organised', () => {
     // Named groups, each carrying its own count.
     expect(groups.length).toBeGreaterThanOrEqual(3);
     expect(
-      groups.every((label) => /\(\d+\)$/.test(label)),
+      groups.every((label) => /\((\d+ of )?\d+\)$/.test(label)),
       groups.join(' | ')
     ).toBe(true);
   });
@@ -273,7 +278,7 @@ describe('what the page actually says', () => {
 describe('what a collapsed row makes the reader read', () => {
   const groups = (doc: Document) =>
     Array.from(doc.querySelectorAll('section[aria-label]')).filter((section) =>
-      /\(\d+\)$/.test(section.getAttribute('aria-label') ?? '')
+      /\((\d+ of )?\d+\)$/.test(section.getAttribute('aria-label') ?? '')
     );
 
   it('never labels a row with what its group heading already said', () => {
