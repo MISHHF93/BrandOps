@@ -220,7 +220,6 @@ export function createLedgerEvidence(params: {
     attachedEntities: params.attachedEntities ?? [],
     strength: computeEvidenceStrength({
       verificationStatus: deriveVerificationStatus(params.source),
-      trustTier: deriveTrustTier(params.source),
       source: params.source
     }),
     notes: params.notes
@@ -325,7 +324,6 @@ export function updateEvidenceVerification(
   // Recompute strength
   evidence.strength = computeEvidenceStrength({
     verificationStatus,
-    trustTier: trustTier ?? evidence.trustTier,
     source: evidence.source
   });
 
@@ -383,9 +381,31 @@ export function linkEvidenceToEntity(
 /**
  * Compute evidence strength from verification status, trust tier, and source.
  */
+/**
+ * Strength is verification status plus source reliability. Not trust tier.
+ *
+ * This took a `trustTier` and never read it. All five tiers produced the same
+ * score, so a `MODEL_INFERRED` claim scored exactly as a `USER_VERIFIED` one —
+ * and the parameter's presence said the opposite, which is worse than not
+ * offering it.
+ *
+ * The sharper version of the problem was in `updateEvidenceVerification`, which
+ * accepts a tier from its caller, **stores it on the evidence**, and passed it
+ * here to be discarded. The recorded tier and the recorded strength could
+ * therefore disagree, with nothing to reconcile them.
+ *
+ * Dropping the parameter rather than weighting it is deliberate. Both internal
+ * callers derived the tier from `source` in the first place
+ * (`deriveTrustTier(params.source)`), so provenance is already what `source`
+ * encodes — an agent event scores 0.1, a verification fetch 0.3. Inventing a
+ * second weighting for the same signal would double-count it, and picking those
+ * weights would be a product decision made on no evidence.
+ *
+ * `trustTier` remains a recorded fact on the evidence. It is simply not an input
+ * to this number, and the signature now says so.
+ */
 export function computeEvidenceStrength(params: {
   verificationStatus: VerificationStatus;
-  trustTier: TrustTier;
   source: EvidenceSource;
 }): number {
   let strength = 0;

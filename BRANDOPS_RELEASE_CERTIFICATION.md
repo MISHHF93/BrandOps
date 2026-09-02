@@ -10,7 +10,7 @@
 **Method:** Evidence-driven — inspect source, trace runtime wiring, run typecheck + full test suite + build, classify every capability by observed behavior.
 
 > Corrections since the 2026-08-18/2026-08-30 docs: the prior metrics (647 tests) and
-> certain file citations are stale. Current real baseline: **1122 tests / 218 files
+> certain file citations are stale. Current real baseline: **1122 tests / 219 files
 > passing**, `tsc -b` clean, `eslint` clean, `vite build` OK. 40 dead files and an
 > entire `normalizers/` + `controlPlane/` tree were removed this session. Claims about
 > `commandLayer`/`commandExecution`/`policyEngine`/`authorityIntelligence`/`handoffs`
@@ -54,7 +54,7 @@ BrandOps passes certification for **local-first** use as a Personal Brand Operat
 | Outcomes/Learning         | 7/10     | Core path working (verify→Twin mirror), broader feedback loop partial.                                                                                                                                                     |
 | Security                  | 7/10     | **SUPERSEDED — see `BRANDOPS_PRODUCTION_SCORECARD.md` D8.** "No rate limiting" was untrue from Phase 4 onward (per-session, per-tier). Genuinely open: one P0 (ASK-path injection), no auth backend, no TLS, no CSP audit. |
 | Data/API Contracts        | 8/10     | Coherent, single source of truth. Normalizer duplication resolved (tree deleted).                                                                                                                                          |
-| Test Coverage             | 9/10     | 1122 tests, 218 files, all passing. A→Z loop test present (`canonicalLoopEndToEnd`).                                                                                                                                       |
+| Test Coverage             | 9/10     | 1122 tests, 219 files, all passing. A→Z loop test present (`canonicalLoopEndToEnd`).                                                                                                                                       |
 | Build/Type/Lint           | 9/10     | Typecheck clean, lint clean, tests pass, build succeeds.                                                                                                                                                                   |
 | **Overall**               | **8/10** | Coherent, typecheck-clean, fully-passing, builds successfully. Remaining work is consolidation and completeness, not correctness.                                                                                          |
 

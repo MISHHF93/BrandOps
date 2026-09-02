@@ -47,11 +47,12 @@ import { fileURLToPath } from 'node:url';
  * code with nothing exercising it is code that will fail on the day someone
  * finally calls it.
  *
- * 107 after covering the agent-input validators, which is what the number is
+ * 107 after covering the agent-input validators, 102 after the evidence ledger.
+ * Which is what the number is
  * for: every drop since 118 has come from exercising unwired code rather than
  * deleting it, and each pass has found a real defect in what it covered.
  */
-const BUDGET = 107;
+const BUDGET = 102;
 
 /**
  * Knip's `exports` map blocks `require.resolve` for both `bin/knip.js` and its

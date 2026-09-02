@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1621 tests / 218 files** passing · `vite build` succeeds.
+**1631 tests / 219 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,55 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 57 — 2026-09-02 · a score that ignored the thing it asked for
+
+Third pass of the same method, on the evidence ledger. `computeEvidenceStrength` takes a
+`verificationStatus`, a `source`, and a **`trustTier` it never reads**:
+
+```
+  trustTier=USER_VERIFIED      score=0.2
+  trustTier=BRANDOPS_VERIFIED  score=0.2
+  trustTier=AGENT_REPORTED     score=0.2
+  trustTier=EXTERNAL_SOURCE    score=0.2
+  trustTier=MODEL_INFERRED     score=0.2
+```
+
+A model's guess scored exactly as the operator's own confirmation. For a product whose core concept
+is trust tiers, a parameter that names one and discards it is worse than not offering it — the
+signature promises a weighting that does not exist.
+
+**The sharper version was one call away.** `updateEvidenceVerification` accepts a tier from its
+caller, **stores it on the evidence**, and passed it here to be thrown away. So the recorded tier and
+the recorded strength could disagree, with nothing to reconcile them.
+
+The parameter is dropped rather than weighted, and that choice is the substance of the fix. Both
+internal callers derived the tier from `source` in the first place — an agent event scores 0.1, a
+verification fetch 0.3 — so provenance is already what `source` encodes. Inventing a second weighting
+would double-count the same signal, and choosing those weights would be a product decision made on no
+evidence. `trustTier` stays a recorded fact; it is simply not an input to this number, and the
+signature now says so.
+
+**Two properties are pinned rather than changed.** `STRONG` is reachable only through
+`SYSTEM_VERIFIED` — a user personally confirming a fetched source reaches `MODERATE`. And the
+scorer's floor is 0.15, so `NONE` is unreachable from it: that level belongs to a claim nothing
+supports, which is a different question from how strong one piece is.
+
+**And my own test was wrong again — the fifth time this session.** I called
+`updateEvidenceVerification` with an object literal when its signature is positional, so
+`verificationStatus` became that object, the scorer fell to its default branch, and two tests failed
+against working code. The typecheck ratchet from cycle 52 would have caught it before the run.
+
+| Repair                                                    | Dimension | Evidence                                     |
+| --------------------------------------------------------- | --------- | -------------------------------------------- |
+| A scorer that named a signal it discarded                 | D4        | Five tiers, one score; 10 tests, 4 mutations |
+| Recorded tier and recorded strength can no longer pretend | D4        | The two are independent, and now say so      |
+| Export/import round-trip proven                           | D10       | Was untested; strength and links survive     |
+
+**Knip 107 → 102.** Three passes, three real defects in code nothing called: a filter missing half
+its type, identifiers accepting control characters, and a score ignoring its own argument.
+
+---
 
 ### Cycle 56 — 2026-09-02 · the validators that waved identifiers through
 
