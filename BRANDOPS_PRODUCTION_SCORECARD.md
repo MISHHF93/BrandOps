@@ -14,7 +14,7 @@
 
 ## 0. Verdict
 
-**Total: 95.5 / 100 — INTERNAL / ALPHA QUALITY.**
+**Total: 94.5 / 100 — INTERNAL / ALPHA QUALITY.**
 
 **Release status: NOT READY.** One hard gate remains open — down from two.
 
@@ -24,13 +24,15 @@
 | Production deployment unverified    | ❌ **OPEN** — no deploy target exists (see D15)                                                                                                                                                        |
 | Cross-workspace data leakage        | ✅ closed — refused before dispatch, tested both ways                                                                                                                                                  |
 | Approval bypass                     | ✅ closed — fail-closed invariant + protocol-level refusal                                                                                                                                             |
+| Auth / authorization bypass         | ✅ **CLOSED this cycle — and it was open while D8 read 10.0.** A production build made with `VITE_SKIP_LAUNCH_AUTH=1` shipped with the authentication wall folded out entirely. The skip is now unreachable outside `DEV` |
 | Duplicate irreversible execution    | ✅ closed — idempotency, one task per key, approve-twice is a no-op                                                                                                                                    |
 | Fabricated evidence or verification | ✅ closed — **and it was open without anyone knowing until cycle 3.** An approved external action wrote a `COMPLETED` checkpoint while no connector ran. Now COMPLETED only follows a connector result |
 | Critical Golden Workflow failure    | ✅ none — A→Z loop and success-criterion round trip both pass                                                                                                                                          |
 
 The bands never override the gates. A 99 with an open authorization defect would still read NOT
-READY; 95.5 with one open gate reads NOT READY for the same reason. The score has moved forty-three cycles
-running and the verdict has not — which is the design.
+READY; 94.5 with one open gate reads NOT READY for the same reason. The score has moved forty-four cycles
+running and the verdict has not — which is the design. This cycle it moved **down**, because a gate that was
+recorded as closed was only being watched.
 
 ---
 
@@ -67,7 +69,7 @@ acted on.
 | D5  | Plan / Agent / Execution Runtime     | 10      | **9.5**  | 8.5  | **+1.0** | Durable tasks, checkpoints, receipts, cancellation, verified across process restart. Every proposal kind now binds its approval to the content the user saw — the last one binding to a bare reference was the promotion path                                                               |
 | D6  | MCP / External AI Interoperability   | 7       | **6.5**  | 5.5  | **+1.0** | Server + client, both transports. Conformance now driven as a foreign client would drive it: handshake notification absorbed, malformed requests are protocol errors. Third-party client interop still UNVERIFIED                                                                           |
 | D7  | Connectors / External Actions        | 6       | **4.0**  | 3.5  | **+0.5** | Dispatch path with four honest outcomes, and it refuses anything without a standing approval — checked at the dispatcher, not only in one caller. One real connector (outbound webhook). No vendor connector, no live delivery verified                                                     |
-| D8  | Security / Authorization / Isolation | 10      | **10.0** | 10.0 | —        | Model-input surface fully screened and guarded. An approval cannot be spent on an action the user did not see, no connector runs without one standing, and the workspace lock is verified in the rendered interface rather than assumed. Auth backend, TLS and CSP remain out of scope here |
+| D8  | Security / Authorization / Isolation | 10      | **9.0**  | 10.0 | **-1.0** | Model-input surface screened; an approval cannot be spent on an action the user did not see; the workspace lock is verified in the rendered interface. **Lowered on evidence.** The previous 10.0 rested on a detector mistaken for a fix: `VITE_SKIP_LAUNCH_AUTH` could still delete the auth wall from a release build, and the only thing watching was a test that reads whichever `dist/` happens to exist. Now structurally closed, and the absence of any real identity provider is priced in rather than scoped out |
 | D9  | Reliability / Durable Execution      | 7       | **7.0**  | 6.5  | **+0.5** | Failure injection plus a 40-capability sweep proving none throws out of the gateway and every call is audited. Workspace writes are atomic and journaled: 25 mid-write SIGKILLs leave 25 readable workspaces, and an interrupted write recovers and repairs itself                          |
 | D10 | Verification / Receipts / Outcomes   | 6       | **6.0**  | 6.0  | —        | Every dispatch outcome leaves a receipt recording whether the effect was proven. Export/import verified lossless and credential-free — the escape hatch the product recommends. No live delivery verified end to end                                                                        |
 | D11 | AI Evaluations / Grounding           | 5       | **4.5**  | 4.0  | **+0.5** | Scored grounding eval; guards mutation-verified. Provider transport now exercised against a real endpoint — retry, rate-limit and auth-failure behaviour, and credentials redacted out of provider text. Model answer quality still unmeasured: that needs a model                          |
@@ -75,7 +77,7 @@ acted on.
 | D13 | Accessibility / Responsive Quality   | 3       | **3.0**  | 2.5  | **+0.5** | Structural audit over five rendered surfaces plus WCAG contrast computed for both themes — text and focus rings clear AA in each. Borders below non-text contrast are measured and pinned, not silently carried. Viewport reflow still needs a browser                                      |
 | D14 | Performance / Observability          | 3       | **3.0**  | 2.5  | **+0.5** | Traces and audit are strong. Bundle weight budgeted; view-model rebuild cost measured and bounded, and proven not to grow with the workspace. Real browser paint and interaction timing still unmeasured                                                                                    |
 | D15 | Deployment / Operational Readiness   | 2       | **2.0**  | 2.0  | —        | CI and release both pass end to end. The Android release variant can now produce a signable, correctly versioned bundle — verified by Gradle, not by reading. Still no staging, no production, nothing published: the hard gate stays open                                                  |
-|     | **TOTAL**                            | **100** | **95.5** | 95.0 | **+0.5** |                                                                                                                                                                                                                                                                                             |
+|     | **TOTAL**                            | **100** | **94.5** | 95.5 | **-1.0** |                                                                                                                                                                                                                                                |
 
 `Prev` and `Δ` are empty for dimensions untouched since the baseline.
 
@@ -224,6 +226,61 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 65 — 2026-09-02 · a gate that was watched, not closed
+
+Asked to keep developer access without weakening authentication, which meant finding out what the
+authentication actually was.
+
+`launchLifecycleGate.ts` holds two predicates side by side. `isMembershipGateEnforced` opens with
+`if (!import.meta.env.DEV) return false;`. `isLaunchAuthSkipped` — the one that disables the sign-in
+wall — did not. Neighbours written to different rules is the shape that has produced a defect in
+every cycle that looked for it.
+
+**Measured rather than reasoned about**, because `import.meta.env` is inlined at build time and the
+source reads identically either way. Two production builds, counting the negated read of
+`auth.isAuthenticated` in the emitted chunk:
+
+```
+  npx vite build                              ->  1 occurrence   wall present
+  VITE_SKIP_LAUNCH_AUTH=1 npx vite build      ->  0 occurrences  wall folded out entirely
+```
+
+A release build could ship with no authentication at all, from an environment variable, with no
+source change to review.
+
+**Cycle 19 already found this flag and did not close it.** It added a test that reads
+`dist/chunks/launchLifecycleGate.js` and asserts the check survived — then recorded the repair as
+_"Mutation: a skip-flag build is detected"_ and D8 went to 10.0. But that test inspects whichever
+build happens to be lying in `dist/`. Someone building a release with the flag set and uploading it
+to a store never runs it. A detector that depends on ambient state is not a gate, and the difference
+is the whole distinction this document exists to keep.
+
+The fix is the guard its neighbour always had. In any production build `!import.meta.env.DEV` folds
+to `true`, so the skip is unreachable dead code before the flag is ever read. Developer access is
+untouched: under `npm run dev` the gate still renders and a provider button still grants a local
+preview identity, which is what `.env.development` already instructs — _"do not set
+VITE_SKIP_LAUNCH_AUTH"_.
+
+The old assertion was rewritten too. It pinned `return!t.auth.isAuthenticated`, the optimiser's
+output rather than the property, and broke the moment the minifier kept the call instead of inlining
+it. It now asserts the negated read, which is the thing that was actually measured at 1 and 0.
+
+**Mutation, run.** Removing the `DEV` guard fails the new build-driven test — and passes the
+ambient-`dist` one, which is the weakness stated above, demonstrated.
+
+| Repair                                                            | Dimension | Evidence                                                     |
+| ----------------------------------------------------------------- | --------- | ------------------------------------------------------------ |
+| Build-time auth skip made unreachable outside `DEV`               | D8        | `launchLifecycleGate.ts`; hostile build now retains the wall |
+| The guard builds the hostile case instead of reading a stale one  | D8, D15   | `launchGateContract.test.ts`, mutation-verified              |
+| Assertion pinned to the property, not to minifier output          | D11       | Negated read, measured 1 vs 0 across real builds             |
+| Scorecard corrupted by an earlier heredoc — 2 NUL bytes — repaired | D1        | File was `data`, now `UTF-8 text`; the example reads as text |
+
+**Score movement: -1.0** — D8 Security 10.0 → 9.0. **94.5/100.** The dimension did not get worse this
+cycle; the record of it did, and it is corrected downward. A gate recorded as closed was only being
+watched, and the absent identity provider is now priced into the score rather than scoped out of it.
+The hard-gate table also gained the row the directive names and it never had: auth / authorization
+bypass, open until this cycle.
 
 ### Cycle 64 — 2026-09-02 · a checklist that reports instead of being ticked
 
@@ -616,12 +673,9 @@ exported, and called by nothing.
 nothing else:
 
 ```
-  assertId("abc def")        ->  "abc def"     accepted
-  assertId("abc
-def")            ->  "abc
-def"         accepted
-  assertRequiredString("abc
-def") ->  "abcdef"          stripped
+  assertId("abc\0def")             ->  "abc\0def"    accepted
+  assertId("abc\ndef")             ->  "abc\ndef"    accepted
+  assertRequiredString("abc\ndef") ->  "abcdef"        stripped
 ```
 
 The same module screened free text carefully and **waved identifiers through**. That is the wrong way
