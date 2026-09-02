@@ -13,6 +13,7 @@ import type {
 } from '../../types/agentInterop';
 import type { BrandOpsData } from '../../types/domain';
 import { appendAuditEntry } from './audit';
+import { previewPromotion, type PromotionPreview } from '../builder/promotions';
 import {
   AGENT_CAPABILITY_DEFINITIONS,
   getAgentCapability,
@@ -87,6 +88,18 @@ export const agentBridge = {
     workspace.agentProposals?.entries ?? [],
   proposalsForEvent: (workspace: BrandOpsData, eventId: string): AgentProposal[] =>
     getAgentProposalsByEventId(workspace, eventId),
+
+  /**
+   * What approving this proposal will actually change, for proposals that
+   * promote something. Returns `null` for kinds that promote nothing.
+   *
+   * The review row could not previously answer this: a twin update's deltas sit
+   * in `builderActivity.twinProposals`, which nothing outside the services layer
+   * could reach, so a person approved edits to their own identity without being
+   * shown them.
+   */
+  previewProposal: (workspace: BrandOpsData, proposal: AgentProposal): PromotionPreview | null =>
+    proposal.promotion ? previewPromotion(workspace, proposal.promotion) : null,
   decideProposal: (
     workspace: BrandOpsData,
     proposalId: string,

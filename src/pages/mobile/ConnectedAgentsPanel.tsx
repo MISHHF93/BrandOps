@@ -406,6 +406,55 @@ export const ConnectedAgentsPanel = ({
                       {proposal.kind} · {proposal.status}
                       {proposal.planId ? ` · plan: ${proposal.planId}` : ''}
                     </p>
+                    {(() => {
+                      /**
+                       * What approving actually does. Without this the row showed
+                       * a title and a clamped detail, so a person accepted edits
+                       * to their own headline, skills and achievements without
+                       * ever seeing them — and the approval fingerprint bound to
+                       * content that had never been displayed.
+                       */
+                      const preview = agentBridge.previewProposal(workspace, proposal);
+                      if (!preview) return null;
+                      if (preview.missing) {
+                        return (
+                          <p className="mt-1 text-fine text-danger">
+                            What this would promote no longer exists, so approving would do nothing.
+                          </p>
+                        );
+                      }
+                      if (preview.action === 'verify-achievement') {
+                        return (
+                          <p className="mt-1 text-fine text-textSoft">
+                            Marks “{preview.subject}” verified. Your Twin is not edited — that
+                            becomes a separate proposal you approve on its own.
+                          </p>
+                        );
+                      }
+                      if (!preview.changes.length) {
+                        return (
+                          <p className="mt-1 text-fine text-textSoft">
+                            Changes nothing in your Twin.
+                          </p>
+                        );
+                      }
+                      return (
+                        <div className="mt-1 rounded-md border border-border/30 bg-surface/60 px-1.5 py-1">
+                          <p className="text-fine font-medium text-text">
+                            Approving edits your Twin:
+                          </p>
+                          <ul className="mt-0.5 space-y-0.5">
+                            {preview.changes.map((change) => (
+                              <li key={change.field} className="text-fine text-textSoft">
+                                <span className="font-medium text-text">{change.field}</span>{' '}
+                                {change.from ? `“${change.from}” → ` : ''}
+                                <span className="text-text">“{change.to}”</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {proposal.status === 'pending' ? (

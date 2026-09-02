@@ -47,6 +47,92 @@ function twinState(twin: DigitalTwin): CurrentTwinState {
   };
 }
 
+/** One field a person is about to change, in the words of the field itself. */
+export interface PromotionPreviewChange {
+  field: string;
+  from: string;
+  to: string;
+}
+
+/** What approving a promotion proposal will actually do. */
+export interface PromotionPreview {
+  action: 'verify-achievement' | 'accept-twin-proposal';
+  /** One line naming the subject, so a row has something to say even with no field changes. */
+  subject: string;
+  /** Field-level edits the Twin will receive. Empty for a verification, which edits no Twin. */
+  changes: PromotionPreviewChange[];
+  /** The target no longer exists, so approving would do nothing. */
+  missing: boolean;
+}
+
+/**
+ * Describe a promotion before it happens.
+ *
+ * `approvalBinding.ts` guarantees that an approved proposal cannot do more than
+ * the user saw when they approved it. That guarantee was **vacuous for twin
+ * updates**, because nothing ever showed them: the review row rendered a title
+ * and a two-line-clamped detail, and the deltas — the actual edits to a
+ * person's headline, summary, skills and achievements — lived in
+ * `builderActivity.twinProposals` which no interface could reach. A binding to
+ * content nobody displayed binds to nothing.
+ *
+ * The changes are computed by running `applyDeltas` against the current Twin and
+ * reading back the version it produces, **the same call the acceptance path
+ * makes**, on a copy that is discarded. Restating the field mapping here would
+ * be a second implementation of it, free to drift from the one that runs; this
+ * cannot say anything the real path would not do.
+ */
+export function previewPromotion(
+  workspace: BrandOpsData,
+  promotion: { action: 'verify-achievement' | 'accept-twin-proposal'; targetId: string }
+): PromotionPreview | null {
+  const activity = workspace.builderActivity;
+  if (!activity) return null;
+
+  if (promotion.action === 'verify-achievement') {
+    const candidate = (activity.achievements ?? []).find(
+      (entry) => entry.eventId === promotion.targetId || entry.id === promotion.targetId
+    );
+    /**
+     * A verification does not edit the Twin. It marks an event verified, which
+     * *proposes* a Twin update that the same person then has to accept
+     * separately. Saying so is the honest answer to "what does approving do".
+     */
+    return {
+      action: 'verify-achievement',
+      subject: candidate?.title ?? '',
+      changes: [],
+      missing: !candidate
+    };
+  }
+
+  const proposal = (activity.twinProposals ?? []).find((entry) => entry.id === promotion.targetId);
+  const twinId = workspace.digitalTwins?.activeTwinId ?? workspace.digitalTwins?.twins[0]?.id;
+  const twin = workspace.digitalTwins?.twins.find((entry) => entry.id === twinId);
+  if (!proposal || !twin) {
+    return { action: 'accept-twin-proposal', subject: '', changes: [], missing: true };
+  }
+
+  const result = applyDeltas({
+    currentTwin: twinState(twin),
+    deltas: proposal.deltas,
+    acceptedDeltaIds: proposal.deltas.map((delta) => delta.id),
+    rejectedDeltaIds: [],
+    editedDeltas: new Map()
+  });
+
+  return {
+    action: 'accept-twin-proposal',
+    subject: proposal.summary,
+    changes: result.version.changes.map((change) => ({
+      field: change.field,
+      from: change.from,
+      to: change.to
+    })),
+    missing: false
+  };
+}
+
 /**
  * Marks the event verified and retires the candidate.
  *
