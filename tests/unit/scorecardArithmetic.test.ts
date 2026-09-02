@@ -110,6 +110,35 @@ describe('the production scorecard adds up', () => {
     expect(rows.filter((row) => !(row.score >= 0)).map((row) => row.id)).toEqual([]);
   });
 
+  it('keeps the PLAN table in step with the movements its own cycle log records', () => {
+    /**
+     * The PLAN table sat at 79.0 while the cycle log traced 79.0 to 81.0 to
+     * 81.5 to 82.5 to 83.0 to 83.5 to 84.0 to 85.5 across seven cycles. Every
+     * increase was written down and none was ever applied, so the table was
+     * self-consistent — it summed correctly — and contradicted the document it
+     * lives in.
+     *
+     * Summing to the right number is what let it hide. So this compares against
+     * the most recent figure the log itself states, which is the one thing the
+     * table cannot quietly disagree with.
+     */
+    const text = readFileSync(SCORECARD, 'utf8');
+    const movements = [...text.matchAll(/PLAN score: [\d.]+ . ([\d.]+)/g)].map((m) => Number(m[1]));
+    expect(
+      movements.length,
+      'no PLAN score movements found — has the log changed shape?'
+    ).toBeGreaterThan(0);
+
+    // The log is newest-first, so the first match is the current figure.
+    const [latest] = movements;
+    const planTable = scoreTables()[1];
+    expect(planTable, 'no PLAN table found').toBeDefined();
+    expect(
+      planTable.total,
+      `PLAN table totals ${planTable.total}; the log last recorded ${latest}`
+    ).toBe(latest);
+  });
+
   it('states the same total in the headline as in the table', () => {
     // The product total is the first table; the PLAN surface score follows it.
     const { total } = scoreTables()[0];

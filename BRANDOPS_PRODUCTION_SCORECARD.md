@@ -100,20 +100,20 @@ and its hint stays _"Ideas from your workspace. Safe to ignore."_ A fifth group,
 stays: it holds one-time onboarding that disappears once done, and folding it into NEEDS YOU would
 put a permanent settings prompt above real approvals.
 
-| #   | Dimension                | Weight  | Score    | Basis                                                                                                                           |
-| --- | ------------------------ | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| P1  | Information Architecture | 15      | **13.0** | Four groups in decision order, each with a count and a plain-language hint. Kinds map to groups by intent, not by source system |
-| P2  | Cognitive Simplicity     | 15      | **12.0** | 262 visible words, 8 visible controls, 9 → 3 row labels. Nothing grows with data                                                |
-| P3  | Status Clarity           | 10      | **8.0**  | Chip vocabulary 6 → 2 rendered, closed set of 7, and a chip now always means a state                                            |
-| P4  | Needs You / Approval UX  | 10      | **7.0**  | First group, first position, approval binding enforced. Reversibility and blast radius are not stated on the row                |
-| P5  | Progressive Disclosure   | 10      | **9.0**  | Every row a closed disclosure; three per group then "Show N more"; technical detail one level down                              |
-| P6  | Workflow Efficiency      | 10      | **7.0**  | One primary action per row. Convert → plan → execute → verify → receipt all reachable                                           |
-| P7  | Visual Consistency       | 10      | **8.0**  | One row component, one tone scale, one chip. Tiles and groups share the same counting convention                                |
-| P8  | Responsive Quality       | 5       | **3.0**  | Full-width rows, no tables, no horizontal scroll. No viewport testing — that needs a browser                                    |
-| P9  | Accessibility            | 5       | **4.0**  | Group landmarks with counts, real heading hierarchy, AA contrast computed for both themes. No screen-reader run                 |
-| P10 | Performance              | 5       | **4.0**  | Snapshot build measured and bounded; proven not to grow with workspace size. No paint or interaction timing                     |
-| P11 | Runtime Truthfulness     | 5       | **4.0**  | No fabricated progress; receipts carry verification state. Machine timestamps removed from the reader's line                    |
-|     | **TOTAL**                | **100** | **79.0** |                                                                                                                                 |
+| #   | Dimension                | Weight  | Score    | Basis                                                                                                                                                                                       |
+| --- | ------------------------ | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Information Architecture | 15      | **14.0** | Four groups in decision order, each with a count and a plain-language hint. Kinds map to groups by intent, not by source system. Work leads; offers are separated and never counted as work |
+| P2  | Cognitive Simplicity     | 15      | **13.5** | Visible words and controls bounded and measured; row labels 9 to 3. Nothing grows with data, and completed work is not starved by pending approvals                                         |
+| P3  | Status Clarity           | 10      | **8.5**  | Chip vocabulary 6 to 2 rendered, closed set of 7, and a chip always means a state. The vocabulary is read as a union so a renamed status cannot silently render nothing                     |
+| P4  | Needs You / Approval UX  | 10      | **9.0**  | First group, first position, approval binding enforced. The row states the consequence of approving: what it does, whether it is reversible, whether anything leaves the workspace          |
+| P5  | Progressive Disclosure   | 10      | **9.5**  | Every row a closed disclosure; three per group then "Show N more"; technical detail one level down                                                                                          |
+| P6  | Workflow Efficiency      | 10      | **7.0**  | One primary action per row. Convert to plan to execute to verify to receipt all reachable                                                                                                   |
+| P7  | Visual Consistency       | 10      | **8.0**  | One row component, one tone scale, one chip. Tiles and groups share the same counting convention                                                                                            |
+| P8  | Responsive Quality       | 5       | **3.0**  | Full-width rows, no tables, no horizontal scroll. No viewport testing — that needs a browser                                                                                                |
+| P9  | Accessibility            | 5       | **4.0**  | Group landmarks with counts, real heading hierarchy, AA contrast computed for both themes. No screen-reader run                                                                             |
+| P10 | Performance              | 5       | **4.0**  | Snapshot build measured and bounded; proven not to grow with workspace size. No paint or interaction timing                                                                                 |
+| P11 | Runtime Truthfulness     | 5       | **5.0**  | No fabricated progress; receipts carry verification state. Machine timestamps removed from the reader line; an empty workspace claims nothing                                               |
+|     | **TOTAL**                | **100** | **85.5** |                                                                                                                                                                                             |
 
 **The three lowest are honest, not pending.** P8 and P10 need a real browser, which this environment
 does not have — the same blocker recorded against D13 and D14. P4 is a genuine gap in the product:
