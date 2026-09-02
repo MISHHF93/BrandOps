@@ -1,7 +1,7 @@
 # BRANDOPS MCP CERTIFICATION
 
 **Date:** 2026-08-31
-**Baseline:** 40 capabilities · 40 tools · **1122 tests / 217 files passing** · `npm run typecheck`
+**Baseline:** 40 capabilities · 40 tools · **1122 tests / 218 files passing** · `npm run typecheck`
 (`tsc -b`) clean · `eslint` clean · `vite build` succeeds.
 
 > **Use `npm run typecheck`, not `tsc --noEmit`.** The root `tsconfig.json` is solution-style
@@ -233,7 +233,7 @@ clients, the G1 deployment work.
 ```bash
 npx tsc --noEmit
 npx eslint .
-npx vitest run                                    # expect 1122 passing, 217 files
+npx vitest run                                    # expect 1122 passing, 218 files
 npx vite build
 
 npx vitest run tests/unit/mcpSuccessCriterion.test.ts   # the round trip

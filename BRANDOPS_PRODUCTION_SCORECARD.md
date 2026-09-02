@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1599 tests / 217 files** passing · `vite build` succeeds.
+**1621 tests / 218 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -67,7 +67,7 @@ acted on.
 | D5  | Plan / Agent / Execution Runtime     | 10      | **9.5**  | 8.5  | **+1.0** | Durable tasks, checkpoints, receipts, cancellation, verified across process restart. Every proposal kind now binds its approval to the content the user saw — the last one binding to a bare reference was the promotion path                                                               |
 | D6  | MCP / External AI Interoperability   | 7       | **6.5**  | 5.5  | **+1.0** | Server + client, both transports. Conformance now driven as a foreign client would drive it: handshake notification absorbed, malformed requests are protocol errors. Third-party client interop still UNVERIFIED                                                                           |
 | D7  | Connectors / External Actions        | 6       | **4.0**  | 3.5  | **+0.5** | Dispatch path with four honest outcomes, and it refuses anything without a standing approval — checked at the dispatcher, not only in one caller. One real connector (outbound webhook). No vendor connector, no live delivery verified                                                     |
-| D8  | Security / Authorization / Isolation | 10      | **10.0** | 9.5  | **+0.5** | Model-input surface fully screened and guarded. An approval cannot be spent on an action the user did not see, no connector runs without one standing, and the workspace lock is verified in the rendered interface rather than assumed. Auth backend, TLS and CSP remain out of scope here |
+| D8  | Security / Authorization / Isolation | 10      | **10.0** | 10.0 | —        | Model-input surface fully screened and guarded. An approval cannot be spent on an action the user did not see, no connector runs without one standing, and the workspace lock is verified in the rendered interface rather than assumed. Auth backend, TLS and CSP remain out of scope here |
 | D9  | Reliability / Durable Execution      | 7       | **7.0**  | 6.5  | **+0.5** | Failure injection plus a 40-capability sweep proving none throws out of the gateway and every call is audited. Workspace writes are atomic and journaled: 25 mid-write SIGKILLs leave 25 readable workspaces, and an interrupted write recovers and repairs itself                          |
 | D10 | Verification / Receipts / Outcomes   | 6       | **6.0**  | 5.5  | **+0.5** | Every dispatch outcome leaves a receipt recording whether the effect was proven. Export/import verified lossless and credential-free — the escape hatch the product recommends. No live delivery verified end to end                                                                        |
 | D11 | AI Evaluations / Grounding           | 5       | **4.5**  | 4.0  | **+0.5** | Scored grounding eval; guards mutation-verified. Provider transport now exercised against a real endpoint — retry, rate-limit and auth-failure behaviour, and credentials redacted out of provider text. Model answer quality still unmeasured: that needs a model                          |
@@ -224,6 +224,58 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 56 — 2026-09-02 · the validators that waved identifiers through
+
+Same method as the last cycle, applied to the largest remaining cluster: eleven unwired exports in
+`validation.ts` — four length limits and the throwing assertions built on them. The gateway screens
+agent text through `sanitizeAgentText` and `screenAgentContent`; this parallel API is written,
+exported, and called by nothing.
+
+**Running it found a real gap.** `assertId` and `assertIdempotencyKey` trimmed and length-checked and
+nothing else:
+
+```
+  assertId("abc def")        ->  "abc def"     accepted
+  assertId("abc
+def")            ->  "abc
+def"         accepted
+  assertRequiredString("abc
+def") ->  "abcdef"          stripped
+```
+
+The same module screened free text carefully and **waved identifiers through**. That is the wrong way
+round: ids reach places prose does not — audit lines, trace records, map keys, idempotency lookups. A
+newline inside one can forge a second log entry; a NUL can truncate a value in anything that later
+hands it to a C-backed API.
+
+They now **reject** rather than strip, and the difference is deliberate. Silently altering an
+identifier would store something the caller never sent and then fail to match it on every later
+lookup — a quieter failure than refusing it at the door. Free text keeps the opposite policy, because
+prose with a stray newline is still the prose the agent meant.
+
+**Two contracts are now pinned that are easy to assume wrongly.** `assertRequiredString` **truncates**
+ten thousand characters to four thousand and returns success — "assert" reads like "reject" and it
+does not. And it does **no injection screening at all**: it returns `ignore all previous
+instructions` unchanged, because screening is a separate call the caller composes.
+
+`MAX_AGENT_TITLE` and `MAX_AGENT_EVIDENCE_REFS` appear exactly once in the source — their own
+declaration. They encode an intended policy that no code applies, which the tests now record plainly
+rather than leaving as numbers nobody reads.
+
+| Repair                                       | Dimension | Evidence                                             |
+| -------------------------------------------- | --------- | ---------------------------------------------------- |
+| Identifiers refuse control characters        | D8        | NUL and newline were accepted; 22 tests, 4 mutations |
+| Refusing rather than stripping, for ids only | D8        | A silently altered id never matches again            |
+| Truncation and no-screening contracts pinned | D1        | Both are surprising from the names alone             |
+
+**Knip 118 → 107.** Every drop since 118 has come from exercising unwired code rather than deleting
+it, and **each pass has found a real defect in what it covered** — a filter that missed half its own
+type last cycle, identifiers that accepted control characters this one. That is the argument for the
+operator's rule stated as evidence rather than principle: the deletions would have removed the
+functions _and_ the bugs, and learned nothing.
+
+---
 
 ### Cycle 55 — 2026-09-02 · unwired is not unwanted
 
