@@ -123,41 +123,45 @@ describe('the decision survives into the artifact a user runs', () => {
     ).toBe(true);
   });
 
-  it('cannot have the wall removed by a build-time flag', () => {
-    /**
-     * The structural property, and the reason this test builds rather than
-     * reads. `VITE_SKIP_LAUNCH_AUTH=1` on a *production* build used to inline
-     * to `true`, fold `shouldRequireLaunchAuth` to `false`, and delete the
-     * authentication wall from the shipped output — measured, not theorised:
-     * the negated `auth.isAuthenticated` read went from one occurrence to zero.
-     *
-     * The assertion above could not catch that on its own. It reads whichever
-     * `dist/` happens to exist, so it only fires when the hostile build is the
-     * one left lying around at test time; someone building a release with the
-     * flag set and uploading it straight to a store never trips it. A detector
-     * that depends on ambient state is not a gate.
-     *
-     * So this builds the hostile case on purpose, into a throwaway directory,
-     * and asserts the wall is still there. `isLaunchAuthSkipped` now returns
-     * early on `!import.meta.env.DEV`, which folds to a constant in any
-     * production build and makes the skip unreachable before the flag is read.
-     * Developer mode keeps working under `npm run dev`, where `DEV` is true.
-     */
-    const outDir = mkdtempSync(join(tmpdir(), 'brandops-authgate-'));
-    try {
-      execSync(`npx vite build --mode production --outDir "${outDir}" --emptyOutDir`, {
-        env: { ...process.env, VITE_SKIP_LAUNCH_AUTH: '1' },
-        stdio: 'pipe'
-      });
-      const built = readFileSync(join(outDir, 'chunks/launchLifecycleGate.js'), 'utf8');
-      expect(
-        /!\w+\.auth\.isAuthenticated/.test(built),
-        'a production build with VITE_SKIP_LAUNCH_AUTH=1 shipped without an auth wall'
-      ).toBe(true);
-    } finally {
-      rmSync(outDir, { recursive: true, force: true });
-    }
-  }, BUILD_TIMEOUT);
+  it(
+    'cannot have the wall removed by a build-time flag',
+    () => {
+      /**
+       * The structural property, and the reason this test builds rather than
+       * reads. `VITE_SKIP_LAUNCH_AUTH=1` on a *production* build used to inline
+       * to `true`, fold `shouldRequireLaunchAuth` to `false`, and delete the
+       * authentication wall from the shipped output — measured, not theorised:
+       * the negated `auth.isAuthenticated` read went from one occurrence to zero.
+       *
+       * The assertion above could not catch that on its own. It reads whichever
+       * `dist/` happens to exist, so it only fires when the hostile build is the
+       * one left lying around at test time; someone building a release with the
+       * flag set and uploading it straight to a store never trips it. A detector
+       * that depends on ambient state is not a gate.
+       *
+       * So this builds the hostile case on purpose, into a throwaway directory,
+       * and asserts the wall is still there. `isLaunchAuthSkipped` now returns
+       * early on `!import.meta.env.DEV`, which folds to a constant in any
+       * production build and makes the skip unreachable before the flag is read.
+       * Developer mode keeps working under `npm run dev`, where `DEV` is true.
+       */
+      const outDir = mkdtempSync(join(tmpdir(), 'brandops-authgate-'));
+      try {
+        execSync(`npx vite build --mode production --outDir "${outDir}" --emptyOutDir`, {
+          env: { ...process.env, VITE_SKIP_LAUNCH_AUTH: '1' },
+          stdio: 'pipe'
+        });
+        const built = readFileSync(join(outDir, 'chunks/launchLifecycleGate.js'), 'utf8');
+        expect(
+          /!\w+\.auth\.isAuthenticated/.test(built),
+          'a production build with VITE_SKIP_LAUNCH_AUTH=1 shipped without an auth wall'
+        ).toBe(true);
+      } finally {
+        rmSync(outDir, { recursive: true, force: true });
+      }
+    },
+    BUILD_TIMEOUT
+  );
 
   it('ships no build-time auth-skip flag', () => {
     const source = readFileSync(CHUNK, 'utf8');
