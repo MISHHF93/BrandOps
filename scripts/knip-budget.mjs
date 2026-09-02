@@ -16,7 +16,7 @@
  *   luck of hoisting, or not at all. The test-suite ratchet found exactly this
  *   kind of thing: an import of a module that does not exist.
  *
- * Unused *exports* are budgeted, because 128 of them cannot honestly be cleared
+ * Unused *exports* are budgeted, because they cannot honestly be cleared
  * in one pass and pretending otherwise produces mass deletion rather than
  * repair. The budget only moves down, and it must be lowered in the same commit
  * that lowers the count.
@@ -32,9 +32,11 @@ import { fileURLToPath } from 'node:url';
  *
  * 133 when first gated (120 exports + 13 types). 128 after removing four
  * functions from `candidateMemory.ts` that `memoryFirewall.ts` re-declares under
- * the same names, and un-exporting one used only inside its own file.
+ * the same names, and un-exporting one used only inside its own file. 119 after
+ * removing nine from `featureRegistry.ts` — a query API over a registry that
+ * nothing writes, of which exactly one function was ever wired.
  */
-const BUDGET = 128;
+const BUDGET = 119;
 
 /**
  * Knip's `exports` map blocks `require.resolve` for both `bin/knip.js` and its

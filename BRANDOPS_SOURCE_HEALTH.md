@@ -344,7 +344,7 @@
 
 ---
 
-### Test Coverage — `VERIFIED_WORKING` (1122 tests, 215 files)
+### Test Coverage — `VERIFIED_WORKING` (1122 tests, 216 files)
 
 **REVISED (2026-08-31):** The original 647/135 figures below are stale. Current baseline is **1122 tests across 204 test files, all passing**. The "Agent interop: gateway tests / sessions tests / events tests / proposals tests / idempotency tests / validation tests / capabilityRegistry tests / contextRetrieval tests / convertToPlan tests / trustBoundaries tests" line below listed **phantom test files that do not exist** — real interop coverage lives in `agentInterop.test.ts`, `agentInteropStorageRoundTrip.test.ts`, `agentTokenDiagnostic.test.ts`, `mcpProtocol.test.ts`, `mcpClaudeConfig.test.ts`, `validationDirective.test.ts` (if present), plus this session's new suites.
 
@@ -521,7 +521,7 @@ The two files modified in the ORIGINAL (2026-08-18) audit were:
 | Outcomes/Learning         | 7/10     | Core path working (verify→Twin mirror), broader feedback loop partial.                                                                       |
 | Security                  | 7/10     | Controls present (hashing, validation, trust boundaries, idempotency, bridge security). No auth backend, no CSP audit, no rate limiting.     |
 | Data/API Contracts        | 8/10     | Coherent, single source of truth. Shadowing duplication resolved (normalizers deleted).                                                      |
-| Test Coverage             | 9.5/10   | 1122 tests, 215 files, all passing. Integrated loop test now present (`canonicalLoopEndToEnd.test.ts`).                                      |
+| Test Coverage             | 9.5/10   | 1122 tests, 216 files, all passing. Integrated loop test now present (`canonicalLoopEndToEnd.test.ts`).                                      |
 | Build/Type/Lint           | 9/10     | Typecheck clean, tests pass, install clean, lint + Vite build clean in latest workstream.                                                    |
 | **Overall**               | **9/10** | Coherent, typecheck/lint/build-clean, 1122/1122 passing. Remaining work is completeness and honest deployment verification, not correctness. |
 

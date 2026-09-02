@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1584 tests / 215 files** passing · `vite build` succeeds.
+**1588 tests / 216 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -224,6 +224,46 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 54 — 2026-09-02 · a registry nothing writes
+
+With both detectors gated, this cycle spent the budget they now enforce. `featureRegistry.ts` held
+**twelve exports of which ten were unreachable** — 599 lines for one wired function.
+
+Chasing why turned up the more interesting thing. `getFeatureRegistryState` returns
+`workspace.featureRegistry` when it has entries and otherwise falls back to a hardcoded catalogue.
+**Nothing writes `workspace.featureRegistry`.** The only function that could, `updateFeatureRegistry`,
+was itself unreferenced — so the fallback ran on every call, and it stamped the constant with
+`updatedAt: new Date().toISOString()`.
+
+A list that has never changed, reported as freshly recomputed, every single time. The entries are
+identical down both branches, so the timestamp was the only thing that could have told a caller which
+one they got, and it was the one field actively erasing the distinction. It now reads `built-in`.
+
+The nine dead functions went with it — a query API (`getUnwiredFeatures`, `getDeadUiFeatures`,
+`detectDuplicates`) over a registry nothing populates. Worth naming plainly: **the product shipped a
+dead-UI detector that was itself dead.**
+
+**Knip 128 → 119.**
+
+**Then the typecheck ratchet caught me.** The guard I wrote for the timestamp added a type error —
+`as BrandOpsData` on an object literal — and `check:tests` refused the commit. Typing the fixture
+properly immediately surfaced a **missing required field**, `wired`, that the cast had been hiding.
+The gate built one cycle ago failed the next cycle's work, on its author, for exactly the reason it
+was built.
+
+| Repair                                            | Dimension | Evidence                                         |
+| ------------------------------------------------- | --------- | ------------------------------------------------ |
+| The built-in catalogue stops dating itself to now | D4, P11   | `new Date()` on a constant, on every call        |
+| Nine unreachable functions removed                | D1        | One of twelve exports was wired; 599 → 546 lines |
+| A test fixture typed rather than cast             | D1        | Which found a required field it was missing      |
+
+**Score movement: none.** D1 and D4 are at their caps.
+
+The through-line from the last three cycles is the same one: **the detectors were right and nobody
+was listening.** Knip had been naming `featureRegistry.ts` all along.
+
+---
 
 ### Cycle 53 — 2026-09-02 · the second detector that could not fail
 

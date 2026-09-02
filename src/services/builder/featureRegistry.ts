@@ -4,15 +4,13 @@
  * duplicated capabilities, and unsupported product claims.
  */
 
-import type { FeatureRegistryEntry, FeatureMaturity } from '../../types/builder';
+import type { FeatureRegistryEntry } from '../../types/builder';
 import type { BrandOpsData } from '../../types/domain';
 
 export interface FeatureRegistryState {
   entries: FeatureRegistryEntry[];
   updatedAt: string;
 }
-
-export const FEATURE_REGISTRY_KEY = 'featureRegistry' as const;
 
 export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
   // Core capabilities
@@ -519,6 +517,23 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
   }
 ];
 
+/**
+ * The workspace's registry, or the catalogue this build ships with.
+ *
+ * The fallback used to stamp `updatedAt: new Date().toISOString()` — a
+ * freshness claim on a hardcoded constant. **Nothing writes
+ * `workspace.featureRegistry`**: the only function that could,
+ * `updateFeatureRegistry`, was itself unreferenced and has been removed. So that
+ * branch ran every time, and every call reported the built-in list as though it
+ * had just been recomputed.
+ *
+ * A caller cannot tell a stored registry from the default by looking at the
+ * entries, so the timestamp is the only thing that could carry the distinction —
+ * and it was actively erasing it. `BUILT_IN_AT` is the constant's own identity:
+ * it does not change because the list does not change.
+ */
+const BUILT_IN_AT = 'built-in';
+
 export function getFeatureRegistryState(workspace: BrandOpsData): FeatureRegistryState {
   const existing = workspace.featureRegistry;
   if (existing && existing.entries.length > 0) {
@@ -526,74 +541,6 @@ export function getFeatureRegistryState(workspace: BrandOpsData): FeatureRegistr
   }
   return {
     entries: DEFAULT_FEATURE_REGISTRY,
-    updatedAt: new Date().toISOString()
+    updatedAt: BUILT_IN_AT
   };
-}
-
-export function updateFeatureRegistry(
-  workspace: BrandOpsData,
-  entries: FeatureRegistryEntry[],
-  updatedAt?: string
-): BrandOpsData {
-  const now = updatedAt ?? new Date().toISOString();
-  return {
-    ...workspace,
-    featureRegistry: {
-      entries,
-      updatedAt: now
-    }
-  };
-}
-
-export function getFeatureById(
-  registry: FeatureRegistryState,
-  id: string
-): FeatureRegistryEntry | null {
-  return registry.entries.find((e) => e.id === id) ?? null;
-}
-
-export function getFeaturesByMaturity(
-  registry: FeatureRegistryState,
-  maturity: FeatureMaturity
-): FeatureRegistryEntry[] {
-  return registry.entries.filter((e) => e.maturity === maturity);
-}
-
-export function getWiredFeatures(registry: FeatureRegistryState): FeatureRegistryEntry[] {
-  return registry.entries.filter((e) => e.wired);
-}
-
-export function getUnwiredFeatures(registry: FeatureRegistryState): FeatureRegistryEntry[] {
-  return registry.entries.filter((e) => !e.wired);
-}
-
-export function getBackendOnlyFeatures(registry: FeatureRegistryState): FeatureRegistryEntry[] {
-  return registry.entries.filter(
-    (e) => e.backendImplementation && e.uiExposure === 'hidden' && e.wired
-  );
-}
-
-export function getDeadUiFeatures(registry: FeatureRegistryState): FeatureRegistryEntry[] {
-  return registry.entries.filter(
-    (e) => e.uiExposure !== 'hidden' && e.uiExposure !== 'none' && !e.wired
-  );
-}
-
-export function detectDuplicates(registry: FeatureRegistryState): FeatureRegistryEntry[] {
-  const seen = new Map<string, FeatureRegistryEntry[]>();
-  for (const entry of registry.entries) {
-    const key = [entry.owningModule, entry.name.toLowerCase()].join(':');
-    if (seen.has(key)) {
-      seen.get(key)!.push(entry);
-    } else {
-      seen.set(key, [entry]);
-    }
-  }
-  const duplicates: FeatureRegistryEntry[] = [];
-  for (const [, entries] of seen) {
-    if (entries.length > 1) {
-      duplicates.push(...entries);
-    }
-  }
-  return duplicates;
 }
