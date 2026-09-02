@@ -1,5 +1,42 @@
 apply plugin: 'com.android.application'
 
+/**
+ * Release identity comes from package.json, and signing keys never come from git.
+ *
+ * `versionCode 1` / `versionName "1.0"` were hardcoded, so every store upload
+ * after the first would have been rejected for reusing a version code, and the
+ * app's version would have disagreed with the product's. One source of truth:
+ * `package.json`. `versionCode` is derived from it so it always increases with
+ * the semantic version, and can be overridden per-build for hotfixes.
+ *
+ * Signing reads `android/keystore.properties`, which is git-ignored, or the
+ * matching environment variables for CI. When neither is present the release
+ * build stays unsigned rather than failing: a contributor without the key can
+ * still build, and an unsigned bundle cannot be mistaken for a shippable one.
+ */
+def appVersion = new groovy.json.JsonSlurper()
+    .parseText(file("../../package.json").text)
+    .version
+
+def versionCodeFrom = { String semver ->
+    def parts = semver.tokenize('.')
+    def major = (parts.size() > 0 ? parts[0] : '0') as int
+    def minor = (parts.size() > 1 ? parts[1] : '0') as int
+    def patch = (parts.size() > 2 ? parts[2] : '0') as int
+    major * 1000000 + minor * 1000 + patch
+}
+
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
+def keyStorePath = keystoreProps['storeFile'] ?: System.getenv('BRANDOPS_KEYSTORE_FILE')
+def keyStorePassword = keystoreProps['storePassword'] ?: System.getenv('BRANDOPS_KEYSTORE_PASSWORD')
+def keyAliasName = keystoreProps['keyAlias'] ?: System.getenv('BRANDOPS_KEY_ALIAS')
+def keyAliasPassword = keystoreProps['keyPassword'] ?: System.getenv('BRANDOPS_KEY_PASSWORD')
+def canSign = keyStorePath && keyStorePassword && keyAliasName && keyAliasPassword
+
 android {
     namespace = "com.brandops.mobile"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +44,10 @@ android {
         applicationId "com.brandops.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode project.hasProperty('brandopsVersionCode')
+            ? project.property('brandopsVersionCode') as int
+            : versionCodeFrom(appVersion)
+        versionName appVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +55,27 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (canSign) {
+            release {
+                storeFile file(keyStorePath)
+                storePassword keyStorePassword
+                keyAlias keyAliasName
+                keyPassword keyAliasPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // Left off deliberately: Capacitor plugins resolve classes reflectively,
+            // and enabling shrinking without being able to run the app is how a
+            // store build ships broken. Revisit with a device in hand.
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (canSign) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
@@ -51,4 +107,13 @@ try {
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+/** Prints the identity a release would carry. Used by `android:release:check`. */
+tasks.register('brandopsReleaseIdentity') {
+    doLast {
+        println "versionName=${android.defaultConfig.versionName}"
+        println "versionCode=${android.defaultConfig.versionCode}"
+        println "signed=${canSign}"
+    }
 }

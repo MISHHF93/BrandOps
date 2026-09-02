@@ -4,7 +4,7 @@
 [`BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md`](BRANDOPS_CONTINUOUS_HEALING_DIRECTIVE.md).
 **Snapshot:** 2026-09-01 · cycle 43
 **Verification at this snapshot:** `npm run typecheck` (`tsc -b`) clean · `eslint` clean ·
-**1667 tests / 224 files** passing · `vite build` succeeds.
+**1678 tests / 225 files** passing · `vite build` succeeds.
 
 > **Scores are assigned from evidence, not inherited.** Several dimensions sit _lower_ than the
 > previous hand-written certification implied, because deeper testing found defects that document did
@@ -74,7 +74,7 @@ acted on.
 | D12 | Frontend / UX / Design Quality       | 8       | **8.0**  | 7.5  | **+0.5** | Five surfaces audited on real HTML; every rendered control checked against the workspace lock. Both directions of the LinkedIn companion's boundary verified. Still no visual regression or viewport testing — both need a browser                                                          |
 | D13 | Accessibility / Responsive Quality   | 3       | **3.0**  | 2.5  | **+0.5** | Structural audit over five rendered surfaces plus WCAG contrast computed for both themes — text and focus rings clear AA in each. Borders below non-text contrast are measured and pinned, not silently carried. Viewport reflow still needs a browser                                      |
 | D14 | Performance / Observability          | 3       | **3.0**  | 2.5  | **+0.5** | Traces and audit are strong. Bundle weight budgeted; view-model rebuild cost measured and bounded, and proven not to grow with the workspace. Real browser paint and interaction timing still unmeasured                                                                                    |
-| D15 | Deployment / Operational Readiness   | 2       | **2.0**  | 1.5  | **+0.5** | CI and release both pass end to end; an artifact cannot be produced from an untested tree. Manifest, permissions and shipped bundle verified by test. Still no staging and no production: the hard gate stays open                                                                          |
+| D15 | Deployment / Operational Readiness   | 2       | **2.0**  | 2.0  | —        | CI and release both pass end to end. The Android release variant can now produce a signable, correctly versioned bundle — verified by Gradle, not by reading. Still no staging, no production, nothing published: the hard gate stays open                                                  |
 |     | **TOTAL**                            | **100** | **95.5** | 95.0 | **+0.5** |                                                                                                                                                                                                                                                                                             |
 
 `Prev` and `Δ` are empty for dimensions untouched since the baseline.
@@ -224,6 +224,60 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 ---
 
 ## 3. Cycle log
+
+### Cycle 63 — 2026-09-02 · the Android project could never have shipped
+
+The decision was made to keep BrandOps in TypeScript and ship the existing app through Capacitor, so
+this cycle went at the thing that actually blocks publishing. **Kotlin is not required** — per the
+operator's own research it gates one optional prize category, and choosing it would mean rewriting
+~14,700 lines of UI and either porting or serving ~49,100 lines of services, invalidating 1,678
+tests. Recorded as a rejected option rather than an open question.
+
+**What blocks publishing is that the release variant could not produce an artefact a store accepts:**
+
+```
+  versionCode 1          hardcoded — the second upload would be rejected outright
+  versionName "1.0"      disagreed with package.json from the start
+  signingConfigs         absent entirely
+  CI artefact            a synced source tree, which is not a thing Play takes
+```
+
+None of it could fail, because nothing ever built the release variant.
+
+Version now derives from `package.json` — one source of truth — with a per-build override for
+hotfixes. Signing reads a git-ignored properties file or `BRANDOPS_KEYSTORE_*` in CI, and when
+neither is present the build **stays unsigned rather than failing**: a contributor without the key
+can still build, and an unsigned bundle cannot be mistaken for a shippable one. Key material is
+git-ignored in four patterns.
+
+**Verified by Gradle, not by reading it.** An SDK is needed to compile a project but not to configure
+one, so a task was added that prints what a release would carry:
+
+```
+  versionName=0.1.0   versionCode=1000   signed=false
+```
+
+0.1.0 → 0×10⁶ + 1×10³ + 0 = 1000, confirmed by the tool that will run it.
+
+**What this does not do**, stated plainly: it does not prove the build compiles. That needs an
+Android SDK, which this machine does not have. `minifyEnabled` is left off deliberately — Capacitor
+plugins resolve classes reflectively, and enabling shrinking without a device to test on is how a
+store build ships broken.
+
+Two incidental repairs: `cap sync` rewrites an asset on every build that Prettier was gating on, now
+ignored; and `.vscode/` was untracked and would have been swept into the next `git add -A`.
+
+| Repair                                                     | Dimension | Evidence                             |
+| ---------------------------------------------------------- | --------- | ------------------------------------ |
+| Release version derives from one source of truth           | D15       | Gradle prints 0.1.0 / 1000           |
+| Signing configured, absent key degrades to unsigned        | D15, D8   | 11 tests; key material ignored       |
+| A bundle task exists, and a check that works without a SDK | D15       | Play takes an AAB, not a source tree |
+
+**Score movement: none. D15 stays at 2.0 and the hard gate stays open** — a buildable bundle is not a
+published app, and nothing has been submitted anywhere. What changed is that submission is now
+possible at all, which it demonstrably was not.
+
+---
 
 ### Cycle 62 — 2026-09-02 · looking for the pattern instead of tripping over it
 

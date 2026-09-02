@@ -3,6 +3,8 @@ node_modules
 
 # Generated Capacitor/Android assets (mirror of dist/)
 android/app/src/main/assets/public
+# Written by `cap sync` on every build; formatting it is a race with the tool.
+android/app/src/main/assets/capacitor.config.json
 android/app/build
 android/build
 android/.gradle

@@ -50,7 +50,10 @@
     "package:release": "node scripts/package-release.mjs",
     "release": "npm run check && npm run check:tests && npm run knip && npm run format && npm run test && npm run test:integration && npm run build && npm run verify:dist && npm run package:release",
     "check:tests": "node scripts/typecheck-tests-budget.mjs",
-    "knip:report": "knip --no-exit-code --no-config-hints"
+    "knip:report": "knip --no-exit-code --no-config-hints",
+    "android:bundle": "npm run build && npm run android:sync && node scripts/android-release.mjs bundle",
+    "android:apk": "npm run build && npm run android:sync && node scripts/android-release.mjs apk",
+    "android:release:check": "node scripts/android-release.mjs check"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",

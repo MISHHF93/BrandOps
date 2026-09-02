@@ -18,3 +18,16 @@ dev-server.log
 
 # Windows reserved-name artifact (can't be a real file on disk)
 /nul
+
+# Android release signing — never committed.
+# The release build reads android/keystore.properties (or BRANDOPS_KEYSTORE_*
+# environment variables in CI) and stays unsigned when neither is present, so a
+# missing key degrades to an unshippable build rather than a broken one.
+android/keystore.properties
+android/local.properties
+*.jks
+*.keystore
+
+# Local editor settings. Untracked today, so this records that rather than
+# changing it — and stops a future `git add -A` sweeping it in.
+.vscode/
