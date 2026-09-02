@@ -19,6 +19,26 @@ import type { TrustTier } from '../../types/agentInterop';
 // ---------------------------------------------------------------------------
 
 /** Sources that can submit content to candidate memory. */
+/**
+ * Four functions were removed from this module, and one stopped being exported.
+ *
+ * `memoryFirewall.ts` imports nine functions from here and then **re-declares
+ * five of them under the same names** — `getCandidateEntry`, `queryCandidates`,
+ * `rejectCandidateEntry`, `candidateSummary`, `promoteToDurableMemory`. Its
+ * versions are thin wrappers; all of the actual safety logic (a rejected
+ * candidate cannot be promoted, one requiring verification needs a verifier)
+ * lives here.
+ *
+ * So four of the copies in *this* file were dead: nothing imported them, and
+ * each appeared exactly once in the file — its own declaration. What they left
+ * behind was worse than dead weight, because a reader searching for
+ * `rejectCandidateEntry` in a security boundary found two implementations and
+ * had to work out which one runs.
+ *
+ * `assessInstructionRisk` is used here and imported nowhere, so it is no longer
+ * exported. `promoteToDurableMemory` stays exported: the firewall imports it as
+ * `promoteCandidate` and wraps it.
+ */
 export type CandidateSource =
   | 'agent-event'
   | 'agent-proposal'
@@ -284,7 +304,7 @@ const INSTRUCTION_PATTERNS = [
  *
  * Returns 'none', 'low', or 'high' based on the severity of detected patterns.
  */
-export function assessInstructionRisk(content: string): InstructionRisk {
+function assessInstructionRisk(content: string): InstructionRisk {
   if (!content || content.length < 10) return 'none';
 
   let highCount = 0;
@@ -474,22 +494,6 @@ function emptyCandidate(params: {
  */
 
 /**
- * Alias for {@link getCandidate}.
- */
-export function getCandidateEntry(id: string): CandidateMemoryEntry | undefined {
-  return getCandidate(id);
-}
-
-/**
- * Alias for {@link getCandidates}.
- */
-export function queryCandidates(
-  options?: Parameters<typeof getCandidates>[0]
-): CandidateMemoryEntry[] {
-  return getCandidates(options);
-}
-
-/**
  * Get a candidate entry by id.
  */
 export function getCandidate(id: string): CandidateMemoryEntry | undefined {
@@ -593,19 +597,6 @@ export function rejectCandidate(candidateId: string, reason?: string): boolean {
   return true;
 }
 
-/**
- * Alias for {@link rejectCandidate}.
- */
-export function rejectCandidateEntry(candidateId: string, reason?: string): boolean {
-  return rejectCandidate(candidateId, reason);
-}
-
-/**
- * Build a short, human-readable summary string for a candidate entry.
- */
-export function candidateSummary(entry: CandidateMemoryEntry): string {
-  return `${entry.source}${entry.sourceLabel !== 'unknown' ? ` (${entry.sourceLabel})` : ''}: ${entry.content.slice(0, 80)}${entry.content.length > 80 ? '…' : ''}`;
-}
 export function getCandidateStats(): {
   totalCandidates: number;
   bySource: Record<CandidateSource, number>;

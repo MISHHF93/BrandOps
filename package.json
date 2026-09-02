@@ -35,7 +35,7 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "check": "npm run typecheck && npm run lint",
-    "verify": "npm run check && npm run check:tests && npm run test",
+    "verify": "npm run check && npm run check:tests && npm run knip && npm run test",
     "report:resonance": "node scripts/generate-artifact-resonance-report.mjs",
     "monitor:ai": "node scripts/monitor-ai-stack.mjs",
     "local:model:pull": "node scripts/setup-local-inference.mjs pull",
@@ -45,11 +45,12 @@
     "native:model:run": "node scripts/run-native-model.mjs",
     "verify:artifacts": "node scripts/verify-artifact-lock.mjs",
     "brand:assets": "node scripts/generate-brand-assets.mjs",
-    "knip": "knip --no-exit-code --no-config-hints",
+    "knip": "node scripts/knip-budget.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
     "package:release": "node scripts/package-release.mjs",
-    "release": "npm run check && npm run check:tests && npm run format && npm run test && npm run test:integration && npm run build && npm run verify:dist && npm run package:release",
-    "check:tests": "node scripts/typecheck-tests-budget.mjs"
+    "release": "npm run check && npm run check:tests && npm run knip && npm run format && npm run test && npm run test:integration && npm run build && npm run verify:dist && npm run package:release",
+    "check:tests": "node scripts/typecheck-tests-budget.mjs",
+    "knip:report": "knip --no-exit-code --no-config-hints"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",

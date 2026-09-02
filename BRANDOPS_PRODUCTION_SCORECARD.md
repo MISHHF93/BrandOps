@@ -225,6 +225,50 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 
 ## 3. Cycle log
 
+### Cycle 53 — 2026-09-02 · the second detector that could not fail
+
+Cycle 52 found a typechecker wired into nothing. **Knip was the same story, and had been longer.**
+Installed, configured, and invoked as `knip --no-exit-code` — report mode permanently, in no
+pipeline, reporting **120 unused exports and 13 unused types to nobody.**
+
+Before gating it, the audit's oldest finding got acted on. `memoryFirewall.ts` imports nine functions
+from `candidateMemory.ts` and then **re-declares five of them under the same names**. Its versions
+are thin wrappers; every piece of the actual safety logic — a rejected candidate cannot be promoted,
+one requiring verification needs a verifier — lives in the module underneath.
+
+Four of the copies in `candidateMemory.ts` were dead: nothing imported them, and each appeared
+exactly once in its own file, as its own declaration. What they left behind was worse than dead
+weight. **A reader searching a security boundary for `rejectCandidateEntry` found two
+implementations and had to work out which one runs.** A fifth, `assessInstructionRisk`, is used
+inside its own file and imported nowhere, so it stopped being exported rather than being removed.
+
+**133 → 128.** Then the ratchet, in the same shape as the test-type budget:
+
+- **unused exports and types** are budgeted, because 128 cannot honestly be cleared in one pass and
+  pretending otherwise produces mass deletion rather than repair;
+- **a file nothing reaches** is held at zero — there are none, and one appearing means something was
+  orphaned rather than deleted;
+- **an unlisted or unresolved import** is held at zero, because that is exactly what the test-suite
+  ratchet caught last cycle: an import of a module that does not exist.
+
+It runs in `verify`, in `release`, and in CI. `knip:report` keeps the old unfiltered view for when
+the question is _what is left_, rather than _has it got worse_.
+
+| Repair                                                        | Dimension | Evidence                                                |
+| ------------------------------------------------------------- | --------- | ------------------------------------------------------- |
+| Four duplicate implementations removed from a security module | D1, D8    | `memoryFirewall` re-declared them; the copies were dead |
+| One export narrowed to the file that uses it                  | D1        | Used internally, imported nowhere                       |
+| Reachability gated on a ratchet in CI                         | D1, D15   | 133 → 128; files and unresolved imports held at zero    |
+
+**Score movement: none.** D1 is at its cap. What changed is that the cap now has something holding
+it up: two detectors that could not fail now can, and both are in the pipeline that gates a release.
+
+The pattern worth carrying forward is not "add ratchets". It is that **this repository had two
+sophisticated analysers installed, correctly configured, and deliberately prevented from failing** —
+which reads as diligence right up until you check whether anything reads their output.
+
+---
+
 ### Cycle 52 — 2026-09-02 · the checks nobody was running
 
 Asked to work on source health. The audit from cycle 47 had found real debt and I never acted on it,

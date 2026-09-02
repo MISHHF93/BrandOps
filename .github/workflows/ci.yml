@@ -38,6 +38,13 @@ jobs:
       - name: Typecheck tests against their budget
         run: npm run check:tests
 
+      # Knip was installed, configured, and run as `knip --no-exit-code` — report
+      # mode forever, in no pipeline, reporting 120 unused exports to nobody.
+      # Same ratchet: unused exports are budgeted and may only fall, while a file
+      # nothing reaches and an import that does not resolve are held at zero.
+      - name: Check reachability against its budget
+        run: npm run knip
+
       - name: Verify formatting (Prettier)
         run: npm run format
 
