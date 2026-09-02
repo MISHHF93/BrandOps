@@ -53,7 +53,8 @@
     "knip:report": "knip --no-exit-code --no-config-hints",
     "android:bundle": "npm run build && npm run android:sync && node scripts/android-release.mjs bundle",
     "android:apk": "npm run build && npm run android:sync && node scripts/android-release.mjs apk",
-    "android:release:check": "node scripts/android-release.mjs check"
+    "android:release:check": "node scripts/android-release.mjs check",
+    "shipaton:gate": "node scripts/shipaton-gate.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",

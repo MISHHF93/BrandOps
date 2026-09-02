@@ -225,6 +225,53 @@ deployment readiness is a gate rather than a contributor — and the gate is ope
 
 ## 3. Cycle log
 
+### Cycle 64 — 2026-09-02 · a checklist that reports instead of being ticked
+
+The Shipaton requirements arrived as a list to tick by hand. This repository has been burned by
+exactly that shape four times — a scorecard total that drifted 2.5 points, Knip reporting to nobody,
+a typechecker wired into no pipeline, a dead-UI detector that was itself dead — so the checkable half
+is now checked by `npm run shipaton:gate`, and the rest is **labelled as needing a human rather than
+silently assumed**.
+
+```
+  5 verified   7 missing   9 need a human
+```
+
+Three states, and the third is the honest one. `MANUAL` covers what a repository genuinely cannot
+know: whether a store release happened inside the window, whether a video exists, whether anyone has
+used the app. Calling those PASS would be the fabrication this whole programme exists to prevent.
+
+**One requirement was fixable here and is fixed.** The icon set stopped at 512 — enough for the
+extension and the web manifest, too small for either store, which both want 1024×1024. The generator
+already produced every other size, so it now produces that one too.
+
+**The rest of the failures are worth reading as a group**, because they are not a to-do list of equal
+items:
+
+| missing                  | who can fix it                                           |
+| ------------------------ | -------------------------------------------------------- |
+| RevenueCat SDK           | engineering — mandatory for entry                        |
+| a hosted API             | **engineering, and it is the largest piece never built** |
+| analytics                | engineering — judging asks for retention and conversion  |
+| signing key, Android SDK | the operator's machine and accounts                      |
+| iOS project              | needs macOS; Android alone satisfies eligibility         |
+| 1179×2556 screenshot     | needs a device or emulator, so it follows the build      |
+
+The architecture row is the one that matters. The proposed demo — an agent requests an action, the
+phone is asked to approve it — needs a server, and storage here is `localStorage` with auth as a
+local boolean. **That is the same hard gate D15 has held open for sixty-four cycles**, now stated in
+the terms of a deadline rather than a scorecard.
+
+| Repair                             | Dimension | Evidence                                      |
+| ---------------------------------- | --------- | --------------------------------------------- |
+| The submission checklist runs      | D15       | 5 verified / 7 missing / 9 manual             |
+| The store icon exists              | D15       | 1024×1024, generated from the existing source |
+| Rules are attributed, not asserted | D4        | The gate says nothing verifies them           |
+
+**Score movement: none.** Knowing precisely what is missing is not the same as having it.
+
+---
+
 ### Cycle 63 — 2026-09-02 · the Android project could never have shipped
 
 The decision was made to keep BrandOps in TypeScript and ship the existing app through Capacitor, so

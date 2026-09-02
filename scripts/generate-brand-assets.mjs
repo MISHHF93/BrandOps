@@ -85,7 +85,15 @@ async function main() {
       .toFile(file);
   };
 
-  for (const s of [16, 32, 48, 128, 192, 512]) {
+  /**
+   * 1024 is the store icon.
+   *
+   * The set stopped at 512, which covers the extension and the web manifest and
+   * is too small for either app store — Apple and Google both want 1024×1024.
+   * It was the one submission asset that could be produced from what is already
+   * here, so it is produced here rather than being made by hand later.
+   */
+  for (const s of [16, 32, 48, 128, 192, 512, 1024]) {
     await writeIcon(s, join(iconsDir, `${s}.png`));
   }
 
