@@ -50,7 +50,7 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     integrationDependencies: [],
     maturity: 'STABLE',
     wired: true,
-    tests: ['contextRetrieval.test.ts']
+    tests: []
   },
   {
     id: 'core-mcp-gateway',
@@ -75,7 +75,7 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     integrationDependencies: [],
     maturity: 'STABLE',
     wired: true,
-    tests: ['gateway.test.ts', 'sessions.test.ts']
+    tests: []
   },
   {
     id: 'core-agent-sessions',
@@ -89,7 +89,7 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     integrationDependencies: [],
     maturity: 'STABLE',
     wired: true,
-    tests: ['sessions.test.ts']
+    tests: []
   },
   {
     id: 'core-agent-events',
@@ -104,7 +104,7 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     integrationDependencies: [],
     maturity: 'STABLE',
     wired: true,
-    tests: ['events.test.ts']
+    tests: []
   },
   {
     id: 'core-agent-proposals',
@@ -119,7 +119,7 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     integrationDependencies: [],
     maturity: 'STABLE',
     wired: true,
-    tests: ['proposals.test.ts']
+    tests: []
   },
   {
     id: 'core-plan-conversion',
@@ -177,7 +177,7 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     integrationDependencies: [],
     maturity: 'BETA',
     wired: true,
-    tests: ['workspaceIntelligence.test.ts']
+    tests: []
   },
   // Builder intelligence (new)
   {
@@ -276,7 +276,7 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     description:
       'User-facing "Context used" control showing categories and concise evidence for Ask responses, recommendations, Twin updates, and Plans.',
     owningModule: 'builder',
-    owningService: 'contextBundles.ts (extension of contextRetrieval.ts)',
+    owningService: 'contextRetrieval.ts',
     uiExposure: 'ask',
     backendImplementation: true,
     requiredPermissions: ['CAN_READ_CONTEXT'],
@@ -336,13 +336,13 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     description:
       'Allows PlanSteps to declare dependencies. Computes READY, BLOCKED, WAITING_APPROVAL, RUNNING, DONE, FAILED states.',
     owningModule: 'builder',
-    owningService: 'planDependencyEngine.ts',
+    owningService: '',
     uiExposure: 'plan',
-    backendImplementation: true,
+    backendImplementation: false,
     requiredPermissions: ['CAN_CREATE_PLAN'],
     integrationDependencies: ['core-plan-execution'],
     maturity: 'EXPERIMENTAL',
-    wired: true,
+    wired: false,
     tests: []
   },
   {
@@ -410,13 +410,13 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     description:
       'Concise optional briefing from actual BrandOps state: top priority, active plan, recent achievement, highest-value opportunity, pending approvals, suggested next action.',
     owningModule: 'builder',
-    owningService: 'dailyBuilderBrief.ts',
+    owningService: '',
     uiExposure: 'plan',
-    backendImplementation: true,
+    backendImplementation: false,
     requiredPermissions: ['CAN_READ_CONTEXT'],
     integrationDependencies: ['builder-activity-graph'],
     maturity: 'EXPERIMENTAL',
-    wired: true,
+    wired: false,
     tests: []
   },
   {
@@ -425,13 +425,13 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     description:
       'Review artifact with verified work completed, achievements accepted, artifacts created, plans completed, outcomes, goals advanced, opportunities, proposed Twin deltas, and learnings.',
     owningModule: 'builder',
-    owningService: 'weeklyProfessionalReview.ts',
+    owningService: '',
     uiExposure: 'plan',
-    backendImplementation: true,
+    backendImplementation: false,
     requiredPermissions: ['CAN_READ_CONTEXT'],
     integrationDependencies: ['builder-activity-graph'],
     maturity: 'EXPERIMENTAL',
-    wired: true,
+    wired: false,
     tests: []
   },
   {
@@ -469,7 +469,7 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     description:
       'Compact PLAN section for inspecting which agents have access to which context bundles and commands, revoking them, and reviewing recent events.',
     owningModule: 'builder',
-    owningService: 'AgentTrustCenter.tsx (UI) + sessions.ts, gateway.ts (backend)',
+    owningService: 'sessions.ts, gateway.ts',
     uiExposure: 'plan',
     backendImplementation: true,
     requiredPermissions: ['CAN_REVOKE_AGENT', 'CAN_READ_CONTEXT'],
@@ -484,7 +484,7 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     description:
       'Flattened "Needs You" stream in PLAN combining plan approvals, Twin update proposals, achievement verification, connection permission requests, and sensitive actions.',
     owningModule: 'builder',
-    owningService: 'ApprovalInboxSection.tsx (UI) + proposals.ts, events.ts (backend)',
+    owningService: 'proposals.ts, events.ts',
     uiExposure: 'plan',
     backendImplementation: true,
     requiredPermissions: ['CAN_PROPOSE_TWIN_CHANGE', 'CAN_VERIFY_ACHIEVEMENT', 'CAN_REVOKE_AGENT'],
@@ -499,9 +499,9 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     description:
       'Deterministic agent lifecycle hooks for formatter/linter/typecheck/tests after code modifications.',
     owningModule: 'builder',
-    owningService: 'sourceHealthHooks.ts',
+    owningService: '',
     uiExposure: 'hidden',
-    backendImplementation: true,
+    backendImplementation: false,
     requiredPermissions: [],
     integrationDependencies: [],
     maturity: 'EXPERIMENTAL',
@@ -514,9 +514,9 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     description:
       'Regression scenarios for Twin grounding, achievement detection, Context Bundle isolation, Ask quality, MCP authorization, prompt injection, etc.',
     owningModule: 'builder',
-    owningService: 'evaluation/agentEvaluationSuite.ts',
+    owningService: '',
     uiExposure: 'hidden',
-    backendImplementation: true,
+    backendImplementation: false,
     requiredPermissions: [],
     integrationDependencies: ['core-context-bundles', 'builder-activity-graph', 'core-mcp-gateway'],
     maturity: 'EXPERIMENTAL',
@@ -529,9 +529,9 @@ export const DEFAULT_FEATURE_REGISTRY: FeatureRegistryEntry[] = [
     description:
       'After implementing each feature batch, automatically trace the relevant user path, run tests, and mark as VERIFIED/PARTIAL/FAILED/UNVERIFIED.',
     owningModule: 'builder',
-    owningService: 'evaluation/selfVerificationGate.ts',
+    owningService: '',
     uiExposure: 'hidden',
-    backendImplementation: true,
+    backendImplementation: false,
     requiredPermissions: [],
     integrationDependencies: ['builder-feature-registry', 'builder-agent-evaluation-suite'],
     maturity: 'EXPERIMENTAL',
