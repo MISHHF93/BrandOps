@@ -1516,7 +1516,7 @@ cycle 39. The lesson that keeps not sticking: _anything derived in one pass shou
 pass_ — so this time it is a test over every field rather than a fix to one.
 
 And a note on my own instrument, because it is the tenth of these and a repeat: the duration
-normaliser in the new guard read `/\d+ms/`, and the `` was written through a shell into a
+normaliser in the new guard read `/\b\d+ms\b/`, and the `\b` was written through a shell into a
 literal **backspace character**. The regex matched nothing, so the guard failed intermittently while
 my standalone probe passed. **The identical escaping bug silently disabled a credential redaction
 earlier in this session.** Two occurrences is a pattern, not an accident: text with backslashes does
@@ -2147,7 +2147,7 @@ The only redaction in the codebase covered `uri_hint` on a multimodal context re
 field entirely. **A key that leaves in a header must not come back in something the product stores.**
 It is now stripped where provider text enters, rather than at each of the places it is later written.
 
-**And the fix silently did nothing at first.** `` in the patch became a literal backspace
+**And the fix silently did nothing at first.** `\b` in the patch became a literal backspace
 character, so the regex was `/<backspace>Bearer…/` and matched nothing. The three tests failed
 identically to having no redaction at all — which is exactly why they were written before the fix
 was trusted.

@@ -19,6 +19,16 @@ interface ImportMetaEnv {
   /**
    * If `1` or `true`, skip the on-device preview-identity gate so users land directly in the app.
    */
+  /**
+   * RevenueCat public SDK key for this platform. Public by design — RevenueCat
+   * keys are safe in a client and are scoped to reads plus purchase initiation;
+   * the entitlement itself is verified with the store.
+   *
+   * Absent means purchasing is unavailable rather than free: `entitlements.ts`
+   * reports `not-configured` and `isPremium` stays false.
+   */
+  readonly VITE_REVENUECAT_IOS_KEY?: string;
+  readonly VITE_REVENUECAT_ANDROID_KEY?: string;
   readonly VITE_SKIP_LAUNCH_AUTH?: string;
   /**
    * Optional HTTPS URL to a JSON intelligence rules pack (partial patch over embedded defaults).
