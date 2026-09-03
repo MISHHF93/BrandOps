@@ -43,14 +43,48 @@ const DIST = 'dist';
 
 /** Gzip ceilings in bytes. A ratchet: these may fall, never rise casually. */
 const CHUNK_BUDGET: Record<string, number> = {
-  'renderChatbotSurface.js': 195_000,
+  // Lowered from 195_000: Settings, Integrations and the agents panel now load
+  // on demand, so the chunk a cold start fetches is 115 kB rather than 190 kB.
+  'renderChatbotSurface.js': 120_000,
   'storage.js': 100_000,
   'react.js': 46_000,
-  'launchLifecycleGate.js': 30_000
+  'launchAccess.js': 30_000,
+  // Lazily loaded tabs, each looked at rather than slid under the total.
+  'ConnectedAgentsPanel.js': 55_000,
+  'MobileSettingsView.js': 45_000,
+  'MobileIntegrationsView.js': 30_000
 };
 
-/** Everything the extension and shell ship, gzipped, together. */
-const TOTAL_GZIP_BUDGET = 400_000;
+/**
+ * Everything the extension and shell ship, gzipped, together.
+ *
+ * **Raised once, deliberately, from 400_000 — the only rise in this file.**
+ *
+ * Code splitting duplicates shared helpers into each lazy chunk, so the sum of
+ * what is *shipped* goes up while the amount a cold start actually *fetches*
+ * goes down. Measured across the three splits: initial payload 189.6 kB → 115.4 kB
+ * gzip, total 401.5 kB → 404.4 kB. A ceiling on the total therefore penalises
+ * the correct mobile optimisation, which is why it stopped being the number
+ * that matters and `INITIAL_GZIP_BUDGET` below took over as the real gate.
+ *
+ * It is kept, rather than dropped, so that genuinely unbounded growth is still
+ * caught — but it is no longer the measure anyone should be optimising.
+ */
+const TOTAL_GZIP_BUDGET = 410_000;
+
+/**
+ * What a cold start actually downloads: the entry plus the chunks it imports
+ * eagerly. This is the number a person on a phone experiences, and it is a
+ * strict ratchet.
+ */
+const INITIAL_GZIP_BUDGET = 330_000;
+
+/** Chunks fetched only when a tab or panel is opened. */
+const LAZY_CHUNKS = [
+  'ConnectedAgentsPanel.js',
+  'MobileSettingsView.js',
+  'MobileIntegrationsView.js'
+];
 
 /**
  * A chunk not in `CHUNK_BUDGET` may not exceed this. It exists so a new large
@@ -125,6 +159,32 @@ describe('bundle budget', () => {
     expect(total, `total gzip ${total} > ${TOTAL_GZIP_BUDGET}`).toBeLessThanOrEqual(
       TOTAL_GZIP_BUDGET
     );
+  });
+
+  it('keeps the cold start within budget', () => {
+    /**
+     * The measure that matters on a phone: everything except the chunks a tab
+     * has to be opened to fetch. Splitting Settings, Integrations and the agents
+     * panel took this from 189.6 kB to 115.4 kB gzip for the app surface alone.
+     *
+     * This is the strict ratchet now. The total above is a backstop.
+     */
+    const initial = jsFiles()
+      .filter((path) => !LAZY_CHUNKS.some((lazy) => path.endsWith(`/${lazy}`)))
+      .reduce((sum, path) => sum + gzipSize(path), 0);
+
+    expect(initial, `cold start gzip ${initial} > ${INITIAL_GZIP_BUDGET}`).toBeLessThanOrEqual(
+      INITIAL_GZIP_BUDGET
+    );
+  });
+
+  it('actually splits the lazy chunks out of the entry', () => {
+    // The counter-case. If a "lazy" import were resolved eagerly the chunk would
+    // not exist as its own file, and the budget above would pass by measuring a
+    // subset that happens to be everything.
+    const files = jsFiles();
+    const missing = LAZY_CHUNKS.filter((lazy) => !files.some((path) => path.endsWith(`/${lazy}`)));
+    expect(missing, `not split into their own chunks: ${missing.join(', ')}`).toEqual([]);
   });
 
   it('ships no test code, fixtures or source maps', () => {

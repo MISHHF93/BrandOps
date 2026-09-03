@@ -1,4 +1,13 @@
-﻿import { type ChangeEvent, useCallback, useEffect, useId, useRef, useState } from 'react';
+﻿import {
+  type ChangeEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  lazy,
+  Suspense
+} from 'react';
 import { quoteContextValue } from '../../services/interop/validation';
 import clsx from 'clsx';
 import {
@@ -92,8 +101,23 @@ import {
   type AskPlanConversionKind,
   type ChatMessage
 } from './MobileChatView';
-import { MobileIntegrationsView } from './MobileIntegrationsView';
-import { MobileSettingsView } from './MobileSettingsView';
+/**
+ * Settings and Integrations load on demand.
+ *
+ * Both are whole tabs a session may never open, and together they were the bulk
+ * of an initial chunk that every page load pays for — 189 kB gzip before this,
+ * past both the payload budget and Vite's chunk size warning. Chat and Plan,
+ * the two surfaces a cold start actually shows, stay in the initial chunk.
+ */
+const MobileIntegrationsView = lazy(() =>
+  import('./MobileIntegrationsView').then((m) => ({ default: m.MobileIntegrationsView }))
+);
+const PaywallSheet = lazy(() =>
+  import('./PaywallSheet').then((m) => ({ default: m.PaywallSheet }))
+);
+const MobileSettingsView = lazy(() =>
+  import('./MobileSettingsView').then((m) => ({ default: m.MobileSettingsView }))
+);
 import type { AiBridgeConfigurationInput } from './SettingsAiBridgePanel';
 import {
   buildWorkspaceSnapshot,
@@ -139,6 +163,17 @@ import {
   type AuthProviderId,
   type LaunchAccessState
 } from '../../shared/account/launchAccess';
+import {
+  cacheableStatus,
+  describeEntitlement,
+  type EntitlementState
+} from '../../services/monetization/entitlements';
+import { refreshEntitlement, restorePurchases } from '../../services/monetization/purchasesRuntime';
+import {
+  canOfferInstall,
+  isRunningInstalled,
+  promptInstall
+} from '../../shared/platform/installability';
 import {
   shouldRequireLaunchAuth,
   shouldRequireLaunchMembership
@@ -451,7 +486,6 @@ const STRIPE_CHECKOUT_URL = import.meta.env.VITE_STRIPE_CHECKOUT_URL as string |
 const STRIPE_BILLING_PORTAL_URL = import.meta.env.VITE_STRIPE_BILLING_PORTAL_URL as
   | string
   | undefined;
-const ALLOW_LOCAL_MEMBERSHIP_BYPASS = import.meta.env.DEV;
 
 type ChatComposerAttachment = {
   name: string;
@@ -519,38 +553,80 @@ function LaunchAuthGate({
 
 function MembershipGate({
   btnFocus,
+  entitlement,
+  installable,
+  onInstallApp,
   onStartCheckout,
-  onOpenBillingPortal
+  onOpenBillingPortal,
+  onRefreshEntitlement,
+  onRestorePurchases
 }: {
   btnFocus: string;
+  entitlement: EntitlementState;
+  installable: boolean;
+  onInstallApp: () => void | Promise<void>;
   onStartCheckout: () => void;
   onOpenBillingPortal: () => void;
+  onRefreshEntitlement: () => void | Promise<void>;
+  onRestorePurchases: () => void | Promise<void>;
 }) {
+  /**
+   * What this surface says is now what RevenueCat said.
+   *
+   * It used to read "membership is verified locally on this device" and carry a
+   * button that set the status to active — premium granted by clicking. The
+   * status shown here is the live entitlement; where a purchase cannot happen
+   * at all, it says which reason rather than offering a route that dead-ends.
+   */
+  const purchasable = entitlement.status !== 'unavailable';
   return (
     <section className="bo-flagship-surface bo-auth-surface p-4 text-sm text-textMuted">
-      <h2 className="text-h2 text-text">Local membership</h2>
-      <p className="mt-1 text-meta text-textMuted">
-        Manage your local workspace membership. Checkout and portal controls are navigation links;
-        membership is verified locally on this device.
-      </p>
+      <h2 className="text-h2 text-text">Subscription</h2>
+      <p className="mt-1 text-meta text-textMuted">{describeEntitlement(entitlement)}</p>
       <div className="mt-3 flex flex-wrap gap-2">
+        {purchasable ? (
+          <button
+            type="button"
+            className={clsx('bo-btn-primary', btnFocus)}
+            onClick={onStartCheckout}
+          >
+            See Pro
+          </button>
+        ) : null}
         <button
           type="button"
-          className={clsx('bo-btn-primary', btnFocus)}
-          onClick={onStartCheckout}
+          className={clsx('bo-btn-ghost', btnFocus)}
+          onClick={() => void onRestorePurchases()}
         >
-          Open checkout link
+          Restore purchases
+        </button>
+        <button
+          type="button"
+          className={clsx('bo-btn-ghost', btnFocus)}
+          onClick={() => void onRefreshEntitlement()}
+        >
+          Refresh status
         </button>
         <button
           type="button"
           className={clsx('bo-btn-ghost', btnFocus)}
           onClick={onOpenBillingPortal}
         >
-          Billing portal
+          Manage billing
         </button>
+        {installable ? (
+          <button
+            type="button"
+            className={clsx('bo-btn-ghost', btnFocus)}
+            onClick={() => void onInstallApp()}
+          >
+            Install BrandOps
+          </button>
+        ) : null}
       </div>
       <p className="mt-2 text-fine text-textMuted">
-        Production builds ignore this gate until a server-verified entitlement flow is implemented.
+        Pro is verified with the App Store or Play Store through RevenueCat. Nothing on this device
+        can grant it.
       </p>
     </section>
   );
@@ -617,6 +693,45 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [recentCheckpoints, setRecentCheckpoints] = useState<Checkpoint[]>([]);
   /** Workspace-wide in-flight / pending-approval counts for BackgroundOperationsIndicator. */
   const [operationsSummary, setOperationsSummary] = useState({ active: 0, pendingApproval: 0 });
+  /**
+   * Live entitlement. Starts unavailable so that a cold start grants nothing
+   * while RevenueCat is still being asked — the cached `membership.status` is
+   * for display, never for the decision.
+   */
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  /**
+   * Whether to offer installation.
+   *
+   * `site.webmanifest` was complete and linked from nowhere, so no browser ever
+   * fired `beforeinstallprompt` and no device was ever offered the install.
+   * Now that it does fire, the product chooses the moment rather than the
+   * browser, and stops asking once a person has answered.
+   */
+  const [installable, setInstallable] = useState(false);
+  useEffect(() => {
+    if (isRunningInstalled()) return;
+    const check = () => setInstallable(canOfferInstall());
+    check();
+    window.addEventListener('beforeinstallprompt', check);
+    return () => window.removeEventListener('beforeinstallprompt', check);
+  }, []);
+
+  const onInstallApp = useCallback(async () => {
+    const outcome = await promptInstall();
+    setInstallable(false);
+    setDataOpsHint(
+      outcome === 'accepted'
+        ? 'BrandOps is installing.'
+        : outcome === 'dismissed'
+          ? 'Install dismissed. You can install later from your browser menu.'
+          : 'Your browser did not offer an install for this page.'
+    );
+  }, []);
+  const [entitlement, setEntitlement] = useState<EntitlementState>({
+    status: 'unavailable',
+    reason: 'lookup-failed',
+    detail: 'Not checked yet.'
+  });
   /** Settings Preferences `configure:` apply in flight only. */
   const [settingsApplyLoading, setSettingsApplyLoading] = useState(false);
   const [snapshot, setSnapshot] = useState<MobileWorkspaceSnapshot>(() =>
@@ -1799,6 +1914,8 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     setDataOpsHint('Local access cleared.');
   }, []);
 
+  const onOpenPaywall = useCallback(() => setPaywallOpen(true), []);
+
   const onStartCheckout = useCallback(() => {
     if (STRIPE_CHECKOUT_URL) {
       window.open(STRIPE_CHECKOUT_URL, '_blank', 'noopener,noreferrer');
@@ -1815,15 +1932,44 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     }
   }, []);
 
-  const onMarkMembershipActive = useCallback(() => {
-    setLaunchAccess((prev) => ({
-      ...prev,
-      membership: {
-        status: 'active',
-        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-      }
-    }));
-    setDataOpsHint('Local demo membership enabled.');
+  /**
+   * Re-read the entitlement from RevenueCat.
+   *
+   * This replaces `onMarkMembershipActive`, which set `membership.status` to
+   * `'active'` on the device with nothing verifying it — premium granted by
+   * clicking a button. The status is now written **only** from what RevenueCat
+   * returns, and is a cache for display: `isPremium` is computed from the live
+   * state, never from this value.
+   */
+  /**
+   * One lookup on start. Until it resolves the entitlement stays unavailable,
+   * which reads as not premium — the safe direction to be wrong in for the
+   * fraction of a second before RevenueCat answers.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    void refreshEntitlement().then((state) => {
+      if (cancelled) return;
+      setEntitlement(state);
+      setLaunchAccess((prev) => ({ ...prev, membership: { status: cacheableStatus(state) } }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const onRefreshEntitlement = useCallback(async () => {
+    const state = await refreshEntitlement();
+    setEntitlement(state);
+    setLaunchAccess((prev) => ({ ...prev, membership: { status: cacheableStatus(state) } }));
+    setDataOpsHint(describeEntitlement(state));
+  }, []);
+
+  const onRestorePurchases = useCallback(async () => {
+    const state = await restorePurchases();
+    setEntitlement(state);
+    setLaunchAccess((prev) => ({ ...prev, membership: { status: cacheableStatus(state) } }));
+    setDataOpsHint(state.status === 'entitled' ? 'Pro restored.' : describeEntitlement(state));
   }, []);
 
   const onChatFileSelected = (event: ChangeEvent<HTMLInputElement>) => {
@@ -2764,8 +2910,13 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           <div className="px-[max(1rem,env(safe-area-inset-left,0px))] pe-[max(1rem,env(safe-area-inset-right,0px))]">
             <MembershipGate
               btnFocus={btnFocus}
-              onStartCheckout={onStartCheckout}
+              entitlement={entitlement}
+              onStartCheckout={onOpenPaywall}
               onOpenBillingPortal={onOpenBillingPortal}
+              installable={installable}
+              onInstallApp={onInstallApp}
+              onRefreshEntitlement={onRefreshEntitlement}
+              onRestorePurchases={onRestorePurchases}
             />
           </div>
         ) : activeTab === 'chat' ? (
@@ -2876,62 +3027,66 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
             ) : null}
 
             {activeTab === 'integrations' ? (
-              <MobileIntegrationsView
-                snapshot={snapshot}
-                btnFocus={btnFocus}
-                commandBusy={commandLoading}
-                runCommand={sendQuickCommandFrom('Integrations')}
-                documentSurface={surfaceLabel}
-                loadWorkspace={() => storageService.getData()}
-                applyWorkspace={async (next) => {
-                  await storageService.setData(next);
-                  await refreshWorkspaceSnapshot();
-                }}
-                onExportWorkspace={exportWorkspace}
-              />
+              <Suspense fallback={<p className="p-3 text-meta text-textMuted">Loading…</p>}>
+                <MobileIntegrationsView
+                  snapshot={snapshot}
+                  btnFocus={btnFocus}
+                  commandBusy={commandLoading}
+                  runCommand={sendQuickCommandFrom('Integrations')}
+                  documentSurface={surfaceLabel}
+                  loadWorkspace={() => storageService.getData()}
+                  applyWorkspace={async (next) => {
+                    await storageService.setData(next);
+                    await refreshWorkspaceSnapshot();
+                  }}
+                  onExportWorkspace={exportWorkspace}
+                />
+              </Suspense>
             ) : null}
 
             {activeTab === 'settings' ? (
-              <MobileSettingsView
-                snapshot={snapshot}
-                btnFocus={btnFocus}
-                runCommand={sendQuickCommandFrom('Settings')}
-                applySettingsConfigure={applySettingsConfigure}
-                applyBusy={settingsApplyLoading}
-                commandBusy={commandLoading}
-                onRequestClearChat={() => setPendingClearChat(true)}
-                onExportWorkspace={exportWorkspace}
-                onExportOperatorTraces={exportOperatorTracesJsonl}
-                onImportWorkspace={importWorkspace}
-                onRequestResetWorkspace={() => setPendingResetWorkspace(true)}
-                onOperatorTraceCollectionChange={(enabled) =>
-                  void setOperatorTraceCollection(enabled)
-                }
-                onConnectedIdentityLearningChange={(enabled) =>
-                  void setConnectedIdentityLearning(enabled)
-                }
-                documentSurface={surfaceLabel}
-                isAuthenticated={launchAccess.auth.isAuthenticated}
-                authProvider={launchAccess.auth.provider}
-                authEmail={launchAccess.auth.email}
-                membership={launchAccess.membership}
-                onSignInProvider={onSignInProvider}
-                onSignOut={onSignOut}
-                onStartCheckout={onStartCheckout}
-                onOpenBillingPortal={onOpenBillingPortal}
-                onOperatingProfileApplied={persistOperatingProfileApply}
-                onPersistResumeNeuralPhaseContext={persistResumeNeuralPhaseContext}
-                onCreateDigitalTwinFromText={createDigitalTwinFromProfile}
-                onDeleteActiveDigitalTwin={deleteActiveDigitalTwin}
-                onUpdateTwinFactStatus={updateTwinFactStatus}
-                onUpdateTwinGoals={updateTwinGoals}
-                resumePhaseRevealKey={resumePhaseRevealKey}
-                onAiOperatorModeChange={patchAiOperatorMode}
-                onAiRoutingDiagnosticsChange={patchAiRoutingDiagnostics}
-                onSaveAiBridgeConfiguration={saveAiBridgeConfiguration}
-                onClearAiBridgeApiKey={clearAiBridgeApiKey}
-                onTestAiBridgeConnection={testAiBridgeConnection}
-              />
+              <Suspense fallback={<p className="p-3 text-meta text-textMuted">Loading…</p>}>
+                <MobileSettingsView
+                  snapshot={snapshot}
+                  btnFocus={btnFocus}
+                  runCommand={sendQuickCommandFrom('Settings')}
+                  applySettingsConfigure={applySettingsConfigure}
+                  applyBusy={settingsApplyLoading}
+                  commandBusy={commandLoading}
+                  onRequestClearChat={() => setPendingClearChat(true)}
+                  onExportWorkspace={exportWorkspace}
+                  onExportOperatorTraces={exportOperatorTracesJsonl}
+                  onImportWorkspace={importWorkspace}
+                  onRequestResetWorkspace={() => setPendingResetWorkspace(true)}
+                  onOperatorTraceCollectionChange={(enabled) =>
+                    void setOperatorTraceCollection(enabled)
+                  }
+                  onConnectedIdentityLearningChange={(enabled) =>
+                    void setConnectedIdentityLearning(enabled)
+                  }
+                  documentSurface={surfaceLabel}
+                  isAuthenticated={launchAccess.auth.isAuthenticated}
+                  authProvider={launchAccess.auth.provider}
+                  authEmail={launchAccess.auth.email}
+                  membership={launchAccess.membership}
+                  onSignInProvider={onSignInProvider}
+                  onSignOut={onSignOut}
+                  onStartCheckout={onStartCheckout}
+                  onOpenBillingPortal={onOpenBillingPortal}
+                  onOperatingProfileApplied={persistOperatingProfileApply}
+                  onPersistResumeNeuralPhaseContext={persistResumeNeuralPhaseContext}
+                  onCreateDigitalTwinFromText={createDigitalTwinFromProfile}
+                  onDeleteActiveDigitalTwin={deleteActiveDigitalTwin}
+                  onUpdateTwinFactStatus={updateTwinFactStatus}
+                  onUpdateTwinGoals={updateTwinGoals}
+                  resumePhaseRevealKey={resumePhaseRevealKey}
+                  onAiOperatorModeChange={patchAiOperatorMode}
+                  onAiRoutingDiagnosticsChange={patchAiRoutingDiagnostics}
+                  onSaveAiBridgeConfiguration={saveAiBridgeConfiguration}
+                  onClearAiBridgeApiKey={clearAiBridgeApiKey}
+                  onTestAiBridgeConnection={testAiBridgeConnection}
+                />
+              </Suspense>
             ) : null}
           </section>
         )}
@@ -2958,22 +3113,23 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
         />
       ) : null}
 
-      {activeTab === 'settings' &&
-      shouldRequireLaunchMembership(launchAccess) &&
-      ALLOW_LOCAL_MEMBERSHIP_BYPASS ? (
-        <div
-          className={clsx(
-            'bo-mobile-main fixed inset-x-0 bottom-[calc(10.85rem+env(safe-area-inset-bottom,0px))] z-[32] mx-auto w-full px-2 pe-14 ps-3',
-            MOBILE_SHELL_MAX_WIDTH_CLASS
-          )}
-        >
-          <button
-            type="button"
-            onClick={onMarkMembershipActive}
-            className={clsx('bo-btn-ghost w-full', btnFocus)}
-          >
-            Unlock local demo access
-          </button>
+      {paywallOpen ? (
+        <div className="fixed inset-x-0 bottom-0 z-[40] mx-auto w-full max-w-xl p-2">
+          <Suspense fallback={null}>
+            <PaywallSheet
+              entitlement={entitlement}
+              btnFocus={btnFocus}
+              onClose={() => setPaywallOpen(false)}
+              onEntitlementChanged={(next) => {
+                setEntitlement(next);
+                setLaunchAccess((prev) => ({
+                  ...prev,
+                  membership: { status: cacheableStatus(next) }
+                }));
+              }}
+              onRestore={onRestorePurchases}
+            />
+          </Suspense>
         </div>
       ) : null}
 

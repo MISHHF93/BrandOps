@@ -25,7 +25,7 @@
  * survives into the built bundle, which is the artifact a user actually runs.
  */
 import { describe, expect, it } from 'vitest';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -91,19 +91,38 @@ describe('the launch gate decides the same way for every input', () => {
 });
 
 describe('the decision survives into the artifact a user runs', () => {
-  const CHUNK = 'dist/chunks/launchLifecycleGate.js';
+  /**
+   * The gate, wherever the bundler put it.
+   *
+   * This pinned `dist/chunks/launchLifecycleGate.js` and broke the moment
+   * Settings and Integrations were code-split, because Vite reorganised the
+   * chunks and the gate moved to `launchAccess.js`. A security assertion that
+   * silently stops finding its subject is worse than one that fails, so it now
+   * searches for the code rather than trusting a filename — the same mistake as
+   * pinning minifier output, one layer up.
+   */
+  const gateChunks = (): string[] => {
+    const dir = 'dist/chunks';
+    if (!existsSync(dir)) return [];
+    return readdirSync(dir)
+      .filter((f) => f.endsWith('.js'))
+      .map((f) => join(dir, f))
+      .filter((f) => readFileSync(f, 'utf8').includes('auth.isAuthenticated'));
+  };
 
   it('has a build to inspect', () => {
     // Fails rather than skips: an unverified artifact must not pass as a
     // verified one.
     expect(
-      existsSync(CHUNK),
-      `${CHUNK} is missing — run \`npx vite build\` before the suite.`
-    ).toBe(true);
+      gateChunks().length,
+      'no built chunk contains the auth gate — run `npm run build` before the suite.'
+    ).toBeGreaterThan(0);
   });
 
   it('still checks authentication after minification', () => {
-    const source = readFileSync(CHUNK, 'utf8');
+    const source = gateChunks()
+      .map((f) => readFileSync(f, 'utf8'))
+      .join('\n');
     /**
      * The negated read has to survive into the bundle, because that bundle is
      * what a user runs. It compiles to
@@ -151,7 +170,10 @@ describe('the decision survives into the artifact a user runs', () => {
           env: { ...process.env, VITE_SKIP_LAUNCH_AUTH: '1' },
           stdio: 'pipe'
         });
-        const built = readFileSync(join(outDir, 'chunks/launchLifecycleGate.js'), 'utf8');
+        const built = readdirSync(join(outDir, 'chunks'))
+          .filter((f) => f.endsWith('.js'))
+          .map((f) => readFileSync(join(outDir, 'chunks', f), 'utf8'))
+          .join('\n');
         expect(
           /!\w+\.auth\.isAuthenticated/.test(built),
           'a production build with VITE_SKIP_LAUNCH_AUTH=1 shipped without an auth wall'
@@ -164,7 +186,9 @@ describe('the decision survives into the artifact a user runs', () => {
   );
 
   it('ships no build-time auth-skip flag', () => {
-    const source = readFileSync(CHUNK, 'utf8');
+    const source = gateChunks()
+      .map((f) => readFileSync(f, 'utf8'))
+      .join('\n');
     // The flag name surviving into output would mean it was read at runtime
     // rather than inlined, which is a different and less predictable gate.
     expect(source).not.toContain('VITE_SKIP_LAUNCH_AUTH');

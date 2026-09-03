@@ -7,6 +7,7 @@ import { MobileApp } from '../mobile/mobileApp';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import type { MobileShellTabId } from '../mobile/mobileShellQuery';
 import { initIntelligenceRulesFromRemote } from '../../rules/intelligenceRulesRuntime';
+import { initInstallability } from '../../shared/platform/installability';
 
 interface RenderChatbotSurfaceOptions {
   /** Shell documents only — excludes `help` (Knowledge Center uses its own entry). */
@@ -21,6 +22,13 @@ export const renderChatbotSurface = ({
   initialTab,
   errorBoundaryLabel
 }: RenderChatbotSurfaceOptions) => {
+  /**
+   * Register the service worker and capture the install opportunity.
+   * `site.webmanifest` was complete and linked from nowhere, so no browser had
+   * ever offered to install BrandOps on a device.
+   */
+  initInstallability({ isDev: import.meta.env.DEV });
+
   void initIntelligenceRulesFromRemote().catch(() => {
     /* best-effort; defaults remain in memory */
   });

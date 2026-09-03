@@ -18,12 +18,36 @@ describe('SiteApp header (contract)', () => {
    * secondary CTA below `sm:` and clipping the wordmark defensively instead
    * of letting it overflow into the next flex item.
    */
-  it('keeps the secondary CTA hidden below sm: so it cannot collide with the wordmark', () => {
+  it('carries exactly one call to action, so nothing can crowd the wordmark', () => {
+    /**
+     * The collision above was fixed by hiding the second CTA below `sm:`. It is
+     * now fixed more directly: there is no second CTA.
+     *
+     * "Open app" and "New local workspace" pointed at `welcome.html` and
+     * `welcome.html?flow=signup`, and **nothing reads `flow`** — `QUERY.welcomeFlow`
+     * is written when the URL is built and never consulted anywhere. Two primary
+     * actions that resolve to the identical screen is the competing-CTA problem,
+     * and it was also what squeezed the wordmark in the first place.
+     *
+     * This asserts the count rather than the responsive class, because the class
+     * was a workaround for the button that is now gone.
+     */
     const headerMatch = siteApp.match(/function SiteHeader\(\)[\s\S]*?\n}\n/)?.[0] ?? '';
-    expect(headerMatch).toContain('New local workspace');
-    const ctaJsx = headerMatch.match(/<a\s+href=\{hrefSignUp\(\)\}[\s\S]*?<\/a>/)?.[0] ?? '';
-    expect(ctaJsx).toContain('hidden');
-    expect(ctaJsx).toContain('sm:inline-flex');
+    expect(headerMatch, 'no SiteHeader found').not.toBe('');
+
+    /**
+     * Comments stripped first. The doc comment above the CTA explains that
+     * "New local workspace" was removed, and matching raw source made that
+     * explanation fail the assertion it was explaining — the same trap the
+     * page-surface scan hit.
+     */
+    const headerCode = headerMatch
+      .replace(/\{?\s*\/\*[\s\S]*?\*\/\s*\}?/g, ' ')
+      .replace(/^\s*\/\/.*$/gm, ' ');
+
+    const ctas = headerCode.match(/<a\s+href=\{href(SignIn|SignUp)\(\)\}/g) ?? [];
+    expect(ctas.length, `header has ${ctas.length} calls to action`).toBe(1);
+    expect(headerCode).not.toContain('New local workspace');
   });
 
   it('clips the wordmark defensively so overflow can never paint into a sibling again', () => {

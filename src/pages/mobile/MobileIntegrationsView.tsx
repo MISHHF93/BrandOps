@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import clsx from 'clsx';
 import type { AppDocumentSurfaceId } from '../../shared/navigation/appDocumentSurface';
 import {
@@ -17,7 +18,18 @@ import {
 } from '../../shared/integrations/integrationSourceCatalog';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
-import { ConnectedAgentsPanel } from './ConnectedAgentsPanel';
+/**
+ * Loaded on demand.
+ *
+ * The agents panel is a settings-tab surface — sessions, proposals, handoffs,
+ * audit — that most sessions never open, and it was sitting in the initial
+ * chunk that every page load pays for. `renderChatbotSurface` had grown to
+ * 189 kB gzip (683 kB raw), past both the payload budget and Vite's own chunk
+ * size warning.
+ */
+const ConnectedAgentsPanel = lazy(() =>
+  import('./ConnectedAgentsPanel').then((m) => ({ default: m.ConnectedAgentsPanel }))
+);
 
 const chipDisabled = 'disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -497,12 +509,16 @@ export const MobileIntegrationsView = ({
                 </span>
               </summary>
               <div className="border-t border-border/30 px-2 py-3 sm:px-3">
-                <ConnectedAgentsPanel
-                  loadWorkspace={loadWorkspace}
-                  applyWorkspace={applyWorkspace}
-                  onExportWorkspace={onExportWorkspace}
-                  btnFocus={btnFocus}
-                />
+                <Suspense
+                  fallback={<p className="text-meta text-textMuted">Loading connected agents…</p>}
+                >
+                  <ConnectedAgentsPanel
+                    loadWorkspace={loadWorkspace}
+                    applyWorkspace={applyWorkspace}
+                    onExportWorkspace={onExportWorkspace}
+                    btnFocus={btnFocus}
+                  />
+                </Suspense>
               </div>
             </details>
           ) : null}

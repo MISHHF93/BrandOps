@@ -146,26 +146,25 @@ function SiteHeader() {
           </a>
         </nav>
         <div className="flex shrink-0 items-center gap-2">
+          {/**
+           * One call to action, not two.
+           *
+           * This carried "Open app" and "New local workspace" side by side. They
+           * went to `welcome.html` and `welcome.html?flow=signup` — and nothing
+           * anywhere reads `flow`. `QUERY.welcomeFlow` is written when the URL is
+           * built and never consulted, so both buttons resolved to the identical
+           * screen. Two primary actions that do the same thing is the competing-CTA
+           * problem, and it also made the wordmark fight for width on small
+           * viewports, which is why the second one was already hidden below `sm`.
+           */}
           <a
             href={hrefSignIn()}
             className={clsx(
-              'rounded-lg border border-border px-3 py-2 text-label font-medium text-text transition-colors hover:border-borderStrong hover:bg-surface',
+              'rounded-lg bg-accent px-3.5 py-2 text-label font-semibold text-bg transition-colors hover:brightness-105',
               FOCUS_RING
             )}
           >
-            Open app
-          </a>
-          {/* The Hero and FinalCta sections repeat this CTA below the fold; hiding it here on
-              narrow viewports is what keeps the wordmark from being squeezed to zero width and
-              visually overlapping "Open app" (see the sibling `shrink-0` on this button row). */}
-          <a
-            href={hrefSignUp()}
-            className={clsx(
-              'hidden rounded-lg bg-accent px-3.5 py-2 text-label font-semibold text-bg transition-colors hover:brightness-105 sm:inline-flex',
-              FOCUS_RING
-            )}
-          >
-            New local workspace
+            Open BrandOps
           </a>
         </div>
       </div>

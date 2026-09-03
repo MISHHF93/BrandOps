@@ -10,6 +10,19 @@ export default [
   },
   js.configs.recommended,
   {
+    /**
+     * The service worker runs in a worker scope, not a page: `self`, `caches`,
+     * `clients` and `skipWaiting` are globals there and undefined here.
+     */
+    files: ['public/sw.js'],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+        ...globals.browser
+      }
+    }
+  },
+  {
     files: ['scripts/**/*.mjs', 'vite.config.ts'],
     languageOptions: {
       globals: {
