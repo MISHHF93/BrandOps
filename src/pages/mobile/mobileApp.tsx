@@ -169,6 +169,8 @@ import {
   type EntitlementState
 } from '../../services/monetization/entitlements';
 import { refreshEntitlement, restorePurchases } from '../../services/monetization/purchasesRuntime';
+import { recordProductEvent } from '../../services/analytics/productEvents';
+import type { ProductEvent } from '../../services/analytics/productEvents';
 import {
   canOfferInstall,
   isRunningInstalled,
@@ -698,6 +700,31 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
    * while RevenueCat is still being asked — the cached `membership.status` is
    * for display, never for the decision.
    */
+  /**
+   * Record one product event.
+   *
+   * Fire-and-forget, and it reads the workspace from storage rather than a ref
+   * so it has no ordering dependency on the rest of this component. Analytics
+   * must never delay or fail the action it measures, and `recordProductEvent`
+   * already returns the workspace untouched when the person has not consented
+   * to trace collection.
+   */
+  const emit = useCallback(
+    (event: ProductEvent, options?: Parameters<typeof recordProductEvent>[2]) => {
+      void (async () => {
+        try {
+          const data = await storageService.getData();
+          const next = recordProductEvent(data, event, { surface: 'mobile', ...options });
+          if (next === data) return;
+          await storageService.setData(next);
+        } catch {
+          /* measurement must not break the thing being measured */
+        }
+      })();
+    },
+    []
+  );
+
   const [paywallOpen, setPaywallOpen] = useState(false);
   /**
    * Whether to offer installation.
@@ -717,7 +744,9 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   }, []);
 
   const onInstallApp = useCallback(async () => {
+    emit('install_offered');
     const outcome = await promptInstall();
+    if (outcome === 'accepted') emit('install_accepted');
     setInstallable(false);
     setDataOpsHint(
       outcome === 'accepted'
@@ -726,7 +755,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
           ? 'Install dismissed. You can install later from your browser menu.'
           : 'Your browser did not offer an install for this page.'
     );
-  }, []);
+  }, [emit]);
   const [entitlement, setEntitlement] = useState<EntitlementState>({
     status: 'unavailable',
     reason: 'lookup-failed',
@@ -807,6 +836,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const [conversationId] = useState(readChatConversationId);
   /** Synchronous cache of the last-read workspace — feeds receipt resolution for the checkpoint timeline without an extra async round trip per row. */
   const workspaceDataRef = useRef<BrandOpsData | null>(null);
+
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const persisted = readChatThread();
     if (persisted && persisted.length > 0) return persisted;
@@ -1914,7 +1944,10 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     setDataOpsHint('Local access cleared.');
   }, []);
 
-  const onOpenPaywall = useCallback(() => setPaywallOpen(true), []);
+  const onOpenPaywall = useCallback(() => {
+    setPaywallOpen(true);
+    emit('paywall_viewed');
+  }, [emit]);
 
   const onStartCheckout = useCallback(() => {
     if (STRIPE_CHECKOUT_URL) {
@@ -1947,6 +1980,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
    * fraction of a second before RevenueCat answers.
    */
   useEffect(() => {
+    emit('app_open');
     let cancelled = false;
     void refreshEntitlement().then((state) => {
       if (cancelled) return;
@@ -1956,7 +1990,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [emit]);
 
   const onRefreshEntitlement = useCallback(async () => {
     const state = await refreshEntitlement();
@@ -1966,11 +2000,13 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   }, []);
 
   const onRestorePurchases = useCallback(async () => {
+    emit('restore_started');
     const state = await restorePurchases();
+    emit('restore_completed', { outcome: state.status === 'entitled' ? 'success' : 'failure' });
     setEntitlement(state);
     setLaunchAccess((prev) => ({ ...prev, membership: { status: cacheableStatus(state) } }));
     setDataOpsHint(state.status === 'entitled' ? 'Pro restored.' : describeEntitlement(state));
-  }, []);
+  }, [emit]);
 
   const onChatFileSelected = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
