@@ -2285,13 +2285,20 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const executeApprovedPlan = useCallback(
     async (planId: string) => {
       try {
-        const data = await storageService.getData();
-        const result = executePlan(data, planId);
-        if (result.workspace === data) {
+        /**
+         * Serialized. Execution advances plan state; a lost write here replays
+         * or skips a step while the interface reports the summary either way.
+         */
+        let executed: ReturnType<typeof executePlan> | null = null;
+        const written = await storageService.updateWorkspace((data) => {
+          executed = executePlan(data, planId);
+          return executed.workspace === data ? null : executed.workspace;
+        });
+        const result = executed as unknown as ReturnType<typeof executePlan>;
+        if (!written) {
           setDataOpsHint(result.summary);
           return;
         }
-        await storageService.setData(result.workspace);
         await refreshWorkspaceSnapshot();
         const blocked = result.blockedSteps.length
           ? ` ${result.blockedSteps.length} step(s) blocked (external action required).`
@@ -2317,13 +2324,18 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       setVerifyPlanBusy(true);
       setVerifyPlanError(null);
       try {
-        const data = await storageService.getData();
-        const result = verifyPlanOutcomes(data, planId, { outcomes });
+        // Serialized: a verification recorded against a stale read is dropped
+        // while the summary still confirms it.
+        let verification: ReturnType<typeof verifyPlanOutcomes> | null = null;
+        await storageService.updateWorkspace((data) => {
+          verification = verifyPlanOutcomes(data, planId, { outcomes });
+          return verification.verified ? verification.workspace : null;
+        });
+        const result = verification as unknown as ReturnType<typeof verifyPlanOutcomes>;
         if (!result.verified) {
           setVerifyPlanError(result.summary);
           return;
         }
-        await storageService.setData(result.workspace);
         await refreshWorkspaceSnapshot();
         setDataOpsHint(result.summary);
         setVerifyPlanId(null);
@@ -2703,10 +2715,13 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
 
   const deleteActiveDigitalTwin = useCallback(async () => {
     try {
-      const data = await storageService.getData();
-      const active = getActiveDigitalTwin(data);
-      if (!active) return;
-      await storageService.setData(removeDigitalTwinWorkspaceArtifacts(data, active));
+      // Serialized: a deletion lost to an interleaved write leaves the twin in
+      // place while the interface says it was deleted.
+      await storageService.updateWorkspace((data) => {
+        const active = getActiveDigitalTwin(data);
+        if (!active) return null;
+        return removeDigitalTwinWorkspaceArtifacts(data, active);
+      });
       await refreshWorkspaceSnapshot();
       setDataOpsHint('Digital twin and generated workspace artifacts deleted from this workspace.');
     } catch (err) {

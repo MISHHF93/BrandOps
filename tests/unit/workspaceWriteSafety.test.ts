@@ -7,10 +7,11 @@
  * `concurrentWorkspaceWrites.test.ts` demonstrates the loss against the real
  * store.
  *
- * There were 32 such sites. The four whose loss is a lost *decision* —
- * approving a checkpoint, rejecting one, verifying a Twin fact, and recording a
- * product event — now go through `storageService.updateWorkspace`, which
- * serializes read and write together.
+ * There were 32 such sites. Seven now go through `storageService.updateWorkspace`,
+ * which serializes read and write together — chosen because what they lose is a
+ * decision or a deletion rather than a number: approving a checkpoint, rejecting
+ * one, executing an approved plan, recording its verification, verifying a Twin
+ * fact, deleting the active Twin, and recording a product event.
  *
  * The rest are real and not yet migrated. A single mechanical transform across
  * all of them was attempted and reverted: the call sites are not uniform, and
@@ -31,7 +32,7 @@ import { readFileSync } from 'node:fs';
  *
  * **Lower this in the same commit that migrates a site.** It may never rise.
  */
-const UNSERIALIZED_WRITE_BUDGET = 28;
+const UNSERIALIZED_WRITE_BUDGET = 25;
 
 const SHELL = 'src/pages/mobile/mobileApp.tsx';
 
@@ -87,7 +88,10 @@ describe('workspace write safety', () => {
     for (const marker of [
       'approveCheckpointForPlan',
       'rejectCheckpointForPlan',
+      'executePlan',
+      'verifyPlanOutcomes',
       'updateTwinFactVerificationStatus',
+      'removeDigitalTwinWorkspaceArtifacts',
       'recordProductEvent'
     ]) {
       /**

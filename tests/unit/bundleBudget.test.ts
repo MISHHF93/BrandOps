@@ -52,7 +52,8 @@ const CHUNK_BUDGET: Record<string, number> = {
   // Lazily loaded tabs, each looked at rather than slid under the total.
   'ConnectedAgentsPanel.js': 55_000,
   'MobileSettingsView.js': 45_000,
-  'MobileIntegrationsView.js': 30_000
+  'MobileIntegrationsView.js': 30_000,
+  'PaywallSheet.js': 10_000
 };
 
 /**
@@ -77,13 +78,18 @@ const TOTAL_GZIP_BUDGET = 410_000;
  * eagerly. This is the number a person on a phone experiences, and it is a
  * strict ratchet.
  */
-const INITIAL_GZIP_BUDGET = 330_000;
+const INITIAL_GZIP_BUDGET = 329_000;
 
 /** Chunks fetched only when a tab or panel is opened. */
 const LAZY_CHUNKS = [
   'ConnectedAgentsPanel.js',
   'MobileSettingsView.js',
-  'MobileIntegrationsView.js'
+  'MobileIntegrationsView.js',
+  // Added after the paywall was split out. Leaving it off counted a chunk a
+  // cold start never fetches, which pushed the measurement 1.6 kB over a
+  // ceiling the product had not actually crossed — a stale list quietly
+  // reporting a regression that did not happen.
+  'PaywallSheet.js'
 ];
 
 /**
