@@ -130,8 +130,14 @@ export function entitlementFromCustomerInfo(
    */
   if (entitlement.isActive !== true) return { status: 'not-entitled' };
 
-  // A failed verification means the answer cannot be trusted, so it is not one.
-  if (entitlement.verification === 'FAILED') return { status: 'not-entitled' };
+  // Only RevenueCat's explicit verified states are trusted. NOT_REQUESTED is
+  // an unverified entitlement, not evidence that Pro is active.
+  if (
+    entitlement.verification !== 'VERIFIED' &&
+    entitlement.verification !== 'VERIFIED_ON_DEVICE'
+  ) {
+    return { status: 'not-entitled' };
+  }
 
   return {
     status: 'entitled',

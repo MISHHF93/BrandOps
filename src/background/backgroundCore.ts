@@ -50,16 +50,13 @@ const hasNotifiedForCurrentReminderWindow = (task: SchedulerState['tasks'][numbe
 
 export async function loadWorkspaceSafely(
   storage: WorkspaceStorage,
-  reconcileWorkspace: (data: BrandOpsData) => BrandOpsData
+  _reconcileWorkspace: (data: BrandOpsData) => BrandOpsData
 ): Promise<BrandOpsData> {
   try {
     return await storage.getData();
   } catch (error) {
-    console.error('[BrandOps] Failed to load workspace state. Restoring seeded workspace.', error);
-    const seeded = await storage.resetToSeed();
-    const reconciled = reconcileWorkspace(seeded);
-    await storage.setData(reconciled);
-    return reconciled;
+    console.error('[BrandOps] Failed to load workspace state. Preserving stored data.', error);
+    throw error;
   }
 }
 
@@ -75,10 +72,8 @@ export async function scheduleBrandOpsAlarms(options: {
     const mutation = await storage.withWorkspaceMutation((current) => reconcileWorkspace(current));
     nextData = mutation.data;
   } catch (error) {
-    console.error('[BrandOps] Failed to load workspace state. Restoring seeded workspace.', error);
-    const seeded = await storage.resetToSeed();
-    nextData = reconcileWorkspace(seeded);
-    await storage.setData(nextData);
+    console.error('[BrandOps] Failed to reconcile workspace state. Preserving stored data.', error);
+    throw error;
   }
 
   const existing = await alarms.getAll();

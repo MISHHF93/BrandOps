@@ -1,5 +1,5 @@
 /** * Goal Health — evaluates each active Goal from evidence-backed progress.
- * * P0-7 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * * The capability is tracked in the README product backlog.
  * * Existing: Goal status is binary (active/completed/paused/abandoned).
  * Missing: ON_TRACK/AT_RISK/STALLED/COMPLETED/NEEDS_REVIEW classification with evidence. */
 import type { BrandOpsData } from '../../types/domain';

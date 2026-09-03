@@ -94,13 +94,12 @@ describe('reading an entitlement from RevenueCat', () => {
     expect(isPremium(state)).toBe(false);
   });
 
-  it('accepts a verification that was never requested', () => {
-    // The counter-case: NOT_REQUESTED is the default when verification is off,
-    // and rejecting it would break every correctly-configured free-tier build.
+  it('does not trust an entitlement that was never verified', () => {
+    // NOT_REQUESTED means the store did not provide verification evidence.
     const state = entitlementFromCustomerInfo(
       customerInfo({ verification: 'NOT_REQUESTED' }) as never
     );
-    expect(isPremium(state)).toBe(true);
+    expect(isPremium(state)).toBe(false);
   });
 
   it('is not entitled when the entitlement is marked inactive', () => {

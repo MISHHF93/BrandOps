@@ -16,6 +16,8 @@ import {
   ALL_INTEGRATION_SOURCE_KINDS,
   integrationPresetForKind
 } from '../../shared/integrations/integrationSourceCatalog';
+import { ConnectorLibraryPanel } from '../../shared/connectors/ConnectorLibraryPanel';
+import { AgentCatalogPanel } from '../../shared/agents/AgentCatalogPanel';
 import { MobileTabSection, mobileChipClass } from './mobileTabPrimitives';
 import { WorkspaceSignalsBoard } from './WorkspaceSignalsBoard';
 /**
@@ -297,6 +299,36 @@ export const MobileIntegrationsView = ({
                   ))}
                 </ul>
               </MobileTabSection>
+            </div>
+          </details>
+
+          <details className="bo-disclosure group">
+            <summary
+              className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+            >
+              Connector library
+            </summary>
+            <div className="space-y-4 border-t border-border/30 px-4 pb-4 pt-4">
+              <p className="text-meta leading-relaxed text-textMuted">
+                Canonical connector registry for Google, communication, social, development, and data-related providers.
+                The registry declares the transport, permissions, capability truth, and risk model before an action is allowed through.
+              </p>
+              <ConnectorLibraryPanel />
+            </div>
+          </details>
+
+          <details className="bo-disclosure group">
+            <summary
+              className={`cursor-pointer list-none rounded-xl px-3 py-2.5 text-sm font-semibold text-text ${btnFocus} [&::-webkit-details-marker]:hidden`}
+            >
+              Capability agents
+            </summary>
+            <div className="space-y-4 border-t border-border/30 px-4 pb-4 pt-4">
+              <p className="text-meta leading-relaxed text-textMuted">
+                BrandOps routes work by capability. Model selection stays automatic, while approvals,
+                permissions, verification, and receipts remain in the control plane.
+              </p>
+              <AgentCatalogPanel />
             </div>
           </details>
 

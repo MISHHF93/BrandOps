@@ -7,7 +7,7 @@
  * authorized rather than trusting that possession of a granted capability is
  * self-justifying.
  *
- * Enforcement ladder (see `BRANDOPS_MCP_GATEWAY_DIRECTIVE.md` §6):
+ * Enforcement ladder (see the MCP control-plane section in `README.md`):
  * - `READ` capabilities        → no contract (reads are scoped by bundle grants).
  * - `GENERATE` / `PREPARE`     → contract synthesized when absent, always audited.
  * - `EXTERNAL_ACTION`          → `objective` + `reason` required.

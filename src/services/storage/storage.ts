@@ -2927,6 +2927,17 @@ export class StorageWriteError extends Error {
   }
 }
 
+/** Typed failure for an unavailable or denied storage read. */
+export class StorageReadError extends Error {
+  constructor(
+    message: string,
+    readonly key: string
+  ) {
+    super(message);
+    this.name = 'StorageReadError';
+  }
+}
+
 /**
  * Persist a normalized workspace blob, translating any adapter-level write
  * failure into a typed `StorageWriteError`. The normalized value is never
@@ -2945,17 +2956,20 @@ const persistWorkspace = async (value: BrandOpsData): Promise<void> => {
 
 /**
  * Read the raw persisted blob plus a normalized copy. Seeding (first boot) and
- * self-healing of a corrupt blob write here and only here, so a plain read never
- * re-persists the whole workspace (removes the old unconditional write-on-read).
+ * self-healing of a malformed blob write here and only here. Adapter failures
+ * are distinct from malformed data and must propagate without resetting state.
  */
 const readWorkspace = async (): Promise<{ raw: unknown; data: BrandOpsData }> => {
+  let raw: unknown;
   try {
-    const raw = await activeStorage.get<unknown>(DATA_KEY);
-    if (isBrandOpsData(raw)) {
-      return { raw, data: withDefaults(raw) };
-    }
-  } catch {
-    // Corrupt storage should recover into a valid seeded workspace.
+    raw = await activeStorage.get<unknown>(DATA_KEY);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new StorageReadError(`Failed to read workspace: ${detail}`, DATA_KEY);
+  }
+
+  if (isBrandOpsData(raw)) {
+    return { raw, data: withDefaults(raw) };
   }
 
   const seeded = createSeededWorkspace();

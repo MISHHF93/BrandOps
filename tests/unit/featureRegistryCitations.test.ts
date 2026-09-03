@@ -1,7 +1,7 @@
 /**
  * The feature registry may not cite a file that does not exist.
  *
- * This repository has already been burned by exactly this. `BRANDOPS_FEATURE_TRUTH.md`
+ * This repository has already been burned by exactly this. The README
  * carries a standing correction note: a prior revision marked Agent Handoffs,
  * Universal Command Layer, Authority Intelligence and others as VERIFIED_WORKING
  * *"by citing test files that do not exist in this repository"*. Those claims

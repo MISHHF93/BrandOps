@@ -10,7 +10,7 @@
  *   src/services/interop/validation.ts        NUL, in a comment about NUL
  *   tests/unit/agentInputValidation.test.ts   NUL, in the matching comment
  *   tests/unit/envVarDocumentation.test.ts    backspace, inside a regex
- *   BRANDOPS_PRODUCTION_SCORECARD.md          backspace, in the entry describing this trap
+ *   README.md                                  backspace, in the entry describing this trap
  * ```
  *
  * The damage is not cosmetic and it is not the same each time:

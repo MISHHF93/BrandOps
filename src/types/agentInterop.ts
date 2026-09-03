@@ -4,7 +4,7 @@
  * (Claude Code, Codex, VS Code/MCP, future IDEs/CLIs) that connect through MCP or
  * the canonical interop gateway.
  *
- * Design rules (see BRANDOPS_AGENT_INTEROP_ARCHITECTURE.md):
+ * Design rules (see the MCP control-plane section in README.md):
  * - Agents are authorized clients, never peers. Every interaction is scoped by
  *   user, workspace, client, purpose, capability, and permission.
  * - Agent-reported facts are `AGENT_REPORTED` and are NEVER silently promoted to

@@ -1,7 +1,7 @@
 /**
  * AI Red-Team Corpus — attack payloads and adversarial tests for agent orchestration changes.
  *
- * P0-11 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * The red-team coverage is tracked in the README product backlog.
  *
  * This corpus contains realistic attack payloads covering:
  * - Indirect prompt injection

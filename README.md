@@ -6,6 +6,9 @@
 
 ## What ships from this repo
 
+This README is the single product, engineering, evidence, and release reference for the repository.
+It records current truth as of 2026-09-02 and must be updated when executable evidence changes.
+
 | Surface                   | Output                        | How                                                                                                     |
 | ------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------- |
 | **Chrome Web Store**      | Unpacked / zipped **`dist/`** | `npm run build` → load unpacked or ship manifest + bundle (`scripts/copy-manifest.mjs`)                 |
@@ -77,7 +80,10 @@ the marketing site while ensuring the native WebView boots the actual app shell.
 
 - Workspace blob **`BrandOpsData`** is keyed **`brandops:data`** and persisted via the browser adapter above — extension installs use **`chrome.storage.local`**.
 - Hosted AI keys and similar secrets stay **outside** workspace JSON (see **`brandops_ai_openai_compat_key`** and Settings AI surfaces). They are device-local browser/WebView credentials, not a native mobile keychain.
-- Imported and stored workspace blobs are normalized before use. Persistence is still whole-workspace storage, so a future transactional/CAS layer is needed for robust simultaneous multi-tab writes.
+- Imported and stored workspace blobs are normalized before use. Workspace writes are serialized,
+  normalized, and use bounded optimistic rebase/retry for concurrent local writers. They are not a
+  durable storage journal; multi-device synchronization still requires a hosted service and is not
+  claimed by this local-first repository.
 
 ### Assistant citations & AI I/O traces
 
@@ -85,7 +91,7 @@ Hosted Assistant replies may include optional structured provenance (`brandOpsAi
 
 ### AI Integration Suite (routing & pipelines)
 
-Operator modes (**Fast / Balanced / Deep / Private / Evidence**) tune hosted **`ask:`** model scoring via [`aiAskRouting.ts`](src/services/ai/aiAskRouting.ts); Settings exposes controls in **`SettingsAiRoutingPanel.tsx`**. Declarative workflow scaffolding lives under [`aiPipelineCatalog.ts`](src/services/ai/aiPipelineCatalog.ts) + [`aiPipelineRunner.ts`](src/services/ai/aiPipelineRunner.ts) with capped audit rows in **`BrandOpsData.aiPipelineRuns`**. Concise architecture + backlog notes: [`docs/AI_INTEGRATION_SUITE_IMPLEMENTATION_REPORT.md`](docs/AI_INTEGRATION_SUITE_IMPLEMENTATION_REPORT.md).
+Operator modes (**Fast / Balanced / Deep / Private / Evidence**) tune hosted **`ask:`** model scoring via [`aiAskRouting.ts`](src/services/ai/aiAskRouting.ts); Settings exposes controls in **`SettingsAiRoutingPanel.tsx`**. Declarative workflow scaffolding lives under [`aiPipelineCatalog.ts`](src/services/ai/aiPipelineCatalog.ts) + [`aiPipelineRunner.ts`](src/services/ai/aiPipelineRunner.ts) with capped audit rows in **`BrandOpsData.aiPipelineRuns`**.
 
 ---
 
@@ -138,7 +144,9 @@ Other **`npm run`** scripts cover resonance reports, AI stack monitoring, option
 
 These items are **tracked separately** from layout milestones:
 
-- **Verified authentication and billing** — provider OAuth, server-side sessions, Stripe webhook/session verification, and entitlement refresh are not implemented. The current account selector is explicitly local preview state.
+- **Verified authentication and billing** — provider OAuth and server-side sessions are not implemented;
+  the current account selector is explicitly local preview state. RevenueCat SDK/entitlement wiring is
+  present, but production products, offerings, and real purchase validation remain external setup.
 - **Webhook delivery integration** — the proxy validates and signs inbound provider messages, and the extension receiver requires an actor allowlist configured in Settings. A deployed receiver/browser-runtime transport, workspace binding for multi-tenant deployments, and outbound provider replies remain application work.
 - **Vendor integration sync** — Integration hub rows emphasize honesty/registry UX; automated CRM/issue ingestion is a pipeline epic.
 - **Bundled on-device NLP** — **`internal-on-device-nlp`** in [`nlpCapabilityManifest.ts`](src/services/ai/nlpCapabilityManifest.ts) is **planned**; no ONNX/WASM runtime shipped in-tree yet (`localModelEnabled` remains an adapter hook).
@@ -148,3 +156,110 @@ These items are **tracked separately** from layout milestones:
 ## Contributor note (Cursor)
 
 Popup and quick-action layout guidance for AI-assisted edits lives in **`.cursor/skills/popup/SKILL.md`** (Cursor skill file — separate from this README).
+
+## Product doctrine
+
+BrandOps is an AI-native work and professional identity operating system. Its promise is **your work becomes a verified professional identity**. It owns context, identity, Digital Twin state, plans, approvals, execution, verification, receipts, outcomes, memory, and learning. Models provide intelligence; Google services provide governed capabilities; MCP provides interoperability. BrandOps remains the product.
+
+The user-facing flow is:
+
+```text
+ASK -> UNDERSTAND CONTEXT -> PLAN -> APPROVE WHEN REQUIRED
+-> EXECUTE -> VERIFY -> RECEIPT -> LEARN
+```
+
+The engineering loop is:
+
+```text
+DISCOVER -> VERIFY -> PRIORITIZE -> FIX ROOT CAUSE -> WIRE END-TO-END
+-> TEST -> RUN -> INSPECT -> VERIFY -> DOCUMENT -> RESCORE -> CONTINUE
+```
+
+Truth is more valuable than a high score. A score may fall when new evidence finds a defect. Never treat documentation, file existence, an agent report, or a mock response as proof of production behavior.
+
+## Architecture and truth boundaries
+
+The primary experience is the **Assistant + Workspace** shell, with Plan, Today/Cockpit, Integrations, and Settings views. Assistant handles conversation, hosted routing, citations, evidence, and artifacts. Workspace handles workstreams, approvals, local execution recording, receipts, and governance. Core services cover AI, Digital Twin, memory/context, builder intelligence, planning, execution, interop, storage, tracing, analytics, and usage.
+
+The canonical pipeline is:
+
+```text
+intent -> context/memory/Twin assembly -> model routing -> generation
+-> validation/guardrails -> artifact/plan -> approval -> execution
+-> verification -> receipt -> controlled learning
+```
+
+The Digital Twin distinguishes user-provided facts, verified claims, agent reports, external data, model inference, unverified claims, history, permissions, and receipts. Inference never silently becomes verified identity. Agent and model writes remain unverified until a BrandOps-side human workflow promotes them.
+
+Workspace state is a normalized `BrandOpsData` blob under `brandops:data`. Chrome uses `chrome.storage.local`; Capacitor/WebView uses scoped `localStorage`; tests use memory storage. Workspace writes are serialized, normalized, and use bounded optimistic rebase/retry for concurrent local writers. They are not a durable storage journal, and Chrome storage has no true compare-and-swap. Import/export is supported and is the current portability path. There is no hosted persistence, tenancy, multi-device sync, or server authority yet. Device-local storage is not a security boundary against an attacker who can read the device.
+
+Secrets such as hosted AI keys and bridge credentials stay outside workspace JSON, but remain device-local and are not native-keychain backed.
+
+## AI and model routing
+
+BrandOps has a deterministic local AI Core for structured artifact synthesis and an optional hosted Ask path using a user-configured OpenAI-compatible endpoint. Operator modes are Fast, Balanced, Deep, Private, and Evidence. Routing uses heuristic capability vectors for latency, reasoning, citation fidelity, modality, privacy, and context needs. It does not claim vendor telemetry, automatic model fallback, or model-quality evaluation beyond the tests and provider evidence recorded here. Provider failures return an explicit failure result.
+
+Declarative AI pipelines and capped audit records exist. Some pipelines run deterministically offline; hosted steps require provider configuration. On-device ONNX/WASM NLP remains planned.
+
+## MCP control plane
+
+The executable registry currently contains **44 capabilities and 44 unique MCP tools**, each with an output schema. Tools map one-to-one to the registry and are exposed through the same dispatcher over stdio and Streamable HTTP. Resources and the Tasks projection are supported. Discovery is grant-scoped.
+
+Risk tiers are:
+
+```text
+READ -> GENERATE -> PREPARE -> EXTERNAL_ACTION -> SENSITIVE_ACTION
+```
+
+The gateway authenticates bearer sessions, scopes them to a workspace, authorizes capabilities, enforces trust ceilings and in-process rate limits, screens prompt injection, validates intent contracts, applies Memory Firewall rules, handles idempotency, dispatches local actions or records blocked external work, and records audit/checkpoint/trace evidence. Tokens are hashed; revocation is immediate. Agent writes are capped at `AGENT_REPORTED`. Approval-gated capabilities fail closed, agents cannot approve their own requests, and handoffs can only narrow authority.
+
+The HTTP gateway is remote-capable but not deployment-ready: there is no TLS termination, OAuth authorization server, hosted session service, or production deployment. Third-party MCP client interoperability is not verified. Capability claims must remain grounded in source files and tests that exist.
+
+## Google and external integrations
+
+Google and Gemini are strategic integration directions, not shipped capabilities. A future governed Workspace connector may combine minimum-necessary Calendar, Gmail, Drive, Docs, Sheets, Slides, Meet, Chat, or Contacts access to prepare a briefing, but only with explicit consent, scoped authorization, visible consequences, and receipts.
+
+This repository does **not** ship live Google Workspace OAuth, provider sessions, sync, Gmail/Calendar/Drive actions, or a verified Google connector. Current integration surfaces describe configuration and capability boundaries only. The same limitation applies to most vendor systems. LinkedIn is local overlay/capture tooling, not a verified LinkedIn API integration. One generic outbound webhook connector exists, but live delivery is not verified.
+
+## Mobile, installation, and monetization
+
+The web build produces an installable PWA surface: all launch pages link the manifest, the web bundle registers a service worker, and the installability contract inspects the built `dist/` artifact. Chrome/Edge extension pages and Capacitor shells intentionally do not register that worker. An Android Capacitor build target exists; iOS configuration/scripts exist but require platform generation on macOS. Store publication, signing, physical-device, and Play Console evidence remain external.
+
+RevenueCat SDK and entitlement wiring are present. Premium decisions use live verified entitlement state and fail closed; local membership values are display-only. Production products, offerings, dashboard configuration, real purchases, restore validation, and store credentials are not proven here. Stripe URLs are navigation links only, with no checkout callback, webhook, or server-side entitlement authority.
+
+## Current evidence: 2026-09-02
+
+| Check                 | Result                                                           |
+| --------------------- | ---------------------------------------------------------------- |
+| `npm run check`       | PASS                                                             |
+| `npm test`            | PASS: 1836 tests in 241 files                                    |
+| MCP inventory         | PASS: 44 capabilities, 44 unique tools, 0 missing output schemas |
+| `npm run build`       | PASS                                                             |
+| `npm run verify:dist` | PASS: no leaked credentials                                      |
+| Test type budget      | PASS at 129 / 129                                                |
+| Knip budget           | PASS at 94 unused exports, 0 unused files/imports                |
+| Shipaton gate         | 6 verified, 6 missing, 9 requiring human evidence                |
+| Weighted score        | Recorded 96.5 / 100; not freshly rescored for all dimensions     |
+| Release verdict       | **NOT READY**                                                    |
+
+Hard gates override scores. Any unresolved P0, cross-workspace leakage, approval or authorization bypass, duplicate irreversible execution, fabricated evidence/verification, or critical Golden Workflow failure means **NOT READY**. Production deployment, staging, real authentication, external connectors, RevenueCat production setup, signing, physical-device verification, store publication, real purchases, and third-party MCP interoperability remain unverified until external evidence exists.
+
+Useful commands:
+
+```bash
+npm install
+npm run dev:mobile
+npm run check
+npm run check:tests
+npm run format
+npm test
+npm run test:integration
+npm run build
+npm run verify:dist
+npm run knip
+npm run shipaton:gate
+npm run release
+npm run mcp:http
+```
+
+Do not carry forward as current: old test counts such as 1122, 1770, 647, 590, 744, or 809; old 40-capability counts; old Shipaton totals; a 96.5 score described as freshly rescored; claims of deployed production, live Google/LinkedIn/vendor connectors, real OAuth, Stripe billing, automatic sync, external side effects without an injected connector, or local-model fallback.

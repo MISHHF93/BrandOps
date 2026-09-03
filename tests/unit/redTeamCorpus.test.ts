@@ -1,7 +1,7 @@
 /**
  * AI Red-Team Corpus — Adversarial Tests
  *
- * P0-11 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * The red-team coverage is tracked in the README product backlog.
  *
  * These tests exercise the red-team corpus attack payloads against the memory firewall
  * and other defense mechanisms. They verify that the system detects and handles each attack.
@@ -488,7 +488,7 @@ describe('Red-Team Corpus — Full Regression', () => {
     }
   });
 
-  it('corpus covers all attack vectors mentioned in BRANDOPS_NEXT_CAPABILITIES.md', () => {
+  it('corpus covers all attack vectors recorded in the README product doctrine', () => {
     // The document mentions: indirect prompt injection, malicious résumé text, poisoned
     // repository instructions, tool-output injection, memory poisoning, privilege escalation
     // requests, deceptive external-agent messages, attempts to bypass approval

@@ -2,7 +2,7 @@
  * Agent Identity & Trust Levels — extends the existing ExternalAgentSession with trust level classification
  * and provides a unified registry for all agent identities.
  *
- * This is P0-2 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * This capability is tracked in the README product backlog.
  *
  * Existing: ExternalAgentSession already has clientKind, clientName, tokenHash, status,
  * grantedBundles, grantedCapabilities, createdAt, lastActivityAt, revokedAt, expiresAt.

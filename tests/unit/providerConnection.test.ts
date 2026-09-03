@@ -4,6 +4,7 @@ import {
   markProviderDisconnected,
   markProviderError
 } from '../../src/shared/account/providerConnection';
+import { resolveConnectorForProvider, connectorStateFromProviderStatus } from '../../src/shared/connectors/connectorCatalog';
 import type { BrandOpsData } from '../../src/types/domain';
 
 function makeWorkspace(): BrandOpsData {
@@ -88,5 +89,22 @@ describe('markProviderError', () => {
     const result = markProviderError(ws, 'linkedin', 'auth failed');
     expect(result.settings.syncHub.linkedin.connectionStatus).toBe('error');
     expect(result.settings.syncHub.linkedin.lastError).toBe('auth failed');
+  });
+});
+
+describe('connector registry and provider state', () => {
+  it('resolves a real BrandOps provider to the canonical connector family', () => {
+    const google = resolveConnectorForProvider('google');
+    const github = resolveConnectorForProvider('github');
+
+    expect(google?.id).toBe('google-account');
+    expect(github?.id).toBe('github');
+  });
+
+  it('maps provider status to registry health states', () => {
+    expect(connectorStateFromProviderStatus('connected')).toBe('CONNECTED');
+    expect(connectorStateFromProviderStatus('configured')).toBe('AVAILABLE');
+    expect(connectorStateFromProviderStatus('error')).toBe('MISCONFIGURED');
+    expect(connectorStateFromProviderStatus('disconnected')).toBe('NOT_CONNECTED');
   });
 });

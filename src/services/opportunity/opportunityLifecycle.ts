@@ -1,7 +1,7 @@
 /**
  * Opportunity Lifecycle — lifecycle states for builder opportunity recommendations.
  *
- * P0-6 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * The capability is tracked in the README product backlog.
  *
  * Existing: CRM Opportunity has lifecycle (prospect → won/lost), builder OpportunityRecommendation
  * is transient with no lifecycle.

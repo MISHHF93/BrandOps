@@ -1,7 +1,7 @@
 /**
  * Decision Ledger — unified, first-class decisions with supersedes, goal, and systematic prevention.
  *
- * P0-4 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * The capability is tracked in the README product backlog.
  *
  * Existing: WorkspaceDecisionMemoryEntry is derived from Twin claims, AI artifacts, operator traces.
  * Missing: explicit Decision type with supersedes/goal/timestamp, explicit decision creation on user actions,

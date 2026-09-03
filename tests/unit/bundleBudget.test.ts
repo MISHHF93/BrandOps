@@ -71,7 +71,10 @@ const CHUNK_BUDGET: Record<string, number> = {
  * It is kept, rather than dropped, so that genuinely unbounded growth is still
  * caught — but it is no longer the measure anyone should be optimising.
  */
-const TOTAL_GZIP_BUDGET = 410_000;
+// Raised from 410_000 after the connector and agent catalogs became a required
+// lazy Integrations surface. Cold start and individual chunk ceilings remain
+// unchanged; this backstop records the measured shipped catalog payload.
+const TOTAL_GZIP_BUDGET = 430_000;
 
 /**
  * What a cold start actually downloads: the entry plus the chunks it imports

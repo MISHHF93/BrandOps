@@ -1,7 +1,7 @@
 /**
  * Evidence Ledger — unified, first-class evidence with verification status and strength.
  *
- * P0-5 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * The evidence-ledger work is tracked in the README product backlog.
  *
  * Existing: EvidenceEntry on ActivityEvent, AchievementCandidate, TwinDelta, ProfessionalSignal, etc.
  * Missing: first-class evidence registry, verification status per evidence item, strength computation,

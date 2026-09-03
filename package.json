@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:mobile": "node scripts/dev.mjs --open /",
+    "dev:mobile": "node scripts/dev.mjs --open /mobile.html",
     "dev:fullstack": "node scripts/full-stack-dev.mjs --open /mobile.html",
     "bridge:proxy": "node scripts/bridge-proxy.mjs",
     "bridge:proxy:local": "node scripts/bridge-proxy-local.mjs",

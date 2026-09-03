@@ -2,10 +2,9 @@
  * Making BrandOps installable on a device.
  *
  * The manifest at `/site.webmanifest` was complete — start_url, standalone
- * display, 192/512 icons including a maskable one — and **no page linked it**.
- * A browser that never sees a manifest never offers an install, so the honest
- * answer to "how do I install this?" was that you could not. There was no
- * service worker either, which Chrome also requires.
+ * display, 192/512 icons including a maskable one — but an earlier build did
+ * not link it from any page or register a service worker. The install path is
+ * now wired through the web entry points and this module.
  *
  * This module registers the worker and exposes the install prompt as ordinary
  * state, so a surface can offer installation at a sensible moment rather than

@@ -22,7 +22,11 @@ vi.mock('../../src/shared/storage/browserStorage', () => ({
 }));
 
 import { browserLocalStorage } from '../../src/shared/storage/browserStorage';
-import { StorageWriteError, storageService } from '../../src/services/storage/storage';
+import {
+  StorageReadError,
+  StorageWriteError,
+  storageService
+} from '../../src/services/storage/storage';
 
 const DATA_KEY = 'brandops:data';
 
@@ -37,6 +41,14 @@ describe('storageService', () => {
     expect(data.modules.length).toBeGreaterThan(0);
     expect(data.brand.operatorName.length).toBeGreaterThan(0);
     expect(memoryStorage.get(DATA_KEY)).toBeDefined();
+  });
+
+  it('surfaces storage read failures without replacing the workspace', async () => {
+    const get = vi.mocked(browserLocalStorage.get);
+    get.mockRejectedValueOnce(new Error('storage unavailable'));
+
+    await expect(storageService.getData()).rejects.toBeInstanceOf(StorageReadError);
+    expect(memoryStorage.has(DATA_KEY)).toBe(false);
   });
 
   /**

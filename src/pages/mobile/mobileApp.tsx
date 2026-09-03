@@ -2887,7 +2887,7 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   const shellSrSummary = SHELL_TAB_SR_SUMMARY[activeTab];
 
   return (
-    <div className="bo-mobile-app relative isolate min-h-[100dvh] min-h-screen">
+    <div className="bo-mobile-app relative isolate min-h-[100dvh]">
       <a href="#bo-mobile-main" className="bo-mobile-skip">
         Skip to main content
       </a>

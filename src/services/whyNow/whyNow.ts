@@ -1,7 +1,7 @@
 /**
  * Explain Why Now — generates concise "why now" narratives for proactive recommendations.
  *
- * P0-8 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * The capability is tracked in the README product backlog.
  *
  * Every proactive card/row should answer: why is BrandOps surfacing this now?
  * Evidence includes: recent activity, goal priority, missing artifacts, etc.

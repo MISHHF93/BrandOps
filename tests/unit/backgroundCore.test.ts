@@ -54,27 +54,22 @@ describe('backgroundCore alarm helpers', () => {
 });
 
 describe('loadWorkspaceSafely', () => {
-  it('restores seeded workspace when getData throws', async () => {
-    const seeded = cloneSeedData();
-    const reconciled: BrandOpsData = {
-      ...seeded,
-      scheduler: { ...seeded.scheduler, tasks: [], updatedAt: iso, lastHydratedAt: iso }
-    };
-
-    const getData = vi.fn().mockRejectedValueOnce(new Error('corrupt'));
-    const resetToSeed = vi.fn(async () => seeded);
+  it('does not reset the workspace when getData fails', async () => {
+    const getData = vi.fn().mockRejectedValueOnce(new Error('storage unavailable'));
+    const resetToSeed = vi.fn(async () => cloneSeedData());
     const setData = vi.fn(async (d: BrandOpsData) => d);
-    const reconcileWorkspace = vi.fn(() => reconciled);
+    const reconcileWorkspace = vi.fn((data: BrandOpsData) => data);
 
-    const result = await loadWorkspaceSafely(
-      storageWithMutation({ getData, resetToSeed, setData }),
-      reconcileWorkspace
-    );
+    await expect(
+      loadWorkspaceSafely(
+        storageWithMutation({ getData, resetToSeed, setData }),
+        reconcileWorkspace
+      )
+    ).rejects.toThrow('storage unavailable');
 
-    expect(result).toBe(reconciled);
-    expect(resetToSeed).toHaveBeenCalledOnce();
-    expect(reconcileWorkspace).toHaveBeenCalledWith(seeded);
-    expect(setData).toHaveBeenCalledWith(reconciled);
+    expect(resetToSeed).not.toHaveBeenCalled();
+    expect(reconcileWorkspace).not.toHaveBeenCalled();
+    expect(setData).not.toHaveBeenCalled();
   });
 });
 

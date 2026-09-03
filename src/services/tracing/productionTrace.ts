@@ -1,7 +1,7 @@
 /**
  * Production Trace — correlated trace across the full workflow lifecycle.
  *
- * P0-3 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * The production-tracing work is tracked in the README product backlog.
  *
  * Assigns one traceId to a complete workflow and propagates it through all
  * tracing systems: AI trace bundles, operator traces, audit entries, checkpoints,

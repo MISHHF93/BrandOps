@@ -1,7 +1,7 @@
 /**
  * Schema Evolution Tests — migration tests from legacy schema versions.
  *
- * P0-10 from BRANDOPS_NEXT_CAPABILITIES.md.
+ * The schema-evolution coverage is tracked in the README product backlog.
  *
  * Tests that data persisted under older schema versions can be migrated to the current schema
  * without data loss, corruption, or silent breakage.

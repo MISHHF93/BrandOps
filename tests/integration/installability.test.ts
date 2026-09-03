@@ -1,12 +1,11 @@
 /**
  * BrandOps can be installed on a device.
  *
- * It could not. `public/site.webmanifest` was complete and correct — start_url,
- * `display: standalone`, 192 and 512 icons including a maskable one — and **no
- * page linked it**. A browser that never receives a manifest never offers an
- * install, so the honest answer to "how do I install this?" was that you could
- * not, and nothing in the repository said so. There was no service worker
- * either, which Chrome requires before it will offer the install at all.
+ * An earlier build could not be installed. `public/site.webmanifest` was
+ * complete and correct — start_url, `display: standalone`, 192 and 512 icons
+ * including a maskable one — but no page linked it and no service worker was
+ * registered. These tests inspect the built artifact so that installability is
+ * verified as shipped behavior.
  *
  * Two files existed, one line was missing, and the feature was invisible. That
  * is the same shape as the four wiring cycles before it, arriving this time in
