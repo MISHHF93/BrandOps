@@ -111,6 +111,7 @@ import {
   buildWorkspaceIntelligenceState,
   normalizeWorkspaceIntelligenceState
 } from '../workspaceIntelligence/workspaceIntelligence';
+import { serializeWorkspaceWrite } from '../analytics/writeQueue';
 
 const DATA_KEY = 'brandops:data';
 
@@ -3022,6 +3023,40 @@ export const storageService = {
     const normalized = withDefaults(data);
     await persistWorkspace(normalized);
     return normalized;
+  },
+
+  /**
+   * Read the workspace, derive the next one, and write it — with no other write
+   * able to interleave.
+   *
+   * Every mutation in the mobile shell was written as a bare
+   * `getData()` → derive → `setData()`, and there are 32 of them. Two running at
+   * once lose one of the changes:
+   *
+   * ```
+   *   A: read  -> w0
+   *   B: read  -> w0          (A has not written yet)
+   *   A: write -> w0 + changeA
+   *   B: write -> w0 + changeB  <- A's change is gone
+   * ```
+   *
+   * For analytics that costs an event. For `approvePlanFromCheckpoint` it costs
+   * an approval, and the interface still says "Checkpoint approved" — a success
+   * reported for a write that was discarded, which is the one thing a workspace
+   * holding someone's decisions must never do.
+   *
+   * `mutate` returning `null` means "nothing to write", so a no-op does not have
+   * to fabricate an unchanged workspace to signal it.
+   */
+  async updateWorkspace(
+    mutate: (current: BrandOpsData) => BrandOpsData | null | Promise<BrandOpsData | null>
+  ): Promise<BrandOpsData | null> {
+    return serializeWorkspaceWrite(async () => {
+      const current = await this.getData();
+      const next = await mutate(current);
+      if (!next || next === current) return null;
+      return this.setData(next);
+    });
   },
 
   async resetToSeed(): Promise<BrandOpsData> {

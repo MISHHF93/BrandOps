@@ -703,24 +703,28 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
   /**
    * Record one product event.
    *
-   * Fire-and-forget, and it reads the workspace from storage rather than a ref
-   * so it has no ordering dependency on the rest of this component. Analytics
-   * must never delay or fail the action it measures, and `recordProductEvent`
-   * already returns the workspace untouched when the person has not consented
-   * to trace collection.
+   * Fire-and-forget, and routed through `updateWorkspace` so it cannot
+   * interleave with another write. Recording is a read-modify-write and the
+   * product issues several in one tick — `install_offered` then
+   * `install_accepted`, `restore_started` then `restore_completed`, `app_open`
+   * alongside the entitlement lookup. Interleaved they silently drop events,
+   * leaving the funnel short and every rate computed from it wrong in the
+   * flattering direction.
+   *
+   * Analytics must never delay or fail the action it measures, so failures are
+   * swallowed here, and `recordProductEvent` returns the workspace untouched
+   * when the person has not consented to trace collection — which
+   * `updateWorkspace` reads as nothing to write.
    */
   const emit = useCallback(
     (event: ProductEvent, options?: Parameters<typeof recordProductEvent>[2]) => {
-      void (async () => {
-        try {
-          const data = await storageService.getData();
-          const next = recordProductEvent(data, event, { surface: 'mobile', ...options });
-          if (next === data) return;
-          await storageService.setData(next);
-        } catch {
+      void storageService
+        .updateWorkspace((data) =>
+          recordProductEvent(data, event, { surface: 'mobile', ...options })
+        )
+        .catch(() => {
           /* measurement must not break the thing being measured */
-        }
-      })();
+        });
     },
     []
   );
@@ -2208,13 +2212,24 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       if (!planId) return;
       setCheckpointActionBusy(true);
       try {
-        const data = await storageService.getData();
-        const next = approveCheckpointForPlan(data, planId);
-        if (!next) {
+        /**
+         * Serialized. Two approvals arriving together used to lose one, and the
+         * interface said "Checkpoint approved" for both — a success reported
+         * for a decision that was discarded.
+         */
+        let missing = false;
+        await storageService.updateWorkspace((data) => {
+          const next = approveCheckpointForPlan(data, planId);
+          if (!next) {
+            missing = true;
+            return null;
+          }
+          return next;
+        });
+        if (missing) {
           setDataOpsHint('No pending review found for that plan.');
           return;
         }
-        await storageService.setData(next);
         await refreshWorkspaceSnapshot();
         setDataOpsHint('Checkpoint approved — plan can proceed to the next step.');
       } catch (e) {
@@ -2233,13 +2248,22 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       if (!planId) return;
       setCheckpointActionBusy(true);
       try {
-        const data = await storageService.getData();
-        const next = rejectCheckpointForPlan(data, planId);
-        if (!next) {
+        // Serialized for the same reason as approval: a rejection that is
+        // silently discarded while the interface confirms it is worse than one
+        // that fails loudly.
+        let missing = false;
+        await storageService.updateWorkspace((data) => {
+          const next = rejectCheckpointForPlan(data, planId);
+          if (!next) {
+            missing = true;
+            return null;
+          }
+          return next;
+        });
+        if (missing) {
           setDataOpsHint('No pending review found for that plan.');
           return;
         }
-        await storageService.setData(next);
         await refreshWorkspaceSnapshot();
         setDataOpsHint('Checkpoint rejected — no action was executed.');
       } catch (e) {
@@ -2700,13 +2724,18 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
       status: 'verified' | 'rejected';
     }) => {
       try {
-        const data = await storageService.getData();
-        const next = updateTwinFactVerificationStatus(data, input);
-        if (next === data) {
+        /**
+         * Serialized. Verifying several facts in quick succession is the normal
+         * way this is used, and interleaved writes dropped all but one while
+         * confirming each.
+         */
+        const written = await storageService.updateWorkspace((data) =>
+          updateTwinFactVerificationStatus(data, input)
+        );
+        if (!written) {
           setDataOpsHint('Twin fact not found — nothing changed.');
           return;
         }
-        await storageService.setData(next);
         await refreshWorkspaceSnapshot();
         setDataOpsHint(`Twin fact marked ${input.status}.`);
       } catch (err) {
