@@ -6,6 +6,8 @@ import type { BrandOpsData } from '../../types/domain';
 import { agentBridge } from '../../services/interop/agentBridge';
 import { buildClaudeCodeMcpSnippet } from '../../services/interop/mcp/claudeConfig';
 import { mobileChipClass, MOBILE_BTN_FOCUS } from './mobileTabPrimitives';
+import type { EntitlementState } from '../../services/monetization/entitlements';
+import { describePlan } from '../../services/monetization/featureGates';
 
 const chipDisabled = 'disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -31,6 +33,15 @@ export interface ConnectedAgentsPanelProps {
   applyWorkspace: (workspace: BrandOpsData) => Promise<void>;
   /** Download the current workspace JSON so the MCP gateway can authenticate this panel's token. */
   onExportWorkspace?: () => void | Promise<void>;
+  /**
+   * Live entitlement, so the panel can say what the current plan allows.
+   * Absent is treated as free — the same failing-open rule the gates use.
+   */
+  entitlement?: EntitlementState;
+  /** Open the paywall when a gate says Pro would lift it. */
+  onUpgrade?: () => void;
+  /** Called when something only Pro allows is actually used. */
+  onPremiumFeatureUsed?: (feature: string) => void;
   btnFocus?: string;
 }
 
@@ -43,6 +54,9 @@ export const ConnectedAgentsPanel = ({
   loadWorkspace,
   applyWorkspace,
   onExportWorkspace,
+  entitlement = { status: 'not-entitled' },
+  onUpgrade,
+  onPremiumFeatureUsed,
   btnFocus = MOBILE_BTN_FOCUS
 }: ConnectedAgentsPanelProps) => {
   const [workspace, setWorkspace] = useState<BrandOpsData | null>(null);
@@ -121,6 +135,24 @@ export const ConnectedAgentsPanel = ({
   }
 
   const createSession = async () => {
+    /**
+     * Checked before the call, not after. Creating the session and then
+     * refusing to save it would mint a token the person can see and cannot
+     * use.
+     */
+    const gate = agentBridge.canConnectAgent(workspace, entitlement);
+    if (!gate.allowed) {
+      setError(gate.reason);
+      return;
+    }
+    /**
+     * Recorded only where the gate would have stopped a free workspace, so
+     * `premium_feature_used` counts Pro actually being used rather than every
+     * action a Pro subscriber happens to take.
+     */
+    if (!agentBridge.canConnectAgent(workspace, { status: 'not-entitled' }).allowed) {
+      onPremiumFeatureUsed?.('multi-agent');
+    }
     setBusy(true);
     setError(null);
     try {
@@ -393,6 +425,19 @@ export const ConnectedAgentsPanel = ({
           )}
         </div>
       </details>
+
+      <div className="rounded-xl border border-border/40 bg-bgSubtle/55 px-3 py-2.5">
+        <p className="text-fine text-textMuted">{describePlan(entitlement)}</p>
+        {!agentBridge.canDelegate(entitlement).allowed && onUpgrade ? (
+          <button
+            type="button"
+            className={`mt-1.5 ${btnFocus} text-fine font-semibold text-accent`}
+            onClick={onUpgrade}
+          >
+            See Pro
+          </button>
+        ) : null}
+      </div>
 
       <details
         className="bo-disclosure group"

@@ -3114,6 +3114,11 @@ export const MobileApp = ({ initialTab = 'chat', surfaceLabel = 'mobile' }: Mobi
                   commandBusy={commandLoading}
                   runCommand={sendQuickCommandFrom('Integrations')}
                   documentSurface={surfaceLabel}
+                  entitlement={entitlement}
+                  onUpgrade={onOpenPaywall}
+                  onPremiumFeatureUsed={(feature) =>
+                    emit('premium_feature_used', { props: { feature } })
+                  }
                   loadWorkspace={() => storageService.getData()}
                   applyWorkspace={async (next) => {
                     await storageService.setData(next);

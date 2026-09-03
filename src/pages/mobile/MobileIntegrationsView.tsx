@@ -138,6 +138,12 @@ export interface MobileIntegrationsViewProps {
   documentSurface?: AppDocumentSurfaceId | 'chatbot';
   /** Connected Agents panel data hooks (required to render the review queue). */
   loadWorkspace?: () => Promise<import('../../types/domain').BrandOpsData>;
+  /** Live entitlement, threaded to Connected Agents so Pro is not shown free limits. */
+  entitlement?: import('../../services/monetization/entitlements').EntitlementState;
+  /** Opens the paywall from a gated control. */
+  onUpgrade?: () => void;
+  /** Records that a Pro-only capability was used. */
+  onPremiumFeatureUsed?: (feature: string) => void;
   applyWorkspace?: (workspace: import('../../types/domain').BrandOpsData) => Promise<void>;
   /** Download the current workspace JSON for the MCP gateway (Connected Agents token sync). */
   onExportWorkspace?: () => void | Promise<void>;
@@ -155,6 +161,9 @@ export const MobileIntegrationsView = ({
   documentSurface = 'mobile',
   loadWorkspace,
   applyWorkspace,
+  entitlement,
+  onUpgrade,
+  onPremiumFeatureUsed,
   onExportWorkspace
 }: MobileIntegrationsViewProps) => {
   return (
@@ -513,6 +522,9 @@ export const MobileIntegrationsView = ({
                   fallback={<p className="text-meta text-textMuted">Loading connected agents…</p>}
                 >
                   <ConnectedAgentsPanel
+                    entitlement={entitlement}
+                    onUpgrade={onUpgrade}
+                    onPremiumFeatureUsed={onPremiumFeatureUsed}
                     loadWorkspace={loadWorkspace}
                     applyWorkspace={applyWorkspace}
                     onExportWorkspace={onExportWorkspace}

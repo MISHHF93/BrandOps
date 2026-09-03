@@ -16,6 +16,12 @@ import { appendAuditEntry } from './audit';
 import { previewPromotion, type PromotionPreview } from '../builder/promotions';
 import type { AchievementCandidate } from '../../types/builder';
 import {
+  canConnectAgent,
+  canDelegateBetweenAgents,
+  type GateDecision
+} from '../monetization/featureGates';
+import type { EntitlementState } from '../monetization/entitlements';
+import {
   cancelHandoff,
   effectiveCapabilities,
   expireHandoffs,
@@ -87,6 +93,28 @@ export const agentBridge = {
   counts,
   listSessions: (workspace: BrandOpsData): ExternalAgentSession[] => listAgentSessions(workspace),
   createSession: createAgentSession,
+
+  /**
+   * Whether another agent may be connected, and whether work may be delegated
+   * between them.
+   *
+   * Decided here rather than only in the interface, so a gate is not something
+   * a rendered button happens to enforce. It is a product boundary, not a
+   * security one — there is no server, so a determined user can edit their own
+   * workspace — and the service layer is the strongest place available until
+   * one exists.
+   *
+   * Only active sessions count toward the limit: a revoked session holds no
+   * capability, and counting it would charge someone for tidying up.
+   */
+  canConnectAgent: (workspace: BrandOpsData, entitlement: EntitlementState): GateDecision =>
+    canConnectAgent(
+      entitlement,
+      listAgentSessions(workspace).filter((session) => session.status === 'active').length
+    ),
+
+  canDelegate: (entitlement: EntitlementState): GateDecision =>
+    canDelegateBetweenAgents(entitlement),
   revokeSession: (workspace: BrandOpsData, sessionId: string): BrandOpsData =>
     revokeAgentSession(workspace, sessionId),
 
